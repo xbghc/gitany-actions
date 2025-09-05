@@ -1,0 +1,39 @@
+name: docs-check
+
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compute diff range
+        id: diff
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}
+            base=$(git merge-base HEAD origin/${{ github.base_ref }})
+          else
+            base=$(git rev-parse HEAD~1 || echo '')
+          fi
+          echo "base=$base" >> $GITHUB_OUTPUT
+
+      - name: Run docs check
+        env:
+          DOCS_CHECK_BASE_SHA: ${{ steps.diff.outputs.base }}
+          DOCS_CHECK_HEAD_SHA: ${{ github.sha }}
+        run: |
+          node scripts/check-docs-updated.mjs
+
