@@ -79,8 +79,6 @@ export class GitcodeAuth {
     return new GitcodeClient({
       baseUrl: cfg.baseUrl,
       token: cfg.token ?? null,
-      authStyle: cfg.authStyle,
-      customAuthHeader: cfg.customAuthHeader,
     });
   }
 

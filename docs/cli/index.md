@@ -30,37 +30,22 @@ gitcode parse https://gitcode.com/owner/repo.git
 子命令：`login | status | logout | oauth-exchange`
 
 - `login`
-  - 选项：
-    - `--token <token>` 令牌（或将通过交互输入）
-    - `--base <api-base>` API 基址，默认 `https://gitcode.com/api/v5`
-    - `--style <style>` 认证风格：`query|bearer|token|header`（默认 `bearer`）
-    - `--header <name>` 当 `--style header` 时自定义请求头名
-  - 行为：保存令牌到本地配置并尝试 `GET /user` 验证。
-
+  - 选项：`--token <token>`（或交互输入）
+  - 行为：保存令牌并尝试 `GET /user` 验证。
 - `status`
-  - 显示本地是否存在令牌，并尝试调用 `/user` 判断是否有效。
-
+  - 显示是否已认证与 `/user` 校验结果。
 - `logout`
   - 清除本地保存的令牌。
-
 - `oauth-exchange`
   - 通过授权码换取 Token 并保存：
-    - `--code &lt;code&gt;`
-    - `--client-id &lt;id&gt;`
-    - `--client-secret &lt;secret&gt;`
-    - `--base &lt;api-base&gt;`（可选）
-  - 请求：`POST /oauth/token`，表单参数 `grant_type=authorization_code`。
+    - `--code <code>` `--client-id <id>` `--client-secret <secret>`
+    - 可选：`--base <api-base>`
 
 ## 环境变量
 
-- `GITCODE_API_BASE`：API 基址（默认 `https://gitcode.com/api/v5`）
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
-- `GITCODE_AUTH_STYLE`：`query|bearer|token|header`（默认 `bearer`）
-- `GITCODE_AUTH_HEADER`：自定义请求头名（当 `header` 风格时）
 - `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 
 ## 本地存储路径
 
-CLI 将认证信息保存到：
-
-- `~/.gitany/gitcode/config.json`
+CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`

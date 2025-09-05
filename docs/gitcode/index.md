@@ -20,21 +20,13 @@ title: gitcode 工具库
 
 ## 认证与请求
 
-默认 API 基址：`https://gitcode.com/api/v5`
+默认 API 基址：`https://gitcode.com/api/v5`，客户端固定使用请求头鉴权：
 
-支持四种认证风格（env `GITCODE_AUTH_STYLE` 或在构造时指定）：
-
-- `bearer`：`Authorization: Bearer <token>`（默认）
-- `query`：在 URL 上追加 `?access_token=<token>`
-- `token`：`Authorization: token <token>`
-- `header`：自定义请求头（配合 `customAuthHeader` / env `GITCODE_AUTH_HEADER`）
+- `Authorization: Bearer <token>`
 
 环境变量：
 
-- `GITCODE_API_BASE`：API 基址（默认 `https://gitcode.com/api/v5`）
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
-- `GITCODE_AUTH_STYLE`：`query|bearer|token|header`
-- `GITCODE_AUTH_HEADER`：当使用 `header` 风格时的请求头名
 - `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 
 ### GitcodeAuth 用法

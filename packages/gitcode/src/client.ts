@@ -1,28 +1,21 @@
-export type AuthStyle = 'query' | 'bearer' | 'token' | 'header';
 export type GitcodeClientOptions = {
   baseUrl?: string; // e.g., https://gitcode.com/api/v5
   token?: string | null;
   headers?: Record<string, string>;
-  authStyle?: AuthStyle; // default derived from env or 'bearer'
-  customAuthHeader?: string; // header name if authStyle === 'header'
 };
+
+const API_BASE = 'https://gitcode.com/api/v5';
 
 export class GitcodeClient {
   private baseUrl: string;
   private token: string | null;
   private extraHeaders: Record<string, string>;
-  private authStyle: AuthStyle;
-  private customAuthHeader?: string;
+  
 
   constructor(opts: GitcodeClientOptions = {}) {
-    const defaultBase = 'https://gitcode.com/api/v5';
-    this.baseUrl = (opts.baseUrl ?? process.env.GITCODE_API_BASE ?? defaultBase).replace(/\/$/, '');
+    this.baseUrl = (opts.baseUrl ?? API_BASE).replace(/\/$/, '');
     this.token = opts.token ?? null;
     this.extraHeaders = opts.headers ?? {};
-    const envStyle = (process.env.GITCODE_AUTH_STYLE as AuthStyle | undefined) ?? undefined;
-    // Default to Authorization header with Bearer scheme
-    this.authStyle = opts.authStyle ?? envStyle ?? 'bearer';
-    this.customAuthHeader = opts.customAuthHeader ?? process.env.GITCODE_AUTH_HEADER ?? undefined;
   }
 
   setToken(token: string | null) {
@@ -42,31 +35,9 @@ export class GitcodeClient {
       ...this.extraHeaders,
       ...(init.headers as Record<string, string> | undefined),
     };
-    // Apply auth
+    // Apply auth: fixed scheme using Authorization: Bearer <token>
     if (this.token) {
-      switch (this.authStyle) {
-        case 'query': {
-          // Append ?access_token=token
-          if (!urlObj.searchParams.has('access_token')) {
-            urlObj.searchParams.set('access_token', this.token);
-          }
-          break;
-        }
-        case 'header': {
-          const headerName = this.customAuthHeader || 'Authorization';
-          headers[headerName] = this.token;
-          break;
-        }
-        case 'token': {
-          headers['authorization'] = `token ${this.token}`;
-          break;
-        }
-        case 'bearer':
-        default: {
-          headers['authorization'] = `Bearer ${this.token}`;
-          break;
-        }
-      }
+      headers['authorization'] = `Bearer ${this.token}`;
     }
 
     const resp = await fetch(urlObj, { ...init, headers });
