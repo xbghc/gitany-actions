@@ -52,6 +52,8 @@ const client = await auth.client();
 const me = await client.request('/user');
 ```
 
+默认本地存储路径：`~/.gitany/gitcode/config.json`
+
 ### GitcodeClient 用法
 
 ```ts
@@ -81,4 +83,3 @@ parseGitUrl('https://gitcode.com/owner/repo.git');
 parseGitUrl('git@gitcode.com:owner/repo.git');
 // => { host: 'gitcode.com', owner: 'owner', repo: 'repo' }
 ```
-

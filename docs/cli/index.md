@@ -58,3 +58,9 @@ gitcode parse https://gitcode.com/owner/repo.git
 - `GITCODE_AUTH_STYLE`：`query|bearer|token|header`
 - `GITCODE_AUTH_HEADER`：自定义请求头名（当 `header` 风格时）
 - `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
+
+## 本地存储路径
+
+CLI 将认证信息保存到：
+
+- `~/.gitany/gitcode/config.json`

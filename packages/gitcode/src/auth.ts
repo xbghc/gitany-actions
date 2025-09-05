@@ -40,10 +40,9 @@ export class FileAuthStorage implements AuthStorage {
 }
 
 export function defaultConfigPath(): string {
-  const xdg = process.env.XDG_CONFIG_HOME;
-  const win = process.env.APPDATA;
-  const base = process.platform === 'win32' ? win || join(homedir(), 'AppData', 'Roaming') : xdg || join(homedir(), '.config');
-  return join(base, 'gitany', 'gitcode.json');
+  // Store under ~/.gitany/gitcode/config.json on all platforms
+  const dir = join(homedir(), '.gitany', 'gitcode');
+  return join(dir, 'config.json');
 }
 
 export class GitcodeAuth {
