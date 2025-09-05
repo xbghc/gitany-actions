@@ -66,7 +66,6 @@ const me = await client.request('/user');
 
 // 获取当前用户在某仓库的权限（GET /repos/{owner}/{repo}/collaborators/self-permission）
 const perm = await client.getSelfRepoPermission('owner', 'repo');
-// 可能返回：{ permission: 'admin' | 'write' | 'read' | 'none', ... }
 ```
 
 ## Git URL 解析

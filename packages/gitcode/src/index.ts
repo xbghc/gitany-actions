@@ -24,3 +24,10 @@ export const version = '0.1.0';
 
 export { GitcodeClient } from './client';
 export { GitcodeAuth, FileAuthStorage, defaultConfigPath } from './auth';
+export type {
+  SelfPermissionParams,
+  RoleInfo,
+  PermissionPoint,
+  ResourceNode,
+  SelfPermissionResponse,
+} from './api/self-permission';

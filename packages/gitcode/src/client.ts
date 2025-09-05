@@ -6,6 +6,8 @@ export type GitcodeClientOptions = {
 
 const API_BASE = 'https://gitcode.com/api/v5';
 
+import { selfPermissionPath, type SelfPermissionResponse } from './api/self-permission';
+
 export class GitcodeClient {
   private baseUrl: string;
   private token: string | null;
@@ -56,13 +58,8 @@ export class GitcodeClient {
    * Get the current authenticated user's permission on a repository.
    * Docs: GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission
    */
-  async getSelfRepoPermission(
-    owner: string,
-    repo: string
-  ): Promise<{ permission: 'admin' | 'write' | 'read' | 'none' } & Record<string, unknown>> {
-    const path = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
-      repo
-    )}/collaborators/self-permission`;
+  async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
+    const path = selfPermissionPath({ owner, repo });
     return await this.request(path, { method: 'GET' });
   }
 }
