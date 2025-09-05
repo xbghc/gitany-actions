@@ -33,7 +33,7 @@ gitcode parse https://gitcode.com/owner/repo.git
   - 选项：
     - `--token <token>` 令牌（或将通过交互输入）
     - `--base <api-base>` API 基址，默认 `https://gitcode.com/api/v5`
-    - `--style <style>` 认证风格：`query|bearer|token|header`（默认 `query`）
+    - `--style <style>` 认证风格：`query|bearer|token|header`（默认 `bearer`）
     - `--header <name>` 当 `--style header` 时自定义请求头名
   - 行为：保存令牌到本地配置并尝试 `GET /user` 验证。
 
@@ -55,7 +55,7 @@ gitcode parse https://gitcode.com/owner/repo.git
 
 - `GITCODE_API_BASE`：API 基址（默认 `https://gitcode.com/api/v5`）
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
-- `GITCODE_AUTH_STYLE`：`query|bearer|token|header`
+- `GITCODE_AUTH_STYLE`：`query|bearer|token|header`（默认 `bearer`）
 - `GITCODE_AUTH_HEADER`：自定义请求头名（当 `header` 风格时）
 - `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 

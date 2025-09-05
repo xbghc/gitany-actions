@@ -56,7 +56,7 @@ export async function authCommand(args: string[]): Promise<void> {
       }
       const { oauthExchangeAuthorizationCode } = await import('./oauth.js');
       const token = await oauthExchangeAuthorizationCode({ code, clientId, clientSecret, baseUrl: baseArg || undefined });
-      await auth.login(token.access_token, baseArg || undefined, 'query');
+      await auth.login(token.access_token, baseArg || undefined, 'bearer');
       console.log('Token stored.');
       return;
     }
@@ -77,5 +77,5 @@ function parseFlag(args: string[], name: string): string | null {
 }
 
 export function printAuthHelp() {
-  console.log(`Usage: gitcode auth <command> [options]\n\nCommands:\n  login             Save a GitCode token\n  status            Show auth status (GET /user)\n  logout            Remove saved token\n  oauth-exchange    Exchange OAuth code for token and save\n\nLogin Options:\n  --token <token>         Personal access token or OAuth token\n  --base <api-base>       API base (default env GITCODE_API_BASE or https://gitcode.com/api/v5)\n  --style <style>         Auth style: query|bearer|token|header (default: query)\n  --header <name>         Custom header name when --style header\n\nOAuth Exchange Options:\n  --code <code>           Authorization code\n  --client-id <id>        OAuth client id\n  --client-secret <sec>   OAuth client secret`);
+  console.log(`Usage: gitcode auth <command> [options]\n\nCommands:\n  login             Save a GitCode token\n  status            Show auth status (GET /user)\n  logout            Remove saved token\n  oauth-exchange    Exchange OAuth code for token and save\n\nLogin Options:\n  --token <token>         Personal access token or OAuth token\n  --base <api-base>       API base (default env GITCODE_API_BASE or https://gitcode.com/api/v5)\n  --style <style>         Auth style: query|bearer|token|header (default: bearer)\n  --header <name>         Custom header name when --style header\n\nOAuth Exchange Options:\n  --code <code>           Authorization code\n  --client-id <id>        OAuth client id\n  --client-secret <sec>   OAuth client secret`);
 }

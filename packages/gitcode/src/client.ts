@@ -3,7 +3,7 @@ export type GitcodeClientOptions = {
   baseUrl?: string; // e.g., https://gitcode.com/api/v5
   token?: string | null;
   headers?: Record<string, string>;
-  authStyle?: AuthStyle; // default derived from env or 'query'
+  authStyle?: AuthStyle; // default derived from env or 'bearer'
   customAuthHeader?: string; // header name if authStyle === 'header'
 };
 
@@ -20,7 +20,8 @@ export class GitcodeClient {
     this.token = opts.token ?? null;
     this.extraHeaders = opts.headers ?? {};
     const envStyle = (process.env.GITCODE_AUTH_STYLE as AuthStyle | undefined) ?? undefined;
-    this.authStyle = opts.authStyle ?? envStyle ?? 'query';
+    // Default to Authorization header with Bearer scheme
+    this.authStyle = opts.authStyle ?? envStyle ?? 'bearer';
     this.customAuthHeader = opts.customAuthHeader ?? process.env.GITCODE_AUTH_HEADER ?? undefined;
   }
 

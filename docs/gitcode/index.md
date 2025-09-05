@@ -24,8 +24,8 @@ title: gitcode 工具库
 
 支持四种认证风格（env `GITCODE_AUTH_STYLE` 或在构造时指定）：
 
-- `query`：在 URL 上追加 `?access_token=<token>`（默认）
-- `bearer`：`Authorization: Bearer <token>`
+- `bearer`：`Authorization: Bearer <token>`（默认）
+- `query`：在 URL 上追加 `?access_token=<token>`
 - `token`：`Authorization: token <token>`
 - `header`：自定义请求头（配合 `customAuthHeader` / env `GITCODE_AUTH_HEADER`）
 
@@ -43,7 +43,7 @@ title: gitcode 工具库
 import { GitcodeAuth } from '@gitany/gitcode';
 
 const auth = new GitcodeAuth();
-await auth.login('your_token', 'https://gitcode.com/api/v5', 'query');
+await auth.login('your_token', 'https://gitcode.com/api/v5', 'bearer');
 
 const { authenticated, user } = await auth.status(); // 尝试 GET /user
 console.log(authenticated, user);
@@ -62,7 +62,7 @@ import { GitcodeClient } from '@gitany/gitcode';
 const client = new GitcodeClient({
   baseUrl: 'https://gitcode.com/api/v5',
   token: process.env.GITCODE_TOKEN ?? null,
-  authStyle: 'query', // 或 'bearer' | 'token' | 'header'
+  authStyle: 'bearer', // 或 'query' | 'token' | 'header'
   customAuthHeader: undefined, // 当 authStyle 为 header 时生效
 });
 
