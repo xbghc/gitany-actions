@@ -14,6 +14,7 @@ title: gitcode 工具库
   - 解析 `https://gitcode.com/owner/repo(.git)` 或 `git@gitcode.com:owner/repo(.git)` 这类 URL。
 - `GitcodeClient`
   - 轻量 HTTP 客户端，内置鉴权处理。
+  - `getSelfRepoPermission(owner, repo)`：获取当前用户在指定仓库的权限。
 - `GitcodeAuth`
   - 本地令牌存储与加载，提供 `login/logout/status/client`。
 - `FileAuthStorage`、`defaultConfigPath()`
@@ -62,6 +63,10 @@ const client = new GitcodeClient({
 const me = await client.request('/user');
 
 // 其它请求：client.request<T>(path, init)
+
+// 获取当前用户在某仓库的权限（GET /repos/{owner}/{repo}/collaborators/self-permission）
+const perm = await client.getSelfRepoPermission('owner', 'repo');
+// 可能返回：{ permission: 'admin' | 'write' | 'read' | 'none', ... }
 ```
 
 ## Git URL 解析

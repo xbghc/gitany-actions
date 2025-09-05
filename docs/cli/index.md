@@ -41,6 +41,20 @@ gitcode parse https://gitcode.com/owner/repo.git
     - `--code <code>` `--client-id <id>` `--client-secret <secret>`
     - 可选：`--base <api-base>`
 
+### gitcode permission &lt;git-url&gt;
+
+查询当前登录用户在指定仓库（通过仓库链接）的权限。
+
+```bash
+gitcode permission https://gitcode.com/owner/repo.git
+
+# 或使用参数：
+gitcode permission --url git@gitcode.com:owner/repo.git
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
+- 输出：固定为一个词：`admin | write | read | none`（仓库不存在时返回 `none`）
+
 ## 环境变量
 
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）

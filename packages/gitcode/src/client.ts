@@ -51,6 +51,20 @@ export class GitcodeClient {
     }
     return (await resp.text()) as unknown as T;
   }
+
+  /**
+   * Get the current authenticated user's permission on a repository.
+   * Docs: GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission
+   */
+  async getSelfRepoPermission(
+    owner: string,
+    repo: string
+  ): Promise<{ permission: 'admin' | 'write' | 'read' | 'none' } & Record<string, unknown>> {
+    const path = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
+      repo
+    )}/collaborators/self-permission`;
+    return await this.request(path, { method: 'GET' });
+  }
 }
 
 async function safeText(resp: Response) {
