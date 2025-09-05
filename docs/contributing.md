@@ -27,13 +27,9 @@ title: 贡献指南
 
 仓库提供本地 Git hook 与 CI 检查来提醒未同步文档的变更。
 
-### 启用本地 Git Hook（推荐）
+### 本地 Git Hook（Husky）
 
-将仓库自带的 hooks 目录启用为本地 hooks：
-
-```bash
-git config core.hooksPath .githooks
-```
+项目使用 Husky 管理 Git 钩子，安装依赖后会自动启用（`package.json` 中 `prepare: husky`）。
 
 提交前，`pre-commit` 会检查：
 
@@ -62,4 +58,3 @@ SKIP_DOCS_CHECK=1 git commit -m "..."
 - `packages/cli/src/*` → `docs/cli/`
 
 如遇仅重构/重命名且不影响对外接口的场景，请在 PR 中说明无需变更文档的理由。
-

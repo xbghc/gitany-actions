@@ -13,9 +13,11 @@
     "clean": "pnpm -r clean",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.6",
     "@types/node": "^22.18.1",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",

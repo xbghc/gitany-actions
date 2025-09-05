@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+set -e
+
+# Docs sync check
+node scripts/check-docs-updated.mjs
