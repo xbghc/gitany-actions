@@ -4,7 +4,7 @@ title: gitcode 工具库
 
 # @gitany/gitcode（工具库）
 
-提供 GitCode API 访问与认证封装，以及 Git 远程地址解析工具。
+提供 [GitCode API](https://docs.gitcode.com/docs/apis/) 访问与认证封装，以及 Git 远程地址解析工具。
 
 包路径：`packages/gitcode`
 
@@ -15,6 +15,7 @@ title: gitcode 工具库
 - `GitcodeClient`
   - 轻量 HTTP 客户端，内置鉴权处理。
   - `getSelfRepoPermission(owner, repo)`：获取当前用户在指定仓库的权限。
+  - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
 - `GitcodeAuth`
   - 本地令牌存储与加载，提供 `login/logout/status/client`。
 - `FileAuthStorage`、`defaultConfigPath()`
@@ -66,6 +67,9 @@ const me = await client.request('/user');
 
 // 获取当前用户在某仓库的权限（GET /repos/{owner}/{repo}/collaborators/self-permission）
 const perm = await client.getSelfRepoPermission('owner', 'repo');
+
+// 获取 PR 列表（GET /repos/{owner}/{repo}/pulls）
+const pulls = await client.listPullRequests('owner', 'repo', { state: 'open', page: 1, per_page: 20 });
 ```
 
 ## Git URL 解析

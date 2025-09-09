@@ -2,9 +2,11 @@
 import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand, printAuthHelp } from './commands/auth';
 import { permissionCommand, printPermissionHelp } from './commands/permission';
+import { pullsCommand, printPullsHelp } from './commands/pulls';
+import { prCommand, printPrHelp } from './commands/pr';
 
 function printHelp(): void {
-  console.log(`gitcode - tools for GitCode\n\nUsage:\n  gitcode auth <login|status|logout> [options]\n  gitcode parse <git-url>\n  gitcode permission <git-url> [options]\n\nExamples:\n  gitcode auth login --token <token>\n  gitcode auth status\n  gitcode parse https://github.com/owner/repo.git\n  gitcode permission https://gitcode.com/owner/repo.git`);
+  console.log(`gitcode - tools for GitCode\n\nUsage:\n  gitcode auth <login|status|logout> [options]\n  gitcode parse <git-url>\n  gitcode permission <git-url> [options]\n  gitcode pr list <git-url> [options]\n\nExamples:\n  gitcode auth login --token <token>\n  gitcode auth status\n  gitcode parse https://github.com/owner/repo.git\n  gitcode permission https://gitcode.com/owner/repo.git\n  gitcode pr list https://gitcode.com/owner/repo.git --state open`);
 }
 
 async function main(): Promise<void> {
@@ -46,6 +48,23 @@ async function main(): Promise<void> {
         return;
       }
       await permissionCommand(args);
+      return;
+    }
+    case 'pulls': {
+      // Back-compat alias for old command name
+      if (!args.length) {
+        printPullsHelp();
+        return;
+      }
+      await pullsCommand(args);
+      return;
+    }
+    case 'pr': {
+      if (!args.length) {
+        printPrHelp();
+        return;
+      }
+      await prCommand(args);
       return;
     }
     default: {

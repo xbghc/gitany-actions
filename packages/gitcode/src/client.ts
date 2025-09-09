@@ -7,6 +7,7 @@ export type GitcodeClientOptions = {
 const API_BASE = 'https://gitcode.com/api/v5';
 
 import { selfPermissionPath, type SelfPermissionResponse } from './api/self-permission';
+import { listPullsPath, type ListPullsQuery, type ListPullsResponse } from './api/pulls';
 
 export class GitcodeClient {
   private baseUrl: string;
@@ -60,6 +61,19 @@ export class GitcodeClient {
    */
   async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
     const path = selfPermissionPath({ owner, repo });
+    return await this.request(path, { method: 'GET' });
+  }
+
+  /**
+   * List pull requests for a repository.
+   * Docs: GET /api/v5/repos/{owner}/{repo}/pulls
+   */
+  async listPullRequests(
+    owner: string,
+    repo: string,
+    query?: ListPullsQuery,
+  ): Promise<ListPullsResponse> {
+    const path = listPullsPath({ owner, repo, query });
     return await this.request(path, { method: 'GET' });
   }
 }

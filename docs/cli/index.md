@@ -6,6 +6,11 @@ title: CLI 工具
 
 包路径：`packages/cli`，可执行名：`gitcode`
 
+说明：本 CLI 的命令与使用方式参考 GitHub CLI（`gh`），是其在 GitCode 平台上的等价实现与封装。例如：
+
+- `gh pr list` → `gitcode pr list`
+- 统一采用子命令与选项的风格（如 `--state`、`--page` 等）。
+
 构建与运行：
 
 ```bash
@@ -54,6 +59,35 @@ gitcode permission --url git@gitcode.com:owner/repo.git
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
 - 输出：固定为一个词：`admin | write | read | none`（仓库不存在时返回 `none`）
+
+### gitcode pr list &lt;git-url&gt;
+
+列出指定仓库的 Pull Requests。默认状态为 `open`，默认输出为「标题列表」：
+
+```
+- [#18] 修复登录异常
+- [#16] CI: 提升缓存命中率
+```
+
+```bash
+gitcode pr list https://gitcode.com/owner/repo.git
+
+# 带筛选参数：
+gitcode pr list --url git@gitcode.com:owner/repo.git \
+  --state open --base main
+
+# 输出 JSON：
+gitcode pr list <url> --json
+```
+
+- 选项：
+  - `--url <git-url>`：仓库地址（可替代位置参数）
+  - `--state <state>`：`open | closed | all`（默认 `open`）
+  - `--head <ref>`：按源分支或 `repo:branch` 过滤
+  - `--base <branch>`：按目标分支过滤
+  - `--sort <field>`、`--direction <asc|desc>`：可选排序
+  - `--json`：输出原始 JSON 数组
+- 调用：`GET /api/v5/repos/{owner}/{repo}/pulls`
 
 ## 环境变量
 

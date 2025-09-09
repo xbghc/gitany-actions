@@ -31,3 +31,9 @@ export type {
   ResourceNode,
   SelfPermissionResponse,
 } from './api/self-permission';
+export type {
+  ListPullsQuery,
+  ListPullsParams,
+  PullRequest,
+  ListPullsResponse,
+} from './api/pulls';
