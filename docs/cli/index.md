@@ -89,6 +89,29 @@ gitcode pr list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/pulls`
 
+### gitcode pr create &lt;git-url&gt;
+
+创建 Pull Request（仅支持部分字段）。
+
+```bash
+gitcode pr create https://gitcode.com/owner/repo.git \
+  --title "修复登录异常" --head feat/login-fix --base main --body "补充说明：修复 Token 过期报错"
+
+# 关联 Issue（示例）：
+gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --base main --issue 123
+```
+
+- 选项：
+  - `--url <git-url>`：仓库地址（可替代位置参数）
+  - `--title <title>`：PR 标题（必填）
+  - `--head <branch>`：源分支名称（不支持跨仓库，必填）
+  - `--base <branch>`：目标分支（可选）
+  - `--body <text>`：PR 描述内容（可选）
+  - `--issue <n>`：将 PR 关联到指定 Issue（可选）
+  - `--json`：输出创建结果的原始 JSON
+- 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
+- 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
+
 ## 环境变量
 
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）

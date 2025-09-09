@@ -36,4 +36,5 @@ export type {
   ListPullsParams,
   PullRequest,
   ListPullsResponse,
+  CreatePullBody,
 } from './api/pulls';

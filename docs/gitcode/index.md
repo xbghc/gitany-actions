@@ -16,6 +16,7 @@ title: gitcode 工具库
   - 轻量 HTTP 客户端，内置鉴权处理。
   - `getSelfRepoPermission(owner, repo)`：获取当前用户在指定仓库的权限。
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
+  - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
 - `GitcodeAuth`
   - 本地令牌存储与加载，提供 `login/logout/status/client`。
 - `FileAuthStorage`、`defaultConfigPath()`
@@ -70,6 +71,16 @@ const perm = await client.getSelfRepoPermission('owner', 'repo');
 
 // 获取 PR 列表（GET /repos/{owner}/{repo}/pulls）
 const pulls = await client.listPullRequests('owner', 'repo', { state: 'open', page: 1, per_page: 20 });
+
+// 创建 PR（POST /repos/{owner}/{repo}/pulls）
+const pr = await client.createPullRequest('owner', 'repo', {
+  title: '修复登录异常',
+  head: 'feat/login-fix',
+  base: 'main',
+  body: '补充说明：修复 Token 过期报错',
+  // 可选：关联 issue
+  issue: 123,
+});
 ```
 
 ## Git URL 解析

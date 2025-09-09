@@ -7,7 +7,14 @@ export type GitcodeClientOptions = {
 const API_BASE = 'https://gitcode.com/api/v5';
 
 import { selfPermissionPath, type SelfPermissionResponse } from './api/self-permission';
-import { listPullsPath, type ListPullsQuery, type ListPullsResponse } from './api/pulls';
+import {
+  listPullsPath,
+  type ListPullsQuery,
+  type ListPullsResponse,
+  createPullPath,
+  type CreatePullBody,
+  type PullRequest,
+} from './api/pulls';
 
 export class GitcodeClient {
   private baseUrl: string;
@@ -75,6 +82,19 @@ export class GitcodeClient {
   ): Promise<ListPullsResponse> {
     const path = listPullsPath({ owner, repo, query });
     return await this.request(path, { method: 'GET' });
+  }
+
+  /**
+   * Create a pull request.
+   * Docs: POST /api/v5/repos/{owner}/{repo}/pulls
+   */
+  async createPullRequest(
+    owner: string,
+    repo: string,
+    body: CreatePullBody,
+  ): Promise<PullRequest> {
+    const path = createPullPath(owner, repo);
+    return await this.request(path, { method: 'POST', body: JSON.stringify(body) });
   }
 }
 
