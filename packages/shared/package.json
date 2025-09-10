@@ -1,0 +1,26 @@
+{
+  "name": "@gitany/shared",
+  "version": "0.1.0",
+  "description": "Shared types and utilities for gitany monorepo.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js",
+    "clean": "rm -rf dist",
+    "lint": "eslint ."
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  },
+  "engines": { "node": ">=18.17" }
+}
+

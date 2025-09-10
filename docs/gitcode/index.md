@@ -25,6 +25,17 @@ title: gitcode 工具库
 
 - Pull Requests：见《[Pull Requests API](./pr.md)》。
 
+## 公共类型
+
+- `Remote`: 解析 Git 远程地址后的结果（`owner`、`repo`、`host?`）。
+- `RepoRole`: 仓库权限归一化结果，`'admin' | 'write' | 'read' | 'none'`。
+- `SelfPermissionResponse`: 当前用户在仓库的权限树响应；相关类型：`RoleInfo`、`PermissionPoint`、`ResourceNode`。
+- `ListPullsQuery`: PR 列表查询参数（常用：`state`、`page`、`per_page`、`head`、`base`、`sort`、`direction`）。
+- `ListPullsParams`: PR 列表路径参数（`owner`、`repo`、`query?`）。
+- `PullRequest`: PR 的最小字段表示（`id`、`number?`、`title?`、`state?` 等）。
+- `ListPullsResponse`: `PullRequest[]`。
+- `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
+
 ## 认证与请求
 
 默认 API 基址：`https://gitcode.com/api/v5`，客户端固定使用请求头鉴权：
