@@ -87,7 +87,7 @@ export class GitcodeAuth {
       const client = await this.client();
       // Many providers expose `/user`; allow override with env if docs differ.
       const whoamiPath = process.env.GITCODE_WHOAMI_PATH || '/user';
-      const user = await client.request(whoamiPath, { method: 'GET' });
+      const user = await client.request(whoamiPath, 'GET');
       return { authenticated: true, tokenPresent, user };
     } catch {
       return { authenticated: false, tokenPresent };

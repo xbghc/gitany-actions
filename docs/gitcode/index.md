@@ -42,13 +42,13 @@ title: gitcode 工具库
 import { GitcodeAuth } from '@gitany/gitcode';
 
 const auth = new GitcodeAuth();
-await auth.login('your_token', 'https://gitcode.com/api/v5', 'bearer');
+await auth.login('your_token', 'bearer');
 
 const { authenticated, user } = await auth.status(); // 尝试 GET /user
 console.log(authenticated, user);
 
 const client = await auth.client();
-const me = await client.request('/user');
+const me = await client.request('/user', 'GET');
 ```
 
 默认本地存储路径：`~/.gitany/gitcode/config.json`
@@ -60,14 +60,12 @@ import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient({
   token: process.env.GITCODE_TOKEN ?? null,
-  authStyle: 'bearer', // 或 'query' | 'token' | 'header'
-  customAuthHeader: undefined, // 当 authStyle 为 header 时生效
 });
 
 // 获取当前用户
-const me = await client.request('/user');
+const me = await client.request('/user', 'GET');
 
-// 其它请求：client.request<T>(path, init)
+// 其它请求：client.request<T>(url, method, options?)
 
 // 获取当前用户在某仓库的权限（GET /repos/{owner}/{repo}/collaborators/self-permission）
 const perm = await client.getSelfRepoPermission('owner', 'repo');

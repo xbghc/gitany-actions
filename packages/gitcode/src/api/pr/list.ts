@@ -7,7 +7,7 @@
  * Query parameters for listing pull requests.
  * Only include fields you need; extra fields are ignored.
  */
-export type ListPullsQuery = {
+export interface ListPullsQuery {
   /** Filter by state, e.g., 'open' | 'closed' | 'all' */
   state?: string;
   /** Page index, starting from 1. */
@@ -22,7 +22,6 @@ export type ListPullsQuery = {
   head?: string;
   /** Filter by base branch. */
   base?: string;
-  [k: string]: unknown;
 };
 
 /**
@@ -56,21 +55,12 @@ export type PullRequest = {
 };
 
 export type ListPullsResponse = PullRequest[];
+import { API_BASE } from '../constants';
 
 /**
  * Builds the request path for listing pull requests.
  * Example: /repos/owner/repo/pulls?state=open&page=1&per_page=20
  */
-export function listPullsPath(params: ListPullsParams): string {
-  const { owner, repo, query } = params;
-  const base = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;
-  if (!query) return base;
-  const usp = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value === undefined || value === null) continue;
-    usp.append(key, String(value));
-  }
-  const qs = usp.toString();
-  return qs ? `${base}?${qs}` : base;
+export function listPullsUrl(owner: string, repo: string): string {
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;
 }
-

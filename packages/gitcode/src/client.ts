@@ -5,19 +5,18 @@ export type GitcodeClientOptions = {
 
 import { selfPermissionUrl, type SelfPermissionResponse } from './api/self-permission';
 import {
-  listPullsPath,
+  listPullsUrl,
   type ListPullsQuery,
   type ListPullsResponse,
   createPullUrl,
   type CreatePullBody,
   type PullRequest,
 } from './api/pr';
-import { httpRequest } from './utils/http';
+import { httpRequest, HttpRequestOptions } from './utils/http';
 
 export class GitcodeClient {
   private token: string | null;
   private extraHeaders: Record<string, string>;
-  
 
   constructor(opts: GitcodeClientOptions = {}) {
     this.token = opts.token ?? null;
@@ -32,19 +31,16 @@ export class GitcodeClient {
     return this.token ?? null;
   }
 
-  async request<T = unknown>(url: string, init: RequestInit = {}): Promise<T> {
-    const method = ((init.method ?? 'GET').toUpperCase()) as 'GET' | 'POST' | 'PUT';
-    const headers = {
-      ...this.extraHeaders,
-      ...(init.headers as Record<string, string> | undefined),
-    } as Record<string, string>;
-    const body = init.body as string | undefined;
-
+  async request<T = unknown>(
+    url: string,
+    method: 'GET' | 'POST' | 'PUT',
+    options?: HttpRequestOptions,
+  ): Promise<T> {
     return await httpRequest<T>({
       method,
       url,
       token: this.token ?? undefined,
-      options: { headers, body },
+      options,
     });
   }
 
@@ -54,7 +50,7 @@ export class GitcodeClient {
    */
   async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
     const path = selfPermissionUrl({ owner, repo });
-    return await this.request(path, { method: 'GET' });
+    return await this.request(path, 'GET', {});
   }
 
   /**
@@ -64,23 +60,27 @@ export class GitcodeClient {
   async listPullRequests(
     owner: string,
     repo: string,
-    query?: ListPullsQuery,
+    prQuery: ListPullsQuery = { state: 'open' },
   ): Promise<ListPullsResponse> {
-    const path = listPullsPath({ owner, repo, query });
-    return await this.request(path, { method: 'GET' });
+    const path = listPullsUrl(owner, repo);
+
+    const query: Record<string, string | number | boolean> = {};
+    for(const [k, v] of Object.entries(prQuery)) {
+      if(v !== undefined) {
+        query[k] = v;
+      }
+    }
+
+    return await this.request(path, 'GET', { query });
   }
 
   /**
    * Create a pull request.
    * Docs: POST /api/v5/repos/{owner}/{repo}/pulls
    */
-  async createPullRequest(
-    owner: string,
-    repo: string,
-    body: CreatePullBody,
-  ): Promise<PullRequest> {
+  async createPullRequest(owner: string, repo: string, body: CreatePullBody): Promise<PullRequest> {
     const url = createPullUrl(owner, repo);
-    return await this.request(url, { method: 'POST', body: JSON.stringify(body) });
+    return await this.request(url, 'POST', { body: JSON.stringify(body) });
   }
 }
 
