@@ -32,15 +32,10 @@ gitcode parse https://gitcode.com/owner/repo.git
 
 ### gitcode auth &lt;subcommand&gt;
 
-子命令：`login | status | logout | oauth-exchange`
+子命令：`set-token`
 
-- `login`
-  - 选项：`--token <token>`（或交互输入）
-  - 行为：保存令牌并尝试 `GET /user` 验证。
-- `status`
-  - 显示是否已认证与 `/user` 校验结果。
-- `logout`
-  - 清除本地保存的令牌。
+- `set-token <token>`
+  - 行为：保存令牌到本地配置文件。
 
 ### gitcode permission &lt;git-url&gt;
 

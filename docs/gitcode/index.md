@@ -18,7 +18,7 @@ title: gitcode 工具库
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
 - `GitcodeAuth`
-  - 本地令牌存储与加载，提供 `login/logout/status/client`。
+  - 本地令牌存储与加载，提供 `setToken/token/status/client`。
 - `FileAuthStorage`、`defaultConfigPath()`
 
 更多 API：
@@ -47,13 +47,20 @@ title: gitcode 工具库
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
 - `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 
+**Token 读取优先级**：
+1. 环境变量 `GITCODE_TOKEN`
+2. 本地配置文件 `~/.gitany/gitcode/config.json`
+
 ### GitcodeAuth 用法
 
 ```ts
 import { GitcodeAuth } from '@gitany/gitcode';
 
 const auth = new GitcodeAuth();
-await auth.login('your_token', 'bearer');
+await auth.setToken('your_token', 'bearer');
+
+const token = await auth.token(); // 获取token（环境变量优先）
+console.log(token);
 
 const { authenticated, user } = await auth.status(); // 尝试 GET /user
 console.log(authenticated, user);

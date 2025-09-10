@@ -6,7 +6,7 @@ import { pullsCommand, printPullsHelp } from './commands/pulls';
 import { prCommand, printPrHelp } from './commands/pr';
 
 function printHelp(): void {
-  console.log(`gitcode - tools for GitCode\n\nUsage:\n  gitcode auth <login|status|logout> [options]\n  gitcode parse <git-url>\n  gitcode repo <command> [options]\n  gitcode pr list <git-url> [options]\n\nExamples:\n  gitcode auth login --token <token>\n  gitcode auth status\n  gitcode parse https://github.com/owner/repo.git\n  gitcode repo permission https://gitcode.com/owner/repo.git\n  gitcode pr list https://gitcode.com/owner/repo.git --state open`);
+  console.log(`gitcode - tools for GitCode\n\nUsage:\n  gitcode auth set-token <token>\n  gitcode parse <git-url>\n  gitcode repo <command> [options]\n  gitcode pr list <git-url> [options]\n\nExamples:\n  gitcode auth set-token <token>\n  gitcode parse https://github.com/owner/repo.git\n  gitcode repo permission https://gitcode.com/owner/repo.git\n  gitcode pr list https://gitcode.com/owner/repo.git --state open`);
 }
 
 async function main(): Promise<void> {

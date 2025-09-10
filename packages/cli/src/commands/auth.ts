@@ -1,43 +1,19 @@
 import { GitcodeAuth } from '@gitany/gitcode';
-import readline from 'readline';
-
-function ask(question: string): Promise<string> {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((resolve) => rl.question(question, (ans) => { rl.close(); resolve(ans); }));
-}
 
 export async function authCommand(args: string[]): Promise<void> {
   const sub = args[0];
   const auth = new GitcodeAuth();
 
   switch (sub) {
-    case 'login': {
-      const rest = args.slice(1);
-      const tokenArg = parseFlag(rest, '--token');
-      const token = tokenArg || (await ask('Paste your GitCode token: '));
+    case 'set-token': {
+      const token = args[1];
       if (!token) {
-        console.error('No token provided.');
+        console.error('Usage: gitcode auth set-token <token>');
         process.exitCode = 1;
         return;
       }
-      await auth.login(token.trim());
-      const status = await auth.status();
-      if (status.authenticated) {
-        console.log('Logged in to GitCode.');
-        if (status.user) console.log(JSON.stringify(status.user, null, 2));
-      } else {
-        console.log('Token saved, but could not verify via API (offline or invalid).');
-      }
-      return;
-    }
-    case 'status': {
-      const status = await auth.status();
-      console.log(JSON.stringify(status, null, 2));
-      return;
-    }
-    case 'logout': {
-      await auth.logout();
-      console.log('Logged out from GitCode (token removed).');
+      await auth.setToken(token.trim());
+      console.log('Token saved successfully');
       return;
     }
     default: {
@@ -46,16 +22,6 @@ export async function authCommand(args: string[]): Promise<void> {
   }
 }
 
-function parseFlag(args: string[], name: string): string | null {
-  const idx = args.indexOf(name);
-  if (idx >= 0 && idx + 1 < args.length) {
-    return args[idx + 1];
-  }
-  const eq = args.find((a) => a.startsWith(name + '='));
-  if (eq) return eq.split('=', 2)[1];
-  return null;
-}
-
 export function printAuthHelp() {
-  console.log(`Usage: gitcode auth <command> [options]\n\nCommands:\n  login             Save a GitCode token\n  status            Show auth status (GET /user)\n  logout            Remove saved token\n  oauth-exchange    Exchange OAuth code for token and save\n\nLogin Options:\n  --token <token>         Personal access token or OAuth token\n\nOAuth Exchange Options:\n  --code <code>           Authorization code\n  --client-id <id>        OAuth client id\n  --client-secret <sec>   OAuth client secret\n  --base <api-base>       Optional API base (default: https://gitcode.com/api/v5)`);
+  console.log(`Usage: gitcode auth <command> [options]\n\nCommands:\n  set-token <token>    Save a GitCode token to config file\n\nExamples:\n  gitcode auth set-token your_personal_access_token`);
 }
