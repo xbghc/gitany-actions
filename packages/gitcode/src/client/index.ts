@@ -3,7 +3,7 @@ export type GitcodeClientOptions = {
   headers?: Record<string, string>;
 };
 
-import { selfPermissionUrl, type SelfPermissionResponse } from './api/repo/self-permission';
+import { selfPermissionUrl, type SelfPermissionResponse } from '../api/repo/self-permission';
 import {
   listPullsUrl,
   type ListPullsQuery,
@@ -11,9 +11,9 @@ import {
   createPullUrl,
   type CreatePullBody,
   type PullRequest,
-} from './api/pr';
-import { userProfileUrl, type UserProfileResponse } from './api/user';
-import { httpRequest, HttpRequestOptions } from './utils/http';
+} from '../api/pr';
+import { userProfileUrl, type UserProfileResponse } from '../api/user';
+import { httpRequest, HttpRequestOptions } from '../utils/http';
 import type { RepoRole, RemoteClientUser } from '@gitany/shared';
 
 export class GitcodeClient {
