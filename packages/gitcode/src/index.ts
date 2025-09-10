@@ -37,4 +37,4 @@ export type {
   PullRequest,
   ListPullsResponse,
   CreatePullBody,
-} from './api/pulls';
+} from './api/pr';

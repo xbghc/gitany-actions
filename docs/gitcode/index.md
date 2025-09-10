@@ -21,6 +21,10 @@ title: gitcode 工具库
   - 本地令牌存储与加载，提供 `login/logout/status/client`。
 - `FileAuthStorage`、`defaultConfigPath()`
 
+更多 API：
+
+- Pull Requests：见《[Pull Requests API](./pr.md)》。
+
 ## 认证与请求
 
 默认 API 基址：`https://gitcode.com/api/v5`，客户端固定使用请求头鉴权：

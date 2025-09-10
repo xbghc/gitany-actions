@@ -14,7 +14,7 @@ import {
   createPullPath,
   type CreatePullBody,
   type PullRequest,
-} from './api/pulls';
+} from './api/pr';
 import { httpRequest } from './utils/http';
 
 export class GitcodeClient {
