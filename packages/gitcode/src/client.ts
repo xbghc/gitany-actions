@@ -3,7 +3,7 @@ export type GitcodeClientOptions = {
   headers?: Record<string, string>;
 };
 
-import { selfPermissionUrl, type SelfPermissionResponse } from './api/self-permission';
+import { selfPermissionUrl, type SelfPermissionResponse } from './api/repo/self-permission';
 import {
   listPullsUrl,
   type ListPullsQuery,
@@ -13,6 +13,7 @@ import {
   type PullRequest,
 } from './api/pr';
 import { httpRequest, HttpRequestOptions } from './utils/http';
+import type { RepoRole } from '@gitany/shared';
 
 export class GitcodeClient {
   private token: string | null;
@@ -54,6 +55,26 @@ export class GitcodeClient {
   }
 
   /**
+   * Get the normalized permission role for the current user on a repository.
+   * Returns one of: 'admin' | 'write' | 'read' | 'none'.
+   * - Maps API role_info.cn_name to RepoRole.
+   * - Returns 'read' when role_info is missing.
+   * - Returns 'none' when repository is not found (HTTP 404).
+   */
+  async getSelfRepoPermissionRole(owner: string, repo: string): Promise<RepoRole> {
+    try {
+      const json = await this.getSelfRepoPermission(owner, repo);
+      return extractRepoRoleFromSelfPermission(json);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (/\b404\b/.test(msg)) {
+        return 'none';
+      }
+      throw err;
+    }
+  }
+
+  /**
    * List pull requests for a repository.
    * Docs: GET /api/v5/repos/{owner}/{repo}/pulls
    */
@@ -85,3 +106,18 @@ export class GitcodeClient {
 }
 
 // SafeText is handled inside utils/http
+
+function extractRepoRoleFromSelfPermission(result: unknown): RepoRole {
+  if (result && typeof result === 'object') {
+    const obj: any = result;
+    const role = obj.role_info || obj.roleInfo;
+    if (!role) {
+      return 'read';
+    }
+    const cn = typeof role.cn_name === 'string' ? role.cn_name.trim() : '';
+    if (cn.includes('管理员')) return 'admin';
+    if (cn.includes('维护者') || cn.includes('开发者')) return 'write';
+    return 'read';
+  }
+  return 'read';
+}

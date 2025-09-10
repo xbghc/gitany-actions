@@ -30,7 +30,7 @@ export type {
   PermissionPoint,
   ResourceNode,
   SelfPermissionResponse,
-} from './api/self-permission';
+} from './api/repo/self-permission';
 export type {
   ListPullsQuery,
   ListPullsParams,

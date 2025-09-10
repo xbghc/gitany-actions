@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand, printAuthHelp } from './commands/auth';
-import { permissionCommand, printPermissionHelp } from './commands/permission';
+import { repoCommand, printRepoHelp } from './commands/repo';
 import { pullsCommand, printPullsHelp } from './commands/pulls';
 import { prCommand, printPrHelp } from './commands/pr';
 
 function printHelp(): void {
-  console.log(`gitcode - tools for GitCode\n\nUsage:\n  gitcode auth <login|status|logout> [options]\n  gitcode parse <git-url>\n  gitcode permission <git-url> [options]\n  gitcode pr list <git-url> [options]\n\nExamples:\n  gitcode auth login --token <token>\n  gitcode auth status\n  gitcode parse https://github.com/owner/repo.git\n  gitcode permission https://gitcode.com/owner/repo.git\n  gitcode pr list https://gitcode.com/owner/repo.git --state open`);
+  console.log(`gitcode - tools for GitCode\n\nUsage:\n  gitcode auth <login|status|logout> [options]\n  gitcode parse <git-url>\n  gitcode repo <command> [options]\n  gitcode pr list <git-url> [options]\n\nExamples:\n  gitcode auth login --token <token>\n  gitcode auth status\n  gitcode parse https://github.com/owner/repo.git\n  gitcode repo permission https://gitcode.com/owner/repo.git\n  gitcode pr list https://gitcode.com/owner/repo.git --state open`);
 }
 
 async function main(): Promise<void> {
@@ -42,12 +42,12 @@ async function main(): Promise<void> {
       console.log(JSON.stringify(parsed, null, 2));
       return;
     }
-    case 'permission': {
+    case 'repo': {
       if (!args.length) {
-        printPermissionHelp();
+        printRepoHelp();
         return;
       }
-      await permissionCommand(args);
+      await repoCommand(args);
       return;
     }
     case 'pulls': {

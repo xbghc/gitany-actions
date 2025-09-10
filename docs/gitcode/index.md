@@ -14,7 +14,7 @@ title: gitcode 工具库
   - 解析 `https://gitcode.com/owner/repo(.git)` 或 `git@gitcode.com:owner/repo(.git)` 这类 URL。
 - `GitcodeClient`
   - 轻量 HTTP 客户端，内置鉴权处理。
-  - `getSelfRepoPermission(owner, repo)`：获取当前用户在指定仓库的权限。
+  - `getSelfRepoPermissionRole(owner, repo)`：获取权限并归一化为 `admin | write | read | none`。
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
 - `GitcodeAuth`

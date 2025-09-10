@@ -65,7 +65,7 @@ export type SelfPermissionResponse = {
   resource_tree: ResourceNode[];
 } & Record<string, unknown>;
 
-import { API_BASE } from './constants';
+import { API_BASE } from '../constants';
 
 /**
  * Builds the request path for the Self Permission endpoint.
