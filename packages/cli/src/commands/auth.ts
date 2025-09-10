@@ -1,27 +1,26 @@
+import { Command } from 'commander';
 import { GitcodeAuth } from '@gitany/gitcode';
 
-export async function authCommand(args: string[]): Promise<void> {
-  const sub = args[0];
+export function authCommand(): Command {
   const auth = new GitcodeAuth();
+  
+  const authProgram = new Command('auth')
+    .description('Authentication commands');
 
-  switch (sub) {
-    case 'set-token': {
-      const token = args[1];
-      if (!token) {
-        console.error('Usage: gitcode auth set-token <token>');
-        process.exitCode = 1;
-        return;
-      }
-      await auth.setToken(token.trim());
-      console.log('Token saved successfully');
-      return;
-    }
-    default: {
-      printAuthHelp();
-    }
-  }
-}
+  authProgram
+    .command('set-token')
+    .description('Set authentication token')
+    .argument('<token>', 'Authentication token')
+    .action((token) => {
+      auth.setToken(token.trim())
+        .then(() => {
+          console.log('Token saved successfully');
+        })
+        .catch((error) => {
+          console.error('Failed to save token:', error);
+          process.exit(1);
+        });
+    });
 
-export function printAuthHelp() {
-  console.log(`Usage: gitcode auth <command> [options]\n\nCommands:\n  set-token <token>    Save a GitCode token to config file\n\nExamples:\n  gitcode auth set-token your_personal_access_token`);
+  return authProgram;
 }

@@ -37,15 +37,12 @@ gitcode parse https://gitcode.com/owner/repo.git
 - `set-token <token>`
   - 行为：保存令牌到本地配置文件。
 
-### gitcode permission &lt;git-url&gt;
+### gitcode repo permission &lt;git-url&gt;
 
 查询当前登录用户在指定仓库（通过仓库链接）的权限。
 
 ```bash
-gitcode permission https://gitcode.com/owner/repo.git
-
-# 或使用参数：
-gitcode permission --url git@gitcode.com:owner/repo.git
+gitcode repo permission https://gitcode.com/owner/repo.git
 ```
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
@@ -64,7 +61,7 @@ gitcode permission --url git@gitcode.com:owner/repo.git
 gitcode pr list https://gitcode.com/owner/repo.git
 
 # 带筛选参数：
-gitcode pr list --url git@gitcode.com:owner/repo.git \
+gitcode pr list git@gitcode.com:owner/repo.git \
   --state open --base main
 
 # 输出 JSON：
@@ -72,7 +69,6 @@ gitcode pr list <url> --json
 ```
 
 - 选项：
-  - `--url <git-url>`：仓库地址（可替代位置参数）
   - `--state <state>`：`open | closed | all`（默认 `open`）
   - `--head <ref>`：按源分支或 `repo:branch` 过滤
   - `--base <branch>`：按目标分支过滤
@@ -93,7 +89,6 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 ```
 
 - 选项：
-  - `--url <git-url>`：仓库地址（可替代位置参数）
   - `--title <title>`：PR 标题（必填）
   - `--head <branch>`：源分支名称（不支持跨仓库，必填）
   - `--base <branch>`：目标分支（可选）
