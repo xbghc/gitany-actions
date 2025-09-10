@@ -19,23 +19,23 @@ title: Pull Requests API
 - `ListPullsResponse`：`PullRequest[]`。
 - `CreatePullBody`：创建 PR 可用字段（`title`、`head`、`base`、`body`、`issue`）。
 - `listPullsPath(params)`：构建列表接口路径。
-- `createPullPath(owner, repo)`：构建创建接口路径。
+- `createPullUrl(owner, repo)`：构建创建接口路径（绝对 URL）。
 
-以上均从包入口 `@gitany/gitcode` 导出。
+以上均从包入口 `@gitany/gitcode` 导出。其中 `createPullUrl` 使用默认常量 `API_BASE`（`https://gitcode.com/api/v5`）构建绝对 URL。
 
 ## 使用示例
 
 ```ts
-import { GitcodeClient, listPullsPath, createPullPath, type CreatePullBody } from '@gitany/gitcode';
+import { GitcodeClient, listPullsPath, createPullUrl, type CreatePullBody } from '@gitany/gitcode';
 
-const client = new GitcodeClient({ baseUrl: 'https://gitcode.com/api/v5', token: process.env.GITCODE_TOKEN ?? null });
+const client = new GitcodeClient({ token: process.env.GITCODE_TOKEN ?? null });
 
 // 1) 列表 PR
 const listPath = listPullsPath({ owner: 'owner', repo: 'repo', query: { state: 'open', page: 1, per_page: 20 } });
 const pulls = await client.request(listPath, { method: 'GET' });
 
-// 2) 创建 PR
-const createPath = createPullPath('owner', 'repo');
+// 2) 创建 PR（使用绝对 URL 构建）
+const createPath = createPullUrl('owner', 'repo');
 const body: CreatePullBody = { title: '修复登录异常', head: 'feat/login-fix', base: 'main', body: '说明文本', issue: 123 };
 const pr = await client.request(createPath, { method: 'POST', body: JSON.stringify(body) });
 ```
@@ -51,4 +51,3 @@ const pr2 = await client.createPullRequest('owner', 'repo', { title: '修复', h
 
 - 网络请求层统一由内部的 `utils/http.ts` 中的 `httpRequest` 处理，对外行为不变。
 - 字段与返回值与 GitCode 文档保持一致的最小子集，额外字段将原样透传。
-

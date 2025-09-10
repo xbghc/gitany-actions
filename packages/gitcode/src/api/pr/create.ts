@@ -21,9 +21,10 @@ export type CreatePullBody = {
 };
 
 /**
- * Path for creating pull requests — same as listing.
+ * Absolute URL for creating pull requests.
  */
-export function createPullPath(owner: string, repo: string): string {
-  return `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;
-}
+import { API_BASE } from '../constants';
 
+export function createPullUrl(owner: string, repo: string): string {
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;
+}

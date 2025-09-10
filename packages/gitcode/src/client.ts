@@ -1,30 +1,25 @@
 export type GitcodeClientOptions = {
-  baseUrl?: string; // e.g., https://gitcode.com/api/v5
   token?: string | null;
   headers?: Record<string, string>;
 };
 
-const API_BASE = 'https://gitcode.com/api/v5';
-
-import { selfPermissionPath, type SelfPermissionResponse } from './api/self-permission';
+import { selfPermissionUrl, type SelfPermissionResponse } from './api/self-permission';
 import {
   listPullsPath,
   type ListPullsQuery,
   type ListPullsResponse,
-  createPullPath,
+  createPullUrl,
   type CreatePullBody,
   type PullRequest,
 } from './api/pr';
 import { httpRequest } from './utils/http';
 
 export class GitcodeClient {
-  private baseUrl: string;
   private token: string | null;
   private extraHeaders: Record<string, string>;
   
 
   constructor(opts: GitcodeClientOptions = {}) {
-    this.baseUrl = (opts.baseUrl ?? API_BASE).replace(/\/$/, '');
     this.token = opts.token ?? null;
     this.extraHeaders = opts.headers ?? {};
   }
@@ -37,10 +32,7 @@ export class GitcodeClient {
     return this.token ?? null;
   }
 
-  async request<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
-    const url = path.startsWith('http')
-      ? path
-      : `${this.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+  async request<T = unknown>(url: string, init: RequestInit = {}): Promise<T> {
     const method = ((init.method ?? 'GET').toUpperCase()) as 'GET' | 'POST' | 'PUT';
     const headers = {
       ...this.extraHeaders,
@@ -61,7 +53,7 @@ export class GitcodeClient {
    * Docs: GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission
    */
   async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
-    const path = selfPermissionPath({ owner, repo });
+    const path = selfPermissionUrl({ owner, repo });
     return await this.request(path, { method: 'GET' });
   }
 
@@ -87,8 +79,8 @@ export class GitcodeClient {
     repo: string,
     body: CreatePullBody,
   ): Promise<PullRequest> {
-    const path = createPullPath(owner, repo);
-    return await this.request(path, { method: 'POST', body: JSON.stringify(body) });
+    const url = createPullUrl(owner, repo);
+    return await this.request(url, { method: 'POST', body: JSON.stringify(body) });
   }
 }
 

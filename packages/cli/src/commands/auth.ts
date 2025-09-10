@@ -52,8 +52,8 @@ export async function authCommand(args: string[]): Promise<void> {
         return;
       }
       const { oauthExchangeAuthorizationCode } = await import('./oauth.js');
-      const token = await oauthExchangeAuthorizationCode({ code, clientId, clientSecret, baseUrl: baseArg || undefined });
-      await auth.login(token.access_token, baseArg || undefined, 'bearer');
+      const token = await oauthExchangeAuthorizationCode({ code, clientId, clientSecret});
+      await auth.login(token.access_token, 'bearer');
       console.log('Token stored.');
       return;
     }

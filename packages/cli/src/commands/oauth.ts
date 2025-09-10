@@ -4,10 +4,9 @@ export async function oauthExchangeAuthorizationCode(params: {
   code: string;
   clientId: string;
   clientSecret: string;
-  baseUrl?: string; // API base, e.g., https://gitcode.com/api/v5
 }): Promise<{ access_token: string; token_type?: string; [k: string]: unknown }> {
-  const { code, clientId, clientSecret, baseUrl } = params;
-  const client = new GitcodeClient({ baseUrl, token: null });
+  const { code, clientId, clientSecret } = params;
+  const client = new GitcodeClient({ token: null });
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,

@@ -65,11 +65,13 @@ export type SelfPermissionResponse = {
   resource_tree: ResourceNode[];
 } & Record<string, unknown>;
 
+import { API_BASE } from './constants';
+
 /**
  * Builds the request path for the Self Permission endpoint.
  * Example: /repos/owner/repo/collaborators/self-permission
  */
-export function selfPermissionPath(params: SelfPermissionParams): string {
+export function selfPermissionUrl(params: SelfPermissionParams): string {
   const { owner, repo } = params;
-  return `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/self-permission`;
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/collaborators/self-permission`;
 }

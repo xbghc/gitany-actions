@@ -38,3 +38,4 @@ export type {
   ListPullsResponse,
   CreatePullBody,
 } from './api/pr';
+export { listPullsPath, createPullUrl } from './api/pr';

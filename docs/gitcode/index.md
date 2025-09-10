@@ -59,7 +59,6 @@ const me = await client.request('/user');
 import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient({
-  baseUrl: 'https://gitcode.com/api/v5',
   token: process.env.GITCODE_TOKEN ?? null,
   authStyle: 'bearer', // 或 'query' | 'token' | 'header'
   customAuthHeader: undefined, // 当 authStyle 为 header 时生效

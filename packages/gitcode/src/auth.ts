@@ -5,7 +5,6 @@ import { GitcodeClient } from './client';
 
 export type AuthConfig = {
   token?: string;
-  baseUrl?: string;
   authStyle?: 'query' | 'bearer' | 'token' | 'header';
   customAuthHeader?: string;
 };
@@ -51,8 +50,8 @@ export class GitcodeAuth {
     this.storage = storage;
   }
 
-  async login(token: string, baseUrl?: string, authStyle?: AuthConfig['authStyle'], customAuthHeader?: string) {
-    const cfg: AuthConfig = { token, baseUrl, authStyle, customAuthHeader };
+  async login(token: string, authStyle?: AuthConfig['authStyle'], customAuthHeader?: string) {
+    const cfg: AuthConfig = { token, authStyle, customAuthHeader };
     await this.storage.write(cfg);
   }
 
@@ -68,7 +67,6 @@ export class GitcodeAuth {
     const disk = (await this.storage.read()) || {};
     return {
       token: envToken ?? disk.token,
-      baseUrl: envBase ?? disk.baseUrl,
       authStyle: envStyle ?? disk.authStyle,
       customAuthHeader: envHeader ?? disk.customAuthHeader,
     };
@@ -77,7 +75,6 @@ export class GitcodeAuth {
   async client(): Promise<GitcodeClient> {
     const cfg = await this.load();
     return new GitcodeClient({
-      baseUrl: cfg.baseUrl,
       token: cfg.token ?? null,
     });
   }
