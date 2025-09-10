@@ -40,23 +40,6 @@ export async function authCommand(args: string[]): Promise<void> {
       console.log('Logged out from GitCode (token removed).');
       return;
     }
-    case 'oauth-exchange': {
-      const rest = args.slice(1);
-      const code = parseFlag(rest, '--code');
-      const clientId = parseFlag(rest, '--client-id');
-      const clientSecret = parseFlag(rest, '--client-secret');
-      const baseArg = parseFlag(rest, '--base');
-      if (!code || !clientId || !clientSecret) {
-        console.error('Usage: gitcode auth oauth-exchange --code <code> --client-id <id> --client-secret <secret> [--base <api-base>]');
-        process.exitCode = 1;
-        return;
-      }
-      const { oauthExchangeAuthorizationCode } = await import('./oauth.js');
-      const token = await oauthExchangeAuthorizationCode({ code, clientId, clientSecret});
-      await auth.login(token.access_token, 'bearer');
-      console.log('Token stored.');
-      return;
-    }
     default: {
       printAuthHelp();
     }

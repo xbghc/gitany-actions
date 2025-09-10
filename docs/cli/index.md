@@ -41,10 +41,6 @@ gitcode parse https://gitcode.com/owner/repo.git
   - 显示是否已认证与 `/user` 校验结果。
 - `logout`
   - 清除本地保存的令牌。
-- `oauth-exchange`
-  - 通过授权码换取 Token 并保存：
-    - `--code <code>` `--client-id <id>` `--client-secret <secret>`
-    - 可选：`--base <api-base>`
 
 ### gitcode permission &lt;git-url&gt;
 
