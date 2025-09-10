@@ -15,6 +15,7 @@ import {
   type CreatePullBody,
   type PullRequest,
 } from './api/pulls';
+import { httpRequest } from './utils/http';
 
 export class GitcodeClient {
   private baseUrl: string;
@@ -37,29 +38,22 @@ export class GitcodeClient {
   }
 
   async request<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
-    // Build URL
-    const urlObj = new URL(path.startsWith('http') ? path : `${this.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`);
-
-    const headers: Record<string, string> = {
-      'content-type': 'application/json',
+    const url = path.startsWith('http')
+      ? path
+      : `${this.baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+    const method = ((init.method ?? 'GET').toUpperCase()) as 'GET' | 'POST' | 'PUT';
+    const headers = {
       ...this.extraHeaders,
       ...(init.headers as Record<string, string> | undefined),
-    };
-    // Apply auth: fixed scheme using Authorization: Bearer <token>
-    if (this.token) {
-      headers['authorization'] = `Bearer ${this.token}`;
-    }
+    } as Record<string, string>;
+    const body = init.body as string | undefined;
 
-    const resp = await fetch(urlObj, { ...init, headers });
-    if (!resp.ok) {
-      const text = await safeText(resp);
-      throw new Error(`Gitcode request failed: ${resp.status} ${resp.statusText}${text ? `\n${text}` : ''}`);
-    }
-    const ct = resp.headers.get('content-type') || '';
-    if (ct.includes('application/json')) {
-      return (await resp.json()) as T;
-    }
-    return (await resp.text()) as unknown as T;
+    return await httpRequest<T>({
+      method,
+      url,
+      token: this.token ?? undefined,
+      options: { headers, body },
+    });
   }
 
   /**
@@ -98,10 +92,4 @@ export class GitcodeClient {
   }
 }
 
-async function safeText(resp: Response) {
-  try {
-    return await resp.text();
-  } catch {
-    return '';
-  }
-}
+// SafeText is handled inside utils/http

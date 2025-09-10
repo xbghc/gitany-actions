@@ -94,3 +94,7 @@ parseGitUrl('https://gitcode.com/owner/repo.git');
 parseGitUrl('git@gitcode.com:owner/repo.git');
 // => { host: 'gitcode.com', owner: 'owner', repo: 'repo' }
 ```
+
+## 变更说明
+
+- 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理；对外 API 与行为不变。
