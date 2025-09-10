@@ -8,6 +8,10 @@ title: 用户 API
 
 用户 API 提供获取当前认证用户信息的功能。
 
+## 更新说明
+
+**2025-09-10 更新**: `getUserProfile()` 方法现在返回完整的 `UserProfile` 类型，直接包含所有用户信息字段，无需通过 `raw` 字段访问原始数据。这提供了更丰富的用户信息和更好的类型安全。
+
 ## API 方法
 
 ### `getUserProfile()`
@@ -16,7 +20,7 @@ title: 用户 API
 
 **API 端点**: `GET /api/v5/user`
 
-**返回类型**: `RemoteClientUser` - 标准化的用户信息接口，包含 `id`、`name`、`email` 和原始数据 `raw` 字段
+**返回类型**: `UserProfile` - 完整的用户信息接口，包含丰富的用户资料字段
 
 ```typescript
 const client = new GitcodeClient({ token: 'your_token' });
@@ -26,20 +30,30 @@ console.log(profile);
 
 ## 类型定义
 
-### `RemoteClientUser`
+### `UserProfile`
 
-标准化的用户信息接口，包含以下字段：
+完整的用户信息接口，包含以下字段：
 
 ```typescript
-interface RemoteClientUser {
-  id: string;      // 用户 ID
-  name: string;    // 用户名
-  email: string;   // 邮箱
-  raw: unknown;    // 原始 API 响应数据
+interface UserProfile {
+  id: string;           // 用户 ID
+  login: string;        // 登录名
+  name: string;         // 用户名
+  email?: string;       // 邮箱（可选）
+  avatar_url: string;   // 头像 URL
+  html_url: string;     // 个人主页 URL
+  type: string;        // 用户类型
+  url: string;          // API URL
+  bio?: string;        // 个人简介（可选）
+  blog?: string;       // 个人博客（可选）
+  company?: string;    // 公司（可选）
+  followers: number;   // 关注者数量
+  following: number;   // 关注中数量
+  top_languages: string[]; // 常用编程语言
 }
 ```
 
-GitCode API 的原始响应数据存储在 `raw` 字段中，可以通过访问该字段获取完整的用户信息。
+现在直接返回完整的用户信息，无需通过 `raw` 字段访问原始数据。
 
 ## 使用示例
 
@@ -54,21 +68,16 @@ const client = new GitcodeClient({
 
 try {
   const profile = await client.getUserProfile();
-  console.log('标准化用户信息:', {
+  console.log('用户信息:', {
     ID: profile.id,
+    登录名: profile.login,
     用户名: profile.name,
     邮箱: profile.email,
-  });
-  
-  // 访问原始 GitCode API 数据
-  const rawData = profile.raw as any;
-  console.log('详细信息:', {
-    登录名: rawData.login,
-    头像: rawData.avatar_url,
-    公司: rawData.company,
-    关注者: rawData.followers,
-    关注中: rawData.following,
-    常用语言: rawData.top_languages,
+    头像: profile.avatar_url,
+    公司: profile.company,
+    关注者: profile.followers,
+    关注中: profile.following,
+    常用语言: profile.top_languages,
   });
 } catch (error) {
   console.error('获取用户信息失败:', error);

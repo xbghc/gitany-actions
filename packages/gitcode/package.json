@@ -21,8 +21,5 @@
   "devDependencies": {
     "esbuild": "^0.21.5"
   },
-  "dependencies": {
-    "@gitany/shared": "workspace:*"
-  },
-  "engines": { "node": ">=18.17" }
+    "engines": { "node": ">=18.17" }
 }

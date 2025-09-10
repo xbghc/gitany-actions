@@ -31,10 +31,11 @@ title: gitcode 工具库
 
 - `Remote`: 解析 Git 远程地址后的结果（`owner`、`repo`、`host?`）。
 - `RepoRole`: 仓库权限归一化结果，`'admin' | 'write' | 'read' | 'none'`。
+- `UserProfile`: 用户完整资料信息，包含 `id`、`login`、`name`、`email`、`avatar_url`、`followers`、`following`、`top_languages` 等字段。
 - `SelfPermissionResponse`: 当前用户在仓库的权限树响应；相关类型：`RoleInfo`、`PermissionPoint`、`ResourceNode`。
 - `ListPullsQuery`: PR 列表查询参数（常用：`state`、`page`、`per_page`、`head`、`base`、`sort`、`direction`）。
 - `ListPullsParams`: PR 列表路径参数（`owner`、`repo`、`query?`）。
-- `PullRequest`: PR 的最小字段表示（`id`、`number?`、`title?`、`state?` 等）。
+- `PullRequest`: PR 的完整字段表示（`id`、`number`、`title`、`state`、`user`、`head`、`base`、`created_at`、`updated_at`、`merged_at` 等）。
 - `ListPullsResponse`: `PullRequest[]`。
 - `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
 
@@ -111,5 +112,16 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 ```
 
 ## 变更说明
+
+### 2025-09-10 更新
+
+- **移除 shared 包**：项目结构简化，移除了 `@gitany/shared` 包依赖
+- **改进类型系统**：
+  - `getUserProfile()` 现在返回完整的 `UserProfile` 类型，包含丰富的用户信息字段
+  - `PullRequest` 类型现在包含完整的 API 响应字段
+  - `RepoRole` 类型直接在 gitcode 包中定义，不再依赖 shared 包
+- **功能增强**：客户端现在返回更完整的 API 响应数据，提供更多有用信息
+
+### 历史变更
 
 - 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理；对外 API 与行为不变。

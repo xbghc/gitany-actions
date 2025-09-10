@@ -12,17 +12,15 @@ import {
   type CreatePullBody,
   type PullRequest,
 } from '../api/pr';
-import { userProfileUrl, type UserProfileResponse } from '../api/user';
+import { userProfileUrl, type UserProfileResponse, type UserProfile } from '../api/user';
 import { httpRequest, HttpRequestOptions } from '../utils/http';
-import type { RepoRole, RemoteClientUser } from '@gitany/shared';
+import type { RepoRole } from '../types/repo-role';
 
 export class GitcodeClient {
   private token: string | null;
-  private extraHeaders: Record<string, string>;
 
   constructor(opts: GitcodeClientOptions = {}) {
     this.token = opts.token ?? null;
-    this.extraHeaders = opts.headers ?? {};
   }
 
   setToken(token: string | null) {
@@ -109,16 +107,9 @@ export class GitcodeClient {
    * Get the current authenticated user's profile.
    * Docs: GET /api/v5/user
    */
-  async getUserProfile(): Promise<RemoteClientUser> {
+  async getUserProfile(): Promise<UserProfile> {
     const url = userProfileUrl();
-    const rawProfile = await this.request<UserProfileResponse>(url, 'GET', {});
-    
-    return {
-      id: rawProfile.id,
-      name: rawProfile.name,
-      email: rawProfile.email || '',
-      raw: rawProfile,
-    };
+    return await this.request<UserProfile>(url, 'GET', {});
   }
 }
 

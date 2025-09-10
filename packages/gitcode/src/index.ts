@@ -41,4 +41,4 @@ export type {
 export { listPullsUrl, createPullUrl } from './api/pr';
 export type { UserProfile, UserProfileResponse } from './api/user';
 export { userProfileUrl } from './api/user';
-export type { RemoteClientUser } from '@gitany/shared';
+export type { RepoRole } from './types/repo-role';
