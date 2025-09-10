@@ -14,6 +14,7 @@ title: gitcode 工具库
   - 解析 `https://gitcode.com/owner/repo(.git)` 或 `git@gitcode.com:owner/repo(.git)` 这类 URL。
 - `GitcodeClient`
   - 轻量 HTTP 客户端，内置鉴权处理。
+  - `getUserProfile()`：获取当前认证用户的个人资料信息。
   - `getSelfRepoPermissionRole(owner, repo)`：获取权限并归一化为 `admin | write | read | none`。
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
@@ -23,6 +24,7 @@ title: gitcode 工具库
 
 更多 API：
 
+- 用户 API：见《[用户 API](./user.md)》。
 - Pull Requests：见《[Pull Requests API](./pr.md)》。
 
 ## 公共类型
@@ -45,7 +47,6 @@ title: gitcode 工具库
 环境变量：
 
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
-- `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 
 **Token 读取优先级**：
 1. 环境变量 `GITCODE_TOKEN`
@@ -62,9 +63,6 @@ await auth.setToken('your_token', 'bearer');
 const token = await auth.token(); // 获取token（环境变量优先）
 console.log(token);
 
-const { authenticated, user } = await auth.status(); // 尝试 GET /user
-console.log(authenticated, user);
-
 const client = await auth.client();
 const me = await client.request('/user', 'GET');
 ```
@@ -80,10 +78,8 @@ const client = new GitcodeClient({
   token: process.env.GITCODE_TOKEN ?? null,
 });
 
-// 获取当前用户
-const me = await client.request('/user', 'GET');
-
-// 其它请求：client.request<T>(url, method, options?)
+// 获取当前用户信息（GET /api/v5/user）
+const profile = await client.getUserProfile();
 
 // 获取当前用户在某仓库的权限（GET /repos/{owner}/{repo}/collaborators/self-permission）
 const perm = await client.getSelfRepoPermission('owner', 'repo');

@@ -4,6 +4,7 @@ import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand } from './commands/auth';
 import { repoCommand } from './commands/repo';
 import { prCommand } from './commands/pr';
+import { userCommand } from './commands/user';
 
 const program = new Command();
 
@@ -33,5 +34,8 @@ program.addCommand(repoCommand());
 
 // pr command
 program.addCommand(prCommand());
+
+// user command
+program.addCommand(userCommand());
 
 program.parse();

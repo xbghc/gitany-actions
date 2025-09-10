@@ -98,10 +98,34 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 - 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
 
+### gitcode user show
+
+显示当前认证用户的详细信息。
+
+```bash
+gitcode user show
+```
+
+输出示例：
+```
+用户信息:
+  ID: 68526f155e91be1053daf941
+  用户名: xbghc
+  邮箱: xbghc@noreply.gitcode.com
+  登录名: xbghc
+  关注者: 0
+  关注中: 0
+  常用语言: TypeScript, TSX, SCSS, Vue, JavaScript
+  头像: https://cdn-img.gitcode.com/eb/dc/e25777167bd9cba77d0d8bb17c1fafe41808204d923fa66a24c70cf63cbd97af.png
+  主页: https://gitcode.com/xbghc
+```
+
+- 调用：`GET /api/v5/user`
+- 显示标准化的用户信息（ID、用户名、邮箱）和详细的用户资料
+
 ## 环境变量
 
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
-- `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 
 ## 本地存储路径
 

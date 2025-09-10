@@ -47,7 +47,6 @@
   GITCODE_API_BASE=https://gitcode.com/api/v5
   GITCODE_AUTH_STYLE=bearer
   GITCODE_AUTH_HEADER=
-  GITCODE_WHOAMI_PATH=/user
   ```
 - The CLI stores auth at `~/.gitany/gitcode/config.json`.
 

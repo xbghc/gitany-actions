@@ -77,21 +77,6 @@ export class GitcodeAuth {
     });
   }
 
-  async status(): Promise<{ authenticated: boolean; tokenPresent: boolean; user?: unknown }> {
-    const token = await this.token();
-    const tokenPresent = !!token;
-    if (!tokenPresent) return { authenticated: false, tokenPresent };
-    try {
-      const client = await this.client();
-      // Many providers expose `/user`; allow override with env if docs differ.
-      const whoamiPath = process.env.GITCODE_WHOAMI_PATH || '/user';
-      const user = await client.request(whoamiPath, 'GET');
-      return { authenticated: true, tokenPresent, user };
-    } catch {
-      return { authenticated: false, tokenPresent };
-    }
-  }
-
   private async load(): Promise<AuthConfig> {
     const envToken = process.env.GITCODE_TOKEN;
     const envStyle = process.env.GITCODE_AUTH_STYLE as AuthConfig['authStyle'] | undefined;

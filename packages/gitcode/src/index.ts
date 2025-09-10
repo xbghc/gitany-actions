@@ -39,3 +39,6 @@ export type {
   CreatePullBody,
 } from './api/pr';
 export { listPullsUrl, createPullUrl } from './api/pr';
+export type { UserProfile, UserProfileResponse } from './api/user';
+export { userProfileUrl } from './api/user';
+export type { RemoteClientUser } from '@gitany/shared';

@@ -12,8 +12,9 @@ import {
   type CreatePullBody,
   type PullRequest,
 } from './api/pr';
+import { userProfileUrl, type UserProfileResponse } from './api/user';
 import { httpRequest, HttpRequestOptions } from './utils/http';
-import type { RepoRole } from '@gitany/shared';
+import type { RepoRole, RemoteClientUser } from '@gitany/shared';
 
 export class GitcodeClient {
   private token: string | null;
@@ -102,6 +103,22 @@ export class GitcodeClient {
   async createPullRequest(owner: string, repo: string, body: CreatePullBody): Promise<PullRequest> {
     const url = createPullUrl(owner, repo);
     return await this.request(url, 'POST', { body: JSON.stringify(body) });
+  }
+
+  /**
+   * Get the current authenticated user's profile.
+   * Docs: GET /api/v5/user
+   */
+  async getUserProfile(): Promise<RemoteClientUser> {
+    const url = userProfileUrl();
+    const rawProfile = await this.request<UserProfileResponse>(url, 'GET', {});
+    
+    return {
+      id: rawProfile.id,
+      name: rawProfile.name,
+      email: rawProfile.email || '',
+      raw: rawProfile,
+    };
   }
 }
 
