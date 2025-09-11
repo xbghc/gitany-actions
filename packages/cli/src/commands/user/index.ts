@@ -1,10 +1,9 @@
 import { Command } from 'commander';
-import { GitcodeAuth } from '@gitany/gitcode';
+import { createGitcodeClient } from '@gitany/gitcode';
 
 export async function userShowCommand(): Promise<void> {
   try {
-    const auth = new GitcodeAuth();
-    const client = await auth.client();
+    const client = await createGitcodeClient();
     const user = await client.user.getProfile();
 
     console.log('用户信息:');

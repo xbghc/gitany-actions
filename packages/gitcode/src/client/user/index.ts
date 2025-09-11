@@ -6,7 +6,7 @@ export async function getUserProfile(client: GitcodeClient): Promise<UserProfile
   return await client.request<UserProfileResponse>(url, 'GET', {});
 }
 
-export class GitCodeClientUser {
+export class GitcodeClientUser {
   constructor(private client: GitcodeClient) {}
 
   async getProfile(): Promise<UserProfileResponse> {

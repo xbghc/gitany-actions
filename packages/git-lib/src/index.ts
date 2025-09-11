@@ -37,11 +37,12 @@ async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitRes
       stderr += d.toString();
     });
 
-    child.on('error', (err: any) => {
-      if (err?.code === 'ENOENT') {
+    child.on('error', (err: unknown) => {
+      const e = err as NodeJS.ErrnoException;
+      if (e?.code === 'ENOENT') {
         resolve(null);
       } else {
-        resolve({ stdout, stderr: err.message, code: 1 });
+        resolve({ stdout, stderr: e.message, code: 1 });
       }
     });
 
