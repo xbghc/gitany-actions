@@ -7,7 +7,9 @@ title: 贡献指南
 本仓库使用 pnpm 管理的 TypeScript Monorepo，包含：
 
 - `@gitany/gitcode`：工具库（packages/gitcode）
+- `@gitany/git-lib`：Git 命令封装库（packages/git-lib）
 - `@gitany/cli`：命令行工具（packages/cli）
+- `@gitany/core`：核心工具库（packages/core）
 - 文档：VitePress（docs）
 
 ## 开发约定
@@ -33,10 +35,12 @@ title: 贡献指南
 
 提交前，`pre-commit` 会检查：
 
-- 若改动了 `packages/**` 源码，且
-- 本次提交未改动 `docs/**`
+1. **代码质量检查**：运行 `pnpm lint` 确保代码符合规范
+2. **文档同步检查**：
+   - 若改动了 `packages/**` 源码，且
+   - 本次提交未改动 `docs/**`
 
-则拒绝提交并提示补充文档。临时跳过（不推荐）：
+则会拒绝提交并提示补充文档或修复 lint 错误。临时跳过（不推荐）：
 
 ```bash
 SKIP_DOCS_CHECK=1 git commit -m "..."
@@ -55,6 +59,15 @@ SKIP_DOCS_CHECK=1 git commit -m "..."
 ## 目录映射参考
 
 - `packages/gitcode/src/*` → `docs/gitcode/`
+- `packages/git-lib/src/*` → `docs/git-lib/`
 - `packages/cli/src/*` → `docs/cli/`
+- `packages/core/src/*` → `docs/core/`
 
 如遇仅重构/重命名且不影响对外接口的场景，请在 PR 中说明无需变更文档的理由。
+
+## 代码质量规范
+
+- 所有提交必须通过 ESLint 检查
+- 使用 `pnpm lint` 进行本地代码检查
+- 使用 `pnpm format` 进行代码格式化
+- 提交前会自动运行 lint 检查，失败则阻止提交
