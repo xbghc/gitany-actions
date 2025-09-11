@@ -3,6 +3,7 @@ import { gitStatus } from '../commands/status';
 import { gitShowFile } from '../commands/show';
 import { gitBranch } from '../commands/branch';
 import { gitCheckout } from '../commands/checkout';
+import { gitFetch } from '../commands/fetch';
 
 export class GitClient {
   constructor(public cwd: string = process.cwd()) {}
@@ -25,5 +26,9 @@ export class GitClient {
 
   async checkout(name: string) {
     return gitCheckout(this, name);
+  }
+
+  async fetch(branch?: string, options: { remote?: string } = {}) {
+    return gitFetch(this, branch, options);
   }
 }

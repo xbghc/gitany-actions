@@ -56,15 +56,6 @@ export async function push(
   return runGit(['push', remote, branch], { cwd });
 }
 
-export async function fetch(
-  branch?: string,
-  options: GitExecOptions & { remote?: string } = {},
-): Promise<GitResult | null> {
-  if (!(await ensureGit())) return null;
-  const { remote = 'origin', cwd } = options;
-  const args = branch ? ['fetch', remote, branch] : ['fetch', remote];
-  return runGit(args, { cwd });
-}
 
 export type { GitResult, GitExecOptions } from './types';
 export { GitClient } from './client';
