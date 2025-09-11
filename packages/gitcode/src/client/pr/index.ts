@@ -3,13 +3,14 @@ import { listPullRequests } from './list';
 import { createPullRequest } from './create';
 import type { ListPullsQuery, CreatePullBody } from '../../api/pr';
 
-export function createPrModule(client: GitcodeClient) {
-  return {
-    list: (owner: string, repo: string, query: ListPullsQuery = { state: 'open' }) =>
-      listPullRequests(client, owner, repo, query),
-    create: (owner: string, repo: string, body: CreatePullBody) =>
-      createPullRequest(client, owner, repo, body),
-  };
-}
+export class GitCodeClientPr {
+  constructor(private client: GitcodeClient) {}
 
-export { listPullRequests, createPullRequest };
+  list(owner: string, repo: string, query: ListPullsQuery = { state: 'open' }) {
+    return listPullRequests(this.client, owner, repo, query);
+  }
+
+  create(owner: string, repo: string, body: CreatePullBody) {
+    return createPullRequest(this.client, owner, repo, body);
+  }
+}

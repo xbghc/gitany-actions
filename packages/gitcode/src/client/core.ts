@@ -5,14 +5,13 @@ export type GitcodeClientOptions = {
 
 import { httpRequest, type HttpRequestOptions } from '../utils/http';
 import { GitCodeClientUser } from './user';
-import { createPrModule } from './pr';
+import { GitCodeClientPr } from './pr';
 import { GitCodeClientRepo } from './repo';
-import type { ListPullsQuery, CreatePullBody } from '../api/pr';
 
 export class GitcodeClient {
   private token: string | null;
 
-  pr = createPrModule(this);
+  pr = new GitCodeClientPr(this);
   repo = new GitCodeClientRepo(this);
   user = new GitCodeClientUser(this);
 
