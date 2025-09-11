@@ -18,6 +18,7 @@ title: gitcode 工具库
   - `getSelfRepoPermissionRole(owner, repo)`：获取权限并归一化为 `admin | write | read | none`。
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
+  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()` 等。
 - `GitcodeAuth`
   - 本地令牌存储与加载，提供 `setToken/token/status/client`。
 - `FileAuthStorage`、`defaultConfigPath()`
