@@ -6,6 +6,8 @@ title: git-lib 工具库
 
 基于系统 `git` 命令的轻量封装，若运行环境缺少 `git`，所有函数返回 `null`。
 
+所有命令支持在 `cwd` 参数中使用 `~` 展开至用户主目录；若指定目录不存在，则返回包含错误信息的 `GitResult`（非 `null`）。
+
 包路径：`packages/git-lib`
 
 ## API
