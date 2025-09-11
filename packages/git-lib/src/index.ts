@@ -20,7 +20,7 @@ async function ensureGit(): Promise<boolean> {
   return gitCheckPromise;
 }
 
-async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitResult | null> {
+export async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitResult | null> {
   return new Promise((resolve) => {
     const child = spawn('git', args, {
       cwd: opts.cwd,
