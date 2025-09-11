@@ -42,9 +42,9 @@ export type ListPullsParams = {
  */
 export type PullRequest = {
   id: number;
-  number?: number;
-  title?: string;
-  state?: string;
+  number: number;
+  title: string;
+  state: string;
   user?: unknown;
   head?: unknown;
   base?: unknown;
