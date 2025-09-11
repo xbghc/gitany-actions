@@ -22,7 +22,7 @@ export interface ListPullsQuery {
   head?: string;
   /** Filter by base branch. */
   base?: string;
-};
+}
 
 /**
  * Path params for list pulls request.
@@ -45,9 +45,9 @@ export type PullRequest = {
   number: number;
   title: string;
   state: string;
+  head: Branch;
+  base: Branch;
   user?: unknown;
-  head?: unknown;
-  base?: unknown;
   created_at?: string;
   updated_at?: string;
   merged_at?: string | null;
