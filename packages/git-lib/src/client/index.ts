@@ -4,6 +4,9 @@ import { gitShowFile } from '../commands/show';
 import { gitBranch } from '../commands/branch';
 import { gitCheckout } from '../commands/checkout';
 import { gitFetch } from '../commands/fetch';
+import { gitPush } from '../commands/push';
+import { gitCommit } from '../commands/commit';
+import { gitSetRemote } from '../commands/remote';
 
 export class GitClient {
   constructor(public cwd: string = process.cwd()) {}
@@ -30,5 +33,17 @@ export class GitClient {
 
   async fetch(branch?: string, options: { remote?: string } = {}) {
     return gitFetch(this, branch, options);
+  }
+
+  async push(branch: string, options: { remote?: string } = {}) {
+    return gitPush(this, branch, options);
+  }
+
+  async commit(message: string, options: { addAll?: boolean } = {}) {
+    return gitCommit(this, message, options);
+  }
+
+  async setRemote(remote: string, url: string) {
+    return gitSetRemote(this, remote, url);
   }
 }
