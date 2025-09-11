@@ -3,7 +3,7 @@ import { listPullRequests } from './list';
 import { createPullRequest } from './create';
 import type { ListPullsQuery, CreatePullBody } from '../../api/pr';
 
-export class GitCodeClientPr {
+export class GitcodeClientPr {
   constructor(private client: GitcodeClient) {}
 
   list(owner: string, repo: string, query: ListPullsQuery = { state: 'open' }) {

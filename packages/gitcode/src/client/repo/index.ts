@@ -3,9 +3,9 @@ import type { RepoRole } from '../../types/repo-role';
 import type { GitcodeClient } from '../core';
 import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission';
 
-export class GitCodeClientRepo {
+export class GitcodeClientRepo {
   constructor(private client: GitcodeClient) {}
-  
+
   async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
     return await getSelfRepoPermission(this.client, owner, repo);
   }

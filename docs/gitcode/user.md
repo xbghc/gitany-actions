@@ -87,11 +87,9 @@ try {
 ### 结合认证使用
 
 ```typescript
-import { GitcodeAuth } from '@gitany/gitcode';
+import { createGitcodeClient } from '@gitany/gitcode';
 
-const auth = new GitcodeAuth();
-const client = await auth.client();
-
+const client = await createGitcodeClient();
 const profile = await client.getUserProfile();
 console.log('当前用户:', profile.name);
 ```

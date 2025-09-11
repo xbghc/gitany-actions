@@ -1,8 +1,9 @@
-import { GitcodeAuth, parseGitUrl } from '@gitany/gitcode';
+import { createGitcodeClient, parseGitUrl, type CreatePullBody } from '@gitany/gitcode';
 
-export async function createCommand(url: string, options: any): Promise<void> {
-  const auth = new GitcodeAuth();
-  
+export async function createCommand(
+  url: string,
+  options: Record<string, string | undefined>,
+): Promise<void> {
   try {
     const remote = parseGitUrl(url);
     if (!remote) {
@@ -11,7 +12,7 @@ export async function createCommand(url: string, options: any): Promise<void> {
       return;
     }
 
-    const body: any = {
+    const body: CreatePullBody = {
       title: options.title,
       head: options.head,
     };
@@ -28,7 +29,7 @@ export async function createCommand(url: string, options: any): Promise<void> {
       body.issue = n;
     }
 
-    const client = await auth.client();
+    const client = await createGitcodeClient();
     const created = await client.pr.create(remote.owner, remote.repo, body);
 
     if (options.json) {
@@ -36,9 +37,9 @@ export async function createCommand(url: string, options: any): Promise<void> {
       return;
     }
 
-    const pr: any = created;
-    const num = (pr?.number ?? pr?.iid ?? pr?.id) as number | string | undefined;
-    const titleOut = (pr?.title ?? '(no title)') as string;
+    const pr = created as Record<string, unknown>;
+    const num = (pr.number ?? pr.iid ?? pr.id) as number | string | undefined;
+    const titleOut = (pr.title ?? '(no title)') as string;
     const numStr = typeof num === 'number' ? num : (num ?? '?');
     console.log(`Created PR #${numStr}: ${titleOut}`);
   } catch (err) {

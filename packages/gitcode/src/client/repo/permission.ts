@@ -39,12 +39,15 @@ export async function getSelfRepoPermissionRole(
 
 export function extractRepoRoleFromSelfPermission(result: unknown): RepoRole {
   if (result && typeof result === 'object') {
-    const obj: any = result;
-    const role = obj.role_info || obj.roleInfo;
+    const obj = result as Record<string, unknown>;
+    const role = (obj.role_info ?? obj.roleInfo) as Record<string, unknown> | undefined;
     if (!role) {
       return 'read';
     }
-    const cn = typeof role.cn_name === 'string' ? role.cn_name.trim() : '';
+    const cn =
+      typeof role.cn_name === 'string'
+        ? (role.cn_name as string).trim()
+        : '';
     if (cn.includes('管理员')) return 'admin';
     if (cn.includes('维护者') || cn.includes('开发者')) return 'write';
     return 'read';
