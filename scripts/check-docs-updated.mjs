@@ -9,14 +9,10 @@ function getChangedFiles() {
   const from = process.env.DOCS_CHECK_BASE_SHA;
   const to = process.env.DOCS_CHECK_HEAD_SHA;
   if (from && to) {
-    return sh(`git diff --name-only ${from} ${to}`)
-      .split('\n')
-      .filter(Boolean);
+    return sh(`git diff --name-only ${from} ${to}`).split('\n').filter(Boolean);
   }
   // staged changes
-  return sh('git diff --name-only --cached')
-    .split('\n')
-    .filter(Boolean);
+  return sh('git diff --name-only --cached').split('\n').filter(Boolean);
 }
 
 function main() {
@@ -28,13 +24,13 @@ function main() {
   let files = [];
   try {
     files = getChangedFiles();
-  } catch (e) {
+  } catch {
     console.log('[docs-check] Unable to compute changed files, skipping.');
     return;
   }
 
-  const codeChanged = files.some((f) =>
-    /^packages\/(gitcode|cli)\/.+/.test(f) && /\.(ts|mts|cts|tsx|json)$/.test(f)
+  const codeChanged = files.some(
+    (f) => /^packages\/(gitcode|cli)\/.+/.test(f) && /\.(ts|mts|cts|tsx|json)$/.test(f),
   );
   const docsChanged = files.some((f) => /^docs\//.test(f));
 
@@ -48,11 +44,10 @@ function main() {
         '  - packages/cli     → docs/cli',
         '如需暂时跳过（不推荐）：SKIP_DOCS_CHECK=1 git commit -m "..."',
         '',
-      ].join('\n')
+      ].join('\n'),
     );
     process.exit(1);
   }
 }
 
 main();
-
