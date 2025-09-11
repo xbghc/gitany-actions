@@ -1,5 +1,5 @@
-import spawn from 'cross-spawn';
 import type { GitResult, GitExecOptions } from './types';
+import { runGit } from './client/run';
 
 let gitChecked = false;
 let gitAvailable = false;
@@ -20,39 +20,11 @@ async function ensureGit(): Promise<boolean> {
   return gitCheckPromise;
 }
 
-export async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitResult | null> {
-  return new Promise((resolve) => {
-    const child = spawn('git', args, {
-      cwd: opts.cwd,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout?.on('data', (d: Buffer) => {
-      stdout += d.toString();
-    });
-    child.stderr?.on('data', (d: Buffer) => {
-      stderr += d.toString();
-    });
-
-    child.on('error', (err: unknown) => {
-      const e = err as NodeJS.ErrnoException;
-      if (e?.code === 'ENOENT') {
-        resolve(null);
-      } else {
-        resolve({ stdout, stderr: e.message, code: 1 });
-      }
-    });
-
-    child.on('close', (code: number | null) => {
-      resolve({ stdout, stderr, code: code ?? 0 });
-    });
-  });
-}
-
-export async function setRemote(remote: string, url: string, options: GitExecOptions = {}): Promise<GitResult | null> {
+export async function setRemote(
+  remote: string,
+  url: string,
+  options: GitExecOptions = {},
+): Promise<GitResult | null> {
   if (!(await ensureGit())) return null;
   const check = await runGit(['remote', 'get-url', remote], options);
   if (check === null) return null;
@@ -64,7 +36,7 @@ export async function setRemote(remote: string, url: string, options: GitExecOpt
 
 export async function commit(
   message: string,
-  options: GitExecOptions & { addAll?: boolean } = {}
+  options: GitExecOptions & { addAll?: boolean } = {},
 ): Promise<GitResult | null> {
   if (!(await ensureGit())) return null;
   const { addAll = true, cwd } = options;
@@ -77,7 +49,7 @@ export async function commit(
 
 export async function push(
   branch: string,
-  options: GitExecOptions & { remote?: string } = {}
+  options: GitExecOptions & { remote?: string } = {},
 ): Promise<GitResult | null> {
   if (!(await ensureGit())) return null;
   const { remote = 'origin', cwd } = options;
@@ -86,7 +58,7 @@ export async function push(
 
 export async function fetch(
   branch?: string,
-  options: GitExecOptions & { remote?: string } = {}
+  options: GitExecOptions & { remote?: string } = {},
 ): Promise<GitResult | null> {
   if (!(await ensureGit())) return null;
   const { remote = 'origin', cwd } = options;
@@ -96,7 +68,7 @@ export async function fetch(
 
 export async function newBranch(
   name: string,
-  options: GitExecOptions & { checkout?: boolean } = {}
+  options: GitExecOptions & { checkout?: boolean } = {},
 ): Promise<GitResult | null> {
   if (!(await ensureGit())) return null;
   const { checkout = true, cwd } = options;
@@ -105,5 +77,5 @@ export async function newBranch(
   return runGit(['checkout', name], { cwd });
 }
 
-export type { GitResult, GitExecOptions } from "./types";
-
+export type { GitResult, GitExecOptions } from './types';
+export { GitClient } from './client';
