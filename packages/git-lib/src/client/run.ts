@@ -1,7 +1,6 @@
 import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
 import spawn from 'cross-spawn';
+import { expandCwd } from '../utils';
 import type { GitExecOptions, GitResult } from '../types';
 
 
@@ -44,12 +43,4 @@ export async function runGit(args: string[], opts: GitExecOptions = {}): Promise
       resolve({ stdout, stderr, code: code ?? 0 });
     });
   });
-}
-
-function expandCwd(cwd?: string) {
-  if (!cwd) return cwd;
-  if (cwd.startsWith('~')) {
-    return path.join(os.homedir(), cwd.slice(1));
-  }
-  return cwd;
 }
