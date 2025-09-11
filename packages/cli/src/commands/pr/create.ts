@@ -1,4 +1,4 @@
-import { GitcodeClient, parseGitUrl, type CreatePullBody } from '@gitany/gitcode';
+import { GitcodeClient, type CreatePullBody } from '@gitany/gitcode';
 
 export async function createCommand(
   url: string,

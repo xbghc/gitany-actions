@@ -1,4 +1,4 @@
-import { parseGitUrl, GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@gitany/gitcode';
 
 export async function permissionCommand(url: string): Promise<void> {
   try {

@@ -6,7 +6,7 @@ const globals = require('globals');
 
 module.exports = [
   {
-    ignores: ['**/dist/**', 'node_modules', '*.tsbuildinfo'],
+    ignores: ['**/dist/**', 'node_modules', '*.tsbuildinfo', '**/cache/**'],
   },
   js.configs.recommended,
   {
