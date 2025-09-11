@@ -21,8 +21,6 @@ title: gitcode 工具库
   - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()` 等。
 - `GitcodeClientAuth`
   - 通过 `client.auth` 提供本地令牌存储与加载。
-- `createGitcodeClient()`
-  - 读取 token 并返回 `GitcodeClient` 实例。
 - `FileAuthStorage`、`defaultConfigPath()`
 
 更多 API：
@@ -59,9 +57,9 @@ title: gitcode 工具库
 ### 认证使用示例
 
 ```ts
-import { createGitcodeClient } from '@gitany/gitcode';
+import { GitCodeClient } from '@gitany/gitcode';
 
-const client = await createGitcodeClient();
+const client = new GitcodeClient();
 await client.auth.setToken('your_token', 'bearer');
 
 const token = await client.auth.token(); // 获取 token（环境变量优先）

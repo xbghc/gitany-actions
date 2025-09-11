@@ -24,7 +24,7 @@ export const version = '0.1.0';
 
 export { GitcodeClient } from './client';
 export { GitcodeClientAuth } from './client/auth';
-export { createGitcodeClient, FileAuthStorage, defaultConfigPath } from './auth';
+export { FileAuthStorage, defaultConfigPath } from './auth';
 export type {
   SelfPermissionParams,
   RoleInfo,

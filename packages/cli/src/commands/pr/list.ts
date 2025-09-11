@@ -1,4 +1,4 @@
-import { createGitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
 
 export async function listCommand(
   url: string,
@@ -12,7 +12,7 @@ export async function listCommand(
       return;
     }
 
-    const client = await createGitcodeClient();
+    const client = new GitcodeClient();
     const pulls = await client.pr.list(remote.owner, remote.repo, {
       state: options.state,
       head: options.head,

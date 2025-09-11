@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { createGitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@gitany/gitcode';
 
 export function authCommand(): Command {
   const authProgram = new Command('auth').description('Authentication commands');
@@ -10,7 +10,7 @@ export function authCommand(): Command {
     .argument('<token>', 'Authentication token')
     .action(async (token) => {
       try {
-        const client = await createGitcodeClient();
+        const client = new GitcodeClient();
         await client.auth.setToken(token.trim());
         console.log('Token saved successfully');
       } catch (error) {

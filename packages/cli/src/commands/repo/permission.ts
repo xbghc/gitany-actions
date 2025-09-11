@@ -1,4 +1,4 @@
-import { createGitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl, GitcodeClient } from '@gitany/gitcode';
 
 export async function permissionCommand(url: string): Promise<void> {
   try {
@@ -11,7 +11,7 @@ export async function permissionCommand(url: string): Promise<void> {
 
     const { owner, repo } = remote;
 
-    const client = await createGitcodeClient();
+    const client = new GitcodeClient();
     const permission = await client.repo.getSelfRepoPermissionRole(owner, repo);
     console.log(permission);
   } catch (err) {

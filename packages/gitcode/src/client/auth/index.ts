@@ -66,19 +66,16 @@ export class GitcodeClientAuth {
   ) {
     const cfg: AuthConfig = { token, authStyle, customAuthHeader };
     await this.storage.write(cfg);
-    this.client.setToken(token);
   }
 
-  async token(): Promise<string | null> {
+  async token(): Promise<string | undefined> {
     const envToken = process.env.GITCODE_TOKEN;
     if (envToken) {
-      this.client.setToken(envToken);
       return envToken;
     }
 
     const disk = (await this.storage.read()) || {};
-    const token = disk.token || null;
-    this.client.setToken(token);
+    const token = disk.token || undefined;
     return token;
   }
 }

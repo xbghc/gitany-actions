@@ -1,4 +1,4 @@
-import { createGitcodeClient, parseGitUrl, type CreatePullBody } from '@gitany/gitcode';
+import { GitcodeClient, parseGitUrl, type CreatePullBody } from '@gitany/gitcode';
 
 export async function createCommand(
   url: string,
@@ -29,7 +29,7 @@ export async function createCommand(
       body.issue = n;
     }
 
-    const client = await createGitcodeClient();
+    const client = new GitcodeClient();
     const created = await client.pr.create(remote.owner, remote.repo, body);
 
     if (options.json) {

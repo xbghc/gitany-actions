@@ -87,9 +87,9 @@ try {
 ### 结合认证使用
 
 ```typescript
-import { createGitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@gitany/gitcode';
 
-const client = await createGitcodeClient();
+const client = new GitcodeClient();
 const profile = await client.getUserProfile();
 console.log('当前用户:', profile.name);
 ```
