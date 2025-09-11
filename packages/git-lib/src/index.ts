@@ -66,16 +66,5 @@ export async function fetch(
   return runGit(args, { cwd });
 }
 
-export async function newBranch(
-  name: string,
-  options: GitExecOptions & { checkout?: boolean } = {},
-): Promise<GitResult | null> {
-  if (!(await ensureGit())) return null;
-  const { checkout = true, cwd } = options;
-  const res = await runGit(['branch', name], { cwd });
-  if (res === null || res.code !== 0 || !checkout) return res;
-  return runGit(['checkout', name], { cwd });
-}
-
 export type { GitResult, GitExecOptions } from './types';
 export { GitClient } from './client';

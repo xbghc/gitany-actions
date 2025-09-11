@@ -1,6 +1,8 @@
 import { runGit } from './run';
 import { gitStatus } from '../commands/status';
 import { gitShowFile } from '../commands/show';
+import { gitBranch } from '../commands/branch';
+import { gitCheckout } from '../commands/checkout';
 
 export class GitClient {
   constructor(public cwd: string) {}
@@ -15,5 +17,13 @@ export class GitClient {
 
   async showFile(ref: string, filePath: string) {
     return gitShowFile(this, ref, filePath);
+  }
+
+  async branch(name: string, base?: string) {
+    return gitBranch(this, name, base);
+  }
+
+  async checkout(name: string) {
+    return gitCheckout(this, name);
   }
 }
