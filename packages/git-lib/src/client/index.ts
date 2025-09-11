@@ -7,6 +7,7 @@ import { gitFetch } from '../commands/fetch';
 import { gitPush } from '../commands/push';
 import { gitCommit } from '../commands/commit';
 import { gitSetRemote } from '../commands/remote';
+import { gitDiffCommits } from '../commands/diff';
 
 export class GitClient {
   constructor(public cwd: string = process.cwd()) {}
@@ -45,5 +46,9 @@ export class GitClient {
 
   async setRemote(remote: string, url: string) {
     return gitSetRemote(this, remote, url);
+  }
+
+  async diffCommits(commit1: string, commit2: string, options: { diffFilter?: 'A' | 'M' | 'D', nameOnly?: boolean, patterns?: string[] } = {}) {
+    return gitDiffCommits(this, commit1, commit2, options);
   }
 }
