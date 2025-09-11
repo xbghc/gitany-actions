@@ -7,8 +7,9 @@ import { gitFetch } from '../commands/fetch';
 import { gitPush } from '../commands/push';
 import { gitCommit } from '../commands/commit';
 import { gitSetRemote } from '../commands/remote';
-import { gitDiffCommits } from '../commands/diff';
+import { gitDiffCommits, DiffOptions } from '../commands/diff';
 import { gitClone } from '../commands/clone';
+import { GitAddOptions, gitAdd } from '../commands/add';
 
 export class GitClient {
   constructor(public cwd: string = process.cwd()) {}
@@ -52,12 +53,16 @@ export class GitClient {
   async diffCommits(
     commit1: string,
     commit2: string,
-    options: { diffFilter?: 'A' | 'M' | 'D'; nameOnly?: boolean; patterns?: string[] } = {},
+    options: DiffOptions = {},
   ) {
     return gitDiffCommits(this, commit1, commit2, options);
   }
 
   async clone(repo: string, directory?: string) {
     return gitClone(this, repo, directory);
+  }
+
+  async add(files?: string | string[], options: GitAddOptions = {}) {
+    return gitAdd(this, files, options);
   }
 }

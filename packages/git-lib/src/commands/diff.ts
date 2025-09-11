@@ -1,6 +1,6 @@
 import { GitClient } from "../client";
 
-interface DiffOptions {
+export interface DiffOptions {
   diffFilter?: 'A' | 'M' | 'D',
   nameOnly?: boolean,
   patterns?: string[],
