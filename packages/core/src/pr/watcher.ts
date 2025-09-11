@@ -4,6 +4,7 @@ interface WatchPullRequestOptions {
   onClosed?: (pr: PullRequest) => void;
   onOpen?: (pr: PullRequest) => void;
   onMerged?: (pr: PullRequest) => void;
+  intervalMs?: number;
 }
 
 export function watchPullRequest(
@@ -41,7 +42,7 @@ export function watchPullRequest(
 
   const intervalId = setInterval(() => {
     check();
-  }, 5000);
+  }, options.intervalMs ?? 5000);
 
   return () => {
     clearInterval(intervalId);
