@@ -18,7 +18,8 @@ title: gitcode 工具库
   - `getSelfRepoPermissionRole(owner, repo)`：获取权限并归一化为 `admin | write | read | none`。
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
-  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()` 等。
+  - `listPullRequestComments(url, prNumber, queryOptions?)`：获取指定 PR 的评论列表。
+  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()`、`client.pr.comments()` 等。
 - `GitcodeClientAuth`
   - 通过 `client.auth` 提供本地令牌存储与加载。
 - `FileAuthStorage`、`defaultConfigPath()`
@@ -39,6 +40,8 @@ title: gitcode 工具库
 - `PullRequest`: PR 的完整字段表示（`id`、`number`、`title`、`state`、`user`、`head`、`base`、`created_at`、`updated_at`、`merged_at` 等）。
 - `ListPullsResponse`: `PullRequest[]`。
 - `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
+- `PRComment`: PR 评论的类型定义，包含 `id`、`body`、`user` 等字段。
+- `PRCommentQueryOptions`: PR 评论查询选项，支持 `comment_type`（`diff_comment` | `pr_comment`）。
 
 ## 认证与请求
 
@@ -96,6 +99,11 @@ const pr = await client.createPullRequest('owner', 'repo', {
   body: '补充说明：修复 Token 过期报错',
   // 可选：关联 issue
   issue: 123,
+});
+
+// 获取 PR 评论（GET /repos/{owner}/{repo}/pulls/{number}/comments）
+const comments = await client.listPullRequestComments('https://gitcode.com/owner/repo.git', 123, {
+  comment_type: 'pr_comment'
 });
 ```
 

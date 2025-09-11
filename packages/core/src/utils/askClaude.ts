@@ -11,13 +11,16 @@ export interface AskClaudeOptions {
   anthropicModel?: string;
   anthropicSmallFastModel?: string;
   disableNonessentialTraffic?: boolean;
+  // When provided, we instruct Claude to return JSON that strictly
+  // conforms to this JSON Schema (best-effort via prompt constraints).
+  // Note: The local `claude` CLI may not expose native structured-output
+  // flags; we embed schema guidance into the prompt to approximate.
+  responseSchema?: Record<string, unknown>;
 }
 
 const execFileAsync = promisify(execFile);
 
-/**
- * TODO 使用--format json，让claude判断是否需要补充修改
- */
+// Use JSON output so Claude can decide if follow-up edits are needed
 export async function askClaude(
   msg: string,
   cwd: string,
@@ -32,6 +35,7 @@ export async function askClaude(
     anthropicSmallFastModel = process.env.ANTHROPIC_SMALL_FAST_MODEL,
     disableNonessentialTraffic =
       process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC === '1',
+  responseSchema,
   } = options;
 
   if (!anthropicAuthToken) {
@@ -52,12 +56,90 @@ export async function askClaude(
     }),
   };
 
-  const args = ['-p', msg, '--output-format', 'text'];
+  // If a schema is provided, wrap the message with strict JSON-only instructions.
+  const prompt = responseSchema
+    ? [
+        '你是一个只输出 JSON 的助手。',
+        '请严格按照下方 JSON Schema 输出，且仅输出一个 JSON 对象：',
+        JSON.stringify(responseSchema, null, 2),
+        '要求：',
+        '- 仅输出 JSON（不包含解释、前后缀或代码块标记）',
+        '- 必须满足 JSON Schema，缺失字段用空值/空数组/空对象占位',
+        '- 不要输出多余字段',
+        '',
+        '用户请求：',
+        msg,
+      ].join('\n')
+    : msg;
+
+  // Ask Claude CLI for JSON to enable richer responses/flags
+  const args = ['-p', prompt, '--format', 'json'];
   if (permissions && permissions.length > 0) {
     args.push('--allowedTools', permissions.join(','));
   }
 
   const { stdout } = await execFileAsync('claude', args, { cwd, env });
-  return stdout.trim();
-}
 
+  // Best-effort extract of main textual answer while keeping backward compatibility
+  const raw = stdout.trim();
+  try {
+    const parsed = JSON.parse(raw);
+    // Common fields the CLI may return
+    if (typeof parsed === 'string') {
+      if (responseSchema) {
+        try {
+          const obj = JSON.parse(parsed);
+          return JSON.stringify(obj);
+        } catch {
+          // not nested JSON; return as-is
+        }
+      }
+      return parsed;
+    }
+    if (parsed && typeof parsed === 'object') {
+      if (typeof parsed.text === 'string') return parsed.text;
+      if (typeof parsed.output === 'string') return parsed.output;
+      if (typeof parsed.message === 'string') return parsed.message;
+      if (typeof parsed.response === 'string') return parsed.response;
+      if (typeof parsed.content === 'string') return parsed.content;
+      // Some CLIs wrap content in an array of blocks
+      if (Array.isArray(parsed.messages) && parsed.messages.length) {
+        const m = parsed.messages[parsed.messages.length - 1];
+        if (m && typeof m.text === 'string') {
+          if (responseSchema) {
+            try {
+              const obj = JSON.parse(m.text);
+              return JSON.stringify(obj);
+            } catch {
+              // ignore nested parse failure
+            }
+          }
+          return m.text;
+        }
+        if (m && typeof m.content === 'string') {
+          if (responseSchema) {
+            try {
+              const obj = JSON.parse(m.content);
+              return JSON.stringify(obj);
+            } catch {
+              // ignore nested parse failure
+            }
+          }
+          return m.content;
+        }
+      }
+    }
+  } catch {
+    // If not JSON, fall back to raw text
+  }
+  if (responseSchema) {
+    // Try a last-chance direct JSON parse of the raw body
+    try {
+      const obj = JSON.parse(raw);
+      return JSON.stringify(obj);
+    } catch {
+      // return raw if it wasn't valid JSON
+    }
+  }
+  return raw;
+}
