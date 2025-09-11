@@ -1,5 +1,5 @@
-import { userProfileUrl, type UserProfile } from '../api/user';
-import type { GitcodeClient } from './core';
+import { userProfileUrl, type UserProfile } from '../../api/user';
+import type { GitcodeClient } from '../core';
 
 export async function getUserProfile(client: GitcodeClient): Promise<UserProfile> {
   const url = userProfileUrl();

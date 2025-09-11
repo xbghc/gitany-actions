@@ -1,6 +1,6 @@
-import { selfPermissionUrl, type SelfPermissionResponse } from '../api/repo/self-permission';
-import type { RepoRole } from '../types/repo-role';
-import type { GitcodeClient } from './core';
+import { selfPermissionUrl, type SelfPermissionResponse } from '../../api/repo/self-permission';
+import type { RepoRole } from '../../types/repo-role';
+import type { GitcodeClient } from '../core';
 
 export async function getSelfRepoPermission(
   client: GitcodeClient,
