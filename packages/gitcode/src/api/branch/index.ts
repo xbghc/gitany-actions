@@ -1,4 +1,4 @@
-interface Branch {
+export interface Branch {
   label: string;
   ref: string;
   sha: string;
