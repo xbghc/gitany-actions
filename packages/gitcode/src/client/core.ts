@@ -7,10 +7,7 @@ import { httpRequest, type HttpRequestOptions } from '../utils/http';
 import { GitCodeClientUser } from './user';
 import { createPrModule } from './pr';
 import { GitCodeClientRepo } from './repo';
-import type { ListPullsQuery, ListPullsResponse, CreatePullBody, PullRequest } from '../api/pr';
-import type { SelfPermissionResponse } from '../api/repo/self-permission';
-import type { RepoRole } from '../types/repo-role';
-import type { UserProfile } from '../api/user';
+import type { ListPullsQuery, CreatePullBody } from '../api/pr';
 
 export class GitcodeClient {
   private token: string | null;
@@ -42,35 +39,5 @@ export class GitcodeClient {
       token: this.token ?? undefined,
       options,
     });
-  }
-
-  // Backward compatible wrappers
-
-  async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
-    return await this.repo.getSelfRepoPermission(owner, repo);
-  }
-
-  async getSelfRepoPermissionRole(owner: string, repo: string): Promise<RepoRole> {
-    return await this.repo.getSelfRepoPermissionRole(owner, repo);
-  }
-
-  async listPullRequests(
-    owner: string,
-    repo: string,
-    prQuery: ListPullsQuery = { state: 'open' },
-  ): Promise<ListPullsResponse> {
-    return await this.pr.list(owner, repo, prQuery);
-  }
-
-  async createPullRequest(
-    owner: string,
-    repo: string,
-    body: CreatePullBody,
-  ): Promise<PullRequest> {
-    return await this.pr.create(owner, repo, body);
-  }
-
-  async getUserProfile(): Promise<UserProfile> {
-    return await this.user.getProfile();
   }
 }
