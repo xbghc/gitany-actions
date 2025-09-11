@@ -1,13 +1,16 @@
-import { userProfileUrl, type UserProfile } from '../../api/user';
+import { userProfileUrl, type UserProfileResponse } from '../../api/user';
 import type { GitcodeClient } from '../core';
 
-export async function getUserProfile(client: GitcodeClient): Promise<UserProfile> {
+export async function getUserProfile(client: GitcodeClient): Promise<UserProfileResponse> {
   const url = userProfileUrl();
-  return await client.request<UserProfile>(url, 'GET', {});
+  return await client.request<UserProfileResponse>(url, 'GET', {});
 }
 
-export function createUserModule(client: GitcodeClient) {
-  return {
-    getProfile: () => getUserProfile(client),
-  };
+export class GitCodeClientUser {
+  constructor(private client: GitcodeClient) {}
+
+  async getProfile(): Promise<UserProfileResponse> {
+    return await getUserProfile(this.client);
+  }
 }
+

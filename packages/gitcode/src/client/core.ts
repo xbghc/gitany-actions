@@ -4,7 +4,7 @@ export type GitcodeClientOptions = {
 };
 
 import { httpRequest, type HttpRequestOptions } from '../utils/http';
-import { createUserModule } from './user';
+import { GitCodeClientUser } from './user';
 import { createPrModule } from './pr';
 import { createRepoModule } from './repo';
 import type { ListPullsQuery, ListPullsResponse, CreatePullBody, PullRequest } from '../api/pr';
@@ -17,7 +17,7 @@ export class GitcodeClient {
 
   pr = createPrModule(this);
   repo = createRepoModule(this);
-  user = createUserModule(this);
+  user = new GitCodeClientUser(this);
 
   constructor(opts: GitcodeClientOptions = {}) {
     this.token = opts.token ?? null;
