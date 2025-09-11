@@ -15,6 +15,9 @@ export interface AskClaudeOptions {
 
 const execFileAsync = promisify(execFile);
 
+/**
+ * TODO 使用--format json，让claude判断是否需要补充修改
+ */
 export async function askClaude(
   msg: string,
   cwd: string,

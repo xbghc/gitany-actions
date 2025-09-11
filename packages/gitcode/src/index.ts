@@ -18,7 +18,10 @@ export type {
   CreatePullBody,
 } from './api/pr';
 export { listPullsUrl, createPullUrl } from './api/pr';
+export type { PRComment, PRCommentQueryOptions } from './api/pr';
+export { prCommentsUrl } from './api/pr';
 export type { UserProfile, UserProfileResponse } from './api/user';
 export { userProfileUrl } from './api/user';
 export type { RepoRole } from './types/repo-role';
 export * from './utils';
+export { API_BASE } from './api/constants';
