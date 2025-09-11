@@ -15,7 +15,8 @@ title: Pull Requests API
 
 - `ListPullsQuery`：PR 列表查询参数（`state`、`page`、`per_page`、`head`、`base` 等）。
 - `ListPullsParams`：包含 `owner`、`repo` 与可选 `query`。
-- `PullRequest`：PR 的最小字段表示（`id`、`number`、`title`、`state` 等）。
+- `Branch`：PR 分支信息结构（`label`、`ref`、`sha` 等）。
+- `PullRequest`：PR 的最小字段表示（`id`、`number`、`title`、`state`、`head`、`base` 等）。
 - `ListPullsResponse`：`PullRequest[]`。
 - `CreatePullBody`：创建 PR 可用字段（`title`、`head`、`base`、`body`、`issue`）。
 - `listPullsUrl(owner, repo)`：构建列表接口绝对 URL。

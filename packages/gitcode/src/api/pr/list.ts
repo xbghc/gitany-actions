@@ -40,6 +40,8 @@ export type ListPullsParams = {
  * Minimal Pull Request representation with common fields.
  * Additional fields may be present and are preserved via index signature.
  */
+import type { Branch } from '../branch';
+
 export type PullRequest = {
   id: number;
   number: number;

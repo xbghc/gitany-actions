@@ -5,10 +5,10 @@ import { gitBranch } from '../commands/branch';
 import { gitCheckout } from '../commands/checkout';
 
 export class GitClient {
-  constructor(public cwd: string) {}
+  constructor(public cwd: string = process.cwd()) {}
 
-  async run(args: string[], options?: { cwd?: string }) {
-    return runGit(args, { cwd: options?.cwd });
+  async run(args: string[]) {
+    return runGit(args, { cwd: this.cwd });
   }
 
   async status() {
