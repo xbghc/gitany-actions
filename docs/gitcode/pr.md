@@ -49,6 +49,13 @@ const pulls2 = await client.listPullRequests('owner', 'repo', { state: 'open' })
 const pr2 = await client.createPullRequest('owner', 'repo', { title: '修复', head: 'feat/x' });
 ```
 
+或使用模块方式调用：
+
+```ts
+const pulls3 = await client.pr.list('owner', 'repo', { state: 'open' });
+const pr3 = await client.pr.create('owner', 'repo', { title: '修复', head: 'feat/x' });
+```
+
 ## 说明
 
 - 网络请求层统一由内部的 `utils/http.ts` 中的 `httpRequest` 处理，对外行为不变。

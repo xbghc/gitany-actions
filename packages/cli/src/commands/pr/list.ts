@@ -1,8 +1,9 @@
-import { GitcodeAuth, parseGitUrl } from '@gitany/gitcode';
+import { createGitcodeClient, parseGitUrl } from '@gitany/gitcode';
 
-export async function listCommand(url: string, options: any): Promise<void> {
-  const auth = new GitcodeAuth();
-  
+export async function listCommand(
+  url: string,
+  options: Record<string, string | undefined>,
+): Promise<void> {
   try {
     const remote = parseGitUrl(url);
     if (!remote) {
@@ -11,8 +12,8 @@ export async function listCommand(url: string, options: any): Promise<void> {
       return;
     }
 
-    const client = await auth.client();
-    const pulls = await client.listPullRequests(remote.owner, remote.repo, {
+    const client = await createGitcodeClient();
+    const pulls = await client.pr.list(remote.owner, remote.repo, {
       state: options.state,
       head: options.head,
       base: options.base,
@@ -26,9 +27,10 @@ export async function listCommand(url: string, options: any): Promise<void> {
     }
 
     // Default: print bullet list of titles: - [#<number>] <title>
-    for (const pr of pulls as any[]) {
-      const num = (pr?.number ?? pr?.iid ?? pr?.id) as number | string | undefined;
-      const title = (pr?.title ?? pr?.subject ?? pr?.name ?? '(no title)') as string;
+    for (const pr of pulls as unknown[]) {
+      const item = pr as Record<string, unknown>;
+      const num = (item.number ?? item.iid ?? item.id) as number | string | undefined;
+      const title = (item.title ?? item.subject ?? item.name ?? '(no title)') as string;
       const numStr = typeof num === 'number' ? num : (num ?? '?');
       console.log(`- [#${numStr}] ${title}`);
     }

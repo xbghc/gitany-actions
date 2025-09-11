@@ -18,8 +18,11 @@ title: gitcode 工具库
   - `getSelfRepoPermissionRole(owner, repo)`：获取权限并归一化为 `admin | write | read | none`。
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
-- `GitcodeAuth`
-  - 本地令牌存储与加载，提供 `setToken/token/status/client`。
+  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()` 等。
+- `GitcodeClientAuth`
+  - 通过 `client.auth` 提供本地令牌存储与加载。
+- `createGitcodeClient()`
+  - 读取 token 并返回 `GitcodeClient` 实例。
 - `FileAuthStorage`、`defaultConfigPath()`
 
 更多 API：
@@ -53,18 +56,17 @@ title: gitcode 工具库
 1. 环境变量 `GITCODE_TOKEN`
 2. 本地配置文件 `~/.gitany/gitcode/config.json`
 
-### GitcodeAuth 用法
+### 认证使用示例
 
 ```ts
-import { GitcodeAuth } from '@gitany/gitcode';
+import { createGitcodeClient } from '@gitany/gitcode';
 
-const auth = new GitcodeAuth();
-await auth.setToken('your_token', 'bearer');
+const client = await createGitcodeClient();
+await client.auth.setToken('your_token', 'bearer');
 
-const token = await auth.token(); // 获取token（环境变量优先）
+const token = await client.auth.token(); // 获取 token（环境变量优先）
 console.log(token);
 
-const client = await auth.client();
 const me = await client.request('/user', 'GET');
 ```
 

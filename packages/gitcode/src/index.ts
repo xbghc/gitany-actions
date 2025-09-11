@@ -23,7 +23,8 @@ export function parseGitUrl(url: string): Remote | null {
 export const version = '0.1.0';
 
 export { GitcodeClient } from './client';
-export { GitcodeAuth, FileAuthStorage, defaultConfigPath } from './auth';
+export { GitcodeClientAuth } from './client/auth';
+export { createGitcodeClient, FileAuthStorage, defaultConfigPath } from './auth';
 export type {
   SelfPermissionParams,
   RoleInfo,
