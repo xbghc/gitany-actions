@@ -12,7 +12,7 @@ export async function listCommand(url: string, options: any): Promise<void> {
     }
 
     const client = await auth.client();
-    const pulls = await client.listPullRequests(remote.owner, remote.repo, {
+    const pulls = await client.pr.list(remote.owner, remote.repo, {
       state: options.state,
       head: options.head,
       base: options.base,

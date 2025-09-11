@@ -29,7 +29,7 @@ export async function createCommand(url: string, options: any): Promise<void> {
     }
 
     const client = await auth.client();
-    const created = await client.createPullRequest(remote.owner, remote.repo, body);
+    const created = await client.pr.create(remote.owner, remote.repo, body);
 
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));

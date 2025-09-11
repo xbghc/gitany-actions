@@ -5,7 +5,7 @@ export async function userShowCommand(): Promise<void> {
   try {
     const auth = new GitcodeAuth();
     const client = await auth.client();
-    const user = await client.getUserProfile();
+    const user = await client.user.getProfile();
 
     console.log('用户信息:');
     console.log(`  ID: ${user.id}`);

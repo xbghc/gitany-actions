@@ -13,7 +13,7 @@ export async function permissionCommand(url: string): Promise<void> {
 
     const auth = new GitcodeAuth();
     const client = await auth.client();
-    const permission = await client.getSelfRepoPermissionRole(owner, repo);
+    const permission = await client.repo.getSelfRepoPermissionRole(owner, repo);
     console.log(permission);
   } catch (err) {
     console.error(err);
