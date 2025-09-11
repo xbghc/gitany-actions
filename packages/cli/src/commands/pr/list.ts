@@ -1,19 +1,12 @@
-import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { GitcodeClient } from '@gitany/gitcode';
 
 export async function listCommand(
   url: string,
   options: Record<string, string | undefined>,
 ): Promise<void> {
   try {
-    const remote = parseGitUrl(url);
-    if (!remote) {
-      console.error('Unrecognized git URL:', url);
-      process.exit(1);
-      return;
-    }
-
     const client = new GitcodeClient();
-    const pulls = await client.pr.list(remote.owner, remote.repo, {
+    const pulls = await client.pr.list(url, {
       state: options.state,
       head: options.head,
       base: options.base,

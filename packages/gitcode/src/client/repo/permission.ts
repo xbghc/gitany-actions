@@ -1,5 +1,6 @@
 import { type SelfPermissionResponse, selfPermissionUrl } from '../../api/repo/self-permission';
 import type { RepoRole } from '../../types/repo-role';
+import { parseGitUrl } from '../../utils';
 import type { GitcodeClient } from '../core';
 
 
@@ -9,9 +10,12 @@ import type { GitcodeClient } from '../core';
 
 export async function getSelfRepoPermission(
   client: GitcodeClient,
-  owner: string,
-  repo: string
+  url: string
 ): Promise<SelfPermissionResponse> {
+  const { owner, repo } = parseGitUrl(url) || {};
+  if (!owner || !repo) {
+    throw new Error(`Invalid Git URL: ${url}`);
+  }
   const path = selfPermissionUrl({ owner, repo });
   return await client.request(path, 'GET', {});
 }
@@ -22,11 +26,10 @@ export async function getSelfRepoPermission(
 
 export async function getSelfRepoPermissionRole(
   client: GitcodeClient,
-  owner: string,
-  repo: string
+  url: string
 ): Promise<RepoRole> {
   try {
-    const json = await getSelfRepoPermission(client, owner, repo);
+    const json = await getSelfRepoPermission(client, url);
     return extractRepoRoleFromSelfPermission(json);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

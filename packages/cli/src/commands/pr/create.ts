@@ -5,13 +5,6 @@ export async function createCommand(
   options: Record<string, string | undefined>,
 ): Promise<void> {
   try {
-    const remote = parseGitUrl(url);
-    if (!remote) {
-      console.error('Unrecognized git URL:', url);
-      process.exit(1);
-      return;
-    }
-
     const body: CreatePullBody = {
       title: options.title,
       head: options.head,
@@ -30,7 +23,7 @@ export async function createCommand(
     }
 
     const client = new GitcodeClient();
-    const created = await client.pr.create(remote.owner, remote.repo, body);
+    const created = await client.pr.create(url, body);
 
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));

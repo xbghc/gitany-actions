@@ -6,11 +6,11 @@ import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission';
 export class GitcodeClientRepo {
   constructor(private client: GitcodeClient) {}
 
-  async getSelfRepoPermission(owner: string, repo: string): Promise<SelfPermissionResponse> {
-    return await getSelfRepoPermission(this.client, owner, repo);
+  async getSelfRepoPermission(url: string): Promise<SelfPermissionResponse> {
+    return await getSelfRepoPermission(this.client, url);
   }
 
-  async getSelfRepoPermissionRole(owner: string, repo: string): Promise<RepoRole> {
-    return await getSelfRepoPermissionRole(this.client, owner, repo);
+  async getSelfRepoPermissionRole(url: string): Promise<RepoRole> {
+    return await getSelfRepoPermissionRole(this.client, url);
   }
 }
