@@ -32,29 +32,17 @@ gitcode parse https://gitcode.com/owner/repo.git
 
 ### gitcode auth &lt;subcommand&gt;
 
-子命令：`login | status | logout | oauth-exchange`
+子命令：`set-token`
 
-- `login`
-  - 选项：`--token <token>`（或交互输入）
-  - 行为：保存令牌并尝试 `GET /user` 验证。
-- `status`
-  - 显示是否已认证与 `/user` 校验结果。
-- `logout`
-  - 清除本地保存的令牌。
-- `oauth-exchange`
-  - 通过授权码换取 Token 并保存：
-    - `--code <code>` `--client-id <id>` `--client-secret <secret>`
-    - 可选：`--base <api-base>`
+- `set-token <token>`
+  - 行为：保存令牌到本地配置文件。
 
-### gitcode permission &lt;git-url&gt;
+### gitcode repo permission &lt;git-url&gt;
 
 查询当前登录用户在指定仓库（通过仓库链接）的权限。
 
 ```bash
-gitcode permission https://gitcode.com/owner/repo.git
-
-# 或使用参数：
-gitcode permission --url git@gitcode.com:owner/repo.git
+gitcode repo permission https://gitcode.com/owner/repo.git
 ```
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
@@ -73,7 +61,7 @@ gitcode permission --url git@gitcode.com:owner/repo.git
 gitcode pr list https://gitcode.com/owner/repo.git
 
 # 带筛选参数：
-gitcode pr list --url git@gitcode.com:owner/repo.git \
+gitcode pr list git@gitcode.com:owner/repo.git \
   --state open --base main
 
 # 输出 JSON：
@@ -81,7 +69,6 @@ gitcode pr list <url> --json
 ```
 
 - 选项：
-  - `--url <git-url>`：仓库地址（可替代位置参数）
   - `--state <state>`：`open | closed | all`（默认 `open`）
   - `--head <ref>`：按源分支或 `repo:branch` 过滤
   - `--base <branch>`：按目标分支过滤
@@ -102,7 +89,6 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 ```
 
 - 选项：
-  - `--url <git-url>`：仓库地址（可替代位置参数）
   - `--title <title>`：PR 标题（必填）
   - `--head <branch>`：源分支名称（不支持跨仓库，必填）
   - `--base <branch>`：目标分支（可选）
@@ -112,10 +98,34 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 - 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
 
+### gitcode user show
+
+显示当前认证用户的详细信息。
+
+```bash
+gitcode user show
+```
+
+输出示例：
+```
+用户信息:
+  ID: 68526f155e91be1053daf941
+  用户名: xbghc
+  邮箱: xbghc@noreply.gitcode.com
+  登录名: xbghc
+  关注者: 0
+  关注中: 0
+  常用语言: TypeScript, TSX, SCSS, Vue, JavaScript
+  头像: https://cdn-img.gitcode.com/eb/dc/e25777167bd9cba77d0d8bb17c1fafe41808204d923fa66a24c70cf63cbd97af.png
+  主页: https://gitcode.com/xbghc
+```
+
+- 调用：`GET /api/v5/user`
+- 显示标准化的用户信息（ID、用户名、邮箱）和详细的用户资料
+
 ## 环境变量
 
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
-- `GITCODE_WHOAMI_PATH`：鉴权验证路径（默认 `/user`）
 
 ## 本地存储路径
 

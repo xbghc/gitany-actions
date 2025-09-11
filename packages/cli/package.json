@@ -6,10 +6,12 @@
   "bin": {
     "gitcode": "dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js --external:@gitany/gitcode",
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js --external:@gitany/gitcode --external:commander",
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "start": "node dist/index.js"
@@ -18,7 +20,10 @@
     "esbuild": "^0.21.5"
   },
   "dependencies": {
-    "@gitany/gitcode": "workspace:*"
+    "@gitany/gitcode": "workspace:*",
+    "commander": "^14.0.0"
   },
-  "engines": { "node": ">=18.17" }
+  "engines": {
+    "node": ">=18.17"
+  }
 }

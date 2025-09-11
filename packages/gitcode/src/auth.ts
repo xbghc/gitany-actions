@@ -5,7 +5,6 @@ import { GitcodeClient } from './client';
 
 export type AuthConfig = {
   token?: string;
-  baseUrl?: string;
   authStyle?: 'query' | 'bearer' | 'token' | 'header';
   customAuthHeader?: string;
 };
@@ -28,7 +27,10 @@ export class FileAuthStorage implements AuthStorage {
   }
   async write(cfg: AuthConfig): Promise<void> {
     await fs.mkdir(dirname(this.filePath), { recursive: true });
-    await fs.writeFile(this.filePath, JSON.stringify(cfg, null, 2), { encoding: 'utf8', mode: 0o600 as number });
+    await fs.writeFile(this.filePath, JSON.stringify(cfg, null, 2), {
+      encoding: 'utf8',
+      mode: 0o600 as number,
+    });
   }
   async clear(): Promise<void> {
     try {
@@ -51,49 +53,39 @@ export class GitcodeAuth {
     this.storage = storage;
   }
 
-  async login(token: string, baseUrl?: string, authStyle?: AuthConfig['authStyle'], customAuthHeader?: string) {
-    const cfg: AuthConfig = { token, baseUrl, authStyle, customAuthHeader };
+  async setToken(token: string, authStyle?: AuthConfig['authStyle'], customAuthHeader?: string) {
+    const cfg: AuthConfig = { token, authStyle, customAuthHeader };
     await this.storage.write(cfg);
   }
 
-  async logout() {
-    await this.storage.clear();
-  }
-
-  async load(): Promise<AuthConfig> {
+  async token(): Promise<string | null> {
     const envToken = process.env.GITCODE_TOKEN;
-    const envBase = process.env.GITCODE_API_BASE;
-    const envStyle = process.env.GITCODE_AUTH_STYLE as AuthConfig['authStyle'] | undefined;
-    const envHeader = process.env.GITCODE_AUTH_HEADER;
+    // 优先从环境变量获取token
+    if (envToken) {
+      return envToken;
+    }
+
     const disk = (await this.storage.read()) || {};
-    return {
-      token: envToken ?? disk.token,
-      baseUrl: envBase ?? disk.baseUrl,
-      authStyle: envStyle ?? disk.authStyle,
-      customAuthHeader: envHeader ?? disk.customAuthHeader,
-    };
+
+    return disk.token || null;
   }
 
   async client(): Promise<GitcodeClient> {
     const cfg = await this.load();
     return new GitcodeClient({
-      baseUrl: cfg.baseUrl,
       token: cfg.token ?? null,
     });
   }
 
-  async status(): Promise<{ authenticated: boolean; tokenPresent: boolean; user?: unknown }> {
-    const cfg = await this.load();
-    const tokenPresent = !!cfg.token;
-    if (!tokenPresent) return { authenticated: false, tokenPresent };
-    try {
-      const client = await this.client();
-      // Many providers expose `/user`; allow override with env if docs differ.
-      const whoamiPath = process.env.GITCODE_WHOAMI_PATH || '/user';
-      const user = await client.request(whoamiPath, { method: 'GET' });
-      return { authenticated: true, tokenPresent, user };
-    } catch {
-      return { authenticated: false, tokenPresent };
-    }
+  private async load(): Promise<AuthConfig> {
+    const envToken = process.env.GITCODE_TOKEN;
+    const envStyle = process.env.GITCODE_AUTH_STYLE as AuthConfig['authStyle'] | undefined;
+    const envHeader = process.env.GITCODE_AUTH_HEADER;
+    const disk = (await this.storage.read()) || {};
+    return {
+      token: envToken ?? disk.token,
+      authStyle: envStyle ?? disk.authStyle,
+      customAuthHeader: envHeader ?? disk.customAuthHeader,
+    };
   }
 }

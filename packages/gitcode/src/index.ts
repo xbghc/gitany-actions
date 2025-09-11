@@ -30,11 +30,15 @@ export type {
   PermissionPoint,
   ResourceNode,
   SelfPermissionResponse,
-} from './api/self-permission';
+} from './api/repo/self-permission';
 export type {
   ListPullsQuery,
   ListPullsParams,
   PullRequest,
   ListPullsResponse,
   CreatePullBody,
-} from './api/pulls';
+} from './api/pr';
+export { listPullsUrl, createPullUrl } from './api/pr';
+export type { UserProfile, UserProfileResponse } from './api/user';
+export { userProfileUrl } from './api/user';
+export type { RepoRole } from './types/repo-role';
