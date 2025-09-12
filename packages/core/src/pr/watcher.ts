@@ -7,11 +7,12 @@ import { createRequire } from 'node:module';
 
 // Lazy pino logger (optional dependency). Falls back to console when unavailable.
 const __require = createRequire(import.meta.url);
-let logger: { error: (...args: any[]) => void } | null = null;
+let logger: { error: (...args: unknown[]) => void } | null = null;
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const pino = __require('pino');
-  const factory = (pino.default ?? pino) as (opts?: any) => { error: (...args: any[]) => void };
+  const factory = (pino.default ?? pino) as (
+    opts?: Record<string, unknown>,
+  ) => { error: (...args: unknown[]) => void };
   logger = factory({ name: '@gitany/core' });
 } catch {
   logger = null;
@@ -189,7 +190,6 @@ function loadPersistedStateSync(url: string): WatcherState | null {
     if (logger) {
       logger.error({ url, err }, msg);
     } else {
-      // eslint-disable-next-line no-console
       console.error(msg, { url, err });
     }
     return null;
@@ -208,7 +208,6 @@ async function persistState(url: string, state: WatcherState) {
     await fs.writeFile(file, JSON.stringify(data), 'utf8');
   } catch (err) {
     // 忽略持久化错误，避免影响主流程，但应打印错误便于排查
-    // eslint-disable-next-line no-console
     console.error('[watchPullRequest] 持久化状态失败:', err);
   }
 }

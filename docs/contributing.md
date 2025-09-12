@@ -7,7 +7,6 @@ title: 贡献指南
 本仓库使用 pnpm 管理的 TypeScript Monorepo，包含：
 
 - `@gitany/gitcode`：工具库（packages/gitcode）
-- `@gitany/git-lib`：Git 命令封装库（packages/git-lib）
 - `@gitany/cli`：命令行工具（packages/cli）
 - `@gitany/core`：核心工具库（packages/core）
 - 文档：VitePress（docs）
@@ -59,7 +58,6 @@ SKIP_DOCS_CHECK=1 git commit -m "..."
 ## 目录映射参考
 
 - `packages/gitcode/src/*` → `docs/gitcode/`
-- `packages/git-lib/src/*` → `docs/git-lib/`
 - `packages/cli/src/*` → `docs/cli/`
 - `packages/core/src/*` → `docs/core/`
 
