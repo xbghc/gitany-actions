@@ -62,3 +62,36 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 - 检测 PR 状态变化（新建、关闭、合并）
 - 自动触发相应的回调函数
 - 使用 `client.pr.list()` 获取 PR 数据
+
+## PR 构建容器
+
+提供在隔离的 Docker 容器中构建和测试 PR 的能力。
+
+```ts
+import { runPrInContainer, resetPrContainer, removePrContainer } from '@gitany/core';
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+const pr = await client.pr.get('https://gitcode.com/owner/repo.git', 1);
+
+// 在默认 node:20 镜像中执行构建
+await runPrInContainer('https://gitcode.com/owner/repo.git', pr);
+
+// 自定义镜像和脚本
+await runPrInContainer('https://gitcode.com/owner/repo.git', pr, {
+  image: 'node:20',
+  script: 'pnpm lint && pnpm build',
+});
+
+// 重新创建或删除容器
+await resetPrContainer('https://gitcode.com/owner/repo.git', pr);
+await removePrContainer(pr.id);
+```
+
+容器内可访问以下环境变量：
+
+- `PR_BASE_REPO_URL`、`PR_HEAD_REPO_URL`
+- `PR_BASE_SHA`、`PR_HEAD_SHA`
+
+默认脚本会克隆基仓库、添加 head 远程并检出 PR 提交，然后执行 `pnpm install`、`pnpm build`、`pnpm test`。
+
