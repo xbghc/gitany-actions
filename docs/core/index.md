@@ -12,7 +12,7 @@ title: Core 工具库
 
 ### Pull Request 监控
 
-提供 PR 状态监控功能，可以实时监听 PR 的状态变化。
+提供 PR 状态和评论监控功能，可以实时监听 PR 的状态变化和评论。
 
 ```ts
 import { watchPullRequest } from '@gitany/core';
@@ -20,7 +20,7 @@ import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient();
 
-// 监控 PR 状态变化
+// 监控 PR 状态变化和评论
 const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
   onOpen: (pr) => {
     console.log(`PR #${pr.number} 已打开: ${pr.title}`);
@@ -30,7 +30,11 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
   },
   onMerged: (pr) => {
     console.log(`PR #${pr.number} 已合并: ${pr.title}`);
-  }
+  },
+  onComment: (pr, comment) => {
+    console.log(`PR #${pr.number} 有新评论: ${comment.body}`);
+  },
+  intervalMs: 10000 // 每10秒检查一次
 });
 
 // 停止监控
@@ -41,7 +45,7 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 
 ##### watchPullRequest(client, url, options)
 
-监控指定仓库的 PR 状态变化。
+监控指定仓库的 PR 状态变化和评论。
 
 **参数:**
 - `client`: `GitcodeClient` 实例
@@ -52,14 +56,17 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 - `onOpen`: PR 打开时触发
 - `onClosed`: PR 关闭时触发
 - `onMerged`: PR 合并时触发
+- `onComment`: PR 有新评论时触发
+- `intervalMs`: 检查间隔时间（毫秒），默认为 5000
 
 **返回值:**
 - 返回一个清理函数，调用可停止监控
 
 ## 工作原理
 
-- 每隔 5 秒检查一次 PR 列表
+- 按指定间隔检查 PR 列表（默认 5 秒）
 - 检测 PR 状态变化（新建、关闭、合并）
+- 监控 PR 评论（仅对打开的 PR）
 - 自动触发相应的回调函数
 - 使用 `client.pr.list()` 获取 PR 数据
 
@@ -131,3 +138,4 @@ await runPrInContainer('https://gitcode.com/owner/repo.git', pr, {
 ```
 
 上述脚本在容器中运行 `claude code` 自动修改工作区，并通过 `git` 命令提交并推送到 PR 分支。
+

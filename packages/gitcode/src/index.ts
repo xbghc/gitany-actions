@@ -10,6 +10,12 @@ export type {
   ResourceNode,
   SelfPermissionResponse,
 } from './api/repo/self-permission';
+export {
+  selfPermissionUrl,
+  selfPermissionResponseSchema,
+} from './api/repo/self-permission';
+export { repoSchema, type Repo } from './api/repo';
+export { branchSchema, type Branch } from './api/branch';
 export type {
   ListPullsQuery,
   ListPullsParams,
@@ -17,8 +23,21 @@ export type {
   ListPullsResponse,
   CreatePullBody,
 } from './api/pr';
-export { listPullsUrl, createPullUrl } from './api/pr';
-export type { UserProfile, UserProfileResponse } from './api/user';
-export { userProfileUrl } from './api/user';
+export {
+  listPullsUrl,
+  createPullUrl,
+  pullRequestSchema,
+  listPullsResponseSchema,
+  prCommentSchema,
+  prCommentsUrl,
+} from './api/pr';
+export type { PRComment, PRCommentQueryOptions } from './api/pr';
+export {
+  userProfileSchema,
+  userProfileUrl,
+  type UserProfile,
+  type UserProfileResponse,
+} from './api/user';
 export type { RepoRole } from './types/repo-role';
 export * from './utils';
+export { API_BASE } from './api/constants';
