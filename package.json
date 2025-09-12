@@ -17,7 +17,8 @@
     "prepare": "husky",
     "dev:core": "pnpm --filter @gitany/core dev",
     "d": "pnpm build && node ./scripts/dev-gitcode.mjs",
-    "d:git": "pnpm build && node ./scripts/dev-git.mjs"
+    "d:git": "pnpm build && node ./scripts/dev-git.mjs",
+    "d:docker": "pnpm build && node ./scripts/dev-docker.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.6",
