@@ -27,8 +27,18 @@ export interface ContainerOptions {
 }
 
 const containers = new Map<number, { container: Docker.Container; options: ContainerOptions }>();
+const outputs = new Map<number, string>();
+
+async function ensureDocker() {
+  try {
+    await docker.ping();
+  } catch {
+    throw new Error('Docker daemon is not available. Ensure Docker is running.');
+  }
+}
 
 async function ensureContainer(repoUrl: string, pr: PullRequest, options: ContainerOptions = {}) {
+  await ensureDocker();
   let entry = containers.get(pr.id);
   if (entry) return entry;
 
@@ -65,21 +75,27 @@ async function ensureContainer(repoUrl: string, pr: PullRequest, options: Contai
   return entry;
 }
 
-async function execInContainer(container: Docker.Container, script: string) {
+async function execInContainer(container: Docker.Container, script: string, prId: number) {
   const exec = await container.exec({
     Cmd: ['sh', '-lc', script],
     AttachStdout: true,
     AttachStderr: true,
   });
   const stream = await exec.start({ hijack: true, stdin: false });
-  return new Promise<void>((resolve, reject) => {
-    stream.on('data', (d) => process.stdout.write(d));
+  let output = '';
+  stream.on('data', (d) => {
+    const text = d.toString();
+    output += text;
+    process.stdout.write(d);
+  });
+  return new Promise<{ exitCode: number; output: string }>((resolve, reject) => {
     stream.on('end', async () => {
       const info = await exec.inspect();
+      outputs.set(prId, output);
       if (info.ExitCode !== 0) {
         reject(new Error(`container exited with code ${info.ExitCode}`));
       } else {
-        resolve();
+        resolve({ exitCode: info.ExitCode ?? 0, output });
       }
     });
   });
@@ -103,7 +119,7 @@ function defaultScript() {
 
 export async function runPrInContainer(repoUrl: string, pr: PullRequest, options: ContainerOptions = {}) {
   const entry = await ensureContainer(repoUrl, pr, options);
-  await execInContainer(entry.container, options.script ?? defaultScript());
+  return await execInContainer(entry.container, options.script ?? defaultScript(), pr.id);
 }
 
 export async function resetPrContainer(repoUrl: string, pr: PullRequest, options: ContainerOptions = {}) {
@@ -125,5 +141,17 @@ export async function removePrContainer(prId: number) {
     /* ignore */
   }
   containers.delete(prId);
+  outputs.delete(prId);
+}
+
+export async function getPrContainerStatus(prId: number) {
+  const entry = containers.get(prId);
+  if (!entry) return null;
+  const info = await entry.container.inspect();
+  return info.State?.Status ?? null;
+}
+
+export function getPrContainerOutput(prId: number) {
+  return outputs.get(prId) ?? null;
 }
 
