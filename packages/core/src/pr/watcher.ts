@@ -1,37 +1,51 @@
 import { GitcodeClient, PullRequest, PRComment } from '@gitany/gitcode';
+import * as fsSync from 'node:fs';
+import * as fs from 'node:fs/promises';
+import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
+import * as path from 'node:path';
+import { createRequire } from 'node:module';
+
+// Lazy pino logger (optional dependency). Falls back to console when unavailable.
+const __require = createRequire(import.meta.url);
+let logger: { error: (...args: any[]) => void } | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const pino = __require('pino');
+  const factory = (pino.default ?? pino) as (opts?: any) => { error: (...args: any[]) => void };
+  logger = factory({ name: '@gitany/core' });
+} catch {
+  logger = null;
+}
+const DEFAULT_INTERVAL_SEC = 5;
 
 interface WatchPullRequestOptions {
   onClosed?: (pr: PullRequest) => void;
   onOpen?: (pr: PullRequest) => void;
   onMerged?: (pr: PullRequest) => void;
   onComment?: (pr: PullRequest, comment: PRComment) => void;
-  intervalMs?: number; // TODO 单位修改为秒
+  intervalSec?: number;
 }
 
-// 实现监听PR的评论，并拆分为多个内部模块，简化主函数
-// TODO 实现存储持久化，这样下一次打开程序时可以判断哪些是新增的。
 export function watchPullRequest(
   client: GitcodeClient,
   url: string,
   options: WatchPullRequestOptions,
 ) {
-  const state = createWatcherState();
+  const state = createWatcherState(url);
 
   const check = async () => {
-    const newList = await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
-    for (const pr of newList) {
-      if (!idExists(pr.id) || stateChanged(pr)) {
-        triggerPullRequestEvent(pr, options);
-      }
-    }
-
-    prList = newList;
+    const currentList = await fetchPullRequests(client, url);
+    detectStateChanges(currentList, state, options);
+    await detectNewComments(client, url, currentList, state, options);
+    state.prList = currentList.map((p) => ({ id: p.id, number: p.number, state: p.state }));
+    await persistState(url, state);
   };
 
   // 立即进行一次检查以尽快建立基线
   void check();
 
-  const intervalId = setInterval(() => void check(), options.intervalMs ?? 5000);
+  const intervalMs = 1000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
+  const intervalId = setInterval(() => void check(), intervalMs);
   return () => clearInterval(intervalId);
 }
 
@@ -49,12 +63,16 @@ export function triggerPullRequestEvent(pr: PullRequest, options: WatchPullReque
 // -------- Internal helpers --------
 
 type WatcherState = {
-  prList: PullRequest[];
+  prList: BaselinePR[];
   lastCommentIdByPr: Map<number, number>; // pr.number -> last seen comment id
 };
 
+type BaselinePR = Pick<PullRequest, 'id' | 'number' | 'state'>;
 
-function createWatcherState(): WatcherState {
+function createWatcherState(url: string): WatcherState {
+  // 从磁盘加载上次的基线，避免程序重启后重复触发“新增/新评论”事件
+  const persisted = loadPersistedStateSync(url);
+  if (persisted) return persisted;
   return { prList: [], lastCommentIdByPr: new Map() };
 }
 
@@ -62,7 +80,7 @@ async function fetchPullRequests(client: GitcodeClient, url: string) {
   return await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
 }
 
-function detectPrEvents(
+function detectStateChanges(
   newList: PullRequest[],
   state: WatcherState,
   options: WatchPullRequestOptions,
@@ -81,7 +99,7 @@ function detectPrEvents(
   }
 }
 
-async function detectCommentEvents(
+async function detectNewComments(
   client: GitcodeClient,
   url: string,
   newList: PullRequest[],
@@ -126,5 +144,71 @@ async function fetchPrComments(
   prNumber: number,
 ): Promise<PRComment[]> {
   // 仅拉取普通 PR 评论（非 diff 评论），减少数据量
+    // TODO 默认拉取所有，允许选择
   return await client.pr.comments(url, prNumber, { comment_type: 'pr_comment' });
+}
+
+// -------- Persistence (fast, lightweight) --------
+type PersistShape = {
+  // Minimal info to identify PRs and detect state changes across restarts
+  prs: Array<{ id: number; number: number; state: PullRequest['state'] }>;
+  lastCommentIdByPr: Record<string, number>; // key: pr.number
+};
+
+function getStoreDir() {
+  // Align with CLI auth location: ~/.gitany/gitcode
+  return resolveGitcodeSubdir('watchers');
+}
+
+function urlKey(url: string) {
+  return sha1Hex(url);
+}
+
+function getStoreFile(url: string) {
+  return path.join(getStoreDir(), `${urlKey(url)}.json`);
+}
+
+function loadPersistedStateSync(url: string): WatcherState | null {
+  try {
+    const file = getStoreFile(url);
+    if (!fsSync.existsSync(file)) return null;
+    const raw = fsSync.readFileSync(file, 'utf8');
+    if (!raw) return null;
+    const data = JSON.parse(raw) as PersistShape;
+    const lastMap = new Map<number, number>();
+    for (const [k, v] of Object.entries(data.lastCommentIdByPr ?? {})) {
+      const num = Number(k);
+      if (!Number.isNaN(num)) lastMap.set(num, v);
+    }
+    // 仅需要 id/state/number 用于事件对比；避免在类型上引入过多属性
+    const prList: BaselinePR[] = (data.prs ?? []).map((p) => ({ id: p.id, state: p.state, number: p.number }));
+    return { prList, lastCommentIdByPr: lastMap };
+  } catch (err) {
+    // 使用 pino 记录错误；若不可用则回退到 console
+    const msg = '[watchPullRequest] 读取持久化状态失败';
+    if (logger) {
+      logger.error({ url, err }, msg);
+    } else {
+      // eslint-disable-next-line no-console
+      console.error(msg, { url, err });
+    }
+    return null;
+  }
+}
+
+async function persistState(url: string, state: WatcherState) {
+  try {
+    const dir = getStoreDir();
+    await ensureDir(dir);
+    const file = getStoreFile(url);
+    const data: PersistShape = {
+      prs: state.prList.map((p) => ({ id: p.id, state: p.state, number: p.number })),
+      lastCommentIdByPr: Object.fromEntries(state.lastCommentIdByPr),
+    };
+    await fs.writeFile(file, JSON.stringify(data), 'utf8');
+  } catch (err) {
+    // 忽略持久化错误，避免影响主流程，但应打印错误便于排查
+    // eslint-disable-next-line no-console
+    console.error('[watchPullRequest] 持久化状态失败:', err);
+  }
 }

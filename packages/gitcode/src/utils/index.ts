@@ -19,3 +19,11 @@ export function parseGitUrl(url: string): Remote | null {
 
   return null;
 }
+
+/**
+ * Ensures a repository URL ends with `.git` (idempotent).
+ * Accepts any URL-like string and appends the suffix only when missing.
+ */
+export function toGitUrl(url: string): string {
+  return url.endsWith('.git') ? url : `${url}.git`;
+}

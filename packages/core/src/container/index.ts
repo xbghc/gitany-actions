@@ -1,5 +1,6 @@
 import Docker from 'dockerode';
 import type { PullRequest } from '@gitany/gitcode';
+import { toGitUrl } from '@gitany/gitcode';
 
 const docker = new Docker();
 
@@ -13,7 +14,6 @@ const forward = [
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC',
 ];
 
-const toGitUrl = (url: string) => (url.endsWith('.git') ? url : `${url}.git`);
 
 export interface ContainerOptions {
   /** Docker image to use. Defaults to `node:20`. */
@@ -154,4 +154,3 @@ export async function getPrContainerStatus(prId: number) {
 export function getPrContainerOutput(prId: number) {
   return outputs.get(prId) ?? null;
 }
-
