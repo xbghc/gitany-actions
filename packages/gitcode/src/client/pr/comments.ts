@@ -1,4 +1,9 @@
-import { prCommentsUrl, type PRComment, type PRCommentQueryOptions } from '../../api/pr';
+import {
+  prCommentsUrl,
+  type PRComment,
+  type PRCommentQueryOptions,
+  prCommentSchema,
+} from '../../api/pr';
 import type { GitcodeClient } from '../core';
 import { parseGitUrl } from '../../utils';
 
@@ -20,6 +25,7 @@ export async function listPullRequestComments(
       if (v !== undefined) query[k] = v as string;
     }
   }
-  return await client.request<PRComment[]>(apiUrl, 'GET', { query });
+  const json = await client.request(apiUrl, 'GET', { query });
+  return prCommentSchema.array().parse(json);
 }
 

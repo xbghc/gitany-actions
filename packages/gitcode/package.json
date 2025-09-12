@@ -5,7 +5,9 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js",
@@ -21,5 +23,10 @@
   "devDependencies": {
     "esbuild": "^0.21.5"
   },
-    "engines": { "node": ">=18.17" }
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "zod": "^4.1.7"
+  }
 }

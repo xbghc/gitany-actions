@@ -1,2 +1,6 @@
-export type { UserProfile, UserProfileResponse } from './profile';
-export { userProfileUrl } from './profile';
+export {
+  userProfileSchema,
+  userProfileUrl,
+  type UserProfile,
+  type UserProfileResponse,
+} from './profile';
