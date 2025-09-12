@@ -5,12 +5,6 @@ export type Permission = string;
 
 export interface AskClaudeOptions {
   permissions?: Permission[];
-  anthropicBaseUrl?: string;
-  anthropicAuthToken?: string;
-  apiTimeoutMs?: number;
-  anthropicModel?: string;
-  anthropicSmallFastModel?: string;
-  disableNonessentialTraffic?: boolean;
 }
 
 const execFileAsync = promisify(execFile);
@@ -18,43 +12,23 @@ const execFileAsync = promisify(execFile);
 export async function askClaude(
   msg: string,
   cwd: string,
-  options: AskClaudeOptions = {}
+  options: AskClaudeOptions = {},
 ): Promise<string> {
-  const {
-    permissions,
-    anthropicBaseUrl = process.env.ANTHROPIC_BASE_URL,
-    anthropicAuthToken = process.env.ANTHROPIC_AUTH_TOKEN,
-    apiTimeoutMs = Number(process.env.API_TIMEOUT_MS) || 60_000,
-    anthropicModel = process.env.ANTHROPIC_MODEL,
-    anthropicSmallFastModel = process.env.ANTHROPIC_SMALL_FAST_MODEL,
-    disableNonessentialTraffic =
-      process.env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC === '1',
-  } = options;
+  const { permissions } = options;
 
-  if (!anthropicAuthToken) {
+  if (!process.env.ANTHROPIC_AUTH_TOKEN) {
     throw new Error('ANTHROPIC_AUTH_TOKEN is required');
   }
-
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    ...(anthropicBaseUrl && { ANTHROPIC_BASE_URL: anthropicBaseUrl }),
-    ANTHROPIC_AUTH_TOKEN: anthropicAuthToken,
-    ...(apiTimeoutMs && { API_TIMEOUT_MS: String(apiTimeoutMs) }),
-    ...(anthropicModel && { ANTHROPIC_MODEL: anthropicModel }),
-    ...(anthropicSmallFastModel && {
-      ANTHROPIC_SMALL_FAST_MODEL: anthropicSmallFastModel,
-    }),
-    ...(disableNonessentialTraffic && {
-      CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
-    }),
-  };
 
   const args = ['-p', msg, '--output-format', 'text'];
   if (permissions && permissions.length > 0) {
     args.push('--allowedTools', permissions.join(','));
   }
 
-  const { stdout } = await execFileAsync('claude', args, { cwd, env });
+  const { stdout } = await execFileAsync('claude', args, {
+    cwd,
+    env: process.env,
+  });
   return stdout.trim();
 }
 

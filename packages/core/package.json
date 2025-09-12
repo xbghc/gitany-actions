@@ -8,7 +8,7 @@
   "files": ["dist"],
   "scripts": {
     "dev": "pnpm build && node dist/index.js",
-    "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js",
+    "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js --external:ssh2 --external:cpu-features",
     "clean": "rm -rf dist",
     "lint": "eslint ."
   },
@@ -19,10 +19,12 @@
     }
   },
   "dependencies": {
-    "@gitany/gitcode": "workspace:*"
+    "@gitany/gitcode": "workspace:*",
+    "dockerode": "^4.0.8"
   },
   "devDependencies": {
-    "esbuild": "^0.21.5"
+    "esbuild": "^0.21.5",
+    "@types/dockerode": "^3.3.43"
   },
   "engines": {
     "node": ">=18.17"

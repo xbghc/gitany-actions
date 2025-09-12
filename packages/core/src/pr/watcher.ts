@@ -25,15 +25,9 @@ export function watchPullRequest(
   const check = async () => {
     const newList = await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
     for (const pr of newList) {
-      if (!idExists) {
+      if (!idExists(pr.id) || stateChanged(pr)) {
         triggerPullRequestEvent(pr, options);
       }
-
-      if (stateChanged(pr)) {
-        triggerPullRequestEvent(pr, options);
-      }
-
-      break;
     }
 
     prList = newList;
