@@ -130,6 +130,11 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
   - `RepoRole` 类型直接在 gitcode 包中定义，不再依赖 shared 包
 - **功能增强**：客户端现在返回更完整的 API 响应数据，提供更多有用信息
 
+### 2025-09-11 更新
+
+- PR 列表、PR 评论和仓库权限接口的返回数据均通过 Zod 进行结构校验。
+- 自身权限接口在角色信息中保留 `cn_name` 字段以确保权限检测。
+
 ### 历史变更
 
 - 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理；对外 API 与行为不变。

@@ -1,4 +1,9 @@
-import { listPullsUrl, type ListPullsQuery, type ListPullsResponse } from '../../api/pr';
+import {
+  listPullsUrl,
+  type ListPullsQuery,
+  type ListPullsResponse,
+  listPullsResponseSchema,
+} from '../../api/pr';
 import type { GitcodeClient } from '../core';
 import { parseGitUrl } from '../../utils';
 
@@ -18,5 +23,6 @@ export async function listPullRequests(
       query[k] = v;
     }
   }
-  return await client.request(apiUrl, 'GET', { query });
+  const json = await client.request(apiUrl, 'GET', { query });
+  return listPullsResponseSchema.parse(json);
 }

@@ -38,23 +38,27 @@ export type ListPullsParams = {
 
 /**
  * Minimal Pull Request representation with common fields.
- * Additional fields may be present and are preserved via index signature.
  */
-import type { Branch } from '../branch';
+import { z } from 'zod';
+import { branchSchema } from '../branch';
 
-export type PullRequest = {
-  id: number;
-  number: number;
-  title: string;
-  state: string;
-  head: Branch;
-  base: Branch;
-  user?: unknown;
-  created_at?: string;
-  updated_at?: string;
-  merged_at?: string | null;
-  [k: string]: unknown;
-};
+export const pullRequestSchema = z.object({
+  id: z.number(),
+  number: z.number(),
+  title: z.string(),
+  state: z.string(),
+  head: branchSchema,
+  base: branchSchema,
+  user: z.unknown().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  merged_at: z.string().nullable().optional(),
+  // 省略部分内容
+});
+
+export type PullRequest = z.infer<typeof pullRequestSchema>;
+
+export const listPullsResponseSchema = pullRequestSchema.array();
 
 export type ListPullsResponse = PullRequest[];
 import { API_BASE } from '../constants';
