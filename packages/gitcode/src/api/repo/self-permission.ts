@@ -27,6 +27,8 @@ export const roleInfoSchema = z.object({
   id: z.number(),
   /** Role display name. */
   name: z.string(),
+  /** Localized role name. */
+  cn_name: z.string().optional(),
   /** Optional code/identifier. */
   code: z.string().optional(),
   /** Optional role type/category (e.g., owner, maintainer). */

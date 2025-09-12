@@ -133,6 +133,7 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 ### 2025-09-11 更新
 
 - PR 列表、PR 评论和仓库权限接口的返回数据均通过 Zod 进行结构校验。
+- 自身权限接口在角色信息中保留 `cn_name` 字段以确保权限检测。
 
 ### 历史变更
 
