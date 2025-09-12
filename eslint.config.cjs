@@ -20,6 +20,12 @@ module.exports = [
     },
   },
   {
+    // Allow using console for logging across the project
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parser: tsParser,
@@ -34,6 +40,7 @@ module.exports = [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       'no-undef': 'off',
+      'no-console': 'off',
     },
   },
   prettier,
