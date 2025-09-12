@@ -13,8 +13,10 @@ const forward = [
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC',
 ];
 
+const toGitUrl = (url: string) => (url.endsWith('.git') ? url : `${url}.git`);
+
 export interface ContainerOptions {
-  /** Docker image to use. Defaults to `node:20-alpine`. */
+  /** Docker image to use. Defaults to `node:20`. */
   image?: string;
   /** Extra environment variables to provide to the container. */
   env?: Record<string, string>;
@@ -38,14 +40,20 @@ async function ensureContainer(repoUrl: string, pr: PullRequest, options: Contai
   if (options.env) {
     for (const [k, v] of Object.entries(options.env)) env.push(`${k}=${v}`);
   }
+
+  const baseRepoUrl = toGitUrl(repoUrl);
+  const headRepoUrl = toGitUrl(pr.head.repo.html_url);
+
   env.push(
-    `PR_REPO_URL=${repoUrl}`,
+    `PR_BASE_REPO_URL=${baseRepoUrl}`,
+    `PR_HEAD_REPO_URL=${headRepoUrl}`,
     `PR_BASE_SHA=${pr.base.sha}`,
     `PR_HEAD_SHA=${pr.head.sha}`,
+    `PR_REPO_URL=${baseRepoUrl}`,
   );
 
   const container = await docker.createContainer({
-    Image: options.image ?? 'node:20-alpine',
+    Image: options.image ?? 'node:20',
     Cmd: ['sh', '-lc', 'tail -f /dev/null'],
     Env: env,
     User: 'node',
@@ -81,9 +89,11 @@ function defaultScript() {
   return [
     'corepack enable',
     'rm -rf /tmp/workspace',
-    'git clone "$PR_REPO_URL" /tmp/workspace',
+    'git clone "$PR_BASE_REPO_URL" /tmp/workspace',
     'cd /tmp/workspace',
-    'git fetch origin "$PR_BASE_SHA" "$PR_HEAD_SHA"',
+    'git remote add head "$PR_HEAD_REPO_URL"',
+    'git fetch origin "$PR_BASE_SHA"',
+    'git fetch head "$PR_HEAD_SHA"',
     'git checkout "$PR_HEAD_SHA"',
     'pnpm install --frozen-lockfile --ignore-scripts',
     'pnpm build',
