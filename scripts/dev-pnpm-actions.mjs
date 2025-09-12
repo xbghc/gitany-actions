@@ -1,7 +1,8 @@
-const main = async () => {
-  const { GitcodeClient } = await import('../packages/gitcode/dist/index.js');
-  const { PnpmActions } = await import('../packages/pnpm-actions/dist/index.js');
+#!/usr/bin/env node
+import { GitcodeClient } from '../packages/gitcode/dist/index.js';
+import { PnpmActions } from '../packages/pnpm-actions/dist/index.js';
 
+const main = async () => {
   const repoUrl =
     process.argv[2] || process.env.GITANY_DEV_REPO || 'https://gitcode.com/owner/repo.git';
   const client = new GitcodeClient();
