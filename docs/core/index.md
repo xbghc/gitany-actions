@@ -106,6 +106,7 @@ await removePrContainer(pr.id);
 
 - `PR_BASE_REPO_URL`、`PR_HEAD_REPO_URL`
 - `PR_BASE_SHA`、`PR_HEAD_SHA`
+
 - 若设置，所有以 `ANTHROPIC_` 开头的 Claude 相关变量都会被转发
 
 这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，默认在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，`runPrInContainer` 会抛出 `Docker daemon is not available` 错误。函数返回值包含脚本的退出码与输出，主程序也可通过 `getPrContainerStatus(pr.id)` 和 `getPrContainerOutput(pr.id)` 查询容器状态与最近一次执行日志。
@@ -130,4 +131,3 @@ await runPrInContainer('https://gitcode.com/owner/repo.git', pr, {
 ```
 
 上述脚本在容器中运行 `claude code` 自动修改工作区，并通过 `git` 命令提交并推送到 PR 分支。
-
