@@ -1,0 +1,33 @@
+{
+  "name": "@gitany/pnpm-actions",
+  "version": "0.1.0",
+  "description": "PNPM-based actions to build and test pull requests in containers",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "dev": "pnpm build && node dist/index.js",
+    "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js",
+    "clean": "rm -rf dist",
+    "lint": "eslint ."
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@gitany/core": "workspace:*",
+    "@gitany/gitcode": "workspace:*",
+    "dockerode": "^4.0.8"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5",
+    "@types/dockerode": "^3.3.43"
+  },
+  "engines": {
+    "node": ">=18.17"
+  }
+}

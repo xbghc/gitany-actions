@@ -154,3 +154,6 @@ export async function getPrContainerStatus(prId: number) {
 export function getPrContainerOutput(prId: number) {
   return outputs.get(prId) ?? null;
 }
+export function getPrContainer(prId: number) {
+  return containers.get(prId)?.container ?? null;
+}

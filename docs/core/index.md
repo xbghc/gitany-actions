@@ -81,6 +81,7 @@ import {
   removePrContainer,
   getPrContainerStatus,
   getPrContainerOutput,
+  getPrContainer,
 } from '@gitany/core';
 import { GitcodeClient } from '@gitany/gitcode';
 
@@ -94,8 +95,9 @@ const [pr] = await client.pr.list('https://gitcode.com/owner/repo.git', {
 const { exitCode, output } = await runPrInContainer('https://gitcode.com/owner/repo.git', pr);
 console.log(exitCode, output);
 
-// 查询容器状态和最近输出
+// 查询容器状态、对象和最近输出
 console.log(await getPrContainerStatus(pr.id));
+console.log(getPrContainer(pr.id));
 console.log(getPrContainerOutput(pr.id));
 
 // 自定义镜像和脚本
@@ -116,7 +118,7 @@ await removePrContainer(pr.id);
 
 - 若设置，所有以 `ANTHROPIC_` 开头的 Claude 相关变量都会被转发
 
-这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，默认在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，`runPrInContainer` 会抛出 `Docker daemon is not available` 错误。函数返回值包含脚本的退出码与输出，主程序也可通过 `getPrContainerStatus(pr.id)` 和 `getPrContainerOutput(pr.id)` 查询容器状态与最近一次执行日志。
+这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，默认在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，`runPrInContainer` 会抛出 `Docker daemon is not available` 错误。函数返回值包含脚本的退出码与输出，主程序也可通过 `getPrContainerStatus(pr.id)`、`getPrContainerOutput(pr.id)` 或 `getPrContainer(pr.id)` 查询容器状态、日志以及容器实例。
 
 默认脚本会克隆基仓库、添加 head 远程并检出 PR 提交，然后执行 `pnpm install`、`pnpm build`、`pnpm test`。
 

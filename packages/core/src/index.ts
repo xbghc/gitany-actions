@@ -10,4 +10,5 @@ export {
   removePrContainer,
   getPrContainerStatus,
   getPrContainerOutput,
+  getPrContainer,
 } from './container';
