@@ -39,7 +39,7 @@ export type ListIssuesParams = {
 export const issueSchema = z.object({
   id: z.number(),
   html_url: z.string(),
-  number: z.number(),
+  number: z.string(),
   state: z.string(),
   title: z.string(),
   body: z.string().nullable().optional(),
