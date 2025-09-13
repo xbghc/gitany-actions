@@ -21,7 +21,8 @@
   "dependencies": {
     "@gitany/gitcode": "workspace:*",
     "@gitany/shared": "workspace:*",
-    "dockerode": "^4.0.8"
+    "dockerode": "^4.0.8",
+    "tar": "^7.4.3"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",

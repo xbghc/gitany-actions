@@ -28,7 +28,14 @@ async function build() {
     target: 'node18',
     sourcemap: true,
     outfile: 'dist/index.js',
-    external: ['@gitany/shared', '@gitany/gitcode', 'ssh2', 'cpu-features'],
+    // Do not bundle certain deps to avoid CJS-in-ESM dynamic require issues
+    external: [
+      '@gitany/shared',
+      '@gitany/gitcode',
+      'dockerode', // keep as external so Node ESM loads CJS properly
+      'ssh2',
+      'cpu-features',
+    ],
   });
 }
 
@@ -36,4 +43,3 @@ build().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
