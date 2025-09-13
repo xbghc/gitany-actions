@@ -1,15 +1,17 @@
 import { GitcodeClient } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
+import { resolveRepoUrl } from '@gitany/git-lib';
 
 const logger = createLogger('@gitany/cli');
 
 export async function listCommand(
-  url: string,
-  options: Record<string, string | undefined>,
+  url?: string,
+  options: Record<string, string | undefined> = {},
 ): Promise<void> {
   try {
     const client = new GitcodeClient();
-    const pulls = await client.pr.list(url, {
+    const repoUrl = await resolveRepoUrl(url);
+    const pulls = await client.pr.list(repoUrl, {
       state: options.state,
       head: options.head,
       base: options.base,

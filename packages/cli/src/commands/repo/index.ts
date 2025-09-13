@@ -7,7 +7,7 @@ export function repoCommand(): Command {
     .description('Repository commands');
 
   repoProgram
-    .command('permission <url>')
+    .command('permission [url]')
     .description('Show current user\'s role on a repo')
     .action(permissionCommand);
 
