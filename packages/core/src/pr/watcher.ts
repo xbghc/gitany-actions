@@ -13,6 +13,9 @@ interface WatchPullRequestOptions {
   onMerged?: (pr: PullRequest) => void;
   onComment?: (pr: PullRequest, comment: PRComment) => void;
   intervalSec?: number;
+  // 可选：仅拉取某一类评论（'pr_comment' 或 'diff_comment'）。
+  // 不设置时默认拉取所有类型评论。
+  commentType?: 'diff_comment' | 'pr_comment';
 }
 
 export function watchPullRequest(
@@ -101,7 +104,7 @@ async function detectNewComments(
     // 仅对打开的 PR 拉取评论，减少请求
     if (pr.state !== 'open') continue;
 
-    const comments = await fetchPrComments(client, url, pr.number);
+    const comments = await fetchPrComments(client, url, pr.number, options);
     if (!comments.length) continue;
 
     const lastSeen = state.lastCommentIdByPr.get(pr.number);
@@ -131,10 +134,11 @@ async function fetchPrComments(
   client: GitcodeClient,
   url: string,
   prNumber: number,
+  options?: WatchPullRequestOptions,
 ): Promise<PRComment[]> {
-  // 仅拉取普通 PR 评论（非 diff 评论），减少数据量
-    // TODO 默认拉取所有，允许选择
-  return await client.pr.comments(url, prNumber, { comment_type: 'pr_comment' });
+  // 默认拉取所有类型评论；如提供 commentType 则按类型过滤
+  const query = options?.commentType ? { comment_type: options.commentType } : undefined;
+  return await client.pr.comments(url, prNumber, query as any);
 }
 
 // -------- Persistence (fast, lightweight) --------
