@@ -9,3 +9,13 @@ export {
   issueSchema,
   listIssuesResponseSchema,
 } from './list';
+export type {
+  IssueCommentsQuery,
+  IssueComment,
+  IssueCommentsResponse,
+} from './comments';
+export {
+  issueCommentsUrl,
+  issueCommentSchema,
+  issueCommentsResponseSchema,
+} from './comments';

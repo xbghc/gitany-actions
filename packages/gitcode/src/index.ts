@@ -37,11 +37,17 @@ export type {
   ListIssuesParams,
   Issue,
   ListIssuesResponse,
+  IssueCommentsQuery,
+  IssueComment,
+  IssueCommentsResponse,
 } from './api/issue';
 export {
   listIssuesUrl,
   issueSchema,
   listIssuesResponseSchema,
+  issueCommentsUrl,
+  issueCommentSchema,
+  issueCommentsResponseSchema,
 } from './api/issue';
 export {
   userProfileSchema,

@@ -9,6 +9,7 @@ title: Issues API
 适用接口：
 
 - 列表：GET `/api/v5/repos/{owner}/{repo}/issues`
+- 评论：GET `/api/v5/repos/{owner}/{repo}/issues/{number}/comments`
 
 ## 类型与导出
 
@@ -16,7 +17,11 @@ title: Issues API
 - `ListIssuesParams`：包含 `owner`、`repo` 与可选 `query`。
 - `Issue`：Issue 的最小字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
 - `ListIssuesResponse`：`Issue[]`。
+- `IssueCommentsQuery`：Issue 评论查询参数（`page`、`per_page`）。
+- `IssueComment`：Issue 评论的最小字段表示（`id`、`body`、`user`）。
+- `IssueCommentsResponse`：`IssueComment[]`。
 - `listIssuesUrl(owner, repo)`：构建列表接口绝对 URL。
+- `issueCommentsUrl(owner, repo, number)`：构建评论列表接口绝对 URL。
 
 以上均从包入口 `@gitany/gitcode` 导出。
 
@@ -36,6 +41,12 @@ const issues = await client.request(listUrl, 'GET', {
 // 也可通过模块方式调用：
 const issues2 = await client.issue.list('https://gitcode.com/owner/repo.git', {
   state: 'open',
+});
+
+// 2) 列表 Issue 评论
+const comments = await client.issue.comments('https://gitcode.com/owner/repo.git', 42, {
+  page: 1,
+  per_page: 20,
 });
 ```
 
