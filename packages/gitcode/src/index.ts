@@ -40,6 +40,12 @@ export type {
   IssueCommentsQuery,
   IssueComment,
   IssueCommentsResponse,
+  CreateIssueBody,
+  CreateIssueParams,
+  CreatedIssue,
+  CreateIssueCommentBody,
+  CreateIssueCommentParams,
+  CreatedIssueComment,
 } from './api/issue';
 export {
   listIssuesUrl,
@@ -48,6 +54,10 @@ export {
   issueCommentsUrl,
   issueCommentSchema,
   issueCommentsResponseSchema,
+  createIssueUrl,
+  createdIssueSchema,
+  createIssueCommentUrl,
+  createdIssueCommentSchema,
 } from './api/issue';
 export {
   userProfileSchema,

@@ -19,3 +19,21 @@ export {
   issueCommentSchema,
   issueCommentsResponseSchema,
 } from './comments';
+export type {
+  CreateIssueBody,
+  CreateIssueParams,
+  CreatedIssue,
+} from './create';
+export {
+  createIssueUrl,
+  createdIssueSchema,
+} from './create';
+export type {
+  CreateIssueCommentBody,
+  CreateIssueCommentParams,
+  CreatedIssueComment,
+} from './create-comment';
+export {
+  createIssueCommentUrl,
+  createdIssueCommentSchema,
+} from './create-comment';

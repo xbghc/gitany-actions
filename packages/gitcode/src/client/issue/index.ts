@@ -1,7 +1,14 @@
 import type { GitcodeClient } from '../core';
 import { listIssues } from './list';
 import { listIssueComments } from './comments';
-import type { ListIssuesQuery, IssueCommentsQuery } from '../../api/issue';
+import { createIssue } from './create';
+import { createIssueComment } from './create-comment';
+import type {
+  ListIssuesQuery,
+  IssueCommentsQuery,
+  CreateIssueParams,
+  CreateIssueCommentParams,
+} from '../../api/issue';
 
 export class GitcodeClientIssue {
   constructor(private client: GitcodeClient) {}
@@ -13,6 +20,14 @@ export class GitcodeClientIssue {
   comments(url: string, issueNumber: number, query: IssueCommentsQuery = {}) {
     return listIssueComments(this.client, url, issueNumber, query);
   }
+
+  create(params: CreateIssueParams) {
+    return createIssue(this.client, params);
+  }
+
+  createComment(params: CreateIssueCommentParams) {
+    return createIssueComment(this.client, params);
+  }
 }
 
-export { listIssues, listIssueComments };
+export { listIssues, listIssueComments, createIssue, createIssueComment };
