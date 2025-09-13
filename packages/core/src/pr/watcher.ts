@@ -137,8 +137,9 @@ async function fetchPrComments(
   options?: WatchPullRequestOptions,
 ): Promise<PRComment[]> {
   // 默认拉取所有类型评论；如提供 commentType 则按类型过滤
-  const query = options?.commentType ? { comment_type: options.commentType } : undefined;
-  return await client.pr.comments(url, prNumber, query as any);
+  const query: import('@gitany/gitcode').PRCommentQueryOptions | undefined =
+    options?.commentType ? { comment_type: options.commentType } : undefined;
+  return await client.pr.comments(url, prNumber, query);
 }
 
 // -------- Persistence (fast, lightweight) --------

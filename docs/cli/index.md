@@ -261,6 +261,73 @@ PR 设置:
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/pull_request_settings`
 
+#### gitcode pr comment <pr-number> [git-url]
+
+在 Pull Request 上创建评论。
+
+```bash
+gitcode pr comment 123 https://gitcode.com/owner/repo.git --body "这个修复看起来不错！"
+
+# 或者在仓库目录中直接运行
+gitcode pr comment 123 --body "需要添加测试用例"
+
+# 从文件读取评论内容
+gitcode pr comment 123 --body-file comment.txt
+
+# 使用编辑器编写评论
+gitcode pr comment 123 --editor
+
+# 从标准输入读取评论内容
+echo "这是一个评论" | gitcode pr comment 123 --body-file -
+
+# 在浏览器中创建评论
+gitcode pr comment 123 --web
+
+# 输出 JSON 格式
+gitcode pr comment 123 --body "测试评论" --json
+```
+
+- 选项：
+  - `--body <string>`：指定评论内容
+  - `-F, --body-file <file>`：从文件读取评论内容（使用 `-` 从标准输入读取）
+  - `-e, --editor`：打开文本编辑器编写评论
+  - `-w, --web`：在浏览器中创建评论
+  - `--json`：输出原始 JSON 格式
+  - `-R, --repo <[HOST/]OWNER/REPO>`：指定其他仓库
+- 调用：`POST /api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
+
+#### gitcode pr comments <pr-number> [git-url]
+
+列出指定 Pull Request 的评论。默认输出为「评论 ID 与首行内容」：
+
+```
+- [#123] 这个修复看起来不错！
+- [#124] 需要添加测试用例
+```
+
+```bash
+gitcode pr comments 123 https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode pr comments 123
+
+# 带分页参数：
+gitcode pr comments 123 --page 2 --per-page 50
+
+# 按评论类型过滤：
+gitcode pr comments 123 --comment-type diff_comment
+
+# 输出 JSON：
+gitcode pr comments 123 --json
+```
+
+- 选项：
+  - `--comment-type <type>`：评论类型（`diff_comment | pr_comment`）
+  - `--page <n>`：页码
+  - `--per-page <n>`：每页数量
+  - `--json`：输出原始 JSON 数组
+- 调用：`GET /api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
+
 ### gitcode issue list [git-url]
 
 列出指定仓库的 Issues。默认状态为 `open`，默认输出为「标题列表」：

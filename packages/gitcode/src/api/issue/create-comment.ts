@@ -34,14 +34,12 @@ export type CreateIssueCommentParams = {
 export const createdIssueCommentSchema = z.object({
   id: z.number(),
   body: z.string(),
-  html_url: z.string(),
   user: z.object({
     id: z.string(),
     login: z.string(),
     name: z.string(),
     avatar_url: z.string(),
     html_url: z.string(),
-    type: z.string(),
   }),
   created_at: z.string(),
   updated_at: z.string(),

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { createLogger } from '@gitany/shared';
 
@@ -18,25 +18,28 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
     let repo: string;
 
     if (options.repo) {
-      const repoMatch = options.repo.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)(?:\.git)?$/);
-      if (repoMatch) {
-        owner = repoMatch[1];
-        repo = repoMatch[2];
+      const parsed = parseGitUrl(options.repo);
+      if (parsed) {
+        owner = parsed.owner;
+        repo = parsed.repo;
       } else {
         const parts = options.repo.split('/');
         if (parts.length === 2) {
           owner = parts[0];
           repo = parts[1];
+        } else if (parts.length === 3) {
+          owner = parts[1];
+          repo = parts[2];
         } else {
           throw new Error('Invalid repository format. Use [HOST/]OWNER/REPO');
         }
       }
     } else {
       const url = await resolveRepoUrl(urlArg);
-      const urlMatch = url.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)(?:\.git)?$/);
-      if (urlMatch) {
-        owner = urlMatch[1];
-        repo = urlMatch[2];
+      const parsed = parseGitUrl(url);
+      if (parsed) {
+        owner = parsed.owner;
+        repo = parsed.repo;
       } else {
         const parts = url.split('/');
         if (parts.length === 2) {

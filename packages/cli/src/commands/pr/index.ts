@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import { listCommand } from './list';
 import { createCommand } from './create';
 import { prSubCommand } from './settings';
+import { createPrCommentCommand } from './create-comment';
+import { prCommentsCommand } from './comments';
 
 export function prCommand(): Command {
   const prProgram = new Command('pr')
@@ -30,6 +32,21 @@ export function prCommand(): Command {
     .option('--issue <n>', 'Associate an issue number with the PR')
     .option('--json', 'Output created PR as JSON')
     .action(createCommand);
+
+  // Comment command
+  prProgram.addCommand(createPrCommentCommand());
+
+  // Comments list command
+  prProgram
+    .command('comments')
+    .description('List comments on a pull request')
+    .argument('<pr-number>', 'Pull request number')
+    .argument('[url]', 'Repository URL')
+    .option('--page <number>', 'Page number')
+    .option('--perPage <number>', 'Items per page')
+    .option('--commentType <type>', 'Comment type: diff_comment | pr_comment')
+    .option('--json', 'Output raw JSON')
+    .action(prCommentsCommand);
 
   // 添加子命令组
   const infoGroup = prProgram

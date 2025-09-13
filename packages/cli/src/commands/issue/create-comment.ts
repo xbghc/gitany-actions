@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -54,20 +54,24 @@ export async function createCommentAction(
     
     if (options.repo) {
       // 如果指定了 --repo，issueArg 应该是 issue number
-      const repoMatch = options.repo.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)(?:\.git)?$/);
-      if (repoMatch) {
-        owner = repoMatch[1];
-        repo = repoMatch[2];
+      const parsed = parseGitUrl(options.repo);
+      if (parsed) {
+        owner = parsed.owner;
+        repo = parsed.repo;
       } else {
         const parts = options.repo.split('/');
-        if (parts.length === 2) {
+        if (parts.length === 3) {
+          owner = parts[1];
+          repo = parts[2];
+        } else if (parts.length === 2) {
           owner = parts[0];
           repo = parts[1];
         } else {
-          throw new Error('Invalid repository format. Use [HOST/]OWNER/REPO');
+          // 展示 options.repo 的实际值，便于排查
+          throw new Error(`Invalid repository format: "${options.repo}". Use [HOST/]OWNER/REPO`);
         }
       }
-      
+
       issueNumber = parseInt(issueArg, 10);
     } else {
       // 解析 issueArg 为 owner/repo/number 或 URL 格式
@@ -146,7 +150,6 @@ export async function createCommentAction(
       console.log(`   ID:       ${comment.id}`);
       console.log(`   Author:   ${comment.user.name || comment.user.login}`);
       console.log(`   Created:  ${new Date(comment.created_at).toLocaleString()}`);
-      console.log(`   URL:      ${colors.blue}${comment.html_url}${colors.reset}`);
       
       // 显示评论内容预览
       const bodyPreview = comment.body.length > 100 
@@ -155,7 +158,6 @@ export async function createCommentAction(
       console.log(`   Preview:  "${bodyPreview}"`);
       
       console.log(`\n💡 Next steps:`);
-      console.log(`   • View the comment: ${colors.blue}${comment.html_url}${colors.reset}`);
       console.log(`   • Reply to comment:  gitcode issue comment ${issueNumber} --body "Your reply"`);
     }
   } catch (error) {
@@ -164,18 +166,6 @@ export async function createCommentAction(
     process.exit(1);
   }
 }
-
-// ANSI 颜色代码
-const colors = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  magenta: '\x1b[35m',
-  cyan: '\x1b[36m',
-  bright: '\x1b[1m'
-};
 
 export function createCommentCommand(): Command {
   return new Command('comment')

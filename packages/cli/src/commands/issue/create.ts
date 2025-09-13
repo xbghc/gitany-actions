@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
 import type { CreateIssueBody } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -211,13 +211,16 @@ export function createCommand(): Command {
       
       // 处理 --repo 标志
       if (optionsToUse.repo) {
-        const repoMatch = optionsToUse.repo.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)(?:\.git)?$/);
-        if (repoMatch) {
-          ownerArg = repoMatch[1];
-          repoArg = repoMatch[2];
+        const parsed = parseGitUrl(optionsToUse.repo);
+        if (parsed) {
+          ownerArg = parsed.owner;
+          repoArg = parsed.repo;
         } else {
           const parts = optionsToUse.repo.split('/');
-          if (parts.length === 2) {
+          if (parts.length === 3) {
+            ownerArg = parts[1];
+            repoArg = parts[2];
+          } else if (parts.length === 2) {
             ownerArg = parts[0];
             repoArg = parts[1];
           } else {

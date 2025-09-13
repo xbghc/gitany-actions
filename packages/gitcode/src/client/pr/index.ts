@@ -3,7 +3,8 @@ import { listPullRequests } from './list';
 import { listPullRequestComments } from './comments';
 import { createPullRequest } from './create';
 import { getPullRequestSettings } from './settings';
-import type { ListPullsQuery, CreatePullBody, PRCommentQueryOptions, PullRequestSettings } from '../../api/pr';
+import { createPrComment } from './create-comment';
+import type { ListPullsQuery, CreatePullBody, PRCommentQueryOptions, PullRequestSettings, CreatedPrComment } from '../../api/pr';
 
 export class GitcodeClientPr {
   constructor(private client: GitcodeClient) {}
@@ -22,5 +23,19 @@ export class GitcodeClientPr {
 
   async getSettings(owner: string, repo: string): Promise<PullRequestSettings> {
     return await getPullRequestSettings(this.client, owner, repo);
+  }
+
+  async createComment(
+    owner: string,
+    repo: string,
+    prNumber: number,
+    body: string,
+  ): Promise<CreatedPrComment> {
+    return await createPrComment(this.client, {
+      owner,
+      repo,
+      number: prNumber,
+      body: { body },
+    });
   }
 }
