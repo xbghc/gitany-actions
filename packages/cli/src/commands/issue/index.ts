@@ -14,7 +14,7 @@ export function issueCommand(): Command {
     .command('list')
     .alias('ls')
     .description('List issues for a repository')
-    .argument('<url>', 'Repository URL')
+    .argument('[url]', 'Repository URL')
     .option('-s, --state <state>', 'Filter by state: open | closed | all', 'open')
     .option('--labels <labels>', 'Comma-separated labels')
     .option('--page <n>', 'Page number')
@@ -26,12 +26,12 @@ export function issueCommand(): Command {
   issueProgram
     .command('comments')
     .description('List comments for an issue')
-    .argument('<url>', 'Repository URL')
     .argument('<number>', 'Issue number')
+    .argument('[url]', 'Repository URL')
     .option('--page <n>', 'Page number')
     .option('--per-page <n>', 'Items per page')
     .option('--json', 'Output raw JSON instead of list')
-    .action(commentsCommand);
+    .action((number, url, options) => commentsCommand(number, url, options));
 
   // Create issue command with GitHub CLI style options
   issueProgram.addCommand(createCommand());

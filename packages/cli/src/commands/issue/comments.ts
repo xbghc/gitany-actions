@@ -1,12 +1,13 @@
 import { GitcodeClient } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
+import { resolveRepoUrl } from '@gitany/git-lib';
 
 const logger = createLogger('@gitany/cli');
 
 export async function commentsCommand(
-  url: string,
   issueNumber: string,
-  options: Record<string, string | undefined>,
+  url?: string,
+  options: Record<string, string | undefined> = {},
 ): Promise<void> {
   const n = Number(issueNumber);
   if (!Number.isFinite(n) || n <= 0) {
@@ -16,11 +17,12 @@ export async function commentsCommand(
   }
 
   try {
-    const client = new GitcodeClient();
-    const comments = await client.issue.comments(url, n, {
-      page: options.page ? Number(options.page) : undefined,
-      per_page: options.perPage ? Number(options.perPage) : undefined,
-    });
+      const client = new GitcodeClient();
+      const repoUrl = await resolveRepoUrl(url);
+      const comments = await client.issue.comments(repoUrl, n, {
+        page: options.page ? Number(options.page) : undefined,
+        per_page: options.perPage ? Number(options.perPage) : undefined,
+      });
 
     if (options.json) {
       console.log(JSON.stringify(comments, null, 2));

@@ -3,6 +3,7 @@ import { GitcodeClient } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { createLogger } from '@gitany/shared';
 
 interface CreateCommentOptions {
   body?: string;
@@ -42,6 +43,7 @@ export async function createCommentAction(
   bodyArg?: string, 
   options: CreateCommentOptions = {}
 ) {
+  const logger = createLogger('@gitany/cli');
   try {
     const client = new GitcodeClient();
     
@@ -157,7 +159,8 @@ export async function createCommentAction(
       console.log(`   • Reply to comment:  gitcode issue comment ${issueNumber} --body "Your reply"`);
     }
   } catch (error) {
-    console.error('\n❌ Failed to create comment:', error instanceof Error ? error.message : error);
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error({ err: error }, '\n❌ Failed to create comment: %s', msg);
     process.exit(1);
   }
 }

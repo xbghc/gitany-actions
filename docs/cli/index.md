@@ -20,14 +20,30 @@ pnpm --filter @gitany/cli start -- --help
 
 > 开发模式：`pnpm --filter @gitany/cli dev`
 
+## 全局选项
+
+- `--verbose`：开启调试日志（等价于将日志级别设为 `debug`）。
+- `--quiet`：静默模式（将日志级别设为 `silent`，仅保留命令输出）。
+- `--log-level <level>`：设置日志级别（`fatal|error|warn|info|debug|trace|silent`）。
+
+说明：
+- 日志统一通过 `@gitany/shared` 的 logger 输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
+- 也可使用环境变量 `GITANY_LOG_LEVEL` 或 `LOG_LEVEL` 控制默认日志级别；命令行选项优先级更高。
+
 ## 命令
 
-### gitcode parse &lt;git-url&gt;
+> 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过 `@gitany/git-lib` 的 `resolveRepoUrl` 自动使用 `git remote get-url origin` 获取仓库地址。
+
+### gitcode parse [git-url]
 
 解析 Git 远程地址并输出 JSON。
 
 ```bash
+# 显式传入 URL
 gitcode parse https://gitcode.com/owner/repo.git
+
+# 在当前 Git 仓库中自动获取 remote
+gitcode parse
 ```
 
 ### gitcode auth &lt;subcommand&gt;
@@ -41,12 +57,14 @@ gitcode parse https://gitcode.com/owner/repo.git
 
 仓库相关命令。
 
-#### gitcode repo permission &lt;git-url&gt;
+#### gitcode repo permission [git-url]
 
 查询当前登录用户在指定仓库（通过仓库链接）的权限。
 
 ```bash
 gitcode repo permission https://gitcode.com/owner/repo.git
+# 或者在仓库目录中直接运行
+gitcode repo permission
 ```
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
@@ -162,7 +180,7 @@ gitcode repo info webhooks myorg myrepo
 
 Pull Request 相关命令。
 
-#### gitcode pr list &lt;git-url&gt;
+#### gitcode pr list [git-url]
 
 列出指定仓库的 Pull Requests。默认状态为 `open`，默认输出为「标题列表」：
 
@@ -173,6 +191,9 @@ Pull Request 相关命令。
 
 ```bash
 gitcode pr list https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode pr list
 
 # 带筛选参数：
 gitcode pr list git@gitcode.com:owner/repo.git \
@@ -190,13 +211,16 @@ gitcode pr list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/pulls`
 
-### gitcode pr create &lt;git-url&gt;
+### gitcode pr create [git-url]
 
 创建 Pull Request（仅支持部分字段）。
 
 ```bash
 gitcode pr create https://gitcode.com/owner/repo.git \
   --title "修复登录异常" --head feat/login-fix --base main --body "补充说明：修复 Token 过期报错"
+
+# 或者在仓库目录中直接运行
+gitcode pr create --title "修复登录异常" --head feat/login-fix --base main
 
 # 关联 Issue（示例）：
 gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --base main --issue 123
@@ -237,7 +261,7 @@ PR 设置:
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/pull_request_settings`
 
-### gitcode issue list &lt;git-url&gt;
+### gitcode issue list [git-url]
 
 列出指定仓库的 Issues。默认状态为 `open`，默认输出为「标题列表」：
 
@@ -248,6 +272,9 @@ PR 设置:
 
 ```bash
 gitcode issue list https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode issue list
 
 # 带筛选参数：
 gitcode issue list git@gitcode.com:owner/repo.git \
@@ -265,7 +292,7 @@ gitcode issue list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues`
 
-### gitcode issue comments <git-url> <issue-number>
+### gitcode issue comments <issue-number> [git-url]
 
 列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」：
 
@@ -274,13 +301,16 @@ gitcode issue list <url> --json
 ```
 
 ```bash
-gitcode issue comments https://gitcode.com/owner/repo.git 42
+gitcode issue comments 42 https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode issue comments 42
 
 # 带分页参数：
-gitcode issue comments <url> 42 --page 2 --per-page 50
+gitcode issue comments 42 --page 2 --per-page 50
 
 # 输出 JSON：
-gitcode issue comments <url> 42 --json
+gitcode issue comments 42 --json
 ```
 
 - 选项：

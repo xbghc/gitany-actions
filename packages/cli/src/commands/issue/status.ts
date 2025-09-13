@@ -1,19 +1,22 @@
 import { Command } from 'commander';
 import { GitcodeClient } from '@gitany/gitcode';
+import { resolveRepoUrl } from '@gitany/git-lib';
+import { createLogger } from '@gitany/shared';
 
 interface StatusOptions {
   json?: boolean;
   repo?: string;
 }
 
-export async function statusAction(url: string, options: StatusOptions = {}) {
+export async function statusAction(urlArg?: string, options: StatusOptions = {}) {
+  const logger = createLogger('@gitany/cli');
   try {
     const client = new GitcodeClient();
-    
+
     // 解析 repository URL
     let owner: string;
     let repo: string;
-    
+
     if (options.repo) {
       const repoMatch = options.repo.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)(?:\.git)?$/);
       if (repoMatch) {
@@ -29,6 +32,7 @@ export async function statusAction(url: string, options: StatusOptions = {}) {
         }
       }
     } else {
+      const url = await resolveRepoUrl(urlArg);
       const urlMatch = url.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)(?:\.git)?$/);
       if (urlMatch) {
         owner = urlMatch[1];
@@ -105,7 +109,8 @@ export async function statusAction(url: string, options: StatusOptions = {}) {
       console.log(`   • View repository:   ${colors.blue}https://gitcode.com/${owner}/${repo}${colors.reset}`);
     }
   } catch (error) {
-    console.error('\n❌ Failed to get issue status:', error instanceof Error ? error.message : error);
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error({ err: error }, '\n❌ Failed to get issue status: %s', msg);
     process.exit(1);
   }
 }
@@ -114,7 +119,7 @@ export function statusCommand(): Command {
   return new Command('status')
     .alias('st')
     .description('Show issue status and statistics for a repository')
-    .argument('<url>', 'Repository URL or OWNER/REPO')
+    .argument('[url]', 'Repository URL or OWNER/REPO')
     .option('--json', 'Output raw JSON instead of formatted status')
     .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
     .action(statusAction);

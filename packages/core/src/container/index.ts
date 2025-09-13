@@ -1,9 +1,11 @@
 import Docker from 'dockerode';
 import type { PullRequest } from '@gitany/gitcode';
 import { toGitUrl } from '@gitany/gitcode';
+import { createLogger } from '@gitany/shared';
 // No local filesystem/container image build needed; use official Node images.
 
 const docker = new Docker();
+const logger = createLogger('@gitany/core');
 
 /** Forwarded Claude related env vars */
 const forward = [
@@ -87,7 +89,7 @@ async function execInContainer(container: Docker.Container, script: string, prId
   stream.on('data', (d) => {
     const text = d.toString();
     output += text;
-    process.stdout.write(d);
+    try { logger.debug(text); } catch { /* ignore */ }
   });
   return new Promise<{ exitCode: number; output: string }>((resolve, reject) => {
     stream.on('end', async () => {
@@ -213,6 +215,11 @@ export async function testShaBuild(
   const verbose = options.verbose ?? false;
   const keepContainer = options.keepContainer ?? false;
   const nodeVersion = options.nodeVersion ?? '18';
+  // Use a child logger for this run; force debug when verbose
+  const log = logger.child({ scope: 'core:container', func: 'testShaBuild', sha });
+  if (verbose) {
+    try { log.level = 'debug'; } catch { /* ignore */ }
+  }
 
   // 初始化结果对象
   const result: TestShaBuildResult = {
@@ -242,9 +249,7 @@ export async function testShaBuild(
     await ensureDocker();
     result.diagnostics.dockerAvailable = true;
 
-    if (verbose) {
-      console.log(`🐳 Docker 可用，使用 Node.js ${nodeVersion}`);
-    }
+    log.debug(`🐳 Docker 可用，使用 Node.js ${nodeVersion}`);
 
     // 创建单一容器执行所有步骤
     const env = [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`];
@@ -254,32 +259,30 @@ export async function testShaBuild(
     try {
       // 使用官方 Node 镜像，不再构建自定义镜像
       const imageName = `node:${nodeVersion}`;
-      if (verbose) {
-        console.log(`🐳 使用镜像: ${imageName}`);
-      }
+      log.debug(`🐳 使用镜像: ${imageName}`);
 
       // 若本地不存在镜像则拉取
       try {
         await docker.getImage(imageName).inspect();
         result.diagnostics.imagePullStatus = 'exists';
-        if (verbose) console.log(`🐳 镜像 ${imageName} 已存在`);
+        log.debug(`🐳 镜像 ${imageName} 已存在`);
       } catch {
-        if (verbose) console.log(`🐳 拉取镜像 ${imageName}...`);
+        log.debug(`🐳 拉取镜像 ${imageName}...`);
         await new Promise<void>((resolve, reject) => {
-          docker.pull(imageName, (err: any, stream: any) => {
-            if (err) return reject(err);
+          docker.pull(imageName, (err: unknown, stream: NodeJS.ReadableStream | undefined) => {
+            if (err) return reject(err instanceof Error ? err : new Error(String(err)));
             if (!stream) return reject(new Error('Docker pull stream is undefined'));
             if (verbose) {
               stream.on('data', (d: Buffer) => {
-                try { process.stdout.write(d.toString()); } catch { /* ignore */ }
+                try { log.debug(d.toString()); } catch { /* ignore */ }
               });
             }
             stream.on('end', () => resolve());
-            stream.on('error', (e: any) => reject(e));
+            stream.on('error', (e: unknown) => reject(e instanceof Error ? e : new Error(String(e))));
           });
         });
         result.diagnostics.imagePullStatus = 'pulled';
-        if (verbose) console.log(`🐳 镜像 ${imageName} 拉取完成`);
+        log.debug(`🐳 镜像 ${imageName} 拉取完成`);
       }
 
       container = await docker.createContainer({
@@ -293,15 +296,11 @@ export async function testShaBuild(
       result.diagnostics.containerId = container.id;
       await container.start();
 
-      if (verbose) {
-        console.log(`🐳 容器已创建，ID: ${container.id}`);
-      }
+      log.debug(`🐳 容器已创建，ID: ${container.id}`);
 
       // 定义执行步骤的函数
       const executeStep = async (name: string, script: string) => {
-        if (verbose) {
-          console.log(`📋 执行步骤: ${name}`);
-        }
+        log.debug(`📋 执行步骤: ${name}`);
 
         const stepStartTime = Date.now();
 
@@ -324,7 +323,7 @@ export async function testShaBuild(
             fullOutput += text;
 
             if (verbose) {
-              process.stdout.write(`[${name}] ${text}`);
+              try { log.debug(`[${name}] ${text}`); } catch { /* ignore */ }
             }
           });
 

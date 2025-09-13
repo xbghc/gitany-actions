@@ -4,6 +4,7 @@ import type { CreateIssueBody } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
+import { createLogger } from '@gitany/shared';
 
 export interface CreateOptions {
   title?: string;
@@ -58,6 +59,7 @@ async function openEditor(content: string): Promise<string> {
 }
 
 export async function createAction(owner: string, repo: string, title?: string, options: CreateOptions = {}) {
+  const logger = createLogger('@gitany/cli');
   try {
     const client = new GitcodeClient();
     
@@ -156,7 +158,8 @@ export async function createAction(owner: string, repo: string, title?: string, 
       console.log(`   • Add assignee:  gitcode issue edit ${issue.number} --assignee @me`);
     }
   } catch (error) {
-    console.error('\n❌ Failed to create issue:', error instanceof Error ? error.message : error);
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error({ err: error }, '\n❌ Failed to create issue: %s', msg);
     process.exit(1);
   }
 }
