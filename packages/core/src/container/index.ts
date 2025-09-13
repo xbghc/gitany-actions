@@ -4,6 +4,13 @@ import { toGitUrl } from '@gitany/gitcode';
 
 const docker = new Docker();
 
+interface DockerModem {
+  followProgress(
+    stream: NodeJS.ReadableStream,
+    onFinished: (error: Error | null) => void,
+  ): void;
+}
+
 /** Forwarded Claude related env vars */
 const forward = [
   'ANTHROPIC_BASE_URL',
@@ -37,6 +44,23 @@ async function ensureDocker() {
   }
 }
 
+async function ensureImage(image: string) {
+  try {
+    await docker.getImage(image).inspect();
+  } catch {
+    const stream = await docker.pull(image);
+    await new Promise<void>((resolve, reject) => {
+      (docker.modem as DockerModem).followProgress(stream, (pullErr: Error | null) => {
+        if (pullErr) {
+          reject(pullErr);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+}
+
 async function ensureContainer(repoUrl: string, pr: PullRequest, options: ContainerOptions = {}) {
   await ensureDocker();
   let entry = containers.get(pr.id);
@@ -62,8 +86,11 @@ async function ensureContainer(repoUrl: string, pr: PullRequest, options: Contai
     `PR_REPO_URL=${baseRepoUrl}`,
   );
 
+  const image = options.image ?? 'node:20';
+  await ensureImage(image);
+
   const container = await docker.createContainer({
-    Image: options.image ?? 'node:20',
+    Image: image,
     Cmd: ['sh', '-lc', 'tail -f /dev/null'],
     Env: env,
     User: 'node',
