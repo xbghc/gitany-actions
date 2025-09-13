@@ -8,7 +8,7 @@
   "files": ["dist"],
   "scripts": {
     "dev": "pnpm build && node dist/index.js",
-    "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js --external:ssh2 --external:cpu-features",
+    "build": "node ./scripts/build.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ."
   },
