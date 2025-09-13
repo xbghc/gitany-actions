@@ -1,4 +1,7 @@
 import { GitcodeClient } from '@gitany/gitcode';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('@gitany/cli');
 
 export async function listCommand(
   url: string,
@@ -33,7 +36,7 @@ export async function listCommand(
       }
       return;
     }
-    console.error(err);
+    logger.error({ err }, 'Failed to list issues');
     process.exit(1);
   }
 }

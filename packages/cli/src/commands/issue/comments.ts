@@ -1,4 +1,7 @@
 import { GitcodeClient } from '@gitany/gitcode';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('@gitany/cli');
 
 export async function commentsCommand(
   url: string,
@@ -7,7 +10,7 @@ export async function commentsCommand(
 ): Promise<void> {
   const n = Number(issueNumber);
   if (!Number.isFinite(n) || n <= 0) {
-    console.error('Invalid issue number');
+    logger.error('Invalid issue number');
     process.exit(1);
     return;
   }
@@ -38,7 +41,7 @@ export async function commentsCommand(
       }
       return;
     }
-    console.error(err);
+    logger.error({ err }, 'Failed to list issue comments');
     process.exit(1);
   }
 }
