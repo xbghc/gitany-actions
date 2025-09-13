@@ -8,7 +8,7 @@
   "files": ["dist"],
   "scripts": {
     "dev": "pnpm build && node dist/index.js",
-    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "build": "node ./scripts/build.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ."
   },
@@ -18,7 +18,9 @@
       "import": "./dist/index.js"
     }
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  },
   "dependencies": {
     "pino": "^9.0.0"
   },
