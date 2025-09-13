@@ -126,6 +126,30 @@ gitcode issue list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues`
 
+### gitcode issue comments <git-url> <issue-number>
+
+列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」：
+
+```
+- [#123] 第一条评论
+```
+
+```bash
+gitcode issue comments https://gitcode.com/owner/repo.git 42
+
+# 带分页参数：
+gitcode issue comments <url> 42 --page 2 --per-page 50
+
+# 输出 JSON：
+gitcode issue comments <url> 42 --json
+```
+
+- 选项：
+  - `--page <n>`：页码
+  - `--per-page <n>`：每页数量
+  - `--json`：输出原始 JSON 数组
+- 调用：`GET /api/v5/repos/{owner}/{repo}/issues/{number}/comments`
+
 ### gitcode user show
 
 显示当前认证用户的详细信息。
