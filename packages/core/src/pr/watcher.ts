@@ -3,19 +3,8 @@ import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
 import * as path from 'node:path';
-import { createRequire } from 'node:module';
-
-// Lazy pino logger (optional dependency). Falls back to console when unavailable.
-const __require = createRequire(import.meta.url);
-let logger: { error: (...args: any[]) => void } | null = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const pino = __require('pino');
-  const factory = (pino.default ?? pino) as (opts?: any) => { error: (...args: any[]) => void };
-  logger = factory({ name: '@gitany/core' });
-} catch {
-  logger = null;
-}
+import { createLogger } from '@gitany/shared';
+const logger = createLogger('@gitany/core');
 const DEFAULT_INTERVAL_SEC = 5;
 
 interface WatchPullRequestOptions {
@@ -184,14 +173,9 @@ function loadPersistedStateSync(url: string): WatcherState | null {
     const prList: BaselinePR[] = (data.prs ?? []).map((p) => ({ id: p.id, state: p.state, number: p.number }));
     return { prList, lastCommentIdByPr: lastMap };
   } catch (err) {
-    // 使用 pino 记录错误；若不可用则回退到 console
+    // 使用统一 logger 记录错误（stderr）
     const msg = '[watchPullRequest] 读取持久化状态失败';
-    if (logger) {
-      logger.error({ url, err }, msg);
-    } else {
-      // eslint-disable-next-line no-console
-      console.error(msg, { url, err });
-    }
+    logger.error({ url, err }, msg);
     return null;
   }
 }
@@ -208,7 +192,6 @@ async function persistState(url: string, state: WatcherState) {
     await fs.writeFile(file, JSON.stringify(data), 'utf8');
   } catch (err) {
     // 忽略持久化错误，避免影响主流程，但应打印错误便于排查
-    // eslint-disable-next-line no-console
-    console.error('[watchPullRequest] 持久化状态失败:', err);
+    logger.error({ err }, '[watchPullRequest] 持久化状态失败');
   }
 }

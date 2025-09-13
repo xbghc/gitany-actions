@@ -9,22 +9,20 @@ export async function listCommand(
 ): Promise<void> {
   try {
     const client = new GitcodeClient();
-    const pulls = await client.pr.list(url, {
-      state: options.state,
-      head: options.head,
-      base: options.base,
-      sort: options.sort,
-      direction: options.direction,
+    const issues = await client.issue.list(url, {
+      state: options.state as 'open' | 'closed' | 'all' | undefined,
+      labels: options.labels,
+      page: options.page ? Number(options.page) : undefined,
+      per_page: options.perPage ? Number(options.perPage) : undefined,
     });
 
     if (options.json) {
-      console.log(JSON.stringify(pulls, null, 2));
+      console.log(JSON.stringify(issues, null, 2));
       return;
     }
 
-    // Default: print bullet list of titles: - [#<number>] <title>
-    for (const pr of pulls as unknown[]) {
-      const item = pr as Record<string, unknown>;
+    for (const issue of issues as unknown[]) {
+      const item = issue as Record<string, unknown>;
       const num = (item.number ?? item.iid ?? item.id) as number | string | undefined;
       const title = (item.title ?? item.subject ?? item.name ?? '(no title)') as string;
       const numStr = typeof num === 'number' ? num : (num ?? '?');
@@ -38,7 +36,7 @@ export async function listCommand(
       }
       return;
     }
-    logger.error({ err }, 'Failed to list PRs');
+    logger.error({ err }, 'Failed to list issues');
     process.exit(1);
   }
 }

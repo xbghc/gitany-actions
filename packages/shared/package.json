@@ -1,7 +1,7 @@
 {
-  "name": "@gitany/core",
+  "name": "@gitany/shared",
   "version": "0.1.0",
-  "description": "Core utilities and types for GitAny monorepo",
+  "description": "Shared utilities for the GitAny monorepo (logger, etc).",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -18,14 +18,11 @@
       "import": "./dist/index.js"
     }
   },
-  "dependencies": {
-    "@gitany/gitcode": "workspace:*",
-    "@gitany/shared": "workspace:*",
-    "dockerode": "^4.0.8"
-  },
   "devDependencies": {
-    "esbuild": "^0.21.5",
-    "@types/dockerode": "^3.3.43"
+    "esbuild": "^0.21.5"
+  },
+  "dependencies": {
+    "pino": "^9.0.0"
   },
   "engines": {
     "node": ">=18.17"

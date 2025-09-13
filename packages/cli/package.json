@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --target=node18 --sourcemap --outfile=dist/index.js --external:@gitany/gitcode --external:commander",
+    "build": "node ./scripts/build.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "start": "node dist/index.js"
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@gitany/gitcode": "workspace:*",
+    "@gitany/shared": "workspace:*",
     "commander": "^14.0.0"
   },
   "engines": {

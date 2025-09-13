@@ -1,4 +1,7 @@
 import { GitcodeClient, type CreatePullBody } from '@gitany/gitcode';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('@gitany/cli');
 
 export async function createCommand(
   url: string,
@@ -15,7 +18,7 @@ export async function createCommand(
     if (options.issue) {
       const n = Number(options.issue);
       if (!Number.isFinite(n) || n <= 0) {
-        console.error('Invalid --issue number');
+        logger.error('Invalid --issue number');
         process.exit(1);
         return;
       }
@@ -36,7 +39,7 @@ export async function createCommand(
     const numStr = typeof num === 'number' ? num : (num ?? '?');
     console.log(`Created PR #${numStr}: ${titleOut}`);
   } catch (err) {
-    console.error(err);
+    logger.error({ err }, 'Failed to create PR');
     process.exit(1);
   }
 }

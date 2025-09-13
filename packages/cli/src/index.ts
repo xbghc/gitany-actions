@@ -2,11 +2,14 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand } from './commands/auth';
+import { createLogger } from '@gitany/shared';
 import { repoCommand } from './commands/repo';
 import { prCommand } from './commands/pr';
 import { userCommand } from './commands/user';
+import { issueCommand } from './commands/issue';
 
 const program = new Command();
+const logger = createLogger('@gitany/cli');
 
 program
   .name('gitcode')
@@ -20,7 +23,7 @@ program
   .action((url) => {
     const parsed = parseGitUrl(url);
     if (!parsed) {
-      console.error('Unrecognized git URL:', url);
+      logger.error({ url }, 'Unrecognized git URL');
       process.exit(1);
     }
     console.log(JSON.stringify(parsed, null, 2));
@@ -37,5 +40,8 @@ program.addCommand(prCommand());
 
 // user command
 program.addCommand(userCommand());
+
+// issue command
+program.addCommand(issueCommand());
 
 program.parse();

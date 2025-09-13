@@ -1,5 +1,8 @@
 import { Command } from 'commander';
 import { GitcodeClient } from '@gitany/gitcode';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('@gitany/cli');
 
 export async function userShowCommand(): Promise<void> {
   try {
@@ -11,7 +14,7 @@ export async function userShowCommand(): Promise<void> {
     console.log(`  用户名: ${user.name}`);
     console.log(`  邮箱: ${user.email}`);
   } catch (error) {
-    console.error('获取用户信息失败:', error instanceof Error ? error.message : error);
+    logger.error({ error }, '获取用户信息失败');
     process.exit(1);
   }
 }

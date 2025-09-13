@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "rm -rf dist && tsc -p tsconfig.json --emitDeclarationOnly && node ./scripts/esbuild.config.js",
+    "build": "node ./scripts/build.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint ."
   },

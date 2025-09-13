@@ -98,6 +98,58 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 - 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
 
+### gitcode issue list &lt;git-url&gt;
+
+列出指定仓库的 Issues。默认状态为 `open`，默认输出为「标题列表」：
+
+```
+- [#42] 修复登录异常
+- [#40] CI: 提升缓存命中率
+```
+
+```bash
+gitcode issue list https://gitcode.com/owner/repo.git
+
+# 带筛选参数：
+gitcode issue list git@gitcode.com:owner/repo.git \
+  --state open --labels bug,help-wanted --page 2 --per-page 50
+
+# 输出 JSON：
+gitcode issue list <url> --json
+```
+
+- 选项：
+  - `--state <state>`：`open | closed | all`（默认 `open`）
+  - `--labels <labels>`：以逗号分隔的标签列表
+  - `--page <n>`：页码
+  - `--per-page <n>`：每页数量
+  - `--json`：输出原始 JSON 数组
+- 调用：`GET /api/v5/repos/{owner}/{repo}/issues`
+
+### gitcode issue comments <git-url> <issue-number>
+
+列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」：
+
+```
+- [#123] 第一条评论
+```
+
+```bash
+gitcode issue comments https://gitcode.com/owner/repo.git 42
+
+# 带分页参数：
+gitcode issue comments <url> 42 --page 2 --per-page 50
+
+# 输出 JSON：
+gitcode issue comments <url> 42 --json
+```
+
+- 选项：
+  - `--page <n>`：页码
+  - `--per-page <n>`：每页数量
+  - `--json`：输出原始 JSON 数组
+- 调用：`GET /api/v5/repos/{owner}/{repo}/issues/{number}/comments`
+
 ### gitcode user show
 
 显示当前认证用户的详细信息。
