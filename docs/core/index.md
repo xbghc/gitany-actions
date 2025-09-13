@@ -76,6 +76,9 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 
 ```ts
 import {
+  createPrContainer,
+  hasPrContainer,
+  execInPrContainer,
   runPrInContainer,
   resetPrContainer,
   removePrContainer,
@@ -98,11 +101,11 @@ console.log(exitCode, output);
 console.log(await getPrContainerStatus(pr.id));
 console.log(getPrContainerOutput(pr.id));
 
-// 自定义镜像和脚本
-await runPrInContainer('https://gitcode.com/owner/repo.git', pr, {
-  image: 'node:20',
-  script: 'pnpm lint && pnpm build',
-});
+// 手动创建并复用容器
+if (!hasPrContainer(pr.id)) {
+  await createPrContainer('https://gitcode.com/owner/repo.git', pr);
+}
+await execInPrContainer(pr.id, 'pnpm lint && pnpm build');
 
 // 重新创建或删除容器
 await resetPrContainer('https://gitcode.com/owner/repo.git', pr);
