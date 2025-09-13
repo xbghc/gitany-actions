@@ -5,6 +5,7 @@ import { authCommand } from './commands/auth';
 import { repoCommand } from './commands/repo';
 import { prCommand } from './commands/pr';
 import { userCommand } from './commands/user';
+import { issueCommand } from './commands/issue';
 
 const program = new Command();
 
@@ -37,5 +38,8 @@ program.addCommand(prCommand());
 
 // user command
 program.addCommand(userCommand());
+
+// issue command
+program.addCommand(issueCommand());
 
 program.parse();

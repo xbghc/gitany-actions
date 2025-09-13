@@ -19,7 +19,8 @@ title: gitcode 工具库
   - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
   - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
   - `listPullRequestComments(url, prNumber, queryOptions?)`：获取指定 PR 的评论列表。
-  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()`、`client.pr.comments()` 等。
+  - `listIssues(url, query?)`：获取仓库的 Issue 列表。
+  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()`、`client.pr.comments()`、`client.issue.list()` 等。
 - `GitcodeClientAuth`
   - 通过 `client.auth` 提供本地令牌存储与加载。
 - `FileAuthStorage`、`defaultConfigPath()`
@@ -28,6 +29,7 @@ title: gitcode 工具库
 
 - 用户 API：见《[用户 API](./user.md)》。
 - Pull Requests：见《[Pull Requests API](./pr.md)》。
+- Issues：见《[Issues API](./issue.md)》。
 
 ## 公共类型
 
@@ -42,6 +44,10 @@ title: gitcode 工具库
 - `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
 - `PRComment`: PR 评论的类型定义，包含 `id`、`body`、`user` 等字段。
 - `PRCommentQueryOptions`: PR 评论查询选项，支持 `comment_type`（`diff_comment` | `pr_comment`）。
+- `ListIssuesQuery`: Issue 列表查询参数（`state`、`labels`、`page`、`per_page`）。
+- `ListIssuesParams`: Issue 列表路径参数（`owner`、`repo`、`query?`）。
+- `Issue`: Issue 的字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
+- `ListIssuesResponse`: `Issue[]`。
 
 ## 认证与请求
 
@@ -105,6 +111,9 @@ const pr = await client.createPullRequest('owner', 'repo', {
 const comments = await client.listPullRequestComments('https://gitcode.com/owner/repo.git', 123, {
   comment_type: 'pr_comment'
 });
+
+// 获取 Issue 列表（GET /repos/{owner}/{repo}/issues）
+const issues = await client.issue.list('https://gitcode.com/owner/repo.git', { state: 'open' });
 ```
 
 ## Git URL 解析
@@ -134,6 +143,10 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 
 - PR 列表、PR 评论和仓库权限接口的返回数据均通过 Zod 进行结构校验。
 - 自身权限接口在角色信息中保留 `cn_name` 字段以确保权限检测。
+
+### 2025-09-12 更新
+
+- 新增 Issue 列表 API 封装。
 
 ### 历史变更
 

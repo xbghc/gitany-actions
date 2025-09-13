@@ -32,6 +32,17 @@ export {
   prCommentsUrl,
 } from './api/pr';
 export type { PRComment, PRCommentQueryOptions } from './api/pr';
+export type {
+  ListIssuesQuery,
+  ListIssuesParams,
+  Issue,
+  ListIssuesResponse,
+} from './api/issue';
+export {
+  listIssuesUrl,
+  issueSchema,
+  listIssuesResponseSchema,
+} from './api/issue';
 export {
   userProfileSchema,
   userProfileUrl,
