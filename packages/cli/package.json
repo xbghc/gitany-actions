@@ -22,6 +22,7 @@
   "dependencies": {
     "@gitany/gitcode": "workspace:*",
     "@gitany/shared": "workspace:*",
+    "@gitany/git-lib": "workspace:*",
     "commander": "^14.0.0"
   },
   "engines": {

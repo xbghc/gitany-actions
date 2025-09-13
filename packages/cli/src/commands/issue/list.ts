@@ -1,15 +1,17 @@
 import { GitcodeClient } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
+import { resolveRepoUrl } from '../../utils';
 
 const logger = createLogger('@gitany/cli');
 
 export async function listCommand(
-  url: string,
+  url: string | undefined,
   options: Record<string, string | undefined>,
 ): Promise<void> {
   try {
+    const repoUrl = await resolveRepoUrl(url);
     const client = new GitcodeClient();
-    const issues = await client.issue.list(url, {
+    const issues = await client.issue.list(repoUrl, {
       state: options.state as 'open' | 'closed' | 'all' | undefined,
       labels: options.labels,
       page: options.page ? Number(options.page) : undefined,

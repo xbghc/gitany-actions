@@ -1,10 +1,11 @@
 import { GitcodeClient, type CreatePullBody } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
+import { resolveRepoUrl } from '../../utils';
 
 const logger = createLogger('@gitany/cli');
 
 export async function createCommand(
-  url: string,
+  url: string | undefined,
   options: Record<string, string | undefined>,
 ): Promise<void> {
   try {
@@ -25,8 +26,9 @@ export async function createCommand(
       body.issue = n;
     }
 
+    const repoUrl = await resolveRepoUrl(url);
     const client = new GitcodeClient();
-    const created = await client.pr.create(url, body);
+    const created = await client.pr.create(repoUrl, body);
 
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));

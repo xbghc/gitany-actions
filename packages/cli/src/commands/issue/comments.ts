@@ -1,13 +1,27 @@
 import { GitcodeClient } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
+import { resolveRepoUrl } from '../../utils';
 
 const logger = createLogger('@gitany/cli');
 
 export async function commentsCommand(
-  url: string,
-  issueNumber: string,
-  options: Record<string, string | undefined>,
+  urlOrNumber: string | undefined,
+  numberOrOptions?: string | Record<string, string | undefined>,
+  maybeOptions?: Record<string, string | undefined>,
 ): Promise<void> {
+  let url: string | undefined = urlOrNumber;
+  let issueNumber: string | undefined;
+  let options: Record<string, string | undefined> = {};
+
+  if (typeof numberOrOptions === 'string') {
+    issueNumber = numberOrOptions;
+    options = maybeOptions ?? {};
+  } else {
+    issueNumber = urlOrNumber;
+    url = undefined;
+    options = numberOrOptions ?? {};
+  }
+
   const n = Number(issueNumber);
   if (!Number.isFinite(n) || n <= 0) {
     logger.error('Invalid issue number');
@@ -16,8 +30,9 @@ export async function commentsCommand(
   }
 
   try {
+    const repoUrl = await resolveRepoUrl(url);
     const client = new GitcodeClient();
-    const comments = await client.issue.comments(url, n, {
+    const comments = await client.issue.comments(repoUrl, n, {
       page: options.page ? Number(options.page) : undefined,
       per_page: options.perPage ? Number(options.perPage) : undefined,
     });

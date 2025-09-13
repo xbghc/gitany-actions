@@ -9,7 +9,7 @@ export function issueCommand(): Command {
   issueProgram
     .command('list')
     .description('List issues for a repository')
-    .argument('<url>', 'Repository URL')
+    .argument('[url]', 'Repository URL')
     .option('--state <state>', 'Filter by state: open | closed | all', 'open')
     .option('--labels <labels>', 'Comma-separated labels')
     .option('--page <n>', 'Page number')
@@ -20,8 +20,8 @@ export function issueCommand(): Command {
   issueProgram
     .command('comments')
     .description('List comments for an issue')
-    .argument('<url>', 'Repository URL')
-    .argument('<number>', 'Issue number')
+    .argument('[url]', 'Repository URL')
+    .argument('[number]', 'Issue number')
     .option('--page <n>', 'Page number')
     .option('--per-page <n>', 'Items per page')
     .option('--json', 'Output raw JSON instead of list')

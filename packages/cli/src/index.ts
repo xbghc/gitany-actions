@@ -7,6 +7,7 @@ import { repoCommand } from './commands/repo';
 import { prCommand } from './commands/pr';
 import { userCommand } from './commands/user';
 import { issueCommand } from './commands/issue';
+import { resolveRepoUrl } from './utils';
 
 const program = new Command();
 const logger = createLogger('@gitany/cli');
@@ -18,15 +19,21 @@ program
 
 // parse command
 program
-  .command('parse <url>')
+  .command('parse [url]')
   .description('Parse Git URL and output JSON')
-  .action((url) => {
-    const parsed = parseGitUrl(url);
-    if (!parsed) {
-      logger.error({ url }, 'Unrecognized git URL');
+  .action(async (url) => {
+    try {
+      const resolved = await resolveRepoUrl(url);
+      const parsed = parseGitUrl(resolved);
+      if (!parsed) {
+        logger.error({ url: resolved }, 'Unrecognized git URL');
+        process.exit(1);
+      }
+      console.log(JSON.stringify(parsed, null, 2));
+    } catch (err) {
+      logger.error({ err }, 'Failed to resolve repository URL');
       process.exit(1);
     }
-    console.log(JSON.stringify(parsed, null, 2));
   });
 
 // auth command

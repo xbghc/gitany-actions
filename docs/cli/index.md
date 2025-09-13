@@ -22,12 +22,15 @@ pnpm --filter @gitany/cli start -- --help
 
 ## 命令
 
-### gitcode parse &lt;git-url&gt;
+### gitcode parse [git-url]
 
-解析 Git 远程地址并输出 JSON。
+解析 Git 远程地址并输出 JSON。若未提供 `git-url`，将自动检测当前目录下名为 `origin` 的远程地址。
 
 ```bash
 gitcode parse https://gitcode.com/owner/repo.git
+
+# 自动检测当前仓库
+gitcode parse
 ```
 
 ### gitcode auth &lt;subcommand&gt;
@@ -37,20 +40,23 @@ gitcode parse https://gitcode.com/owner/repo.git
 - `set-token <token>`
   - 行为：保存令牌到本地配置文件。
 
-### gitcode repo permission &lt;git-url&gt;
+### gitcode repo permission [git-url]
 
-查询当前登录用户在指定仓库（通过仓库链接）的权限。
+查询当前登录用户在指定仓库（通过仓库链接）的权限。若未提供 `git-url`，将使用当前目录下 `origin` 远程地址。
 
 ```bash
 gitcode repo permission https://gitcode.com/owner/repo.git
+
+# 自动检测当前仓库
+gitcode repo permission
 ```
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
 - 输出：固定为一个词：`admin | write | read | none`（仓库不存在时返回 `none`）
 
-### gitcode pr list &lt;git-url&gt;
+### gitcode pr list [git-url]
 
-列出指定仓库的 Pull Requests。默认状态为 `open`，默认输出为「标题列表」：
+列出指定仓库的 Pull Requests。默认状态为 `open`，默认输出为「标题列表」。若未提供 `git-url`，将使用当前目录下 `origin` 远程地址：
 
 ```
 - [#18] 修复登录异常
@@ -59,6 +65,9 @@ gitcode repo permission https://gitcode.com/owner/repo.git
 
 ```bash
 gitcode pr list https://gitcode.com/owner/repo.git
+
+# 自动检测当前仓库
+gitcode pr list
 
 # 带筛选参数：
 gitcode pr list git@gitcode.com:owner/repo.git \
@@ -76,13 +85,16 @@ gitcode pr list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/pulls`
 
-### gitcode pr create &lt;git-url&gt;
+### gitcode pr create [git-url]
 
-创建 Pull Request（仅支持部分字段）。
+创建 Pull Request（仅支持部分字段）。若未提供 `git-url`，将使用当前目录下 `origin` 远程地址。
 
 ```bash
 gitcode pr create https://gitcode.com/owner/repo.git \
   --title "修复登录异常" --head feat/login-fix --base main --body "补充说明：修复 Token 过期报错"
+
+# 自动检测当前仓库
+gitcode pr create --title "修复登录异常" --head feat/login-fix --base main
 
 # 关联 Issue（示例）：
 gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --base main --issue 123
@@ -98,9 +110,9 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 - 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
 
-### gitcode issue list &lt;git-url&gt;
+### gitcode issue list [git-url]
 
-列出指定仓库的 Issues。默认状态为 `open`，默认输出为「标题列表」：
+列出指定仓库的 Issues。默认状态为 `open`，默认输出为「标题列表」。若未提供 `git-url`，将使用当前目录下 `origin` 远程地址：
 
 ```
 - [#42] 修复登录异常
@@ -109,6 +121,9 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 
 ```bash
 gitcode issue list https://gitcode.com/owner/repo.git
+
+# 自动检测当前仓库
+gitcode issue list
 
 # 带筛选参数：
 gitcode issue list git@gitcode.com:owner/repo.git \
@@ -126,9 +141,9 @@ gitcode issue list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues`
 
-### gitcode issue comments <git-url> <issue-number>
+### gitcode issue comments [git-url] <issue-number>
 
-列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」：
+列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」。若未提供 `git-url`，将使用当前目录下 `origin` 远程地址：
 
 ```
 - [#123] 第一条评论
@@ -136,6 +151,9 @@ gitcode issue list <url> --json
 
 ```bash
 gitcode issue comments https://gitcode.com/owner/repo.git 42
+
+# 自动检测当前仓库
+gitcode issue comments 42
 
 # 带分页参数：
 gitcode issue comments <url> 42 --page 2 --per-page 50

@@ -9,7 +9,7 @@ export function prCommand(): Command {
   prProgram
     .command('list')
     .description('List pull requests for a repository')
-    .argument('<url>', 'Repository URL')
+    .argument('[url]', 'Repository URL')
     .option('--state <state>', 'Filter by state: open | closed | all', 'open')
     .option('--head <ref>', 'Filter by head (branch or repo:branch)')
     .option('--base <branch>', 'Filter by base branch')
@@ -21,7 +21,7 @@ export function prCommand(): Command {
   prProgram
     .command('create')
     .description('Create a new pull request')
-    .argument('<url>', 'Repository URL')
+    .argument('[url]', 'Repository URL')
     .requiredOption('--title <title>', 'Title of the PR')
     .requiredOption('--head <branch>', 'Source branch name')
     .option('--base <branch>', 'Target branch')
