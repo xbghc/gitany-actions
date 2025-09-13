@@ -129,8 +129,8 @@ async function execInContainer(container: Docker.Container, script: string, prId
 }
 
 function defaultScript() {
+  const pm = 'corepack pnpm';
   return [
-    'corepack enable',
     'rm -rf /tmp/workspace',
     'git clone "$PR_BASE_REPO_URL" /tmp/workspace',
     'cd /tmp/workspace',
@@ -138,9 +138,9 @@ function defaultScript() {
     'git fetch origin "$PR_BASE_SHA"',
     'git fetch head "$PR_HEAD_SHA"',
     'git checkout "$PR_HEAD_SHA"',
-    'pnpm install --frozen-lockfile --ignore-scripts',
-    'pnpm build',
-    'pnpm test',
+    `${pm} install --frozen-lockfile --ignore-scripts`,
+    `${pm} build`,
+    `${pm} test`,
   ].join(' && ');
 }
 

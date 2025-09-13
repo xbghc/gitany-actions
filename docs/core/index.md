@@ -129,7 +129,6 @@ await removePrContainer(pr.id);
 ```ts
 await runPrInContainer('https://gitcode.com/owner/repo.git', pr, {
   script: [
-    'corepack enable',
     'git config user.name "bot"',
     'git config user.email "bot@example.com"',
     'claude code --apply "将 README 翻译为中文"',
