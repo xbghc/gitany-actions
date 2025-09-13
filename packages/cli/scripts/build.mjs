@@ -31,7 +31,7 @@ async function build() {
     target: 'node18',
     sourcemap: true,
     outfile: 'dist/index.js',
-    external: ['@gitany/gitcode', '@gitany/shared', 'commander'],
+    external: ['@gitany/gitcode', '@gitany/shared', '@gitany/git-lib', 'commander'],
   });
 }
 
@@ -39,4 +39,3 @@ build().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

@@ -2,7 +2,7 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand } from './commands/auth';
-import { createLogger } from '@gitany/shared';
+import { createLogger, setGlobalLogLevel, type LogLevel } from '@gitany/shared';
 import { repoCommand } from './commands/repo';
 import { prCommand } from './commands/pr';
 import { userCommand } from './commands/user';
@@ -15,7 +15,28 @@ const logger = createLogger('@gitany/cli');
 program
   .name('gitcode')
   .description('tools for GitCode')
-  .version('0.1.0');
+  .version('0.1.0')
+  .option('-v, --verbose', 'Enable debug logging')
+  .option('-q, --quiet', 'Silence all logs (silent level)')
+  .option('--log-level <level>', 'Set log level (fatal|error|warn|info|debug|trace|silent)');
+
+// Apply logging options before any command action
+program.hook('preAction', (thisCommand) => {
+  const opts = thisCommand.opts<{ verbose?: boolean; quiet?: boolean; logLevel?: string }>();
+  let level: LogLevel | undefined;
+  if (opts.quiet) level = 'silent';
+  else if (opts.verbose) level = 'debug';
+  else if (opts.logLevel) {
+    const v = String(opts.logLevel).toLowerCase();
+    const allowed = new Set(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
+    if (allowed.has(v)) level = v as LogLevel;
+  }
+  if (level) {
+    try { setGlobalLogLevel(level); } catch { /* ignore */ }
+    // Also update local logger instance
+    try { logger.level = level; } catch { /* ignore */ }
+  }
+});
 
 // parse command
 program

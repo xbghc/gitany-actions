@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { GitcodeClient } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
+import { createLogger } from '@gitany/shared';
 
 interface StatusOptions {
   json?: boolean;
@@ -8,6 +9,7 @@ interface StatusOptions {
 }
 
 export async function statusAction(urlArg?: string, options: StatusOptions = {}) {
+  const logger = createLogger('@gitany/cli');
   try {
     const client = new GitcodeClient();
 
@@ -107,7 +109,8 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
       console.log(`   • View repository:   ${colors.blue}https://gitcode.com/${owner}/${repo}${colors.reset}`);
     }
   } catch (error) {
-    console.error('\n❌ Failed to get issue status:', error instanceof Error ? error.message : error);
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.error({ err: error }, '\n❌ Failed to get issue status: %s', msg);
     process.exit(1);
   }
 }

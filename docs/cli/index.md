@@ -20,6 +20,16 @@ pnpm --filter @gitany/cli start -- --help
 
 > 开发模式：`pnpm --filter @gitany/cli dev`
 
+## 全局选项
+
+- `--verbose`：开启调试日志（等价于将日志级别设为 `debug`）。
+- `--quiet`：静默模式（将日志级别设为 `silent`，仅保留命令输出）。
+- `--log-level <level>`：设置日志级别（`fatal|error|warn|info|debug|trace|silent`）。
+
+说明：
+- 日志统一通过 `@gitany/shared` 的 logger 输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
+- 也可使用环境变量 `GITANY_LOG_LEVEL` 或 `LOG_LEVEL` 控制默认日志级别；命令行选项优先级更高。
+
 ## 命令
 
 > 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过 `@gitany/git-lib` 的 `resolveRepoUrl` 自动使用 `git remote get-url origin` 获取仓库地址。

@@ -26,8 +26,9 @@ async function build() {
     format: 'esm',
     target: 'node18',
     sourcemap: true,
-    outfile: 'dist/index.js'
-    // Note: we don't externalize cross-spawn to match previous behavior
+    outfile: 'dist/index.js',
+    // Avoid bundling CJS deps into ESM output to prevent dynamic require
+    external: ['cross-spawn']
   });
 }
 
@@ -35,4 +36,3 @@ build().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-
