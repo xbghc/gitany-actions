@@ -10,6 +10,8 @@ title: Pull Requests API
 
 - 列表：GET `/api/v5/repos/{owner}/{repo}/pulls`
 - 创建：POST `/api/v5/repos/{owner}/{repo}/pulls`
+- 设置：GET `/api/v5/repos/{owner}/{repo}/pull_request_settings`
+- 评论：GET `/api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
 
 ## 类型与导出
 
@@ -19,8 +21,13 @@ title: Pull Requests API
 - `PullRequest`：PR 的最小字段表示（`id`、`number`、`title`、`state`、`head`、`base` 等）。
 - `ListPullsResponse`：`PullRequest[]`。
 - `CreatePullBody`：创建 PR 可用字段（`title`、`head`、`base`、`body`、`issue`）。
+- `PullRequestSettings`：PR 设置信息（合并策略等）。
+- `PRComment`：PR 评论信息。
+- `PRCommentQueryOptions`：PR 评论查询参数。
 - `listPullsUrl(owner, repo)`：构建列表接口绝对 URL。
 - `createPullUrl(owner, repo)`：构建创建接口路径（绝对 URL）。
+- `pullRequestSettingsUrl(owner, repo)`：构建设置接口 URL。
+- `prCommentsUrl(owner, repo, number)`：构建评论接口 URL。
 
 以上均从包入口 `@gitany/gitcode` 导出。其中 `createPullUrl` 使用默认常量 `API_BASE`（`https://gitcode.com/api/v5`）构建绝对 URL。
 
@@ -29,7 +36,7 @@ title: Pull Requests API
 ```ts
 import { GitcodeClient, listPullsUrl, createPullUrl, type CreatePullBody } from '@gitany/gitcode';
 
-const client = new GitcodeClient({ token: process.env.GITCODE_TOKEN ?? null });
+const client = new GitcodeClient();
 
 // 1) 列表 PR（通过 options.query 传参）
 const listUrl = listPullsUrl('owner', 'repo');
@@ -46,8 +53,8 @@ const pr = await client.request(createPath, 'POST', { body: JSON.stringify(body)
 也可直接使用 `GitcodeClient` 提供的封装方法：
 
 ```ts
-const pulls2 = await client.listPullRequests('owner', 'repo', { state: 'open' });
-const pr2 = await client.createPullRequest('owner', 'repo', { title: '修复', head: 'feat/x' });
+const pulls2 = await client.pr.list('owner', 'repo', { state: 'open' });
+const pr2 = await client.pr.create('owner', 'repo', { title: '修复', head: 'feat/x' });
 ```
 
 或使用模块方式调用：
@@ -57,7 +64,57 @@ const pulls3 = await client.pr.list('owner', 'repo', { state: 'open' });
 const pr3 = await client.pr.create('owner', 'repo', { title: '修复', head: 'feat/x' });
 ```
 
+### 新增功能：PR 设置和评论
+
+```ts
+// 获取 PR 设置
+const settings = await client.pr.getSettings('owner', 'repo');
+console.log('允许合并提交:', settings.allow_merge_commits);
+
+// 获取 PR 评论
+const comments = await client.pr.comments('owner', 'repo', 123);
+comments.forEach(comment => {
+  console.log(comment.user.login, comment.body);
+});
+```
+
+## 类型定义
+
+### `PullRequestSettings`
+
+PR 设置信息：
+
+```typescript
+interface PullRequestSettings {
+  allow_merge_commits: boolean;
+  allow_squash_commits: boolean;
+  allow_rebase_commits: boolean;
+  allow_updates_from_default_branch: boolean;
+  allow_worktree_inheritance: boolean;
+  allow_auto_close_on_conflict: boolean;
+}
+```
+
+### `PRComment`
+
+PR 评论信息：
+
+```typescript
+interface PRComment {
+  id: number;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  body: string;
+  created_at: string;
+  updated_at: string;
+  html_url: string;
+}
+```
+
 ## 说明
 
 - 网络请求层统一由内部的 `utils/http.ts` 中的 `httpRequest` 处理，对外行为不变。
 - 字段与返回值与 GitCode 文档保持一致的最小子集，返回结果会通过 Zod 进行结构校验。
+- 2025-09-13 更新：新增 PR 设置和评论功能支持。

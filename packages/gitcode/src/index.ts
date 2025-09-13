@@ -55,6 +55,28 @@ export {
   type UserProfile,
   type UserProfileResponse,
 } from './api/user';
+export {
+  userNamespaceSchema,
+  userNamespaceUrl,
+  type UserNamespace,
+} from './api/user';
 export type { RepoRole } from './types/repo-role';
 export * from './utils';
 export { API_BASE } from './api/constants';
+
+// 新的仓库相关类型导出
+export type {
+  RepoSettings,
+  PullRequestSettings,
+  RepoEvent,
+  RepoEvents,
+  Contributor,
+  Contributors,
+  FileBlob,
+  Compare,
+  Webhook,
+  Webhooks,
+  Branches,
+  Commit,
+  Commits,
+} from './api/repo';

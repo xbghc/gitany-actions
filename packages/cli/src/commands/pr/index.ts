@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { listCommand } from './list';
 import { createCommand } from './create';
+import { prSubCommand } from './settings';
 
 export function prCommand(): Command {
   const prProgram = new Command('pr')
@@ -29,6 +30,16 @@ export function prCommand(): Command {
     .option('--issue <n>', 'Associate an issue number with the PR')
     .option('--json', 'Output created PR as JSON')
     .action(createCommand);
+
+  // 添加子命令组
+  const infoGroup = prProgram
+    .command('info')
+    .description('Pull request information commands');
+
+  const subCommands = prSubCommand().commands;
+  subCommands.forEach(cmd => {
+    infoGroup.addCommand(cmd);
+  });
 
   return prProgram;
 }

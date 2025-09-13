@@ -13,3 +13,8 @@ export type { CreatePullBody } from './create';
 export { createPullUrl } from './create';
 export type { PRComment, PRCommentQueryOptions } from './comments';
 export { prCommentsUrl, prCommentSchema } from './comments';
+export {
+  pullRequestSettingsSchema,
+  pullRequestSettingsUrl,
+  type PullRequestSettings,
+} from './settings';

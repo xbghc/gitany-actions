@@ -37,7 +37,11 @@ gitcode parse https://gitcode.com/owner/repo.git
 - `set-token <token>`
   - 行为：保存令牌到本地配置文件。
 
-### gitcode repo permission &lt;git-url&gt;
+### gitcode repo
+
+仓库相关命令。
+
+#### gitcode repo permission &lt;git-url&gt;
 
 查询当前登录用户在指定仓库（通过仓库链接）的权限。
 
@@ -48,7 +52,117 @@ gitcode repo permission https://gitcode.com/owner/repo.git
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
 - 输出：固定为一个词：`admin | write | read | none`（仓库不存在时返回 `none`）
 
-### gitcode pr list &lt;git-url&gt;
+#### gitcode repo info
+
+仓库信息命令组。
+
+##### gitcode repo info settings &lt;owner&gt; &lt;repo&gt;
+
+显示仓库设置信息。
+
+```bash
+gitcode repo info settings myorg myrepo
+```
+
+输出示例：
+```
+仓库设置:
+{
+  "default_branch": "main",
+  "has_issues": true,
+  "has_wiki": false,
+  "has_pull_requests": true,
+  "allow_squash_merge": true,
+  "allow_merge_commit": true,
+  "allow_rebase_merge": true
+}
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/repo_settings`
+
+##### gitcode repo info branches &lt;owner&gt; &lt;repo&gt;
+
+列出仓库的所有分支。
+
+```bash
+gitcode repo info branches myorg myrepo
+```
+
+输出示例：
+```
+仓库分支:
+  main (默认: 是, 受保护: 是)
+  develop (默认: 否, 受保护: 否)
+  feature/test (默认: 否, 受保护: 否)
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/branches`
+
+##### gitcode repo info commits &lt;owner&gt; &lt;repo&gt;
+
+显示仓库提交历史。
+
+```bash
+gitcode repo info commits myorg myrepo
+```
+
+输出示例：
+```
+仓库提交历史:
+  1. a1b2c3d - 修复登录问题
+     作者: John Doe <john@example.com>
+     时间: 2024-01-15T10:30:00Z
+
+  2. e4f5g6h - 添加新功能
+     作者: Jane Smith <jane@example.com>
+     时间: 2024-01-14T15:45:00Z
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/commits`
+
+##### gitcode repo info contributors &lt;owner&gt; &lt;repo&gt;
+
+显示仓库贡献者列表。
+
+```bash
+gitcode repo info contributors myorg myrepo
+```
+
+输出示例：
+```
+仓库贡献者:
+  John Doe <john@example.com> - 42 次贡献
+  Jane Smith <jane@example.com> - 28 次贡献
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/contributors`
+
+##### gitcode repo info webhooks &lt;owner&gt; &lt;repo&gt;
+
+列出仓库的 Webhooks。
+
+```bash
+gitcode repo info webhooks myorg myrepo
+```
+
+输出示例：
+```
+仓库 Webhooks:
+  ID: 123
+  URL: https://example.com/webhook
+  名称: web
+  活跃: 是
+  事件: push, pull_request
+  创建时间: 2024-01-01T00:00:00Z
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/hooks`
+
+### gitcode pr
+
+Pull Request 相关命令。
+
+#### gitcode pr list &lt;git-url&gt;
 
 列出指定仓库的 Pull Requests。默认状态为 `open`，默认输出为「标题列表」：
 
@@ -97,6 +211,31 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
   - `--json`：输出创建结果的原始 JSON
 - 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
+
+#### gitcode pr info
+
+PR 信息命令组。
+
+##### gitcode pr info settings &lt;owner&gt; &lt;repo&gt;
+
+显示 PR 设置信息。
+
+```bash
+gitcode pr info settings myorg myrepo
+```
+
+输出示例：
+```
+PR 设置:
+  允许合并提交: 是
+  允许压缩提交: 是
+  允许变基提交: 是
+  允许从默认分支更新: 是
+  允许工作树继承: 否
+  冲突时自动关闭: 是
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/pull_request_settings`
 
 ### gitcode issue list &lt;git-url&gt;
 
@@ -150,7 +289,11 @@ gitcode issue comments <url> 42 --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues/{number}/comments`
 
-### gitcode user show
+### gitcode user
+
+用户相关命令。
+
+#### gitcode user show
 
 显示当前认证用户的详细信息。
 
@@ -174,6 +317,26 @@ gitcode user show
 
 - 调用：`GET /api/v5/user`
 - 显示标准化的用户信息（ID、用户名、邮箱）和详细的用户资料
+
+#### gitcode user namespace
+
+显示当前用户的命名空间信息。
+
+```bash
+gitcode user namespace
+```
+
+输出示例：
+```
+用户命名空间:
+  ID: 123456
+  路径: myusername
+  名称: My Username
+  主页: https://gitcode.com/myusername
+  类型: user
+```
+
+- 调用：`GET /api/v5/user/namespace`
 
 ## 环境变量
 
