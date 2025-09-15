@@ -74,7 +74,7 @@ export async function chat(
       script:
         `cd /tmp/workspace && ~/.npm-global/bin/claude -p ${JSON.stringify(
           question,
-        )} --cwd /tmp/workspace 2>&1`,
+        )} 2>&1`,
       log,
       verbose,
     });
