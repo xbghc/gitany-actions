@@ -2,9 +2,9 @@ import fs from 'node:fs';
 import spawn from 'cross-spawn';
 import { expandCwd } from '../utils';
 import type { GitExecOptions, GitResult } from '../types';
+import { GitNotFoundError } from '../errors';
 
-
-export async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitResult | null> {
+export async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitResult> {
   const cwd = expandCwd(opts.cwd);
   if (cwd && !fs.existsSync(cwd)) {
     return {
@@ -14,7 +14,7 @@ export async function runGit(args: string[], opts: GitExecOptions = {}): Promise
     };
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const child = spawn('git', args, {
       cwd,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -33,7 +33,7 @@ export async function runGit(args: string[], opts: GitExecOptions = {}): Promise
     child.on('error', (err: unknown) => {
       const e = err as NodeJS.ErrnoException;
       if (e?.code === 'ENOENT' && e?.path === 'git') {
-        resolve(null);
+        reject(new GitNotFoundError());
       } else {
         resolve({ stdout, stderr: e?.message ?? String(err), code: 1 });
       }
