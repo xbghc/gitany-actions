@@ -3,6 +3,11 @@ export { resetContainer } from './reset-container';
 export { removeContainer } from './remove-container';
 export { getContainer, getContainerStatus } from './get';
 export { testShaBuild } from './test-sha-build';
+export { cloneRepo } from './clone-repo';
+export { verifySha } from './verify-sha';
+export { checkoutSha } from './checkout-sha';
+export { checkProjectFiles } from './check-project-files';
+export { installDependencies } from './install-dependencies';
 export {
   prepareImage,
   DockerUnavailableError,
@@ -22,3 +27,4 @@ export type {
   TestShaBuildOptions,
   TestShaBuildResult,
 } from './types';
+export type { ProjectCheckResult } from './check-project-files';
