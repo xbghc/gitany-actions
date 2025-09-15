@@ -1,4 +1,10 @@
-import { GitcodeClient, PullRequest, PRComment, PRCommentQueryOptions } from '@gitany/gitcode';
+import {
+  GitcodeClient,
+  PullRequest,
+  PRComment,
+  PRCommentQueryOptions,
+  isNotModified,
+} from '@gitany/gitcode';
 import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
@@ -41,10 +47,14 @@ export function watchPullRequest(
   const containerMap = new Map<number, Docker.Container>();
 
   const check = async () => {
-    const currentList = await fetchPullRequests(client, url);
-    await detectStateChanges(currentList, state, options, url, containerMap);
+    const { data: currentList, notModified } = await fetchPullRequests(client, url);
+    if (!notModified) {
+      await detectStateChanges(currentList, state, options, url, containerMap);
+    }
     await detectNewComments(client, url, currentList, state, options);
-    state.prList = currentList.map((p) => ({ id: p.id, number: p.number, state: p.state }));
+    if (!notModified) {
+      state.prList = currentList.map((p) => ({ id: p.id, number: p.number, state: p.state }));
+    }
     await persistState(url, state);
   };
 
@@ -109,8 +119,9 @@ function createWatcherState(url: string): WatcherState {
 async function fetchPullRequests(
   client: GitcodeClient,
   url: string,
-): Promise<PullRequest[]> {
-  return await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
+): Promise<{ data: PullRequest[]; notModified: boolean }> {
+  const data = await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
+  return { data, notModified: isNotModified(data) };
 }
 
 async function detectStateChanges(
@@ -147,8 +158,8 @@ async function detectNewComments(
     // 仅对打开的 PR 拉取评论，减少请求
     if (pr.state !== 'open') continue;
 
-    const comments = await fetchPrComments(client, url, pr.number, options);
-    if (!comments.length) continue;
+    const { data: comments, notModified } = await fetchPrComments(client, url, pr.number, options);
+    if (notModified || !comments.length) continue;
 
     const lastSeen = state.lastCommentIdByPr.get(pr.number);
     if (lastSeen === undefined) {
@@ -178,11 +189,12 @@ async function fetchPrComments(
   url: string,
   prNumber: number,
   options?: WatchPullRequestOptions,
-): Promise<PRComment[]> {
+): Promise<{ data: PRComment[]; notModified: boolean }> {
   // 默认拉取所有类型评论；如提供 commentType 则按类型过滤（使用静态导入的类型）
   const query: PRCommentQueryOptions | undefined =
     options?.commentType ? { comment_type: options.commentType } : undefined;
-  return await client.pr.comments(url, prNumber, query);
+  const data = await client.pr.comments(url, prNumber, query);
+  return { data, notModified: isNotModified(data) };
 }
 
 // -------- Persistence (fast, lightweight) --------

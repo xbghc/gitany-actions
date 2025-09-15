@@ -167,7 +167,7 @@ interface CreatedPrComment {
 
 ## 说明
 
-- 网络请求层统一由内部的 `utils/http.ts` 中的 `httpRequest` 处理，对外行为不变。
+- 网络请求层统一由内部的 `utils/http.ts` 中的 `httpRequest` 处理，并通过 ETag 自动缓存未变更的响应，对外行为不变。
 - 字段与返回值与 GitCode 文档保持一致的最小子集，返回结果会通过 Zod 进行结构校验。
 - 2025-09-13 更新：新增 PR 设置和评论功能支持。
 - 2025-09-14 更新：新增 PR 创建评论功能支持。
