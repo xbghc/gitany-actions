@@ -16,6 +16,7 @@ export {
   checkoutSha,
   checkProjectFiles,
   installDependencies,
+  installClaudeCli,
   prepareImage,
   DockerUnavailableError,
   ImagePullError,
