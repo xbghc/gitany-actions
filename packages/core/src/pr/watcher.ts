@@ -3,7 +3,10 @@ import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
 import * as path from 'node:path';
+import type Docker from 'dockerode';
 import { createLogger } from '@gitany/shared';
+import { createPrContainer, removeContainer } from '../container';
+import type { ContainerOptions } from '../container/types';
 const logger = createLogger('@gitany/core');
 const DEFAULT_INTERVAL_SEC = 5;
 
@@ -16,6 +19,17 @@ interface WatchPullRequestOptions {
   // 可选：仅拉取某一类评论（'pr_comment' 或 'diff_comment'）。
   // 不设置时默认拉取所有类型评论。
   commentType?: 'diff_comment' | 'pr_comment';
+  /** 启用内置容器管理。传入容器选项或 false 以禁用 */
+  container?: ContainerOptions | false;
+  /** 容器创建后回调 */
+  onContainerCreated?: (container: Docker.Container, pr: PullRequest) => void;
+  /** 容器移除后回调 */
+  onContainerRemoved?: (prId: number) => void;
+}
+
+export interface WatchPullRequestHandle {
+  stop(): void;
+  containers(): Map<number, Docker.Container>;
 }
 
 export function watchPullRequest(
@@ -24,10 +38,11 @@ export function watchPullRequest(
   options: WatchPullRequestOptions,
 ) {
   const state = createWatcherState(url);
+  const containerMap = new Map<number, Docker.Container>();
 
   const check = async () => {
     const currentList = await fetchPullRequests(client, url);
-    detectStateChanges(currentList, state, options);
+    await detectStateChanges(currentList, state, options, url, containerMap);
     await detectNewComments(client, url, currentList, state, options);
     state.prList = currentList.map((p) => ({ id: p.id, number: p.number, state: p.state }));
     await persistState(url, state);
@@ -38,17 +53,40 @@ export function watchPullRequest(
 
   const intervalMs = 1000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
   const intervalId = setInterval(() => void check(), intervalMs);
-  return () => clearInterval(intervalId);
+  return {
+    stop: () => clearInterval(intervalId),
+    containers: () => containerMap,
+  } satisfies WatchPullRequestHandle;
 }
 
-export function triggerPullRequestEvent(pr: PullRequest, options: WatchPullRequestOptions) {
-  const { onClosed, onMerged, onOpen } = options;
-  if (onOpen && pr.state === 'open') {
-    onOpen(pr);
-  } else if (onClosed && pr.state === 'closed') {
-    onClosed(pr);
-  } else if (onMerged && pr.state === 'merged') {
-    onMerged(pr);
+export async function triggerPullRequestEvent(
+  pr: PullRequest,
+  repoUrl: string,
+  options: WatchPullRequestOptions,
+  containerMap: Map<number, Docker.Container>,
+) {
+  const { onClosed, onMerged, onOpen, container, onContainerCreated, onContainerRemoved } = options;
+  if (pr.state === 'open') {
+    if (container !== false && container !== undefined) {
+      const created = await createPrContainer(repoUrl, pr, container || {});
+      containerMap.set(pr.id, created);
+      onContainerCreated?.(created, pr);
+    }
+    onOpen?.(pr);
+  } else if (pr.state === 'closed') {
+    if (container !== false && container !== undefined) {
+      await removeContainer(pr.id);
+      containerMap.delete(pr.id);
+      onContainerRemoved?.(pr.id);
+    }
+    onClosed?.(pr);
+  } else if (pr.state === 'merged') {
+    if (container !== false && container !== undefined) {
+      await removeContainer(pr.id);
+      containerMap.delete(pr.id);
+      onContainerRemoved?.(pr.id);
+    }
+    onMerged?.(pr);
   }
 }
 
@@ -68,25 +106,30 @@ function createWatcherState(url: string): WatcherState {
   return { prList: [], lastCommentIdByPr: new Map() };
 }
 
-async function fetchPullRequests(client: GitcodeClient, url: string) {
+async function fetchPullRequests(
+  client: GitcodeClient,
+  url: string,
+): Promise<PullRequest[]> {
   return await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
 }
 
-function detectStateChanges(
+async function detectStateChanges(
   newList: PullRequest[],
   state: WatcherState,
   options: WatchPullRequestOptions,
+  repoUrl: string,
+  containerMap: Map<number, Docker.Container>,
 ) {
   const prev = state.prList;
   for (const pr of newList) {
     const existed = prev.find((p) => p.id === pr.id);
     if (!existed) {
       // 新增 PR（首次看到）。按当前状态触发一次回调
-      triggerPullRequestEvent(pr, options);
+      await triggerPullRequestEvent(pr, repoUrl, options, containerMap);
       continue;
     }
     if (existed.state !== pr.state) {
-      triggerPullRequestEvent(pr, options);
+      await triggerPullRequestEvent(pr, repoUrl, options, containerMap);
     }
   }
 }

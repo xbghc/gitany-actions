@@ -21,7 +21,7 @@ import { GitcodeClient } from '@gitany/gitcode';
 const client = new GitcodeClient();
 
 // 监控 PR 状态变化和评论
-const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
+const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
   onOpen: (pr) => {
     console.log(`PR #${pr.number} 已打开: ${pr.title}`);
   },
@@ -34,11 +34,11 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
   onComment: (pr, comment) => {
     console.log(`PR #${pr.number} 有新评论: ${comment.body}`);
   },
-  intervalMs: 10000 // 每10秒检查一次
+  intervalSec: 10 // 每10秒检查一次
 });
 
 // 停止监控
-// unwatch();
+// watcher.stop();
 ```
 
 #### API
@@ -57,10 +57,13 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 - `onClosed`: PR 关闭时触发
 - `onMerged`: PR 合并时触发
 - `onComment`: PR 有新评论时触发
-- `intervalMs`: 检查间隔时间（毫秒），默认为 5000
+- `intervalSec`: 检查间隔时间（秒），默认为 5
+- `container`: 传入对象以启用内置容器管理（传 `false` 禁用）
+- `onContainerCreated`: 容器创建后触发
+- `onContainerRemoved`: 容器删除后触发
 
 **返回值:**
-- 返回一个清理函数，调用可停止监控
+- 返回一个句柄 `{ stop(), containers() }`
 
 ## 工作原理
 
@@ -113,23 +116,28 @@ await removeContainer(pr.id);
 
 #### 自动管理 PR 容器生命周期
 
-当需要自动响应 PR 的打开和关闭事件时，可以使用 `managePrContainers` 简化容器管理：
+当需要自动响应 PR 的打开和关闭事件时，可在 watcher 中直接启用容器管理：
 
 ```ts
-import { managePrContainers, getContainer } from '@gitany/core';
+import { watchPullRequest } from '@gitany/core';
 import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient();
 
 // 监控指定仓库的 PR，打开时创建容器，关闭或合并时删除容器
-const unwatch = managePrContainers(client, 'https://gitcode.com/owner/repo.git');
+const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
+  container: {},
+  onContainerCreated: (container, pr) => {
+    console.log('容器已创建', container.id);
+  }
+});
 
-// 需要时根据 PR ID 获取对应的 Docker 容器
-const container = getContainer({ pr: 123 });
+// 根据 PR ID 获取对应的 Docker 容器
+const container = watcher.containers().get(123);
 console.log(container?.id);
 
 // 停止监控
-// unwatch();
+// watcher.stop();
 ```
 
 容器内可访问以下环境变量：
