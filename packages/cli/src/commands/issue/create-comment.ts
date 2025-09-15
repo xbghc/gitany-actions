@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { createLogger } from '@gitany/shared';
+import { withClient } from '../../utils/with-client';
 
 interface CreateCommentOptions {
   body?: string;
@@ -39,21 +39,17 @@ async function openEditor(content: string): Promise<string> {
 }
 
 export async function createCommentAction(
-  issueArg: string, 
-  bodyArg?: string, 
-  options: CreateCommentOptions = {}
+  issueArg: string,
+  bodyArg?: string,
+  options: CreateCommentOptions = {},
 ) {
-  const logger = createLogger('@gitany/cli');
-  try {
-    const client = new GitcodeClient();
-    
+  await withClient(async (client) => {
     // 处理 --repo 标志和解析 issue 参数
     let owner: string;
     let repo: string;
     let issueNumber: number;
-    
+
     if (options.repo) {
-      // 如果指定了 --repo，issueArg 应该是 issue number
       const parsed = parseGitUrl(options.repo);
       if (parsed) {
         owner = parsed.owner;
@@ -67,14 +63,12 @@ export async function createCommentAction(
           owner = parts[0];
           repo = parts[1];
         } else {
-          // 展示 options.repo 的实际值，便于排查
           throw new Error(`Invalid repository format: "${options.repo}". Use [HOST/]OWNER/REPO`);
         }
       }
 
       issueNumber = parseInt(issueArg, 10);
     } else {
-      // 解析 issueArg 为 owner/repo/number 或 URL 格式
       const urlMatch = issueArg.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)\/issues\/(\d+)$/);
       if (urlMatch) {
         owner = urlMatch[1];
@@ -96,36 +90,27 @@ export async function createCommentAction(
       throw new Error('Invalid issue number');
     }
 
-    // 如果指定了 web 模式，打开浏览器
     if (options.web) {
       const url = `https://gitcode.com/${owner}/${repo}/issues/${issueNumber}#new_comment_field`;
       console.log(`Opening ${url} in your browser...`);
-      // 在真实环境中，这里应该使用 open 或类似包
       return;
     }
 
-    // 获取 comment body
     let finalBody = bodyArg || options.body || '';
-    
+
     if (options.bodyFile) {
       if (options.bodyFile === '-') {
-        // 从标准输入读取
         finalBody = fs.readFileSync(0, 'utf-8').trim();
       } else {
-        // 从文件读取
         if (!fs.existsSync(options.bodyFile)) {
           throw new Error(`File not found: ${options.bodyFile}`);
         }
         finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
       }
     } else if (options.editor) {
-      // 在编辑器中编辑
-      const template = `# Comment on Issue #${issueNumber}
-
-<!-- Write your comment below -->`;
+      const template = `# Comment on Issue #${issueNumber}\n\n<!-- Write your comment below -->`;
       finalBody = await openEditor(template);
     } else if (!finalBody) {
-      // 简化的交互式提示
       console.log('Enter comment body (press Ctrl+D when finished, or use -e/--editor):');
       finalBody = fs.readFileSync(0, 'utf-8').trim();
     }
@@ -150,21 +135,16 @@ export async function createCommentAction(
       console.log(`   ID:       ${comment.id}`);
       console.log(`   Author:   ${comment.user.name || comment.user.login}`);
       console.log(`   Created:  ${new Date(comment.created_at).toLocaleString()}`);
-      
-      // 显示评论内容预览
-      const bodyPreview = comment.body.length > 100 
-        ? comment.body.substring(0, 100) + '...' 
+
+      const bodyPreview = comment.body.length > 100
+        ? comment.body.substring(0, 100) + '...'
         : comment.body;
       console.log(`   Preview:  "${bodyPreview}"`);
-      
+
       console.log(`\n💡 Next steps:`);
       console.log(`   • Reply to comment:  gitcode issue comment ${issueNumber} --body "Your reply"`);
     }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logger.error({ err: error }, '\n❌ Failed to create comment: %s', msg);
-    process.exit(1);
-  }
+  }, 'Failed to create comment');
 }
 
 export function createCommentCommand(): Command {

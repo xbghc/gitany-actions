@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
+import { withClient } from '../../utils/with-client';
 
 interface CreatePrCommentOptions {
   body?: string;
@@ -42,11 +42,9 @@ async function openEditor(content: string): Promise<string> {
 export async function createPrCommentAction(
   prNumber: string,
   body: string,
-  options: CreatePrCommentOptions = {}
+  options: CreatePrCommentOptions = {},
 ) {
-  const logger = createLogger('@gitany/cli');
-  try {
-    const client = new GitcodeClient();
+  await withClient(async (client) => {
     const repoUrl = await resolveRepoUrl(options.repo);
 
     // 解析仓库URL获取 owner/repo（复用通用解析器）
@@ -68,7 +66,6 @@ export async function createPrCommentAction(
     if (options.web) {
       const url = `https://${host}/${owner}/${repo}/pull/${prNum}#new_comment_field`;
       console.log(`Opening ${url} in your browser...`);
-      // 在真实环境中，这里应该使用 open 或类似包
       return;
     }
 
@@ -91,11 +88,7 @@ export async function createPrCommentAction(
       console.log(`\n💡 Next steps:`);
       console.log(`   • Reply to comment:  gitcode pr comment ${prNumber} --body "Your reply"`);
     }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logger.error({ err: error }, '\n❌ Failed to create PR comment: %s', msg);
-    process.exit(1);
-  }
+  }, 'Failed to create PR comment');
 }
 
 export function createPrCommentCommand(): Command {

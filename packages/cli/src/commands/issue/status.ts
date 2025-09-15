@@ -1,7 +1,7 @@
 import { Command } from 'commander';
-import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
-import { createLogger } from '@gitany/shared';
+import { withClient } from '../../utils/with-client';
 
 interface StatusOptions {
   json?: boolean;
@@ -9,9 +9,7 @@ interface StatusOptions {
 }
 
 export async function statusAction(urlArg?: string, options: StatusOptions = {}) {
-  const logger = createLogger('@gitany/cli');
-  try {
-    const client = new GitcodeClient();
+  await withClient(async (client) => {
 
     // 解析 repository URL
     let owner: string;
@@ -111,11 +109,7 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
       console.log(`   • List all issues:   gitcode issue list ${owner}/${repo}`);
       console.log(`   • View repository:   ${colors.blue}https://gitcode.com/${owner}/${repo}${colors.reset}`);
     }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logger.error({ err: error }, '\n❌ Failed to get issue status: %s', msg);
-    process.exit(1);
-  }
+  }, 'Failed to get issue status');
 }
 
 export function statusCommand(): Command {
