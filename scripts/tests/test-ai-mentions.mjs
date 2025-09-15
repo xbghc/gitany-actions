@@ -54,7 +54,7 @@ function parseArgs() {
   const opts = {
     includeIssueComments: true,
     includePullRequestComments: true,
-    runChat: false,
+    runChat: true,
     verbose: false,
     showPrompt: false,
   };
