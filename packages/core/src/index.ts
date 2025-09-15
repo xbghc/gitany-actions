@@ -11,6 +11,11 @@ export {
   getContainer,
   getContainerStatus,
   testShaBuild,
+  cloneRepo,
+  verifySha,
+  checkoutSha,
+  checkProjectFiles,
+  installDependencies,
   prepareImage,
   DockerUnavailableError,
   ImagePullError,
@@ -21,3 +26,4 @@ export {
   collectDiagnostics,
   DiagnosticsCollectionError,
 } from './container';
+export type { ProjectCheckResult } from './container';

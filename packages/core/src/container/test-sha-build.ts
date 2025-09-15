@@ -7,26 +7,17 @@ import {
   ImagePullError,
   type ImagePullStatus,
 } from './prepare-image';
-import {
-  createWorkspaceContainer,
-} from './create-workspace-container';
-import {
-  executeStep,
-} from './execute-step';
-import {
-  collectDiagnostics,
-  DiagnosticsCollectionError,
-} from './collect-diagnostics';
+import { createWorkspaceContainer } from './create-workspace-container';
+import { cloneRepo } from './clone-repo';
+import { verifySha } from './verify-sha';
+import { checkoutSha } from './checkout-sha';
+import { checkProjectFiles } from './check-project-files';
+import { installDependencies } from './install-dependencies';
+import { DiagnosticsCollectionError } from './collect-diagnostics';
 import type { TestShaBuildOptions, TestShaBuildResult } from './types';
 
 /**
  * Run a sequence of build verification steps inside a disposable container.
- *
- * Step order:
- * 1. `prepareImage` – ensure Docker is available and the Node image exists.
- * 2. `createWorkspaceContainer` – create a clean workspace container for the repo.
- * 3. `executeStep` – run clone/verify/checkout/project check/install scripts.
- * 4. `collectDiagnostics` – parse project files to determine pnpm usage.
  */
 export async function testShaBuild(
   repoUrl: string,
@@ -91,13 +82,7 @@ export async function testShaBuild(
     });
     result.diagnostics.containerId = container.id;
 
-    const cloneResult = await executeStep({
-      container,
-      name: 'clone',
-      script: 'rm -rf /tmp/workspace && git clone "$REPO_URL" /tmp/workspace 2>&1',
-      log,
-      verbose,
-    });
+    const cloneResult = await cloneRepo({ container, log, verbose });
     fullOutput += cloneResult.output;
     result.diagnostics.steps.clone = {
       success: cloneResult.success,
@@ -110,44 +95,20 @@ export async function testShaBuild(
       return result;
     }
 
-    const verifyShaResult = await executeStep({
-      container,
-      name: 'verifySha',
-      script:
-        'cd /tmp/workspace && echo "=== 验证SHA存在性 ===" && echo "目标SHA: $TARGET_SHA" && git cat-file -e "$TARGET_SHA" 2>&1 && echo "SHA验证成功" || echo "SHA不存在"',
-      log,
-      verbose,
-    });
-    fullOutput += verifyShaResult.output;
+    const verifyResult = await verifySha({ container, log, verbose });
+    fullOutput += verifyResult.output;
     result.diagnostics.steps.verifySha = {
-      success: verifyShaResult.success,
-      duration: verifyShaResult.duration,
-      error: verifyShaResult.success ? undefined : verifyShaResult.output,
+      success: verifyResult.success,
+      duration: verifyResult.duration,
+      error: verifyResult.success ? undefined : verifyResult.output,
     };
-    if (!verifyShaResult.success) {
-      const checkBranchResult = await executeStep({
-        container,
-        name: 'checkBranch',
-        script:
-          'cd /tmp/workspace && git show-ref --verify --quiet "refs/heads/$TARGET_SHA" 2>&1 && echo "是有效分支" || echo "不是有效分支"',
-        log,
-        verbose,
-      });
-      fullOutput += checkBranchResult.output;
-      if (!checkBranchResult.success) {
-        result.error = `SHA/分支验证失败: 提交 '$TARGET_SHA' 不存在`;
-        result.exitCode = 1;
-        return result;
-      }
+    if (!verifyResult.success) {
+      result.error = `SHA/分支验证失败: 提交 '$TARGET_SHA' 不存在`;
+      result.exitCode = 1;
+      return result;
     }
 
-    const checkoutResult = await executeStep({
-      container,
-      name: 'checkout',
-      script: 'cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1',
-      log,
-      verbose,
-    });
+    const checkoutResult = await checkoutSha({ container, log, verbose });
     fullOutput += checkoutResult.output;
     result.diagnostics.steps.checkout = {
       success: checkoutResult.success,
@@ -159,22 +120,18 @@ export async function testShaBuild(
       return result;
     }
 
-    const checkProjectResult = await executeStep({
-      container,
-      name: 'checkProject',
-      script:
-        'cd /tmp/workspace && echo "=== 检查项目文件 ===" && ls -la package.json 2>/dev/null && ls -la pnpm-lock.yaml 2>/dev/null && echo "=== 检查 package.json ===" && cat package.json | grep -E "packageManager|lockfileVersion" || echo "=== 文件检查完成 ==="',
-      log,
-      verbose,
-    });
-    fullOutput += checkProjectResult.output;
-    result.diagnostics.steps.checkProject = {
-      success: checkProjectResult.success,
-      duration: checkProjectResult.duration,
-      error: checkProjectResult.success ? undefined : '项目检查失败',
-    };
     try {
-      const diag = collectDiagnostics(checkProjectResult.output);
+      const { step: projectStep, diagnostics: diag } = await checkProjectFiles({
+        container,
+        log,
+        verbose,
+      });
+      fullOutput += projectStep.output;
+      result.diagnostics.steps.checkProject = {
+        success: projectStep.success,
+        duration: projectStep.duration,
+        error: projectStep.success ? undefined : '项目检查失败',
+      };
       result.diagnostics.packageJsonExists = diag.packageJsonExists;
       result.diagnostics.pnpmLockExists = diag.pnpmLockExists;
       result.diagnostics.isPnpmProject = diag.isPnpmProject;
@@ -194,14 +151,7 @@ export async function testShaBuild(
       return result;
     }
 
-    const installResult = await executeStep({
-      container,
-      name: 'install',
-      script:
-        `cd /tmp/workspace && PNPM_VER=$(node -e "try{const s=require('./package.json').packageManager||''; if(String(s).includes('pnpm@')){process.stdout.write(String(s).split('pnpm@').pop());}else{process.stdout.write('latest')}}catch(e){process.stdout.write('latest')}") && corepack prepare pnpm@$PNPM_VER --activate && corepack pnpm --version && corepack pnpm install 2>&1`,
-      log,
-      verbose,
-    });
+    const installResult = await installDependencies({ container, log, verbose });
     fullOutput += installResult.output;
     result.diagnostics.steps.install = {
       success: installResult.success,
