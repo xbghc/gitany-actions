@@ -157,3 +157,25 @@ console.log(container?.id);
 pnpm --filter @gitany/core cleanup
 ```
 
+### 通过 Claude Code 进行对话
+
+`chat(repoUrl, question, options)` 会在 Docker 容器中克隆项目、安装依赖与 Claude Code CLI，
+并以无头模式向 Claude Code 提问。
+
+```ts
+import { chat } from '@gitany/core';
+
+const result = await chat(
+  'https://gitcode.com/owner/repo.git',
+  'Explain the project structure',
+);
+console.log(result.output);
+```
+
+参数选项：
+
+- `sha`: 目标提交或分支，默认 `dev`
+- `container`: 传入已有容器以复用，否则自动创建临时容器
+- `keepContainer`: 创建的临时容器是否保留，默认 `false`
+
+

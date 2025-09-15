@@ -17,6 +17,7 @@ export {
   checkProjectFiles,
   installDependencies,
   installClaudeCli,
+  chat,
   prepareImage,
   DockerUnavailableError,
   ImagePullError,
@@ -28,4 +29,4 @@ export {
   DiagnosticsCollectionError,
   cleanupPrContainers,
 } from './container';
-export type { ProjectCheckResult } from './container';
+export type { ProjectCheckResult, ChatOptions, ChatResult } from './container';
