@@ -178,4 +178,5 @@ console.log(result.output);
 - `container`: 传入已有容器以复用，否则自动创建临时容器
 - `keepContainer`: 创建的临时容器是否保留，默认 `false`
 
+调用过程中会自动转发宿主机上所有以 `ANTHROPIC_` 开头的环境变量，以便 Claude Code 正确认证。
 

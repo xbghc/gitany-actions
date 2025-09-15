@@ -68,6 +68,13 @@ export async function chat(
     const installClaude = await installClaudeCli({ container, log, verbose });
     if (!installClaude.success) return { success: false, error: installClaude.output };
 
+    const anthropicEnv: string[] = [];
+    for (const [key, value] of Object.entries(process.env)) {
+      if (key.startsWith('ANTHROPIC_') && typeof value === 'string') {
+        anthropicEnv.push(`${key}=${value}`);
+      }
+    }
+
     const chatStep = await executeStep({
       container,
       name: 'claude',
@@ -75,6 +82,7 @@ export async function chat(
         `cd /tmp/workspace && ~/.npm-global/bin/claude -p ${JSON.stringify(
           question,
         )} 2>&1`,
+      env: anthropicEnv,
       log,
       verbose,
     });
