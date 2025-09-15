@@ -8,23 +8,10 @@ export { verifySha } from './verify-sha';
 export { checkoutSha } from './checkout-sha';
 export { checkProjectFiles } from './check-project-files';
 export { installDependencies } from './install-dependencies';
-export {
-  prepareImage,
-  DockerUnavailableError,
-  ImagePullError,
-} from './prepare-image';
-export {
-  createWorkspaceContainer,
-  ContainerCreationError,
-} from './create-workspace-container';
+export { installClaudeCli } from './install-claude-cli';
+export { prepareImage, DockerUnavailableError, ImagePullError } from './prepare-image';
+export { createWorkspaceContainer, ContainerCreationError } from './create-workspace-container';
 export { executeStep, StepExecutionError } from './execute-step';
-export {
-  collectDiagnostics,
-  DiagnosticsCollectionError,
-} from './collect-diagnostics';
-export type {
-  ContainerOptions,
-  TestShaBuildOptions,
-  TestShaBuildResult,
-} from './types';
+export { collectDiagnostics, DiagnosticsCollectionError } from './collect-diagnostics';
+export type { ContainerOptions, TestShaBuildOptions, TestShaBuildResult } from './types';
 export type { ProjectCheckResult } from './check-project-files';

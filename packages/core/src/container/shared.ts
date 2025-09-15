@@ -6,12 +6,11 @@ export const docker = new Docker();
 export const logger = createLogger('@gitany/core');
 
 /** Forwarded Claude related env vars */
+const anthropicEnvVars = Object.keys(process.env).filter((key) => key.startsWith('ANTHROPIC_'));
+
 export const forward = [
-  'ANTHROPIC_BASE_URL',
-  'ANTHROPIC_AUTH_TOKEN',
+  ...anthropicEnvVars,
   'API_TIMEOUT_MS',
-  'ANTHROPIC_MODEL',
-  'ANTHROPIC_SMALL_FAST_MODEL',
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC',
 ];
 
@@ -22,4 +21,3 @@ export async function ensureDocker() {
     throw new Error('Docker daemon is not available. Ensure Docker is running.');
   }
 }
-
