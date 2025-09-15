@@ -150,4 +150,4 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 
 ### 历史变更
 
-- 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理；对外 API 与行为不变。
+- 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并通过 ETag 自动缓存未变更的响应；对外 API 与行为不变。
