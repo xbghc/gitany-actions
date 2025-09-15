@@ -65,6 +65,61 @@ const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 **返回值:**
 - 返回一个句柄 `{ stop(), containers() }`
 
+### Issue 评论监控
+
+`watchIssues` 可用于轮询仓库的 Issue 评论。当监听到新的评论时会触发回调，默认每 5 秒检测一次。
+
+```ts
+import { watchIssues } from '@gitany/core';
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+
+const watcher = watchIssues(client, 'https://gitcode.com/owner/repo.git', {
+  onComment: (issue, comment) => {
+    console.log(`Issue #${issue.number} 有新评论: ${comment.body}`);
+  },
+  intervalSec: 10,
+});
+
+// 需要时停止监听
+// watcher.stop();
+```
+
+可通过 `issueQuery`/`commentQuery` 控制拉取范围，例如 `per_page`、`state` 等。
+
+### AI 评论助手
+
+`watchAiMentions` 会同时监听 Issue 评论与 PR 评论。当新增评论中包含指定标记（默认为 `@AI`）时，会收集 Issue 标题、描述、历史评论等上下文，并将拼装后的提示语传入 `chat`。
+
+```ts
+import { watchAiMentions } from '@gitany/core';
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+
+const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', {
+  chatOptions: { sha: 'dev' },
+  onChatResult: (result, context) => {
+    if (result.success) {
+      console.log('AI 输出:', result.output);
+    } else {
+      console.error('AI 调用失败:', result.error);
+    }
+  },
+});
+
+// aiWatcher.stop();
+```
+
+可通过以下选项自定义行为：
+
+- `mention`: 触发标记，默认 `@AI`
+- `buildPrompt(context)`: 自定义提示语内容
+- `issueIntervalSec` / `prIntervalSec`: Issue 与 PR 轮询频率
+- `chatExecutor`: 自定义 chat 执行器，默认使用内置 `chat`
+- `includeIssueComments` / `includePullRequestComments`: 控制监听的评论类型
+
 ## 工作原理
 
 - 按指定间隔检查 PR 列表（默认 5 秒）

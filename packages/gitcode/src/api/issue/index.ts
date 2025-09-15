@@ -37,3 +37,5 @@ export {
   createIssueCommentUrl,
   createdIssueCommentSchema,
 } from './create-comment';
+export type { IssueDetail } from './get';
+export { issueDetailSchema, getIssueUrl } from './get';

@@ -3,6 +3,7 @@ import { listIssues } from './list';
 import { listIssueComments } from './comments';
 import { createIssue } from './create';
 import { createIssueComment } from './create-comment';
+import { getIssue } from './get';
 import type {
   ListIssuesQuery,
   IssueCommentsQuery,
@@ -21,6 +22,10 @@ export class GitcodeClientIssue {
     return listIssueComments(this.client, url, issueNumber, query);
   }
 
+  get(url: string, issueNumber: number) {
+    return getIssue(this.client, url, issueNumber);
+  }
+
   create(params: CreateIssueParams) {
     return createIssue(this.client, params);
   }
@@ -30,4 +35,4 @@ export class GitcodeClientIssue {
   }
 }
 
-export { listIssues, listIssueComments, createIssue, createIssueComment };
+export { listIssues, listIssueComments, createIssue, createIssueComment, getIssue };
