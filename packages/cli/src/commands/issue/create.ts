@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import { GitcodeClient, parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@gitany/gitcode';
 import type { CreateIssueBody } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { createLogger } from '@gitany/shared';
+import { withClient } from '../../utils/with-client';
 
 export interface CreateOptions {
   title?: string;
@@ -59,9 +59,7 @@ async function openEditor(content: string): Promise<string> {
 }
 
 export async function createAction(owner: string, repo: string, title?: string, options: CreateOptions = {}) {
-  const logger = createLogger('@gitany/cli');
-  try {
-    const client = new GitcodeClient();
+  await withClient(async (client) => {
     
     // 如果指定了 web 模式，打开浏览器
     if (options.web) {
@@ -142,26 +140,22 @@ export async function createAction(owner: string, repo: string, title?: string, 
       console.log(`   Number:   #${issue.number}`);
       console.log(`   State:    ${getStateColor(issue.state)}${issue.state}${colors.reset}`);
       console.log(`   URL:      ${colors.blue}${issue.html_url}${colors.reset}`);
-      
+
       if (issue.assignee) {
         console.log(`   Assignee: ${issue.assignee.name || issue.assignee.login}`);
       }
-      
+
       if (issue.labels && issue.labels.length > 0) {
         const labelNames = issue.labels.map(l => l.name).join(', ');
         console.log(`   Labels:   ${labelNames}`);
       }
-      
+
       console.log(`\n💡 Next steps:`);
       console.log(`   • View the issue: ${colors.blue}${issue.html_url}${colors.reset}`);
       console.log(`   • Add labels:    gitcode issue edit ${issue.number} --label bug`);
       console.log(`   • Add assignee:  gitcode issue edit ${issue.number} --assignee @me`);
     }
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logger.error({ err: error }, '\n❌ Failed to create issue: %s', msg);
-    process.exit(1);
-  }
+  }, 'Failed to create issue');
 }
 
 // ANSI 颜色代码

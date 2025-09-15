@@ -442,3 +442,16 @@ gitcode user namespace
 ## 本地存储路径
 
 CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`
+
+## 开发辅助
+
+在编写自定义命令时，可使用 `withClient` 工具统一创建 `GitcodeClient` 并处理错误：
+
+```ts
+import { withClient } from '@gitany/cli/utils/with-client';
+
+await withClient(async (client) => {
+  const user = await client.user.getProfile();
+  console.log(user.login);
+});
+```

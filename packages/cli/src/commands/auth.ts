@@ -1,8 +1,5 @@
 import { Command } from 'commander';
-import { GitcodeClient } from '@gitany/gitcode';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('@gitany/cli');
+import { withClient } from '../utils/with-client';
 
 export function authCommand(): Command {
   const authProgram = new Command('auth').description('Authentication commands');
@@ -12,14 +9,13 @@ export function authCommand(): Command {
     .description('Set authentication token')
     .argument('<token>', 'Authentication token')
     .action(async (token) => {
-      try {
-        const client = new GitcodeClient();
-        await client.auth.setToken(token.trim());
-        console.log('Token saved successfully');
-      } catch (error) {
-        logger.error({ error }, 'Failed to save token');
-        process.exit(1);
-      }
+      await withClient(
+        async (client) => {
+          await client.auth.setToken(token.trim());
+          console.log('Token saved successfully');
+        },
+        'Failed to save token',
+      );
     });
 
   return authProgram;
