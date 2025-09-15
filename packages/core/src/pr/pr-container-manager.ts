@@ -1,6 +1,6 @@
 import { GitcodeClient, PullRequest, PRComment } from '@gitany/gitcode';
 
-import { createPrContainer, removePrContainer } from '../container';
+import { createPrContainer, removeContainer } from '../container';
 import type { ContainerOptions } from '../container/types';
 import { watchPullRequest } from './watcher';
 
@@ -37,10 +37,10 @@ export function managePrContainers(
       void createPrContainer(repoUrl, pr, containerOptions);
     },
     onClosed: (pr) => {
-      void removePrContainer(pr.id);
+      void removeContainer(pr.id);
     },
     onMerged: (pr) => {
-      void removePrContainer(pr.id);
+      void removeContainer(pr.id);
     },
   });
 

@@ -77,10 +77,10 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 ```ts
 import {
   createPrContainer,
-  resetPrContainer,
-  removePrContainer,
-  getPrContainer,
-  getPrContainerStatus,
+  resetContainer,
+  removeContainer,
+  getContainer,
+  getContainerStatus,
 } from '@gitany/core';
 import { GitcodeClient } from '@gitany/gitcode';
 
@@ -92,7 +92,7 @@ const [pr] = await client.pr.list('https://gitcode.com/owner/repo.git', {
 
 // 手动创建并执行脚本
 await createPrContainer('https://gitcode.com/owner/repo.git', pr);
-const container = getPrContainer(pr.id);
+const container = getContainer({ pr: pr.id });
 if (container) {
   const exec = await container.exec({
     Cmd: ['sh', '-lc', 'pnpm lint && pnpm build'],
@@ -104,11 +104,11 @@ if (container) {
 }
 
 // 查询容器状态
-console.log(await getPrContainerStatus(pr.id));
+console.log(await getContainerStatus(pr.id));
 
 // 重新创建或删除容器
-await resetPrContainer('https://gitcode.com/owner/repo.git', pr);
-await removePrContainer(pr.id);
+await resetContainer('https://gitcode.com/owner/repo.git', pr);
+await removeContainer(pr.id);
 ```
 
 #### 自动管理 PR 容器生命周期
@@ -116,7 +116,7 @@ await removePrContainer(pr.id);
 当需要自动响应 PR 的打开和关闭事件时，可以使用 `managePrContainers` 简化容器管理：
 
 ```ts
-import { managePrContainers, getPrContainer } from '@gitany/core';
+import { managePrContainers, getContainer } from '@gitany/core';
 import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient();
@@ -125,7 +125,7 @@ const client = new GitcodeClient();
 const unwatch = managePrContainers(client, 'https://gitcode.com/owner/repo.git');
 
 // 需要时根据 PR ID 获取对应的 Docker 容器
-const container = getPrContainer(123);
+const container = getContainer({ pr: 123 });
 console.log(container?.id);
 
 // 停止监控
@@ -139,5 +139,5 @@ console.log(container?.id);
 
 - 若设置，所有以 `ANTHROPIC_` 开头的 Claude 相关变量都会被转发
 
-这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，需要自行在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，相关操作会抛出 `Docker daemon is not available` 错误。可通过 `getPrContainerStatus(pr.id)` 查询容器状态。
+这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，需要自行在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，相关操作会抛出 `Docker daemon is not available` 错误。可通过 `getContainerStatus(pr.id)` 查询容器状态。
 

@@ -1,14 +1,10 @@
 export { createPrContainer } from './create';
-export { resetPrContainer } from './reset';
-export { removePrContainer } from './remove';
-export {
-  getPrContainer,
-  getPrContainerStatus,
-} from './query';
+export { resetContainer } from './reset-container';
+export { removeContainer } from './remove-container';
+export { getContainer, getContainerStatus } from './get';
 export { testShaBuild } from './test-sha-build';
 export type {
   ContainerOptions,
   TestShaBuildOptions,
   TestShaBuildResult,
 } from './types';
-
