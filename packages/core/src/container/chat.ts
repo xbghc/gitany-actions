@@ -20,6 +20,10 @@ export interface ChatOptions {
   keepContainer?: boolean;
   /** Enable verbose logging. */
   verbose?: boolean;
+  /** Override npm registry for installs. Falls back to env then mirror. */
+  npmRegistry?: string;
+  /** Override pnpm registry for installs. Falls back to env then mirror. */
+  pnpmRegistry?: string;
 }
 
 export interface ChatResult {
@@ -42,6 +46,14 @@ export async function chat(
   const keepContainer = options.keepContainer ?? false;
   const log = logger.child({ scope: 'core:container', func: 'chat', sha });
 
+  const defaultRegistry = 'https://registry.npmmirror.com';
+  const npmRegistry = options.npmRegistry ?? process.env.NPM_CONFIG_REGISTRY ?? defaultRegistry;
+  const pnpmRegistry = options.pnpmRegistry ?? process.env.PNPM_CONFIG_REGISTRY ?? defaultRegistry;
+  const registryEnv = [
+    `NPM_CONFIG_REGISTRY=${npmRegistry}`,
+    `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`,
+  ];
+
   let container = options.container;
   const createdContainer = !container;
 
@@ -52,7 +64,7 @@ export async function chat(
       container = await createWorkspaceContainer({
         docker,
         image,
-        env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`],
+        env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...registryEnv],
         log,
       });
       const clone = await cloneRepo({ container, log, verbose });
@@ -63,9 +75,9 @@ export async function chat(
       if (!checkout.success) return { success: false, error: checkout.output };
     }
 
-    const installDeps = await installDependencies({ container, log, verbose });
+    const installDeps = await installDependencies({ container, log, verbose, env: registryEnv });
     if (!installDeps.success) return { success: false, error: installDeps.output };
-    const installClaude = await installClaudeCli({ container, log, verbose });
+    const installClaude = await installClaudeCli({ container, log, verbose, env: registryEnv });
     if (!installClaude.success) return { success: false, error: installClaude.output };
 
     const anthropicEnv: string[] = [];
@@ -100,4 +112,3 @@ export async function chat(
     }
   }
 }
-
