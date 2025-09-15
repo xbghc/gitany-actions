@@ -1,4 +1,4 @@
-import { GitcodeClient, PullRequest, PRComment } from '@gitany/gitcode';
+import { GitcodeClient, PullRequest, PRComment, PRCommentQueryOptions } from '@gitany/gitcode';
 import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
@@ -136,8 +136,8 @@ async function fetchPrComments(
   prNumber: number,
   options?: WatchPullRequestOptions,
 ): Promise<PRComment[]> {
-  // 默认拉取所有类型评论；如提供 commentType 则按类型过滤
-  const query: import('@gitany/gitcode').PRCommentQueryOptions | undefined =
+  // 默认拉取所有类型评论；如提供 commentType 则按类型过滤（使用静态导入的类型）
+  const query: PRCommentQueryOptions | undefined =
     options?.commentType ? { comment_type: options.commentType } : undefined;
   return await client.pr.comments(url, prNumber, query);
 }
