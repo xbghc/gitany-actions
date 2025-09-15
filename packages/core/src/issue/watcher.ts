@@ -112,16 +112,27 @@ async function detectNewComments(
     }
 
     const { data: comments, notModified } = result;
-    if (notModified || comments.length === 0) continue;
+    if (notModified) continue;
 
-    const lastSeen = state.lastCommentIdByIssue.get(issueNumber);
-    if (lastSeen === undefined) {
+    const existingLastSeen = state.lastCommentIdByIssue.get(issueNumber);
+
+    if (comments.length === 0) {
+      if (existingLastSeen === undefined) {
+        // 记录已建立的基线，即便当前还没有评论，后续新增的首条评论也能被捕获
+        state.lastCommentIdByIssue.set(issueNumber, 0);
+      }
+      continue;
+    }
+
+    if (existingLastSeen === undefined) {
       const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
       if (highestId > 0) {
         state.lastCommentIdByIssue.set(issueNumber, highestId);
       }
       continue;
     }
+
+    const lastSeen = existingLastSeen;
 
     let maxId = lastSeen;
     for (let i = comments.length - 1; i >= 0; i -= 1) {
