@@ -3,7 +3,8 @@ import { getContainer } from './get';
 
 export async function removeContainer(prId: number) {
   await ensureDocker();
-  const container = getContainer({ pr: prId });
+  const container = await getContainer({ pr: prId });
+  if (!container) return;
   try {
     await container.stop({ t: 0 });
   } catch {
