@@ -11,4 +11,13 @@ export {
   getContainer,
   getContainerStatus,
   testShaBuild,
+  prepareImage,
+  DockerUnavailableError,
+  ImagePullError,
+  createWorkspaceContainer,
+  ContainerCreationError,
+  executeStep,
+  StepExecutionError,
+  collectDiagnostics,
+  DiagnosticsCollectionError,
 } from './container';
