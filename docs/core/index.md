@@ -77,11 +77,11 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 ```ts
 import {
   createPrContainer,
-  hasPrContainer,
   execInPrContainer,
   runPrInContainer,
   resetPrContainer,
   removePrContainer,
+  getPrContainer,
   getPrContainerStatus,
   getPrContainerOutput,
 } from '@gitany/core';
@@ -102,7 +102,7 @@ console.log(await getPrContainerStatus(pr.id));
 console.log(getPrContainerOutput(pr.id));
 
 // 手动创建并复用容器
-if (!hasPrContainer(pr.id)) {
+if (!getPrContainer(pr.id)) {
   await createPrContainer('https://gitcode.com/owner/repo.git', pr);
 }
 await execInPrContainer(pr.id, 'pnpm lint && pnpm build');
@@ -110,6 +110,27 @@ await execInPrContainer(pr.id, 'pnpm lint && pnpm build');
 // 重新创建或删除容器
 await resetPrContainer('https://gitcode.com/owner/repo.git', pr);
 await removePrContainer(pr.id);
+```
+
+#### 自动管理 PR 容器生命周期
+
+当需要自动响应 PR 的打开和关闭事件时，可以使用 `managePrContainers` 简化容器管理：
+
+```ts
+import { managePrContainers, getPrContainer } from '@gitany/core';
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+
+// 监控指定仓库的 PR，打开时创建容器，关闭或合并时删除容器
+const unwatch = managePrContainers(client, 'https://gitcode.com/owner/repo.git');
+
+// 需要时根据 PR ID 获取对应的 Docker 容器
+const container = getPrContainer(123);
+console.log(container?.id);
+
+// 停止监控
+// unwatch();
 ```
 
 容器内可访问以下环境变量：

@@ -1,4 +1,4 @@
-import { containers, outputs } from './shared';
+import { containers, outputs } from './store';
 
 export async function removePrContainer(prId: number) {
   const entry = containers.get(prId);

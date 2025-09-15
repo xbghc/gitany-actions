@@ -1,6 +1,7 @@
 import type Docker from 'dockerode';
 
-import { containers, logger, outputs } from './shared';
+import { logger } from './shared';
+import { containers, outputs } from './store';
 
 async function execInContainer(
   container: Docker.Container,

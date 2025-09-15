@@ -2,7 +2,7 @@ import type { PullRequest } from '@gitany/gitcode';
 
 import { createPrContainer } from './create';
 import { execInPrContainer } from './exec';
-import { hasPrContainer } from './has';
+import { containers } from './store';
 import type { ContainerOptions } from './types';
 
 function defaultScript() {
@@ -30,7 +30,7 @@ export async function runPrInContainer(
   pr: PullRequest,
   options: ContainerOptions = {},
 ) {
-  if (!hasPrContainer(pr.id)) {
+  if (!containers.has(pr.id)) {
     await createPrContainer(repoUrl, pr, options);
   }
   return await execInPrContainer(pr.id, options.script ?? defaultScript());

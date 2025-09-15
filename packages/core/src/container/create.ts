@@ -1,7 +1,8 @@
 import type { PullRequest } from '@gitany/gitcode';
 import { toGitUrl } from '@gitany/gitcode';
 
-import { containers, docker, ensureDocker, forward } from './shared';
+import { docker, ensureDocker, forward } from './shared';
+import { containers } from './store';
 import type { ContainerOptions } from './types';
 
 export async function createPrContainer(
