@@ -1,4 +1,4 @@
-import { containers, outputs } from './store';
+import { containers } from './store';
 
 export async function removePrContainer(prId: number) {
   const entry = containers.get(prId);
@@ -14,6 +14,5 @@ export async function removePrContainer(prId: number) {
     /* ignore */
   }
   containers.delete(prId);
-  outputs.delete(prId);
 }
 
