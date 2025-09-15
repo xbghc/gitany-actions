@@ -149,3 +149,11 @@ console.log(container?.id);
 
 这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，需要自行在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，相关操作会抛出 `Docker daemon is not available` 错误。可通过 `getContainerStatus(pr.id)` 查询容器状态。
 
+### 清理异常容器
+
+若手动运行过程中出现异常容器（例如状态为 `exited`），可执行以下命令进行清理：
+
+```bash
+pnpm --filter @gitany/core cleanup
+```
+

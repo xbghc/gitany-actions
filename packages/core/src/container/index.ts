@@ -13,5 +13,6 @@ export { prepareImage, DockerUnavailableError, ImagePullError } from './prepare-
 export { createWorkspaceContainer, ContainerCreationError } from './create-workspace-container';
 export { executeStep, StepExecutionError } from './execute-step';
 export { collectDiagnostics, DiagnosticsCollectionError } from './collect-diagnostics';
+export { cleanupPrContainers } from './cleanup';
 export type { ContainerOptions, TestShaBuildOptions, TestShaBuildResult } from './types';
 export type { ProjectCheckResult } from './check-project-files';
