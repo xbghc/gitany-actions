@@ -10,6 +10,8 @@ title: Core 工具库
 
 ## 功能
 
+支持监控 Pull Request 和 Issue 的状态与评论。
+
 ### Pull Request 监控
 
 提供 PR 状态和评论监控功能，可以实时监听 PR 的状态变化和评论。
@@ -65,13 +67,59 @@ const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 **返回值:**
 - 返回一个句柄 `{ stop(), containers() }`
 
+### Issue 监控
+
+提供 Issue 状态和评论监控功能。
+
+```ts
+import { watchIssue } from '@gitany/core';
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+
+const watcher = watchIssue(client, 'https://gitcode.com/owner/repo.git', {
+  onOpen: (issue) => {
+    console.log(`Issue #${issue.number} 已打开: ${issue.title}`);
+  },
+  onClosed: (issue) => {
+    console.log(`Issue #${issue.number} 已关闭: ${issue.title}`);
+  },
+  onComment: (issue, comment) => {
+    console.log(`Issue #${issue.number} 有新评论: ${comment.body}`);
+  },
+  intervalSec: 10,
+});
+
+// watcher.stop();
+```
+
+#### API
+
+##### watchIssue(client, url, options)
+
+监控指定仓库的 Issue 状态变化和评论。
+
+**参数:**
+- `client`: `GitcodeClient` 实例
+- `url`: 仓库 URL
+- `options`: 监控选项
+
+**选项:**
+- `onOpen`: Issue 打开时触发
+- `onClosed`: Issue 关闭时触发
+- `onComment`: Issue 有新评论时触发
+- `intervalSec`: 检查间隔时间（秒），默认为 5
+
+**返回值:**
+- 返回一个句柄 `{ stop() }`
+
 ## 工作原理
 
-- 按指定间隔检查 PR 列表（默认 5 秒）
-- 检测 PR 状态变化（新建、关闭、合并）
-- 监控 PR 评论（仅对打开的 PR）
+- 按指定间隔检查 PR 或 Issue 列表（默认 5 秒）
+- 检测状态变化（新建、关闭、合并）
+- 监控评论（仅对打开的条目）
 - 自动触发相应的回调函数
-- 使用 `client.pr.list()` 获取 PR 数据
+- 使用 `client.pr.list()` 或 `client.issue.list()` 获取数据
 
 ## PR 构建容器
 

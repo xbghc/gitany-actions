@@ -1,8 +1,5 @@
 import { GitcodeClient, PullRequest, PRComment, PRCommentQueryOptions } from '@gitany/gitcode';
-import * as fsSync from 'node:fs';
-import * as fs from 'node:fs/promises';
-import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
-import * as path from 'node:path';
+import { loadJsonSync, persistJson } from '../utils/persist';
 import type Docker from 'dockerode';
 import { createLogger } from '@gitany/shared';
 import { createPrContainer, removeContainer } from '../container';
@@ -192,26 +189,10 @@ type PersistShape = {
   lastCommentIdByPr: Record<string, number>; // key: pr.number
 };
 
-function getStoreDir() {
-  // Align with CLI auth location: ~/.gitany/gitcode
-  return resolveGitcodeSubdir('watchers');
-}
-
-function urlKey(url: string) {
-  return sha1Hex(url);
-}
-
-function getStoreFile(url: string) {
-  return path.join(getStoreDir(), `${urlKey(url)}.json`);
-}
-
 function loadPersistedStateSync(url: string): WatcherState | null {
   try {
-    const file = getStoreFile(url);
-    if (!fsSync.existsSync(file)) return null;
-    const raw = fsSync.readFileSync(file, 'utf8');
-    if (!raw) return null;
-    const data = JSON.parse(raw) as PersistShape;
+    const data = loadJsonSync<PersistShape>(url, '');
+    if (!data) return null;
     const lastMap = new Map<number, number>();
     for (const [k, v] of Object.entries(data.lastCommentIdByPr ?? {})) {
       const num = Number(k);
@@ -230,14 +211,11 @@ function loadPersistedStateSync(url: string): WatcherState | null {
 
 async function persistState(url: string, state: WatcherState) {
   try {
-    const dir = getStoreDir();
-    await ensureDir(dir);
-    const file = getStoreFile(url);
     const data: PersistShape = {
       prs: state.prList.map((p) => ({ id: p.id, state: p.state, number: p.number })),
       lastCommentIdByPr: Object.fromEntries(state.lastCommentIdByPr),
     };
-    await fs.writeFile(file, JSON.stringify(data), 'utf8');
+    await persistJson(url, '', data);
   } catch (err) {
     // 忽略持久化错误，避免影响主流程，但应打印错误便于排查
     logger.error({ err }, '[watchPullRequest] 持久化状态失败');

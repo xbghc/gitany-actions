@@ -4,6 +4,7 @@
  */
 
 export { watchPullRequest } from './pr/watcher';
+export { watchIssue } from './issue/watcher';
 export {
   createPrContainer,
   resetContainer,
