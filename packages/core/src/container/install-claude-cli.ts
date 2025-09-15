@@ -6,6 +6,7 @@ export async function installClaudeCli({
   container,
   log,
   verbose,
+  env,
 }: StepOptions): Promise<StepResult> {
   return executeStep({
     container,
@@ -14,6 +15,7 @@ export async function installClaudeCli({
       'mkdir -p ~/.npm-global \
 && npm install -g @anthropic-ai/claude-code --prefix ~/.npm-global \
 && ~/.npm-global/bin/claude -v 2>&1',
+    env,
     log,
     verbose,
   });

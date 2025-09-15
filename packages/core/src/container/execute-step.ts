@@ -6,6 +6,8 @@ export interface ExecuteStepOptions {
   name: string;
   script: string;
   log: Logger;
+  /** Environment variables to provide to the command. */
+  env?: string[];
   verbose?: boolean;
 }
 
@@ -28,6 +30,7 @@ export async function executeStep({
   name,
   script,
   log,
+  env,
   verbose = false,
 }: ExecuteStepOptions): Promise<StepResult> {
   const stepStartTime = Date.now();
@@ -36,6 +39,7 @@ export async function executeStep({
       Cmd: ['sh', '-lc', script],
       AttachStdout: true,
       AttachStderr: true,
+      Env: env,
     });
 
     const stream = await exec.start({ hijack: true, stdin: false });

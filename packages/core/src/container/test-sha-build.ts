@@ -59,7 +59,15 @@ export async function testShaBuild(
     },
   };
 
-  const env = [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`];
+  const defaultRegistry = 'https://registry.npmmirror.com';
+  const npmRegistry = process.env.NPM_CONFIG_REGISTRY ?? defaultRegistry;
+  const pnpmRegistry = process.env.PNPM_CONFIG_REGISTRY ?? defaultRegistry;
+  const env = [
+    `REPO_URL=${repoUrl}`,
+    `TARGET_SHA=${sha}`,
+    `NPM_CONFIG_REGISTRY=${npmRegistry}`,
+    `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`,
+  ];
   const imageName = `node:${nodeVersion}`;
   let container: Docker.Container | undefined;
   let fullOutput = '';
@@ -151,7 +159,7 @@ export async function testShaBuild(
       return result;
     }
 
-    const installResult = await installDependencies({ container, log, verbose });
+    const installResult = await installDependencies({ container, log, verbose, env: [`NPM_CONFIG_REGISTRY=${npmRegistry}`, `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`] });
     fullOutput += installResult.output;
     result.diagnostics.steps.install = {
       success: installResult.success,
@@ -188,4 +196,3 @@ export async function testShaBuild(
 
   return result;
 }
-
