@@ -181,6 +181,19 @@ function logChatResult(result, context, runChat) {
   }
 }
 
+function logReplySuccess(reply, context) {
+  const source = sourceLabel(reply.source);
+  console.log(`💬 已自动回复 ${source} (原评论 ID ${context.mentionComment.id})`);
+  console.log(`   • 新评论 ID: ${reply.comment.id}`);
+}
+
+function logReplyError(error, context) {
+  console.error(`⚠️ 自动回复失败 (评论 ID ${context.mentionComment.id})`);
+  if (error) {
+    console.error(error);
+  }
+}
+
 function buildChatOptions(args) {
   if (!args.runChat) return undefined;
   const options = {};
@@ -235,6 +248,7 @@ async function main() {
     includePullRequestComments: args.includePullRequestComments,
     chatOptions,
     chatExecutor: args.runChat ? undefined : createDryRunExecutor(),
+    replyWithComment: args.runChat,
     buildPrompt: (context) => {
       const prompt = defaultPromptBuilder(context);
       logMention(context, mentionToken, args, prompt);
@@ -242,6 +256,12 @@ async function main() {
     },
     onChatResult: (result, context) => {
       logChatResult(result, context, args.runChat);
+    },
+    onReplyCreated: (reply, context) => {
+      logReplySuccess(reply, context);
+    },
+    onReplyError: (error, context) => {
+      logReplyError(error, context);
     },
   });
 

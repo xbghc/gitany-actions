@@ -1,11 +1,14 @@
-import type {
-  GitcodeClient,
-  Issue,
-  IssueComment,
-  PullRequest,
-  PRComment,
-  ListIssuesQuery,
-  IssueCommentsQuery,
+import {
+  type GitcodeClient,
+  type Issue,
+  type IssueComment,
+  type PullRequest,
+  type PRComment,
+  type ListIssuesQuery,
+  type IssueCommentsQuery,
+  type CreatedIssueComment,
+  type CreatedPrComment,
+  parseGitUrl,
 } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 import { chat, type ChatOptions, type ChatResult } from '../container';
@@ -39,11 +42,34 @@ export interface WatchAiMentionsOptions {
   onChatResult?: (result: ChatResult, context: AiMentionContext) => void;
   includeIssueComments?: boolean;
   includePullRequestComments?: boolean;
+  /** Whether to automatically reply to the mention with the chat output. Defaults to true. */
+  replyWithComment?: boolean;
+  /** Customizes the body used when posting the AI reply comment. */
+  buildReplyBody?: (
+    result: ChatResult,
+    context: AiMentionContext,
+  ) => string | Promise<string | null | undefined>;
+  /** Invoked after the AI reply comment has been created. */
+  onReplyCreated?: (reply: AiMentionReply, context: AiMentionContext) => void;
+  /** Invoked when posting the AI reply fails. */
+  onReplyError?: (error: unknown, context: AiMentionContext) => void;
 }
 
 export interface AiMentionWatcherHandle {
   stop(): void;
 }
+
+export type AiMentionReply =
+  | {
+      source: 'issue_comment';
+      body: string;
+      comment: CreatedIssueComment;
+    }
+  | {
+      source: 'pr_review_comment';
+      body: string;
+      comment: CreatedPrComment;
+    };
 
 export function watchAiMentions(
   client: GitcodeClient,
@@ -55,6 +81,7 @@ export function watchAiMentions(
   const chatExecutor = options.chatExecutor ?? chat;
   const issueHandles: WatchIssueHandle[] = [];
   const prHandles: WatchPullRequestHandle[] = [];
+  const replyEnabled = options.replyWithComment !== false;
 
   const handleMention = async (
     payload: {
@@ -123,6 +150,43 @@ export function watchAiMentions(
         logger.error({ issueNumber, commentId: comment.id, error: result.error }, '[watchAiMentions] chat failed');
       } else {
         logger.info({ issueNumber, commentId: comment.id }, '[watchAiMentions] chat completed');
+        if (replyEnabled) {
+          let replyBody: string | null | undefined;
+          try {
+            const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
+            replyBody = await builder(result, context);
+          } catch (err) {
+            logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to build reply body');
+            options.onReplyError?.(err, context);
+            return;
+          }
+
+          const trimmed = replyBody?.trim();
+          if (!trimmed) {
+            logger.warn(
+              { issueNumber, commentId: comment.id },
+              '[watchAiMentions] empty reply body generated, skip comment creation',
+            );
+            return;
+          }
+
+          try {
+            const reply = await createAiReplyComment(client, repoUrl, context, trimmed);
+            options.onReplyCreated?.(reply, context);
+            logger.info(
+              {
+                issueNumber,
+                commentId: comment.id,
+                replyId: reply.comment.id,
+                replySource: reply.source,
+              },
+              '[watchAiMentions] reply comment created',
+            );
+          } catch (err) {
+            logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to post reply');
+            options.onReplyError?.(err, context);
+          }
+        }
       }
     } catch (err) {
       logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] chat invocation failed');
@@ -193,6 +257,37 @@ function createMentionRegex(mention: string): RegExp {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function createAiReplyComment(
+  client: GitcodeClient,
+  repoUrl: string,
+  context: AiMentionContext,
+  body: string,
+): Promise<AiMentionReply> {
+  const parsed = parseGitUrl(repoUrl);
+  if (!parsed) {
+    throw new Error(`Invalid repository URL: ${repoUrl}`);
+  }
+
+  if (context.commentSource === 'issue_comment') {
+    const comment = await client.issue.createComment({
+      owner: parsed.owner,
+      repo: parsed.repo,
+      number: context.issueNumber,
+      body: { body },
+    });
+    return { source: 'issue_comment', body, comment } satisfies AiMentionReply;
+  }
+
+  const prNumber = context.pullRequest?.number ?? context.issueNumber;
+  const comment = await client.pr.createComment(parsed.owner, parsed.repo, prNumber, body);
+  return { source: 'pr_review_comment', body, comment } satisfies AiMentionReply;
+}
+
+function defaultReplyBodyBuilder(result: ChatResult): string | null {
+  const text = result.output?.trim();
+  return text && text.length > 0 ? text : null;
 }
 
 export function defaultPromptBuilder(context: AiMentionContext): string {

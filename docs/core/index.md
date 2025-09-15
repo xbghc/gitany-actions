@@ -90,7 +90,7 @@ const watcher = watchIssues(client, 'https://gitcode.com/owner/repo.git', {
 
 ### AI 评论助手
 
-`watchAiMentions` 会同时监听 Issue 评论与 PR 评论。当新增评论中包含指定标记（默认为 `@AI`）时，会收集 Issue 标题、描述、历史评论等上下文，并将拼装后的提示语传入 `chat`。
+`watchAiMentions` 会同时监听 Issue 评论与 PR 评论。当新增评论中包含指定标记（默认为 `@AI`）时，会收集 Issue 标题、描述、历史评论等上下文，并将拼装后的提示语传入 `chat`。当 AI 调用成功且生成了内容时，会自动在对应的 Issue 或 PR 下创建回复评论。
 
 ```ts
 import { watchAiMentions } from '@gitany/core';
@@ -107,6 +107,9 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
       console.error('AI 调用失败:', result.error);
     }
   },
+  onReplyCreated: (reply) => {
+    console.log('AI 已回复评论，ID:', reply.comment.id);
+  },
 });
 
 // aiWatcher.stop();
@@ -119,6 +122,12 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
 - `issueIntervalSec` / `prIntervalSec`: Issue 与 PR 轮询频率
 - `chatExecutor`: 自定义 chat 执行器，默认使用内置 `chat`
 - `includeIssueComments` / `includePullRequestComments`: 控制监听的评论类型
+- `replyWithComment`: 是否自动在 Issue/PR 下回复评论，默认 `true`
+- `buildReplyBody(result, context)`: 自定义回复内容
+- `onReplyCreated(reply, context)`: AI 回复成功创建时的回调
+- `onReplyError(error, context)`: AI 回复失败时的回调
+
+若只希望监听但不自动回复，可设置 `replyWithComment: false`；如需对回复内容进行包装，例如附带原评论引用，可通过 `buildReplyBody` 返回自定义文本。
 
 ## 工作原理
 

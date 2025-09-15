@@ -12,6 +12,7 @@ export type {
   AiMentionWatcherHandle,
   AiMentionContext,
   AiMentionSource,
+  AiMentionReply,
 } from './issue/ai-mentions';
 export {
   createPrContainer,
