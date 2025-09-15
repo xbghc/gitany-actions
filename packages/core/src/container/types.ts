@@ -3,8 +3,6 @@ export interface ContainerOptions {
   image?: string;
   /** Extra environment variables to provide to the container. */
   env?: Record<string, string>;
-  /** Script executed inside the container when calling `runPrInContainer`. */
-  script?: string;
   /** Whether the container should automatically remove itself when stopped. */
   autoRemove?: boolean;
 }

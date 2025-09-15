@@ -1,7 +1,7 @@
 import type { PullRequest } from '@gitany/gitcode';
 import { toGitUrl } from '@gitany/gitcode';
 
-import { containers, docker, ensureDocker, forward } from './shared';
+import { docker, ensureDocker, forward } from './shared';
 import type { ContainerOptions } from './types';
 
 export async function createPrContainer(
@@ -32,6 +32,7 @@ export async function createPrContainer(
   );
 
   const container = await docker.createContainer({
+    name: `pr-${pr.id}`,
     Image: options.image ?? 'node:20',
     Cmd: ['sh', '-lc', 'tail -f /dev/null'],
     Env: env,
@@ -39,7 +40,6 @@ export async function createPrContainer(
     HostConfig: { AutoRemove: options.autoRemove ?? false },
   });
   await container.start();
-  containers.set(pr.id, { container, options });
   return container;
 }
 

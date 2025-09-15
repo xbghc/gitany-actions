@@ -21,7 +21,7 @@ import { GitcodeClient } from '@gitany/gitcode';
 const client = new GitcodeClient();
 
 // 监控 PR 状态变化和评论
-const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
+const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
   onOpen: (pr) => {
     console.log(`PR #${pr.number} 已打开: ${pr.title}`);
   },
@@ -34,11 +34,11 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
   onComment: (pr, comment) => {
     console.log(`PR #${pr.number} 有新评论: ${comment.body}`);
   },
-  intervalMs: 10000 // 每10秒检查一次
+  intervalSec: 10 // 每10秒检查一次
 });
 
 // 停止监控
-// unwatch();
+// watcher.stop();
 ```
 
 #### API
@@ -57,10 +57,13 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 - `onClosed`: PR 关闭时触发
 - `onMerged`: PR 合并时触发
 - `onComment`: PR 有新评论时触发
-- `intervalMs`: 检查间隔时间（毫秒），默认为 5000
+- `intervalSec`: 检查间隔时间（秒），默认为 5
+- `container`: 传入对象以启用内置容器管理（传 `false` 禁用）
+- `onContainerCreated`: 容器创建后触发
+- `onContainerRemoved`: 容器删除后触发
 
 **返回值:**
-- 返回一个清理函数，调用可停止监控
+- 返回一个句柄 `{ stop(), containers() }`
 
 ## 工作原理
 
@@ -77,13 +80,10 @@ const unwatch = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 ```ts
 import {
   createPrContainer,
-  hasPrContainer,
-  execInPrContainer,
-  runPrInContainer,
-  resetPrContainer,
-  removePrContainer,
-  getPrContainerStatus,
-  getPrContainerOutput,
+  resetContainer,
+  removeContainer,
+  getContainer,
+  getContainerStatus,
 } from '@gitany/core';
 import { GitcodeClient } from '@gitany/gitcode';
 
@@ -93,23 +93,51 @@ const [pr] = await client.pr.list('https://gitcode.com/owner/repo.git', {
   state: 'open',
 });
 
-// 在默认 node:20 镜像中执行构建
-const { exitCode, output } = await runPrInContainer('https://gitcode.com/owner/repo.git', pr);
-console.log(exitCode, output);
-
-// 查询容器状态和最近输出
-console.log(await getPrContainerStatus(pr.id));
-console.log(getPrContainerOutput(pr.id));
-
-// 手动创建并复用容器
-if (!hasPrContainer(pr.id)) {
-  await createPrContainer('https://gitcode.com/owner/repo.git', pr);
+// 手动创建并执行脚本
+await createPrContainer('https://gitcode.com/owner/repo.git', pr);
+const container = getContainer({ pr: pr.id });
+if (container) {
+  const exec = await container.exec({
+    Cmd: ['sh', '-lc', 'pnpm lint && pnpm build'],
+    AttachStdout: true,
+    AttachStderr: true,
+  });
+  const stream = await exec.start({ hijack: true, stdin: false });
+  stream.on('data', (d) => process.stdout.write(d.toString()));
 }
-await execInPrContainer(pr.id, 'pnpm lint && pnpm build');
+
+// 查询容器状态
+console.log(await getContainerStatus(pr.id));
 
 // 重新创建或删除容器
-await resetPrContainer('https://gitcode.com/owner/repo.git', pr);
-await removePrContainer(pr.id);
+await resetContainer('https://gitcode.com/owner/repo.git', pr);
+await removeContainer(pr.id);
+```
+
+#### 自动管理 PR 容器生命周期
+
+当需要自动响应 PR 的打开和关闭事件时，可在 watcher 中直接启用容器管理：
+
+```ts
+import { watchPullRequest } from '@gitany/core';
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+
+// 监控指定仓库的 PR，打开时创建容器，关闭或合并时删除容器
+const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
+  container: {},
+  onContainerCreated: (container, pr) => {
+    console.log('容器已创建', container.id);
+  }
+});
+
+// 根据 PR ID 获取对应的 Docker 容器
+const container = watcher.containers().get(123);
+console.log(container?.id);
+
+// 停止监控
+// watcher.stop();
 ```
 
 容器内可访问以下环境变量：
@@ -119,26 +147,5 @@ await removePrContainer(pr.id);
 
 - 若设置，所有以 `ANTHROPIC_` 开头的 Claude 相关变量都会被转发
 
-这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，默认在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，`runPrInContainer` 会抛出 `Docker daemon is not available` 错误。函数返回值包含脚本的退出码与输出，主程序也可通过 `getPrContainerStatus(pr.id)` 和 `getPrContainerOutput(pr.id)` 查询容器状态与最近一次执行日志。
-
-默认脚本会克隆基仓库、添加 head 远程并检出 PR 提交，然后执行 `pnpm install`、`pnpm build`、`pnpm test`。
-
-### 使用 Claude Code 修改并提交 PR
-
-借助转发的 `ANTHROPIC_AUTH_TOKEN` 等环境变量，可以在容器脚本中直接调用 `claude code` 对代码进行编辑并推送提交：
-
-```ts
-await runPrInContainer('https://gitcode.com/owner/repo.git', pr, {
-  script: [
-    'corepack enable',
-    'git config user.name "bot"',
-    'git config user.email "bot@example.com"',
-    'claude code --apply "将 README 翻译为中文"',
-    'git commit -am "docs: translate readme"',
-    'git push head HEAD:translate-readme',
-  ].join(' && '),
-});
-```
-
-上述脚本在容器中运行 `claude code` 自动修改工作区，并通过 `git` 命令提交并推送到 PR 分支。
+这些变量提供了构建和修改所需的全部信息。容器不会挂载宿主机目录，需要自行在 `/tmp/workspace` 下克隆代码并执行脚本，不会影响本地文件。若 Docker 守护进程不可用，相关操作会抛出 `Docker daemon is not available` 错误。可通过 `getContainerStatus(pr.id)` 查询容器状态。
 
