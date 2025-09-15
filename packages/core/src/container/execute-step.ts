@@ -53,18 +53,27 @@ export async function executeStep({
       }
     });
 
-    return await new Promise<StepResult>((resolve) => {
+    return await new Promise<StepResult>((resolve, reject) => {
       stream.on('end', async () => {
         const info = await exec.inspect();
         const duration = Date.now() - stepStartTime;
         const success = info.ExitCode === 0;
         resolve({ success, duration, output: stepOutput });
       });
+      stream.on('error', (e) => {
+        const err = e instanceof Error ? e : new Error(String(e));
+        err.name = 'StepStreamError';
+        reject(err);
+      });
     });
   } catch (error) {
     const duration = Date.now() - stepStartTime;
+    if (error instanceof Error) {
+      const context = error.name === 'StepStreamError' ? '流错误' : '执行异常';
+      throw new StepExecutionError(`步骤 ${name} ${context}: ${error.message}`, duration);
+    }
     throw new StepExecutionError(
-      `步骤 ${name} 执行异常: ${error instanceof Error ? error.message : String(error)}`,
+      `步骤 ${name} 执行异常: ${String(error)}`,
       duration,
     );
   }
