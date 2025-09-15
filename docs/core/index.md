@@ -95,7 +95,7 @@ const [pr] = await client.pr.list('https://gitcode.com/owner/repo.git', {
 
 // 手动创建并执行脚本
 await createPrContainer('https://gitcode.com/owner/repo.git', pr);
-const container = getContainer({ pr: pr.id });
+const container = await getContainer({ pr: pr.id });
 if (container) {
   const exec = await container.exec({
     Cmd: ['sh', '-lc', 'pnpm lint && pnpm build'],

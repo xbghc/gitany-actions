@@ -3,6 +3,7 @@ import { toGitUrl } from '@gitany/gitcode';
 
 import { docker, ensureDocker, forward } from './shared';
 import type { ContainerOptions } from './types';
+import { getContainer } from './get';
 
 export async function createPrContainer(
   repoUrl: string,
@@ -10,6 +11,14 @@ export async function createPrContainer(
   options: ContainerOptions = {},
 ) {
   await ensureDocker();
+
+  const baseRepoUrl = toGitUrl(repoUrl);
+  const existing = await getContainer({ pr: pr.id, repoUrl: baseRepoUrl });
+  if (existing) {
+    const info = await existing.inspect();
+    if (info.State?.Status !== 'running') await existing.start();
+    return existing;
+  }
 
   const env: string[] = [];
   for (const v of forward) {
@@ -20,7 +29,6 @@ export async function createPrContainer(
     for (const [k, v] of Object.entries(options.env)) env.push(`${k}=${v}`);
   }
 
-  const baseRepoUrl = toGitUrl(repoUrl);
   const headRepoUrl = toGitUrl(pr.head.repo.html_url);
 
   env.push(
@@ -38,6 +46,10 @@ export async function createPrContainer(
     Env: env,
     User: 'node',
     HostConfig: { AutoRemove: options.autoRemove ?? false },
+    Labels: {
+      'gitany.prId': String(pr.id),
+      'gitany.repoUrl': baseRepoUrl,
+    },
   });
   await container.start();
   return container;
