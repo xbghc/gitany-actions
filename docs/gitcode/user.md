@@ -6,12 +6,13 @@ title: 用户 API
 
 ## 概述
 
-用户 API 提供获取当前认证用户信息的功能。
+用户 API 提供获取当前认证用户信息和命名空间的功能。
 
 ## 更新说明
 
 **2025-09-10 更新**: `getUserProfile()` 方法现在返回完整的 `UserProfile` 类型，直接包含所有用户信息字段，无需通过 `raw` 字段访问原始数据。这提供了更丰富的用户信息和更好的类型安全。
 **2025-09-11 更新**: `getUserProfile()` 现在使用 Zod 对返回数据进行结构校验，提升类型安全。
+**2025-09-13 更新**: 新增 `getUserNamespace()` 方法，支持获取用户命名空间信息。
 
 ## API 方法
 
@@ -24,9 +25,23 @@ title: 用户 API
 **返回类型**: `UserProfile` - 完整的用户信息接口，包含丰富的用户资料字段
 
 ```typescript
-const client = new GitcodeClient({ token: 'your_token' });
-const profile = await client.getUserProfile();
+const client = new GitcodeClient();
+const profile = await client.user.getProfile();
 console.log(profile);
+```
+
+### `getUserNamespace()`
+
+获取当前用户的命名空间信息。
+
+**API 端点**: `GET /api/v5/user/namespace`
+
+**返回类型**: `UserNamespace` - 用户命名空间信息
+
+```typescript
+const client = new GitcodeClient();
+const namespace = await client.user.getNamespace();
+console.log(namespace);
 ```
 
 ## 类型定义
@@ -51,6 +66,20 @@ interface UserProfile {
   followers: number;   // 关注者数量
   following: number;   // 关注中数量
   top_languages: string[]; // 常用编程语言
+}
+```
+
+### `UserNamespace`
+
+用户命名空间信息接口：
+
+```typescript
+interface UserNamespace {
+  id: number;          // 命名空间 ID
+  path: string;        // 命名空间路径
+  name: string;        // 命名空间名称
+  html_url: string;    // 命名空间主页 URL
+  type: string;        // 命名空间类型
 }
 ```
 

@@ -10,7 +10,8 @@
     "dev": "pnpm build && node dist/index.js",
     "build": "node ./scripts/build.mjs",
     "clean": "rm -rf dist",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "cleanup": "node ./scripts/cleanup.mjs"
   },
   "exports": {
     ".": {
@@ -21,7 +22,8 @@
   "dependencies": {
     "@gitany/gitcode": "workspace:*",
     "@gitany/shared": "workspace:*",
-    "dockerode": "^4.0.8"
+    "dockerode": "^4.0.8",
+    "tar": "^7.4.3"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",

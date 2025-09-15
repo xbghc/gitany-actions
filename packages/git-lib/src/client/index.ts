@@ -1,4 +1,5 @@
 import { runGit } from './run';
+import { GitNotFoundError } from '../errors';
 import { gitStatus } from '../commands/status';
 import { gitShowFile } from '../commands/show';
 import { gitBranch } from '../commands/branch';
@@ -15,7 +16,14 @@ export class GitClient {
   constructor(public cwd: string = process.cwd()) {}
 
   async run(args: string[]) {
-    return runGit(args, { cwd: this.cwd });
+    try {
+      return await runGit(args, { cwd: this.cwd });
+    } catch (err) {
+      if (err instanceof GitNotFoundError) {
+        throw new GitNotFoundError('Git command not found. Please install Git and ensure it is in PATH.');
+      }
+      throw err;
+    }
   }
 
   async status() {
@@ -50,11 +58,7 @@ export class GitClient {
     return gitSetRemote(this, remote, url);
   }
 
-  async diffCommits(
-    commit1: string,
-    commit2: string,
-    options: DiffOptions = {},
-  ) {
+  async diffCommits(commit1: string, commit2: string, options: DiffOptions = {}) {
     return gitDiffCommits(this, commit1, commit2, options);
   }
 

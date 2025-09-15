@@ -31,7 +31,7 @@ export {
   prCommentSchema,
   prCommentsUrl,
 } from './api/pr';
-export type { PRComment, PRCommentQueryOptions } from './api/pr';
+export type { PRComment, PRCommentQueryOptions, CreatedPrComment } from './api/pr';
 export type {
   ListIssuesQuery,
   ListIssuesParams,
@@ -40,6 +40,13 @@ export type {
   IssueCommentsQuery,
   IssueComment,
   IssueCommentsResponse,
+  CreateIssueBody,
+  CreateIssueParams,
+  CreatedIssue,
+  CreateIssueCommentBody,
+  CreateIssueCommentParams,
+  CreatedIssueComment,
+  IssueDetail,
 } from './api/issue';
 export {
   listIssuesUrl,
@@ -48,6 +55,12 @@ export {
   issueCommentsUrl,
   issueCommentSchema,
   issueCommentsResponseSchema,
+  createIssueUrl,
+  createdIssueSchema,
+  createIssueCommentUrl,
+  createdIssueCommentSchema,
+  issueDetailSchema,
+  getIssueUrl,
 } from './api/issue';
 export {
   userProfileSchema,
@@ -55,6 +68,28 @@ export {
   type UserProfile,
   type UserProfileResponse,
 } from './api/user';
+export {
+  userNamespaceSchema,
+  userNamespaceUrl,
+  type UserNamespace,
+} from './api/user';
 export type { RepoRole } from './types/repo-role';
 export * from './utils';
 export { API_BASE } from './api/constants';
+
+// 新的仓库相关类型导出
+export type {
+  RepoSettings,
+  PullRequestSettings,
+  RepoEvent,
+  RepoEvents,
+  Contributor,
+  Contributors,
+  FileBlob,
+  Compare,
+  Webhook,
+  Webhooks,
+  Branches,
+  Commit,
+  Commits,
+} from './api/repo';

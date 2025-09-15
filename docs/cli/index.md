@@ -20,14 +20,30 @@ pnpm --filter @gitany/cli start -- --help
 
 > 开发模式：`pnpm --filter @gitany/cli dev`
 
+## 全局选项
+
+- `--verbose`：开启调试日志（等价于将日志级别设为 `debug`）。
+- `--quiet`：静默模式（将日志级别设为 `silent`，仅保留命令输出）。
+- `--log-level <level>`：设置日志级别（`fatal|error|warn|info|debug|trace|silent`）。
+
+说明：
+- 日志统一通过 `@gitany/shared` 的 logger 输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
+- 也可使用环境变量 `GITANY_LOG_LEVEL` 或 `LOG_LEVEL` 控制默认日志级别；命令行选项优先级更高。
+
 ## 命令
 
-### gitcode parse &lt;git-url&gt;
+> 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过 `@gitany/git-lib` 的 `resolveRepoUrl` 自动使用 `git remote get-url origin` 获取仓库地址。
+
+### gitcode parse [git-url]
 
 解析 Git 远程地址并输出 JSON。
 
 ```bash
+# 显式传入 URL
 gitcode parse https://gitcode.com/owner/repo.git
+
+# 在当前 Git 仓库中自动获取 remote
+gitcode parse
 ```
 
 ### gitcode auth &lt;subcommand&gt;
@@ -37,18 +53,134 @@ gitcode parse https://gitcode.com/owner/repo.git
 - `set-token <token>`
   - 行为：保存令牌到本地配置文件。
 
-### gitcode repo permission &lt;git-url&gt;
+### gitcode repo
+
+仓库相关命令。
+
+#### gitcode repo permission [git-url]
 
 查询当前登录用户在指定仓库（通过仓库链接）的权限。
 
 ```bash
 gitcode repo permission https://gitcode.com/owner/repo.git
+# 或者在仓库目录中直接运行
+gitcode repo permission
 ```
 
 - 调用：`GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
 - 输出：固定为一个词：`admin | write | read | none`（仓库不存在时返回 `none`）
 
-### gitcode pr list &lt;git-url&gt;
+#### gitcode repo info
+
+仓库信息命令组。
+
+##### gitcode repo info settings &lt;owner&gt; &lt;repo&gt;
+
+显示仓库设置信息。
+
+```bash
+gitcode repo info settings myorg myrepo
+```
+
+输出示例：
+```
+仓库设置:
+{
+  "default_branch": "main",
+  "has_issues": true,
+  "has_wiki": false,
+  "has_pull_requests": true,
+  "allow_squash_merge": true,
+  "allow_merge_commit": true,
+  "allow_rebase_merge": true
+}
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/repo_settings`
+
+##### gitcode repo info branches &lt;owner&gt; &lt;repo&gt;
+
+列出仓库的所有分支。
+
+```bash
+gitcode repo info branches myorg myrepo
+```
+
+输出示例：
+```
+仓库分支:
+  main (默认: 是, 受保护: 是)
+  develop (默认: 否, 受保护: 否)
+  feature/test (默认: 否, 受保护: 否)
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/branches`
+
+##### gitcode repo info commits &lt;owner&gt; &lt;repo&gt;
+
+显示仓库提交历史。
+
+```bash
+gitcode repo info commits myorg myrepo
+```
+
+输出示例：
+```
+仓库提交历史:
+  1. a1b2c3d - 修复登录问题
+     作者: John Doe <john@example.com>
+     时间: 2024-01-15T10:30:00Z
+
+  2. e4f5g6h - 添加新功能
+     作者: Jane Smith <jane@example.com>
+     时间: 2024-01-14T15:45:00Z
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/commits`
+
+##### gitcode repo info contributors &lt;owner&gt; &lt;repo&gt;
+
+显示仓库贡献者列表。
+
+```bash
+gitcode repo info contributors myorg myrepo
+```
+
+输出示例：
+```
+仓库贡献者:
+  John Doe <john@example.com> - 42 次贡献
+  Jane Smith <jane@example.com> - 28 次贡献
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/contributors`
+
+##### gitcode repo info webhooks &lt;owner&gt; &lt;repo&gt;
+
+列出仓库的 Webhooks。
+
+```bash
+gitcode repo info webhooks myorg myrepo
+```
+
+输出示例：
+```
+仓库 Webhooks:
+  ID: 123
+  URL: https://example.com/webhook
+  名称: web
+  活跃: 是
+  事件: push, pull_request
+  创建时间: 2024-01-01T00:00:00Z
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/hooks`
+
+### gitcode pr
+
+Pull Request 相关命令。
+
+#### gitcode pr list [git-url]
 
 列出指定仓库的 Pull Requests。默认状态为 `open`，默认输出为「标题列表」：
 
@@ -59,6 +191,9 @@ gitcode repo permission https://gitcode.com/owner/repo.git
 
 ```bash
 gitcode pr list https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode pr list
 
 # 带筛选参数：
 gitcode pr list git@gitcode.com:owner/repo.git \
@@ -76,13 +211,16 @@ gitcode pr list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/pulls`
 
-### gitcode pr create &lt;git-url&gt;
+### gitcode pr create [git-url]
 
 创建 Pull Request（仅支持部分字段）。
 
 ```bash
 gitcode pr create https://gitcode.com/owner/repo.git \
   --title "修复登录异常" --head feat/login-fix --base main --body "补充说明：修复 Token 过期报错"
+
+# 或者在仓库目录中直接运行
+gitcode pr create --title "修复登录异常" --head feat/login-fix --base main
 
 # 关联 Issue（示例）：
 gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --base main --issue 123
@@ -98,7 +236,99 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 - 字段支持（与 GitCode 文档对齐的子集）：`title`、`head`、`base`、`body`、`issue`
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls`
 
-### gitcode issue list &lt;git-url&gt;
+#### gitcode pr info
+
+PR 信息命令组。
+
+##### gitcode pr info settings &lt;owner&gt; &lt;repo&gt;
+
+显示 PR 设置信息。
+
+```bash
+gitcode pr info settings myorg myrepo
+```
+
+输出示例：
+```
+PR 设置:
+  允许合并提交: 是
+  允许压缩提交: 是
+  允许变基提交: 是
+  允许从默认分支更新: 是
+  允许工作树继承: 否
+  冲突时自动关闭: 是
+```
+
+- 调用：`GET /api/v5/repos/{owner}/{repo}/pull_request_settings`
+
+#### gitcode pr comment <pr-number> [git-url]
+
+在 Pull Request 上创建评论。
+
+```bash
+gitcode pr comment 123 https://gitcode.com/owner/repo.git --body "这个修复看起来不错！"
+
+# 或者在仓库目录中直接运行
+gitcode pr comment 123 --body "需要添加测试用例"
+
+# 从文件读取评论内容
+gitcode pr comment 123 --body-file comment.txt
+
+# 使用编辑器编写评论
+gitcode pr comment 123 --editor
+
+# 从标准输入读取评论内容
+echo "这是一个评论" | gitcode pr comment 123 --body-file -
+
+# 在浏览器中创建评论
+gitcode pr comment 123 --web
+
+# 输出 JSON 格式
+gitcode pr comment 123 --body "测试评论" --json
+```
+
+- 选项：
+  - `--body <string>`：指定评论内容
+  - `-F, --body-file <file>`：从文件读取评论内容（使用 `-` 从标准输入读取）
+  - `-e, --editor`：打开文本编辑器编写评论
+  - `-w, --web`：在浏览器中创建评论
+  - `--json`：输出原始 JSON 格式
+  - `-R, --repo <[HOST/]OWNER/REPO>`：指定其他仓库
+- 调用：`POST /api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
+
+#### gitcode pr comments <pr-number> [git-url]
+
+列出指定 Pull Request 的评论。默认输出为「评论 ID 与首行内容」：
+
+```
+- [#123] 这个修复看起来不错！
+- [#124] 需要添加测试用例
+```
+
+```bash
+gitcode pr comments 123 https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode pr comments 123
+
+# 带分页参数：
+gitcode pr comments 123 --page 2 --per-page 50
+
+# 按评论类型过滤：
+gitcode pr comments 123 --comment-type diff_comment
+
+# 输出 JSON：
+gitcode pr comments 123 --json
+```
+
+- 选项：
+  - `--comment-type <type>`：评论类型（`diff_comment | pr_comment`）
+  - `--page <n>`：页码
+  - `--per-page <n>`：每页数量
+  - `--json`：输出原始 JSON 数组
+- 调用：`GET /api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
+
+### gitcode issue list [git-url]
 
 列出指定仓库的 Issues。默认状态为 `open`，默认输出为「标题列表」：
 
@@ -109,6 +339,9 @@ gitcode pr create <url> --title "修复登录异常" --head feat/login-fix --bas
 
 ```bash
 gitcode issue list https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode issue list
 
 # 带筛选参数：
 gitcode issue list git@gitcode.com:owner/repo.git \
@@ -126,7 +359,7 @@ gitcode issue list <url> --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues`
 
-### gitcode issue comments <git-url> <issue-number>
+### gitcode issue comments <issue-number> [git-url]
 
 列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」：
 
@@ -135,13 +368,16 @@ gitcode issue list <url> --json
 ```
 
 ```bash
-gitcode issue comments https://gitcode.com/owner/repo.git 42
+gitcode issue comments 42 https://gitcode.com/owner/repo.git
+
+# 或者在仓库目录中直接运行
+gitcode issue comments 42
 
 # 带分页参数：
-gitcode issue comments <url> 42 --page 2 --per-page 50
+gitcode issue comments 42 --page 2 --per-page 50
 
 # 输出 JSON：
-gitcode issue comments <url> 42 --json
+gitcode issue comments 42 --json
 ```
 
 - 选项：
@@ -150,7 +386,11 @@ gitcode issue comments <url> 42 --json
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues/{number}/comments`
 
-### gitcode user show
+### gitcode user
+
+用户相关命令。
+
+#### gitcode user show
 
 显示当前认证用户的详细信息。
 
@@ -175,6 +415,26 @@ gitcode user show
 - 调用：`GET /api/v5/user`
 - 显示标准化的用户信息（ID、用户名、邮箱）和详细的用户资料
 
+#### gitcode user namespace
+
+显示当前用户的命名空间信息。
+
+```bash
+gitcode user namespace
+```
+
+输出示例：
+```
+用户命名空间:
+  ID: 123456
+  路径: myusername
+  名称: My Username
+  主页: https://gitcode.com/myusername
+  类型: user
+```
+
+- 调用：`GET /api/v5/user/namespace`
+
 ## 环境变量
 
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
@@ -182,3 +442,16 @@ gitcode user show
 ## 本地存储路径
 
 CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`
+
+## 开发辅助
+
+在编写自定义命令时，可使用 `withClient` 工具统一创建 `GitcodeClient` 并处理错误：
+
+```ts
+import { withClient } from '@gitany/cli/utils/with-client';
+
+await withClient(async (client) => {
+  const user = await client.user.getProfile();
+  console.log(user.login);
+});
+```

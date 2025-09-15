@@ -2,7 +2,9 @@ import { z } from 'zod';
 import { API_BASE } from '../constants';
 
 export interface PRCommentQueryOptions {
-  comment_type: 'diff_comment' | 'pr_comment';
+  comment_type?: 'diff_comment' | 'pr_comment';
+  page?: number;
+  per_page?: number;
 }
 
 export const prCommentSchema = z.object({
