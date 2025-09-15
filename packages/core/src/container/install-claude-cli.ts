@@ -10,7 +10,10 @@ export async function installClaudeCli({
   return executeStep({
     container,
     name: 'claude-cli',
-    script: 'corepack pnpm add -g @anthropic-ai/claude-code && claude -v 2>&1',
+    script:
+      'mkdir -p ~/.npm-global \
+&& npm install -g @anthropic-ai/claude-code --prefix ~/.npm-global \
+&& ~/.npm-global/bin/claude -v 2>&1',
     log,
     verbose,
   });
