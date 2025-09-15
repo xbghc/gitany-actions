@@ -4,7 +4,7 @@ title: git-lib 工具库
 
 # @gitany/git-lib（Git 命令封装库）
 
-基于系统 `git` 命令的轻量封装，若运行环境缺少 `git`，所有函数返回 `null`。
+基于系统 `git` 命令的轻量封装，若运行环境缺少 `git`，所有函数将抛出 `GitNotFoundError`。
 
 所有命令支持在 `cwd` 参数中使用 `~` 展开至用户主目录；若指定目录不存在，则返回包含错误信息的 `GitResult`（非 `null`）。
 
@@ -68,6 +68,7 @@ await client.add(undefined, { update: true });
 ```
 
 **参数:**
+
 - `files`: 文件路径或文件路径数组
 - `options.all`: 是否添加所有文件（`git add -A`）
 - `options.update`: 是否仅更新已跟踪的文件（`git add -u`）
@@ -82,6 +83,7 @@ await client.commit('feat: 新功能', { addAll: false });
 ```
 
 **参数:**
+
 - `message`: 提交信息
 - `options.addAll`: 是否在提交前执行 `git add -A`，默认为 `true`
 
@@ -95,6 +97,7 @@ await client.push('feature-branch', { remote: 'upstream' });
 ```
 
 **参数:**
+
 - `branch`: 分支名称
 - `options.remote`: 远程仓库名称，默认为 `origin`
 
@@ -109,6 +112,7 @@ await client.fetch('feature-branch', { remote: 'upstream' });
 ```
 
 **参数:**
+
 - `branch`: 分支名称，可选
 - `options.remote`: 远程仓库名称，默认为 `origin`
 
@@ -122,6 +126,7 @@ await client.branch('feature-branch', 'main');
 ```
 
 **参数:**
+
 - `name`: 新分支名称
 - `base`: 基础分支，可选
 
@@ -135,6 +140,7 @@ await client.checkout('feature-branch');
 ```
 
 **参数:**
+
 - `name`: 目标分支名称
 
 ##### clone(repo, directory?)
@@ -147,6 +153,7 @@ await client.clone('https://github.com/user/repo.git', '~/projects/repo');
 ```
 
 **参数:**
+
 - `repo`: 仓库URL
 - `directory`: 目标目录，可选
 
@@ -160,6 +167,7 @@ console.log(result.stdout);
 ```
 
 **参数:**
+
 - `ref`: 分支名或提交哈希
 - `filePath`: 文件路径
 
@@ -173,6 +181,7 @@ await client.setRemote('upstream', 'https://github.com/original/repo.git');
 ```
 
 **参数:**
+
 - `remote`: 远程仓库名称
 - `url`: 远程仓库URL
 
@@ -186,6 +195,7 @@ await client.diffCommits('main', 'feature-branch', { nameOnly: true });
 ```
 
 **参数:**
+
 - `commit1`: 第一个提交
 - `commit2`: 第二个提交
 - `options.nameOnly`: 是否只显示文件名，默认为 `false`
@@ -200,6 +210,7 @@ await client.run(['status', '-s']);
 ```
 
 **参数:**
+
 - `args`: git 命令参数数组
 
 ## 函数式 API
@@ -217,7 +228,7 @@ await gitPush(client, 'main');
 
 ## 返回值
 
-所有函数返回 `Promise<GitResult | null>`，`GitResult` 结构如下：
+所有函数返回 `Promise<GitResult>`，`GitResult` 结构如下：
 
 ```ts
 interface GitResult {
@@ -227,18 +238,25 @@ interface GitResult {
 }
 ```
 
-当 `git` 不存在或无法执行时返回 `null`。
+当 `git` 不存在或无法执行时会抛出 `GitNotFoundError`。
 
 ## 错误处理
 
 ```ts
-const result = await client.status();
-if (result === null) {
-  console.log('git 命令未找到');
-} else if (result.code !== 0) {
-  console.log('命令执行失败:', result.stderr);
-} else {
-  console.log('命令执行成功:', result.stdout);
+import { GitNotFoundError } from '@gitany/git-lib';
+
+try {
+  const result = await client.status();
+  if (result.code !== 0) {
+    console.log('命令执行失败:', result.stderr);
+  } else {
+    console.log('命令执行成功:', result.stdout);
+  }
+} catch (err) {
+  if (err instanceof GitNotFoundError) {
+    console.log('git 命令未找到');
+  } else {
+    console.log('未知错误:', (err as Error).message);
+  }
 }
 ```
-

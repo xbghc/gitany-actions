@@ -1,4 +1,4 @@
-import { GitClient } from "../client";
+import { GitClient } from '../client';
 
 export async function gitCommit(
   client: GitClient,
@@ -8,7 +8,7 @@ export async function gitCommit(
   const { addAll = true } = options;
   if (addAll) {
     const addRes = await client.run(['add', '-A']);
-    if (addRes === null || addRes.code !== 0) return addRes;
+    if (addRes.code !== 0) return addRes;
   }
   return client.run(['commit', '-m', message]);
 }
