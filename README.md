@@ -250,6 +250,14 @@ const settings: RepoSettings = await client.repo.getSettings('owner', 'repo');
 - **Pre-commit**: 运行文档同步检查 (`scripts/check-docs-updated.mjs`)
 - **Prepare**: 自动安装 Husky hooks
 
+## 清理 PR 容器
+
+若在手动运行过程中需要清理残留或异常状态的 PR 容器，可执行：
+
+```bash
+pnpm --filter @gitany/core cleanup
+```
+
 ## 文档同步
 
 项目强制要求文档与代码同步更新：

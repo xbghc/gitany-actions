@@ -11,7 +11,7 @@ import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
 import * as path from 'node:path';
 import type Docker from 'dockerode';
 import { createLogger } from '@gitany/shared';
-import { createPrContainer, removeContainer } from '../container';
+import { createPrContainer, removeContainer, cleanupPrContainers } from '../container';
 import type { ContainerOptions } from '../container/types';
 const logger = createLogger('@gitany/core');
 const DEFAULT_INTERVAL_SEC = 5;
@@ -58,8 +58,11 @@ export function watchPullRequest(
     await persistState(url, state);
   };
 
-  // 立即进行一次检查以尽快建立基线
-  void check();
+    // 立即进行一次检查以尽快建立基线
+    void (async () => {
+      await cleanupPrContainers();
+      await check();
+    })();
 
   const intervalMs = 1000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
   const intervalId = setInterval(() => void check(), intervalMs);

@@ -26,5 +26,6 @@ export {
   StepExecutionError,
   collectDiagnostics,
   DiagnosticsCollectionError,
+  cleanupPrContainers,
 } from './container';
 export type { ProjectCheckResult } from './container';
