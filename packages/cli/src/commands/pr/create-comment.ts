@@ -108,27 +108,43 @@ export function createPrCommentCommand(): Command {
   return new Command('comment')
     .description('Create a comment on a pull request')
     .argument('<pr-number>', 'Pull request number')
+    .argument('[url]', 'Repository URL or identifier')
     .option('--body <string>', 'Supply a comment body')
     .option('-F, --body-file <file>', 'Read body text from file (use "-" to read from standard input)')
     .option('-e, --editor', 'Open text editor to write the comment')
     .option('-w, --web', 'Open the browser to create a comment')
     .option('--json', 'Output raw JSON instead of formatted output')
     .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
-    .action(async (prNumber: string, options: CreatePrCommentOptions) => {
+    .action(async (
+      prNumber: string,
+      repoUrlArg: string | undefined,
+      options: CreatePrCommentOptions,
+    ) => {
+      const repoArg = repoUrlArg?.trim() || undefined;
+      const repoOption = options.repo?.trim() || undefined;
+
+      if (repoArg && repoOption && repoArg !== repoOption) {
+        throw new Error('Repository specified twice. Use either positional [url] or --repo.');
+      }
+
+      const resolvedOptions: CreatePrCommentOptions = {
+        ...options,
+        repo: repoArg ?? repoOption,
+      };
 
       // 获取评论内容
-      let finalBody = options.body || '';
+      let finalBody = resolvedOptions.body || '';
 
-      if (options.bodyFile) {
-        if (options.bodyFile === '-') {
+      if (resolvedOptions.bodyFile) {
+        if (resolvedOptions.bodyFile === '-') {
           finalBody = fs.readFileSync(0, 'utf-8').trim();
         } else {
-          if (!fs.existsSync(options.bodyFile)) {
-            throw new Error(`File not found: ${options.bodyFile}`);
+          if (!fs.existsSync(resolvedOptions.bodyFile)) {
+            throw new Error(`File not found: ${resolvedOptions.bodyFile}`);
           }
-          finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
+          finalBody = fs.readFileSync(resolvedOptions.bodyFile, 'utf-8').trim();
         }
-      } else if (options.editor) {
+      } else if (resolvedOptions.editor) {
         const template = `# Comment on Pull Request #${prNumber}
 
 <!-- Write your comment below -->`;
@@ -142,6 +158,6 @@ export function createPrCommentCommand(): Command {
         throw new Error('Comment body is required');
       }
 
-      await createPrCommentAction(prNumber, finalBody, options);
+      await createPrCommentAction(prNumber, finalBody, resolvedOptions);
     });
 }
