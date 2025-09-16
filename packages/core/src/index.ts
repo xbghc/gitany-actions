@@ -27,6 +27,7 @@ export {
   checkProjectFiles,
   installDependencies,
   installClaudeCli,
+  installGitcodeCli,
   chat,
   prepareImage,
   DockerUnavailableError,

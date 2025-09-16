@@ -1,5 +1,6 @@
 import type Docker from 'dockerode';
 import type { Logger } from '@gitany/shared';
+import { PassThrough } from 'node:stream';
 
 export interface ExecuteStepOptions {
   container: Docker.Container;
@@ -40,35 +41,64 @@ export async function executeStep({
       AttachStdout: true,
       AttachStderr: true,
       Env: env,
+      Tty: false,
     });
 
     const stream = await exec.start({ hijack: true, stdin: false });
     let stepOutput = '';
 
-    stream.on('data', (data) => {
-      const text = data.toString();
+    const appendOutput = (source: 'stdout' | 'stderr', chunk: Buffer) => {
+      if (!chunk?.length) return;
+      const text = chunk.toString();
       stepOutput += text;
-      if (verbose) {
-        try {
-          log.debug(`[${name}] ${text}`);
-        } catch {
-          /* ignore */
-        }
+      if (!verbose) return;
+      try {
+        const scope = source === 'stderr' ? `${name}:stderr` : name;
+        log.debug(`[${scope}] ${text}`);
+      } catch {
+        /* ignore */
       }
-    });
+    };
+
+    const stdoutStream = new PassThrough();
+    const stderrStream = new PassThrough();
+    stdoutStream.on('data', (chunk: Buffer) => appendOutput('stdout', chunk));
+    stderrStream.on('data', (chunk: Buffer) => appendOutput('stderr', chunk));
 
     return await new Promise<StepResult>((resolve, reject) => {
+      const onStreamError = (e: unknown) => {
+        const err = e instanceof Error ? e : new Error(String(e));
+        err.name = 'StepStreamError';
+        reject(err);
+      };
+
       stream.on('end', async () => {
+        stdoutStream.end();
+        stderrStream.end();
         const info = await exec.inspect();
         const duration = Date.now() - stepStartTime;
         const success = info.ExitCode === 0;
         resolve({ success, duration, output: stepOutput });
       });
-      stream.on('error', (e) => {
-        const err = e instanceof Error ? e : new Error(String(e));
-        err.name = 'StepStreamError';
-        reject(err);
-      });
+      stream.on('error', onStreamError);
+      stdoutStream.on('error', onStreamError);
+      stderrStream.on('error', onStreamError);
+
+      const withModem = container as Docker.Container & {
+        modem?: {
+          demuxStream?: (
+            stream: NodeJS.ReadableStream,
+            stdout: NodeJS.WritableStream,
+            stderr: NodeJS.WritableStream,
+          ) => void;
+        };
+      };
+      const demux = withModem.modem?.demuxStream;
+      if (demux) {
+        demux(stream, stdoutStream, stderrStream);
+      } else {
+        stream.pipe(stdoutStream);
+      }
     });
   } catch (error) {
     const duration = Date.now() - stepStartTime;
@@ -82,4 +112,3 @@ export async function executeStep({
     );
   }
 }
-

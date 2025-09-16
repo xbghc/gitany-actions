@@ -9,6 +9,7 @@ export { checkoutSha } from './checkout-sha';
 export { checkProjectFiles } from './check-project-files';
 export { installDependencies } from './install-dependencies';
 export { installClaudeCli } from './install-claude-cli';
+export { installGitcodeCli } from './install-gitcode-cli';
 export { chat } from './chat';
 export { prepareImage, DockerUnavailableError, ImagePullError } from './prepare-image';
 export { createWorkspaceContainer, ContainerCreationError } from './create-workspace-container';
