@@ -48,12 +48,15 @@ export function watchIssues(
   const state = createWatcherState(url);
 
   const check = async () => {
+    const startedAt = Date.now();
+    logger.info({ url }, '[watchIssues] poll start');
     try {
       const { data: issues } = await fetchIssues(client, url, options);
       await detectNewComments(client, url, issues, state, options);
       await persistState(url, state);
+      logger.info({ url, durationMs: Date.now() - startedAt }, '[watchIssues] poll complete');
     } catch (err) {
-      logger.error({ err, url }, '[watchIssues] poll failed');
+      logger.error({ err, url, durationMs: Date.now() - startedAt }, '[watchIssues] poll failed');
     }
   };
 
