@@ -170,6 +170,13 @@ function createDryRunExecutor() {
 
 function createLoggedChatExecutor() {
   return async (repoUrl, prompt, options) => {
+    const reused = Boolean(options?.container);
+    if (reused) {
+      const id = options.container?.id ? options.container.id.slice(0, 12) : '未知';
+      console.log(`   - chat 容器: 复用 (ID: ${id})`);
+    } else {
+      console.log('   - chat 容器: 新建');
+    }
     console.log(`   - 执行命令 "claude -p ${promptPreview(prompt)}"`);
     return chat(repoUrl, prompt, options);
   };
