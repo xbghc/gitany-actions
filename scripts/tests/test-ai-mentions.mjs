@@ -2,7 +2,7 @@
 
 // 环境变量:
 // - TEST_REPO_URL: 必填，目标仓库 URL。
-// - TEST_MENTION: 可选，自定义触发标记，默认值为 @AI。
+// - TEST_MENTION: 可选，自定义触发标记，默认值为 Gitcode 当前用户的 @用户名。
 // - TEST_ISSUE_INTERVAL: 可选，Issue 轮询间隔秒数。
 // - TEST_PR_INTERVAL: 可选，PR 轮询间隔秒数。
 // - TEST_WATCH_DURATION: 可选，监听持续秒数。
@@ -19,10 +19,38 @@
 import { config } from 'dotenv';
 import { watchAiMentions, defaultPromptBuilder, chat } from '../../packages/core/dist/index.js';
 import { GitcodeClient } from '../../packages/gitcode/dist/index.js';
+import os from 'node:os';
 
 config({ path: new URL('.env', import.meta.url) });
 
-const DEFAULT_MENTION = '@AI';
+function resolveLocalUsername() {
+  try {
+    const username = os.userInfo().username?.trim();
+    if (username) return username;
+  } catch (error) {
+    // ignore - fall back to legacy default below
+  }
+
+  return undefined;
+}
+
+async function resolveDefaultMention(client, verbose) {
+  try {
+    const profile = await client.user.getProfile();
+    const login = profile.login?.trim();
+    if (login) return `@${login}`;
+  } catch (error) {
+    if (verbose) {
+      console.warn('⚠️ 无法从 Gitcode 获取当前用户名, 将使用本地用户名或默认值 @AI。');
+      console.warn(error);
+    }
+  }
+
+  const localUsername = resolveLocalUsername();
+  if (localUsername) return `@${localUsername}`;
+
+  return '@AI';
+}
 
 function envBoolean(name, defaultValue) {
   const raw = process.env[name];
@@ -167,16 +195,18 @@ async function main() {
     process.exit(1);
   }
 
-  const mentionToken = (process.env.TEST_MENTION || DEFAULT_MENTION).trim();
-  const issueIntervalSec = envNumber('TEST_ISSUE_INTERVAL');
-  const prIntervalSec = envNumber('TEST_PR_INTERVAL');
-  const durationSec = envNumber('TEST_WATCH_DURATION');
   const runChat = envBoolean('TEST_RUN_CHAT', true);
   const verbose = envBoolean('TEST_VERBOSE', false);
   const showPrompt = envBoolean('TEST_SHOW_PROMPT', false);
   const chatKeepContainer = envBoolean('TEST_CHAT_KEEP_CONTAINER', false);
   const chatVerbose = envBoolean('TEST_CHAT_VERBOSE', false);
+  const issueIntervalSec = envNumber('TEST_ISSUE_INTERVAL');
+  const prIntervalSec = envNumber('TEST_PR_INTERVAL');
+  const durationSec = envNumber('TEST_WATCH_DURATION');
 
+  const client = new GitcodeClient();
+  const mentionToken = (process.env.TEST_MENTION || '').trim()
+    || (await resolveDefaultMention(client, verbose));
   const chatOptions = buildChatOptions(runChat, chatKeepContainer, chatVerbose);
 
   console.log('👂 开始监听 AI 评论提及');
@@ -195,7 +225,6 @@ async function main() {
   if (showPrompt) console.log('📝 将输出生成的提示词');
   if (verbose) console.log('🔍 将打印评论正文等调试信息');
 
-  const client = new GitcodeClient();
   const timers = [];
   const loggingOptions = { verbose, showPrompt };
 
