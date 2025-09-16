@@ -19,6 +19,8 @@ export interface ListIssuesQuery {
   page?: number;
   /** Items per page. */
   per_page?: number;
+  /** Sort field: created | updated | comments. Defaults to updated. */
+  sort?: 'created' | 'updated' | 'comments';
 }
 
 /**

@@ -29,6 +29,7 @@ pnpm --filter @gitany/cli start -- --help
 说明：
 - 日志统一通过 `@gitany/shared` 的 logger 输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
 - 也可使用环境变量 `GITANY_LOG_LEVEL` 或 `LOG_LEVEL` 控制默认日志级别；命令行选项优先级更高。
+- 日志默认以易读格式输出；若需要 JSON 结构化日志，可设置环境变量 `GITANY_LOG_FORMAT=json`。
 
 ## 命令
 
@@ -280,9 +281,6 @@ gitcode pr comment 123 --editor
 # 从标准输入读取评论内容
 echo "这是一个评论" | gitcode pr comment 123 --body-file -
 
-# 在浏览器中创建评论
-gitcode pr comment 123 --web
-
 # 输出 JSON 格式
 gitcode pr comment 123 --body "测试评论" --json
 ```
@@ -291,7 +289,6 @@ gitcode pr comment 123 --body "测试评论" --json
   - `--body <string>`：指定评论内容
   - `-F, --body-file <file>`：从文件读取评论内容（使用 `-` 从标准输入读取）
   - `-e, --editor`：打开文本编辑器编写评论
-  - `-w, --web`：在浏览器中创建评论
   - `--json`：输出原始 JSON 格式
   - `-R, --repo <[HOST/]OWNER/REPO>`：指定其他仓库
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls/{number}/comments`

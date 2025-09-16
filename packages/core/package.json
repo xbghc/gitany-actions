@@ -11,7 +11,8 @@
     "build": "node ./scripts/build.mjs",
     "clean": "rm -rf dist",
     "lint": "eslint .",
-    "cleanup": "node ./scripts/cleanup.mjs"
+    "cleanup": "node ./scripts/cleanup.mjs",
+    "test": "pnpm --filter @gitany/shared build && pnpm --filter @gitany/gitcode build && tsx tests/watch-issues-detect-new-comments.test.ts"
   },
   "exports": {
     ".": {
@@ -20,6 +21,7 @@
     }
   },
   "dependencies": {
+    "@gitany/cli": "workspace:*",
     "@gitany/gitcode": "workspace:*",
     "@gitany/shared": "workspace:*",
     "dockerode": "^4.0.8",

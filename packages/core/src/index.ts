@@ -9,6 +9,8 @@ export { watchAiMentions, defaultPromptBuilder } from './issue/ai-mentions';
 export type { WatchIssueOptions, WatchIssueHandle } from './issue/watcher';
 export type {
   WatchAiMentionsOptions,
+  IssueAiMentionWatchOptions,
+  PullRequestAiMentionWatchOptions,
   AiMentionWatcherHandle,
   AiMentionContext,
   AiMentionSource,
@@ -27,6 +29,7 @@ export {
   checkProjectFiles,
   installDependencies,
   installClaudeCli,
+  installGitcodeCli,
   chat,
   prepareImage,
   DockerUnavailableError,
@@ -38,5 +41,12 @@ export {
   collectDiagnostics,
   DiagnosticsCollectionError,
   cleanupPrContainers,
+  copyToContainer,
+  CopyToContainerError,
 } from './container';
-export type { ProjectCheckResult, ChatOptions, ChatResult } from './container';
+export type {
+  ProjectCheckResult,
+  ChatOptions,
+  ChatResult,
+  CopyToContainerOptions,
+} from './container';

@@ -1,3 +1,5 @@
+import { createLogger } from '@gitany/shared';
+
 export type HttpRequestParams = {
   method: 'GET' | 'POST' | 'PUT';
   url: string;
@@ -9,6 +11,11 @@ export interface HttpRequestOptions {
   headers?: Record<string, string>;
   query?: Record<string, string | number | boolean>;
   body?: string;
+  /**
+   * Number of times to retry the request when the network connection fails.
+   * Defaults to 3.
+   */
+  retries?: number;
 }
 
 // Simple in-memory cache for ETag and payload per URL
@@ -20,6 +27,43 @@ const cacheHit = new WeakSet<object>();
  */
 export function isNotModified(value: unknown): boolean {
   return typeof value === 'object' && value !== null && cacheHit.has(value as object);
+}
+
+const httpDebugFlag = process.env.GITCODE_HTTP_DEBUG || process.env.GITANY_HTTP_DEBUG || '';
+const httpDebugEnabled = ['1', 'true', 'yes', 'on', 'debug']
+  .includes(httpDebugFlag.trim().toLowerCase());
+const httpDebugShowSensitiveFlag = process.env.GITCODE_HTTP_DEBUG_SHOW_SECRETS || '';
+const httpDebugShowSensitive = ['1', 'true', 'yes', 'on']
+  .includes(httpDebugShowSensitiveFlag.trim().toLowerCase());
+
+const httpLogger = createLogger('@gitany/gitcode:http');
+
+function logHttp(event: string, detail: Record<string, unknown>) {
+  if (!httpDebugEnabled) return;
+  httpLogger.info({ event, detail }, 'gitcode http debug');
+}
+
+function redactHeaders(headers: Record<string, string>) {
+  if (httpDebugEnabled && httpDebugShowSensitive) {
+    return { ...headers };
+  }
+  const sanitized: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === 'authorization') {
+      sanitized[key] = '<redacted>';
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
+function responseHeaders(resp: Response): Record<string, string> {
+  const entries: Record<string, string> = {};
+  for (const [key, value] of resp.headers.entries()) {
+    entries[key] = value;
+  }
+  return entries;
 }
 
 export async function httpRequest<T = unknown>(params: HttpRequestParams): Promise<T> {
@@ -46,28 +90,86 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
     init.body = options.body;
   }
 
-  const resp = await fetch(requestUrl, init);
+  logHttp('request', {
+    method,
+    url: requestUrl,
+    headers: redactHeaders(headers),
+    body: options?.body ?? null,
+  });
+  const retries = options?.retries ?? 3;
+  let resp: Response;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      resp = await fetch(requestUrl, init);
+      break;
+    } catch (error) {
+      if (attempt < retries) {
+        logHttp('retry', {
+          url: requestUrl,
+          attempt: attempt + 1,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        continue;
+      }
+      if (error instanceof Error) {
+        const cause = (error as { cause?: unknown }).cause;
+        const causeCode =
+          typeof cause === 'object' && cause !== null && 'code' in cause
+            ? String((cause as { code?: unknown }).code)
+            : undefined;
+        if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
+          const details =
+            typeof cause === 'object' && cause !== null && 'message' in cause
+              ? String((cause as { message?: unknown }).message)
+              : 'connection timed out';
+          throw new Error(`连接 GitCode 服务器超时: ${requestUrl}. ${details}`);
+        }
+        if (causeCode === 'UND_ERR_HEADERS_TIMEOUT' || causeCode === 'UND_ERR_RESPONSE_TIMEOUT') {
+          throw new Error(`等待 GitCode 响应超时: ${requestUrl}`);
+        }
+      }
+      throw error;
+    }
+  }
 
   if (resp.status === 304 && cached) {
     if (typeof cached.payload === 'object' && cached.payload !== null) {
       cacheHit.add(cached.payload as object);
     }
+    logHttp('response-cache', {
+      method,
+      url: requestUrl,
+      status: resp.status,
+      statusText: resp.statusText,
+      headers: responseHeaders(resp),
+      body: '[cached payload reused]',
+    });
     return cached.payload as T;
   }
 
+  const rawBody = await resp.text().catch(() => '');
+
+  logHttp('response', {
+    method,
+    url: requestUrl,
+    status: resp.status,
+    statusText: resp.statusText,
+    headers: responseHeaders(resp),
+    body: rawBody,
+  });
+
   if (!resp.ok) {
-    const text = await safeText(resp);
     throw new Error(
-      `Gitcode request failed: ${resp.status} ${resp.statusText}${text ? `\n${text}` : ''}`,
+      `Gitcode request failed: ${resp.status} ${resp.statusText}${rawBody ? `\n${rawBody}` : ''}`,
     );
   }
 
   const ct = resp.headers.get('content-type') || '';
   let payload: unknown;
   if (ct.includes('application/json')) {
-    payload = await resp.json();
+    payload = rawBody ? JSON.parse(rawBody) : undefined;
   } else {
-    payload = await resp.text();
+    payload = rawBody;
   }
 
   const etag = resp.headers.get('etag');
@@ -76,14 +178,6 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
   }
 
   return payload as T;
-}
-
-async function safeText(resp: Response) {
-  try {
-    return await resp.text();
-  } catch {
-    return '';
-  }
 }
 
 function buildUrlWithQuery(url: string, query?: Record<string, string | number | boolean>) {
