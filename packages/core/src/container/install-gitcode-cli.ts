@@ -1,6 +1,7 @@
 import path from 'node:path';
+import os from 'node:os';
 import { createRequire } from 'node:module';
-import { access, stat } from 'node:fs/promises';
+import { access, stat, mkdtemp, rm, cp } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 
 import { copyToContainer } from './copy-files';
@@ -28,18 +29,22 @@ export async function installGitcodeCli({
     const packageJsonPath = require.resolve('@gitany/cli/package.json');
     const cliDir = path.dirname(packageJsonPath);
     await ensureLocalCliDirectory(cliDir);
+    const staging = await createCliStagingDirectory(cliDir);
     const pkg = require('@gitany/cli/package.json') as { bin?: Record<string, string> };
     const binRelative = pkg.bin?.gitcode ?? 'dist/index.js';
     const containerEntry = toPosixPath(path.posix.join(CLI_INSTALL_PATH, toPosixPath(binRelative)));
 
-    await ensureContainerTargetDirectory({ container, log, verbose, env });
+    try {
+      await ensureContainerTargetDirectory({ container, log, verbose, env });
 
-    await copyToContainer({
-      container,
-      srcPath: cliDir,
-      containerPath: CLI_INSTALL_PATH,
-      followSymlinks: true,
-    });
+      await copyToContainer({
+        container,
+        srcPath: staging.path,
+        containerPath: CLI_INSTALL_PATH,
+      });
+    } finally {
+      await staging.cleanup();
+    }
 
     const script = `set -e
 mkdir -p ~/.npm-global/bin
@@ -95,6 +100,27 @@ async function ensureLocalCliDirectory(dir: string): Promise<void> {
   } catch {
     throw new Error(`无法读取 Gitcode CLI 源目录: ${dir}`);
   }
+}
+
+async function createCliStagingDirectory(dir: string): Promise<{ path: string; cleanup: () => Promise<void> }> {
+  const prefix = path.join(os.tmpdir(), 'gitcode-cli-');
+  const tempRoot = await mkdtemp(prefix);
+  const stagedDir = path.join(tempRoot, 'gitcode-cli');
+
+  try {
+    await cp(dir, stagedDir, { recursive: true, dereference: true });
+  } catch (error) {
+    await rm(tempRoot, { recursive: true, force: true }).catch(() => {});
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`无法准备 Gitcode CLI 临时目录: ${message}`);
+  }
+
+  return {
+    path: stagedDir,
+    cleanup: async () => {
+      await rm(tempRoot, { recursive: true, force: true });
+    },
+  };
 }
 
 async function ensureContainerTargetDirectory({
