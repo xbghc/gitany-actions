@@ -40,6 +40,7 @@ export async function executeStep({
       AttachStdout: true,
       AttachStderr: true,
       Env: env,
+      Tty: true,
     });
 
     const stream = await exec.start({ hijack: true, stdin: false });
@@ -82,4 +83,3 @@ export async function executeStep({
     );
   }
 }
-

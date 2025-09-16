@@ -1,7 +1,7 @@
 import type { PullRequest } from '@gitany/gitcode';
 import { toGitUrl } from '@gitany/gitcode';
 
-import { docker, ensureDocker, forward } from './shared';
+import { collectForwardEnv, docker, ensureDocker } from './shared';
 import type { ContainerOptions } from './types';
 import { getContainer } from './get';
 
@@ -20,11 +20,7 @@ export async function createPrContainer(
     return existing;
   }
 
-  const env: string[] = [];
-  for (const v of forward) {
-    const value = process.env[v];
-    if (value) env.push(`${v}=${value}`);
-  }
+  const env: string[] = collectForwardEnv();
   if (options.env) {
     for (const [k, v] of Object.entries(options.env)) env.push(`${k}=${v}`);
   }
@@ -54,4 +50,3 @@ export async function createPrContainer(
   await container.start();
   return container;
 }
-

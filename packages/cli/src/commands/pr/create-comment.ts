@@ -5,6 +5,9 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('@gitany/cli');
 
 interface CreatePrCommentOptions {
   body?: string;
@@ -21,6 +24,7 @@ function getDefaultEditor(): string {
 }
 
 // 在编辑器中打开内容
+// TODO 移除编辑评论内容的功能和调用编辑器的功能
 async function openEditor(content: string): Promise<string> {
   const editor = getDefaultEditor();
   const tempFile = path.join(process.cwd(), '.gitany-pr-comment-temp.md');
@@ -64,9 +68,12 @@ export async function createPrCommentAction(
     }
 
     // 如果指定了 web 模式，打开浏览器
+    // TODO 移除web模式及相关代码
     if (options.web) {
       const url = `https://${host}/${owner}/${repo}/pull/${prNum}#new_comment_field`;
-      console.log(`Opening ${url} in your browser...`);
+      const openMsg = `Opening ${url} in your browser...`;
+      console.log(openMsg);
+      logger.info({ url }, openMsg);
       return;
     }
 
@@ -76,18 +83,28 @@ export async function createPrCommentAction(
       console.log(JSON.stringify(comment, null, 2));
     } else {
       // GitHub CLI 风格的彩色输出
-      console.log('\n💬 PR comment created successfully!');
-      console.log('\n📋 Comment Details:');
-      console.log(`   ID:       ${comment.id}`);
+      const successMsg = '\n💬 PR comment created successfully!';
+      console.log(successMsg);
+      logger.info({ prNumber: prNum, repoUrl, commentId: comment.id }, 'PR comment created successfully');
+
+      const detailsMsg = '\n📋 Comment Details:';
+      console.log(detailsMsg);
+      const idLine = `   ID:       ${comment.id}`;
+      console.log(idLine);
 
       // 显示评论内容预览
       const bodyPreview = comment.body.length > 100
         ? comment.body.substring(0, 100) + '...'
         : comment.body;
-      console.log(`   Preview:  "${bodyPreview}"`);
+      const previewLine = `   Preview:  "${bodyPreview}"`;
+      console.log(previewLine);
+      logger.info({ preview: bodyPreview }, previewLine);
 
-      console.log(`\n💡 Next steps:`);
-      console.log(`   • Reply to comment:  gitcode pr comment ${prNumber} --body "Your reply"`);
+      const nextStepsMsg = '\n💡 Next steps:';
+      const replyLine = `   • Reply to comment:  gitcode pr comment ${prNumber} --body "Your reply"`;
+      console.log(nextStepsMsg);
+      console.log(replyLine);
+      logger.info({ nextSteps: ['reply-to-comment'] }, 'Displayed next steps for PR comment');
     }
   }, (error) => {
     const prNum = Number.parseInt(prNumber, 10);
@@ -99,7 +116,7 @@ export async function createPrCommentAction(
       options,
       error,
     };
-    console.error('Failed to create PR comment', debugInfo);
+    logger.error({ error, context: debugInfo }, 'Failed to create PR comment');
     return 'Failed to create PR comment';
   });
 }
@@ -150,7 +167,9 @@ export function createPrCommentCommand(): Command {
 <!-- Write your comment below -->`;
         finalBody = await openEditor(template);
       } else if (!finalBody) {
-        console.log('Enter comment body (press Ctrl+D when finished, or use -e/--editor):');
+        const promptMsg = 'Enter comment body (press Ctrl+D when finished, or use -e/--editor):';
+        console.log(promptMsg);
+        logger.info(promptMsg);
         finalBody = fs.readFileSync(0, 'utf-8').trim();
       }
 

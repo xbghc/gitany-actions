@@ -266,6 +266,9 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * 在容器中调用 gitcode CLI 创建评论
+ */
 async function createAiReplyComment(
   client: GitcodeClient,
   repoUrl: string,
@@ -278,7 +281,7 @@ async function createAiReplyComment(
   }
 
   const repoArg = `${parsed.owner}/${parsed.repo}`;
-  const token = await client.auth.token();
+  const token = (await client.auth.token())?.trim();
   const cliEnv: NodeJS.ProcessEnv = {};
   if (token) {
     cliEnv.GITCODE_TOKEN = token;
