@@ -5,7 +5,7 @@
 
 export { watchPullRequest } from './pr/watcher';
 export { watchIssues } from './issue/watcher';
-export { watchAiMentions, defaultPromptBuilder } from './issue/ai-mentions';
+export { watchAiMentions, defaultPromptBuilder } from './ai-mentions';
 export type { WatchIssueOptions, WatchIssueHandle } from './issue/watcher';
 export type {
   WatchAiMentionsOptions,
@@ -13,7 +13,9 @@ export type {
   AiMentionContext,
   AiMentionSource,
   AiMentionReply,
-} from './issue/ai-mentions';
+  BuildAiMentionPrompt,
+  BuildAiMentionReplyBody,
+} from './ai-mentions';
 export {
   createPrContainer,
   resetContainer,
