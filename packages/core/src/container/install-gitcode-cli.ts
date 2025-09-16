@@ -1,5 +1,7 @@
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { access, stat } from 'node:fs/promises';
+import { constants as fsConstants } from 'node:fs';
 
 import { copyToContainer } from './copy-files';
 import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step';
@@ -25,9 +27,12 @@ export async function installGitcodeCli({
   try {
     const packageJsonPath = require.resolve('@gitany/cli/package.json');
     const cliDir = path.dirname(packageJsonPath);
+    await ensureLocalCliDirectory(cliDir);
     const pkg = require('@gitany/cli/package.json') as { bin?: Record<string, string> };
     const binRelative = pkg.bin?.gitcode ?? 'dist/index.js';
     const containerEntry = toPosixPath(path.posix.join(CLI_INSTALL_PATH, toPosixPath(binRelative)));
+
+    await ensureContainerTargetDirectory({ container, log, verbose, env });
 
     await copyToContainer({
       container,
@@ -70,5 +75,67 @@ fi
     const duration = Date.now() - startTime;
     const message = error instanceof Error ? error.message : String(error);
     return { success: false, duration, output: message } satisfies StepResult;
+  }
+}
+
+async function ensureLocalCliDirectory(dir: string): Promise<void> {
+  let stats;
+  try {
+    stats = await stat(dir);
+  } catch {
+    throw new Error(`Gitcode CLI 源目录不存在: ${dir}`);
+  }
+
+  if (!stats.isDirectory()) {
+    throw new Error(`Gitcode CLI 源路径不是目录: ${dir}`);
+  }
+
+  try {
+    await access(dir, fsConstants.R_OK | fsConstants.X_OK);
+  } catch {
+    throw new Error(`无法读取 Gitcode CLI 源目录: ${dir}`);
+  }
+}
+
+async function ensureContainerTargetDirectory({
+  container,
+  log,
+  verbose,
+  env,
+}: StepOptions): Promise<void> {
+  const targetDir = path.posix.dirname(CLI_INSTALL_PATH);
+  const script = `set -e
+target_dir=${JSON.stringify(targetDir)}
+target_path=${JSON.stringify(CLI_INSTALL_PATH)}
+if [ -e "$target_dir" ] && [ ! -d "$target_dir" ]; then
+  echo "目标路径 '$target_dir' 已存在但不是目录" >&2
+  exit 1
+fi
+mkdir -p "$target_dir"
+if [ ! -w "$target_dir" ]; then
+  echo "目标目录 '$target_dir' 无写权限" >&2
+  exit 1
+fi
+if [ -e "$target_path" ] && [ ! -d "$target_path" ]; then
+  echo "目标路径 '$target_path' 已存在但不是目录" >&2
+  exit 1
+fi
+if [ -e "$target_path" ] && [ ! -w "$target_path" ]; then
+  echo "目标路径 '$target_path' 无写权限" >&2
+  exit 1
+fi`;
+
+  const result = await executeStep({
+    container,
+    name: 'gitcode-cli-target-check',
+    script,
+    log,
+    verbose,
+    env,
+  });
+
+  if (!result.success) {
+    const output = result.output.trim();
+    throw new Error(output || `无法验证 gitcode CLI 目标目录权限: ${CLI_INSTALL_PATH}`);
   }
 }
