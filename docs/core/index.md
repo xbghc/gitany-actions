@@ -129,6 +129,8 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
 
 若只希望监听但不自动回复，可设置 `replyWithComment: false`；如需对回复内容进行包装，例如附带原评论引用，可通过 `buildReplyBody` 返回自定义文本。
 
+默认提示语会包含仓库、Issue 与评论上下文，并明确要求 AI 使用中文进行回复。
+
 ## 工作原理
 
 - 按指定间隔检查 PR 列表（默认 5 秒）
