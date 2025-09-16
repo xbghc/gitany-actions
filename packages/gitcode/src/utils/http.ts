@@ -11,6 +11,11 @@ export interface HttpRequestOptions {
   headers?: Record<string, string>;
   query?: Record<string, string | number | boolean>;
   body?: string;
+  /**
+   * Number of times to retry the request when the network connection fails.
+   * Defaults to 3.
+   */
+  retries?: number;
 }
 
 // Simple in-memory cache for ETag and payload per URL
@@ -91,29 +96,40 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
     headers: redactHeaders(headers),
     body: options?.body ?? null,
   });
-
+  const retries = options?.retries ?? 3;
   let resp: Response;
-  try {
-    resp = await fetch(requestUrl, init);
-  } catch (error) {
-    if (error instanceof Error) {
-      const cause = (error as { cause?: unknown }).cause;
-      const causeCode =
-        typeof cause === 'object' && cause !== null && 'code' in cause
-          ? String((cause as { code?: unknown }).code)
-          : undefined;
-      if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
-        const details =
-          typeof cause === 'object' && cause !== null && 'message' in cause
-            ? String((cause as { message?: unknown }).message)
-            : 'connection timed out';
-        throw new Error(`连接 GitCode 服务器超时: ${requestUrl}. ${details}`);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      resp = await fetch(requestUrl, init);
+      break;
+    } catch (error) {
+      if (attempt < retries) {
+        logHttp('retry', {
+          url: requestUrl,
+          attempt: attempt + 1,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        continue;
       }
-      if (causeCode === 'UND_ERR_HEADERS_TIMEOUT' || causeCode === 'UND_ERR_RESPONSE_TIMEOUT') {
-        throw new Error(`等待 GitCode 响应超时: ${requestUrl}`);
+      if (error instanceof Error) {
+        const cause = (error as { cause?: unknown }).cause;
+        const causeCode =
+          typeof cause === 'object' && cause !== null && 'code' in cause
+            ? String((cause as { code?: unknown }).code)
+            : undefined;
+        if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
+          const details =
+            typeof cause === 'object' && cause !== null && 'message' in cause
+              ? String((cause as { message?: unknown }).message)
+              : 'connection timed out';
+          throw new Error(`连接 GitCode 服务器超时: ${requestUrl}. ${details}`);
+        }
+        if (causeCode === 'UND_ERR_HEADERS_TIMEOUT' || causeCode === 'UND_ERR_RESPONSE_TIMEOUT') {
+          throw new Error(`等待 GitCode 响应超时: ${requestUrl}`);
+        }
       }
+      throw error;
     }
-    throw error;
   }
 
   if (resp.status === 304 && cached) {
