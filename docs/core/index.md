@@ -57,17 +57,19 @@ const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
 - `onClosed`: PR 关闭时触发
 - `onMerged`: PR 合并时触发
 - `onComment`: PR 有新评论时触发
-- `intervalSec`: 检查间隔时间（秒），默认为 5
+- `intervalSec`: 基础轮询间隔（秒），默认为 30；实际执行会根据 HTTP 限流队列自动收敛或放缓
 - `container`: 传入对象以启用内置容器管理（传 `false` 禁用）
 - `onContainerCreated`: 容器创建后触发
 - `onContainerRemoved`: 容器删除后触发
+
+> 轮询循环会共享 GitCode HTTP 客户端的全局限流器，并采用类似 TCP 的“慢启动 + 加性增加/乘性减少”策略动态调整速度。当检测到限流队列积压或请求耗时异常时，会立即退避重置窗口，避免排队无限增长；当队列清空时再逐步提速。
 
 **返回值:**
 - 返回一个句柄 `{ stop(), containers() }`
 
 ### Issue 评论监控
 
-`watchIssues` 可用于轮询仓库的 Issue 评论。当监听到新的评论时会触发回调，默认每 5 秒检测一次。
+`watchIssues` 可用于轮询仓库的 Issue 评论。当监听到新的评论时会触发回调，默认基础间隔为 30 秒，实际频率会结合 HTTP 限流状况动态调整。
 
 ```ts
 import { watchIssues } from '@gitany/core';
@@ -133,7 +135,7 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
 
 ## 工作原理
 
-- 按指定间隔检查 PR 列表（默认 5 秒）
+- 按指定间隔检查 PR 列表（默认 30 秒）
 - 检测 PR 状态变化（新建、关闭、合并）
 - 监控 PR 评论（仅对打开的 PR）
 - 自动触发相应的回调函数

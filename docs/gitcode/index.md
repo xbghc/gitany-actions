@@ -56,10 +56,13 @@ title: gitcode 工具库
 - `Authorization: Bearer <token>`
 
 请求在网络连接失败时会自动重试 3 次，可通过 `retries` 选项自定义。
+请求会在发起前经过全局限流队列（默认每 60 秒最多 50 次请求，可通过 `GITCODE_API_RPM` 调整）。
+可通过 `getHttpRateLimiterStats()` 获取当前限流队列长度与速率配置，便于上层轮询逻辑根据拥塞情况动态退避。
 
 环境变量：
 
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
+- `GITCODE_API_RPM`：可选，配置每分钟允许的最大请求数（默认 50）
 
 **Token 读取优先级**：
 1. 环境变量 `GITCODE_TOKEN`
@@ -156,4 +159,4 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 
 ### 历史变更
 
-- 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并通过 ETag 自动缓存未变更的响应；对外 API 与行为不变。
+- 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并通过 ETag 自动缓存未变更的响应；请求在发送前会经过全局限流（默认 60 秒 50 次，可通过 `GITCODE_API_RPM` 配置）；对外 API 与行为不变。

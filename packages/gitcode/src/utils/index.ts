@@ -49,4 +49,5 @@ export function toQuery<T extends object | undefined | null>(
   return out;
 }
 
-export { isNotModified } from './http';
+export { isNotModified, getHttpRateLimiterStats } from './http';
+export type { HttpRateLimiterStats } from './http';

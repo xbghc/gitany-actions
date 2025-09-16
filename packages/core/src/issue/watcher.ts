@@ -4,6 +4,7 @@ import {
   type IssueComment,
   type ListIssuesQuery,
   type IssueCommentsQuery,
+  getHttpRateLimiterStats,
   isNotModified,
 } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
@@ -11,9 +12,10 @@ import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
+import { createAdaptivePoller } from '../utils/polling';
 
 const logger = createLogger('@gitany/core');
-const DEFAULT_INTERVAL_SEC = 5;
+const DEFAULT_INTERVAL_SEC = 30;
 
 export interface WatchIssueOptions {
   intervalSec?: number;
@@ -48,24 +50,31 @@ export function watchIssues(
   const state = createWatcherState(url);
 
   const check = async () => {
-    try {
-      const { data: issues } = await fetchIssues(client, url, options);
-      await detectNewComments(client, url, issues, state, options);
-      await persistState(url, state);
-    } catch (err) {
-      logger.error({ err, url }, '[watchIssues] poll failed');
-    }
+    const { data: issues } = await fetchIssues(client, url, options);
+    await detectNewComments(client, url, issues, state, options);
+    await persistState(url, state);
   };
 
-  void check();
+  const baseIntervalMs = 1_000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
+  const initialLimiterStats = getHttpRateLimiterStats();
+  const rpm = Math.max(1, Math.floor(initialLimiterStats.requestsPerMinute));
 
-  const intervalMs = 1000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
-  const intervalId = setInterval(() => {
-    void check();
-  }, intervalMs);
+  const poller = createAdaptivePoller(check, {
+    label: 'watchIssues',
+    baseIntervalMs,
+    rpm,
+    getLimiterQueueSize: () => getHttpRateLimiterStats().queueSize,
+    logger,
+    backlogThreshold: 1,
+    minIntervalMs: 1_000,
+    maxIntervalMs: Math.max(baseIntervalMs * 12, 60_000),
+    onError: (err) => {
+      logger.error({ err, url }, '[watchIssues] poll failed');
+    },
+  });
 
   return {
-    stop: () => clearInterval(intervalId),
+    stop: () => poller.stop(),
   } satisfies WatchIssueHandle;
 }
 

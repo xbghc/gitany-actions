@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@gitany/shared": "workspace:*",
+    "p-throttle": "^5.1.0",
     "zod": "^4.1.7"
   }
 }

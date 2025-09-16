@@ -3,18 +3,20 @@ import {
   PullRequest,
   PRComment,
   PRCommentQueryOptions,
+  getHttpRateLimiterStats,
   isNotModified,
 } from '@gitany/gitcode';
 import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
+import { createAdaptivePoller } from '../utils/polling';
 import * as path from 'node:path';
 import type Docker from 'dockerode';
 import { createLogger } from '@gitany/shared';
 import { createPrContainer, removeContainer, cleanupPrContainers } from '../container';
 import type { ContainerOptions } from '../container/types';
 const logger = createLogger('@gitany/core');
-const DEFAULT_INTERVAL_SEC = 5;
+const DEFAULT_INTERVAL_SEC = 30;
 
 interface WatchPullRequestOptions {
   onClosed?: (pr: PullRequest) => void;
@@ -58,16 +60,34 @@ export function watchPullRequest(
     await persistState(url, state);
   };
 
-    // 立即进行一次检查以尽快建立基线
-    void (async () => {
+  let didInitialize = false;
+  const run = async () => {
+    if (!didInitialize) {
+      didInitialize = true;
       await cleanupPrContainers();
-      await check();
-    })();
+    }
+    await check();
+  };
 
-  const intervalMs = 1000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
-  const intervalId = setInterval(() => void check(), intervalMs);
+  const baseIntervalMs = 1_000 * (options.intervalSec ?? DEFAULT_INTERVAL_SEC);
+  const initialLimiterStats = getHttpRateLimiterStats();
+  const rpm = Math.max(1, Math.floor(initialLimiterStats.requestsPerMinute));
+  const poller = createAdaptivePoller(run, {
+    label: 'watchPullRequest',
+    baseIntervalMs,
+    rpm,
+    getLimiterQueueSize: () => getHttpRateLimiterStats().queueSize,
+    logger,
+    backlogThreshold: 1,
+    minIntervalMs: 1_000,
+    maxIntervalMs: Math.max(baseIntervalMs * 12, 60_000),
+    onError: (err) => {
+      logger.error({ err, url }, '[watchPullRequest] poll failed');
+    },
+  });
+
   return {
-    stop: () => clearInterval(intervalId),
+    stop: () => poller.stop(),
     containers: () => containerMap,
   } satisfies WatchPullRequestHandle;
 }

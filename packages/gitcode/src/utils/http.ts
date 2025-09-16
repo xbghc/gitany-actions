@@ -1,4 +1,5 @@
 import { createLogger } from '@gitany/shared';
+import pThrottle, { type ThrottledFunction } from 'p-throttle';
 
 export type HttpRequestParams = {
   method: 'GET' | 'POST' | 'PUT';
@@ -37,6 +38,11 @@ const httpDebugShowSensitive = ['1', 'true', 'yes', 'on']
   .includes(httpDebugShowSensitiveFlag.trim().toLowerCase());
 
 const httpLogger = createLogger('@gitany/gitcode:http');
+
+const DEFAULT_REQUESTS_PER_MINUTE = 50;
+const THROTTLE_INTERVAL_MS = 60_000;
+const requestsPerMinute = resolveRequestsPerMinute();
+const scheduleFetch = createRateLimitedFetcher(requestsPerMinute);
 
 function logHttp(event: string, detail: Record<string, unknown>) {
   if (!httpDebugEnabled) return;
@@ -100,7 +106,7 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
   let resp: Response;
   for (let attempt = 0; ; attempt++) {
     try {
-      resp = await fetch(requestUrl, init);
+      resp = await scheduleFetch(requestUrl, init);
       break;
     } catch (error) {
       if (attempt < retries) {
@@ -178,6 +184,46 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
   }
 
   return payload as T;
+}
+
+function resolveRequestsPerMinute(): number {
+  const raw = process.env.GITCODE_API_RPM;
+  if (!raw) {
+    return DEFAULT_REQUESTS_PER_MINUTE;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_REQUESTS_PER_MINUTE;
+  }
+  return parsed;
+}
+
+export interface HttpRateLimiterStats {
+  queueSize: number;
+  limit: number;
+  intervalMs: number;
+  requestsPerMinute: number;
+}
+
+export function getHttpRateLimiterStats(): HttpRateLimiterStats {
+  return {
+    queueSize: scheduleFetch.queueSize,
+    limit: Math.max(1, Math.floor(requestsPerMinute)),
+    intervalMs: THROTTLE_INTERVAL_MS,
+    requestsPerMinute,
+  };
+}
+
+function createRateLimitedFetcher(
+  rpm: number,
+): ThrottledFunction<[string, RequestInit], Response> {
+  const limit = Math.max(1, Math.floor(rpm));
+  const throttle = pThrottle({
+    limit,
+    interval: THROTTLE_INTERVAL_MS,
+  });
+
+  return throttle((url: string, init: RequestInit) => fetch(url, init));
 }
 
 function buildUrlWithQuery(url: string, query?: Record<string, string | number | boolean>) {
