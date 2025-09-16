@@ -342,7 +342,7 @@ gitcode issue list
 
 # 带筛选参数：
 gitcode issue list git@gitcode.com:owner/repo.git \
-  --state open --labels bug,help-wanted --page 2 --per-page 50
+  --state open --label bug,help-wanted --page 2 --per-page 50
 
 # 输出 JSON：
 gitcode issue list <url> --json
@@ -350,38 +350,89 @@ gitcode issue list <url> --json
 
 - 选项：
   - `--state <state>`：`open | closed | all`（默认 `open`）
-  - `--labels <labels>`：以逗号分隔的标签列表
+  - `--label <labels>`：以逗号分隔的标签列表
   - `--page <n>`：页码
   - `--per-page <n>`：每页数量
   - `--json`：输出原始 JSON 数组
 - 调用：`GET /api/v5/repos/{owner}/{repo}/issues`
 
-### gitcode issue comments <issue-number> [git-url]
+### gitcode issue view <issue-number> [git-url]
 
-列出指定 Issue 的评论。默认输出为「评论 ID 与首行内容」：
-
-```
-- [#123] 第一条评论
-```
+查看指定 Issue 的详情，并可同时列出评论：
 
 ```bash
-gitcode issue comments 42 https://gitcode.com/owner/repo.git
+gitcode issue view 42 https://gitcode.com/owner/repo.git
 
-# 或者在仓库目录中直接运行
-gitcode issue comments 42
+# 查看并显示评论
+gitcode issue view 42 --repo owner/repo --comments
 
-# 带分页参数：
-gitcode issue comments 42 --page 2 --per-page 50
-
-# 输出 JSON：
-gitcode issue comments 42 --json
+# 以 JSON 形式输出
+gitcode issue view 42 --comments --json
 ```
 
 - 选项：
-  - `--page <n>`：页码
-  - `--per-page <n>`：每页数量
-  - `--json`：输出原始 JSON 数组
-- 调用：`GET /api/v5/repos/{owner}/{repo}/issues/{number}/comments`
+  - `--comments`：同时获取评论列表
+  - `--page <n>`：评论分页页码
+  - `--per-page <n>`：评论每页数量
+  - `--json`：输出原始 JSON
+  - `-R, --repo <[HOST/]OWNER/REPO>`：指定仓库
+- 调用：`GET /api/v5/repos/{owner}/{repo}/issues/{number}` + `GET /api/v5/repos/{owner}/{repo}/issues/{number}/comments`（在开启 `--comments` 时）
+
+### gitcode issue edit <issue-number> [git-url]
+
+编辑 Issue 的标题、内容、标签等字段：
+
+```bash
+# 更新标题和正文
+gitcode issue edit 42 owner/repo --title "New title" --body "Updated description"
+
+# 替换标签并设置负责人
+gitcode issue edit 42 --repo owner/repo --label bug --label critical --assignee developer
+
+# 直接修改状态
+gitcode issue edit 42 owner/repo --state closed
+```
+
+- 选项：
+  - `--title <string>`：更新标题
+  - `--body <string>` / `--body-file <file>`：更新正文
+  - `--label <name>`：替换标签（可多次使用）
+  - `--assignee <login>`：设置负责人
+  - `--milestone <number>`：设置里程碑编号
+  - `--state <state>`：设置状态（`open | closed`）
+  - `--json`：输出原始 JSON
+  - `-R, --repo <[HOST/]OWNER/REPO>`：指定仓库
+- 调用：`PATCH /api/v5/repos/{owner}/{repo}/issues/{number}`
+
+### gitcode issue close <issue-number> [git-url]
+
+快速关闭 Issue：
+
+```bash
+# 关闭 Issue
+gitcode issue close 123 https://gitcode.com/owner/repo.git
+
+# 使用 --repo 指定仓库
+gitcode issue close 123 --repo owner/repo
+```
+
+- 选项：`--json`、`-R, --repo`
+- 调用：`PATCH /api/v5/repos/{owner}/{repo}/issues/{number}`（设置 `state=closed`）
+
+### gitcode issue reopen <issue-number> [git-url]
+
+重新打开已关闭的 Issue：
+
+```bash
+# 重新打开 Issue
+gitcode issue reopen 123 https://gitcode.com/owner/repo.git
+
+# 使用 --repo 指定仓库
+gitcode issue reopen 123 --repo owner/repo
+```
+
+- 选项：`--json`、`-R, --repo`
+- 调用：`PATCH /api/v5/repos/{owner}/{repo}/issues/{number}`（设置 `state=open`）
 
 ### gitcode user
 

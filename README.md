@@ -54,7 +54,10 @@ gitcode pr info settings owner repo
 
 # Issue 操作
 gitcode issue list https://gitcode.com/owner/repo
-gitcode issue comments https://gitcode.com/owner/repo 1
+gitcode issue view 42 https://gitcode.com/owner/repo
+gitcode issue edit 42 --repo owner/repo --label bug
+gitcode issue close 42 --repo owner/repo
+gitcode issue reopen 42 --repo owner/repo
 ```
 
 ### 使用 API 库

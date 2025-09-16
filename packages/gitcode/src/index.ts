@@ -47,6 +47,9 @@ export type {
   CreateIssueCommentParams,
   CreatedIssueComment,
   IssueDetail,
+  UpdateIssueBody,
+  UpdateIssueParams,
+  UpdatedIssue,
 } from './api/issue';
 export {
   listIssuesUrl,
@@ -61,6 +64,8 @@ export {
   createdIssueCommentSchema,
   issueDetailSchema,
   getIssueUrl,
+  updateIssueUrl,
+  updatedIssueSchema,
 } from './api/issue';
 export {
   userProfileSchema,

@@ -219,10 +219,3 @@ export function createCommand(): Command {
       await createAction(ownerArg, repoArg, titleArg || optionsToUse.title, optionsToUse);
     });
 }
-
-// 添加别名
-export function newCommand(): Command {
-  const cmd = createCommand();
-  cmd.name('new');
-  return cmd;
-}

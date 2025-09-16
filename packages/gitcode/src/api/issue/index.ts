@@ -39,3 +39,5 @@ export {
 } from './create-comment';
 export type { IssueDetail } from './get';
 export { issueDetailSchema, getIssueUrl } from './get';
+export type { UpdateIssueBody, UpdateIssueParams, UpdatedIssue } from './update';
+export { updateIssueUrl, updatedIssueSchema } from './update';
