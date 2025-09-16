@@ -280,9 +280,6 @@ gitcode pr comment 123 --editor
 # 从标准输入读取评论内容
 echo "这是一个评论" | gitcode pr comment 123 --body-file -
 
-# 在浏览器中创建评论
-gitcode pr comment 123 --web
-
 # 输出 JSON 格式
 gitcode pr comment 123 --body "测试评论" --json
 ```
@@ -291,7 +288,6 @@ gitcode pr comment 123 --body "测试评论" --json
   - `--body <string>`：指定评论内容
   - `-F, --body-file <file>`：从文件读取评论内容（使用 `-` 从标准输入读取）
   - `-e, --editor`：打开文本编辑器编写评论
-  - `-w, --web`：在浏览器中创建评论
   - `--json`：输出原始 JSON 格式
   - `-R, --repo <[HOST/]OWNER/REPO>`：指定其他仓库
 - 调用：`POST /api/v5/repos/{owner}/{repo}/pulls/{number}/comments`

@@ -85,7 +85,6 @@ gitcode issue create [owner] [repo] [title] [options]
 - `-m, --milestone <number>`: Add the issue to a milestone by number
 - `--security-hole <security-hole>`: Security hole level
 - `--template-path <template-path>`: Template path
-- `-w, --web`: Open the browser to create an issue
 - `--json`: Output raw JSON instead of formatted output
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
@@ -129,7 +128,6 @@ gitcode issue comment <issue> [body] [options]
 - `-b, --body <string>`: Supply a comment body
 - `-F, --body-file <file>`: Read body text from file (use "-" to read from standard input)
 - `-e, --editor`: Open text editor to write the comment
-- `-w, --web`: Open the browser to create a comment
 - `--json`: Output raw JSON instead of formatted output
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 

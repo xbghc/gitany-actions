@@ -13,7 +13,6 @@ interface CreatePrCommentOptions {
   body?: string;
   bodyFile?: string;
   editor?: boolean;
-  web?: boolean;
   json?: boolean;
   repo?: string;
 }
@@ -58,23 +57,10 @@ export async function createPrCommentAction(
       throw new Error('Unrecognized repository URL. Provide a full git URL or run inside a git repo.');
     }
 
-    const owner = parsed.owner;
-    const repo = parsed.repo;
-    const host = parsed.host || 'gitcode.com';
     const prNum = parseInt(prNumber, 10);
 
     if (isNaN(prNum)) {
       throw new Error('Invalid PR number');
-    }
-
-    // 如果指定了 web 模式，打开浏览器
-    // TODO 移除web模式及相关代码
-    if (options.web) {
-      const url = `https://${host}/${owner}/${repo}/pull/${prNum}#new_comment_field`;
-      const openMsg = `Opening ${url} in your browser...`;
-      console.log(openMsg);
-      logger.info({ url }, openMsg);
-      return;
     }
 
     const comment = await client.pr.createComment(repoUrl, prNum, body);
@@ -129,7 +115,6 @@ export function createPrCommentCommand(): Command {
     .option('--body <string>', 'Supply a comment body')
     .option('-F, --body-file <file>', 'Read body text from file (use "-" to read from standard input)')
     .option('-e, --editor', 'Open text editor to write the comment')
-    .option('-w, --web', 'Open the browser to create a comment')
     .option('--json', 'Output raw JSON instead of formatted output')
     .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
     .action(async (
