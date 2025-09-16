@@ -16,7 +16,6 @@ export interface CreateOptions {
   template_path?: string;
   bodyFile?: string;
   editor?: boolean;
-  web?: boolean;
   json?: boolean;
   repo?: string;
 }
@@ -60,15 +59,6 @@ async function openEditor(content: string): Promise<string> {
 
 export async function createAction(owner: string, repo: string, title?: string, options: CreateOptions = {}) {
   await withClient(async (client) => {
-    
-    // 如果指定了 web 模式，打开浏览器
-    if (options.web) {
-      const url = `https://gitcode.com/${owner}/${repo}/issues/new`;
-      console.log(`Opening ${url} in your browser...`);
-      // 在真实环境中，这里应该使用 open 或类似包
-      return;
-    }
-
     // 获取 title（交互式提示）
     let finalTitle = title || options.title;
     if (!finalTitle) {
@@ -197,7 +187,6 @@ export function createCommand(): Command {
     .option('-m, --milestone <number>', 'Add the issue to a milestone by number', (val) => parseInt(val, 10))
     .option('--security-hole <security-hole>', 'Security hole level')
     .option('--template-path <template-path>', 'Template path')
-    .option('-w, --web', 'Open the browser to create an issue')
     .option('--json', 'Output raw JSON instead of formatted output')
     .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
     .action(async (ownerArg?: string, repoArg?: string, titleArg?: string, options?: CreateOptions) => {

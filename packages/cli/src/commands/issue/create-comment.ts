@@ -9,7 +9,6 @@ interface CreateCommentOptions {
   body?: string;
   bodyFile?: string;
   editor?: boolean;
-  web?: boolean;
   json?: boolean;
   repo?: string;
 }
@@ -90,12 +89,6 @@ export async function createCommentAction(
       throw new Error('Invalid issue number');
     }
 
-    if (options.web) {
-      const url = `https://gitcode.com/${owner}/${repo}/issues/${issueNumber}#new_comment_field`;
-      console.log(`Opening ${url} in your browser...`);
-      return;
-    }
-
     let finalBody = bodyArg || options.body || '';
 
     if (options.bodyFile) {
@@ -148,7 +141,6 @@ export function createCommentCommand(): Command {
     .option('-b, --body <string>', 'Supply a comment body')
     .option('-F, --body-file <file>', 'Read body text from a file')
     .option('-e, --editor', 'Open text editor to write the comment')
-    .option('-w, --web', 'Open the browser to create a comment')
     .option('--json', 'Output raw JSON instead of formatted output')
     .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
     .action(createCommentAction);
