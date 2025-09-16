@@ -4,7 +4,6 @@ dist/
 .env*
 !.env.example
 *.tsbuildinfo
-pnpm-lock.yaml
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 local_tests/

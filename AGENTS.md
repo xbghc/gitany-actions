@@ -50,3 +50,6 @@
   ```
 - The CLI stores auth at `~/.gitany/gitcode/config.json`.
 
+## Appendix
+
+- 不考虑向后兼容，保持代码的简洁
