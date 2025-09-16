@@ -1,40 +1,13 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
-import * as path from 'path';
-import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client';
 
 interface CreateCommentOptions {
   body?: string;
   bodyFile?: string;
-  editor?: boolean;
   json?: boolean;
   repo?: string;
-}
-
-// 获取默认编辑器
-function getDefaultEditor(): string {
-  return process.env.EDITOR || process.env.VISUAL || 'nano';
-}
-
-// 在编辑器中打开内容
-async function openEditor(content: string): Promise<string> {
-  const editor = getDefaultEditor();
-  const tempFile = path.join(process.cwd(), '.gitany-comment-temp.md');
-  
-  try {
-    fs.writeFileSync(tempFile, content);
-    execSync(`${editor} "${tempFile}"`, { stdio: 'inherit' });
-    const result = fs.readFileSync(tempFile, 'utf-8');
-    fs.unlinkSync(tempFile);
-    return result.trim();
-  } catch (error) {
-    if (fs.existsSync(tempFile)) {
-      fs.unlinkSync(tempFile);
-    }
-    throw new Error(`Failed to open editor: ${error}`);
-  }
 }
 
 export async function createCommentAction(
@@ -96,13 +69,10 @@ export async function createCommentAction(
         throw new Error(`File not found: ${options.bodyFile}`);
       }
       finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
-    } else if (options.editor) {
-      const template = `# Comment on Issue #${issueNumber}\n\n<!-- Write your comment below -->`;
-      finalBody = await openEditor(template);
     }
 
     if (!finalBody) {
-      throw new Error('Comment body is required. Use the body argument, --body, --body-file, or --editor.');
+      throw new Error('Comment body is required. Use the body argument, --body, or --body-file.');
     }
 
     const comment = await client.issue.createComment({
@@ -137,10 +107,9 @@ export function createCommentCommand(): Command {
   return new Command('comment')
     .description('Create a comment on an issue')
     .argument('<issue>', 'Issue URL, number, or OWNER/REPO/NUMBER')
-    .argument('[body]', 'Comment body (required unless using --body, --body-file, or --editor)')
+    .argument('[body]', 'Comment body (required unless using --body or --body-file)')
     .option('-b, --body <string>', 'Supply a comment body')
     .option('-F, --body-file <file>', 'Read body text from a file')
-    .option('-e, --editor', 'Open text editor to write the comment')
     .option('--json', 'Output raw JSON instead of formatted output')
     .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
     .action(createCommentAction);
