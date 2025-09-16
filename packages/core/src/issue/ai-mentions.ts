@@ -377,6 +377,7 @@ export function defaultPromptBuilder(context: AiMentionContext): string {
   );
   lines.push(mentionComment.body);
   lines.push('Provide a helpful answer or recommended next steps for the maintainers.');
+  lines.push('Your entire reply must be written in Simplified Chinese.');
 
   return lines.join('\n\n');
 }
