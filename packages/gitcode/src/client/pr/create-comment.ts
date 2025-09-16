@@ -29,7 +29,7 @@ export async function createPrComment(
 
   const url = createPrCommentUrl(owner, repo, params.number);
   const response = await client.request(url, 'POST', {
-    body: JSON.stringify(params.body),
+    body: params.body,
   });
 
   const result = createdPrCommentSchema.safeParse(response);

@@ -21,7 +21,7 @@ export async function createIssue(
 ): Promise<CreatedIssue> {
   const url = createIssueUrl(params.owner);
   const response = await client.request(url, 'POST', {
-    body: JSON.stringify(params.body),
+    body: params.body,
   });
 
   const result = createdIssueSchema.safeParse(response);

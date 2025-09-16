@@ -1,5 +1,7 @@
 import { createLogger } from '@gitany/shared';
 
+type BinaryLike = ArrayBuffer | NodeJS.ArrayBufferView;
+
 export type HttpRequestParams = {
   method: 'GET' | 'POST' | 'PUT';
   url: string;
@@ -10,7 +12,7 @@ export type HttpRequestParams = {
 export interface HttpRequestOptions {
   headers?: Record<string, string>;
   query?: Record<string, string | number | boolean>;
-  body?: string;
+  body?: unknown;
   /**
    * Number of times to retry the request when the network connection fails.
    * Defaults to 3.
@@ -66,13 +68,157 @@ function responseHeaders(resp: Response): Record<string, string> {
   return entries;
 }
 
+export interface FetchWithRetryOptions {
+  retries: number;
+  onRetry?: (attempt: number, error: unknown) => void;
+}
+
+export async function fetchWithRetries(
+  requestUrl: string,
+  init: RequestInit,
+  options: FetchWithRetryOptions,
+): Promise<Response> {
+  const { retries, onRetry } = options;
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetch(requestUrl, init);
+    } catch (error) {
+      if (attempt < retries) {
+        onRetry?.(attempt + 1, error);
+        continue;
+      }
+      throw normalizeFetchError(error, requestUrl);
+    }
+  }
+}
+
+function normalizeFetchError(error: unknown, requestUrl: string): unknown {
+  if (!(error instanceof Error)) {
+    return error;
+  }
+  const cause = (error as { cause?: unknown }).cause;
+  const causeCode =
+    typeof cause === 'object' && cause !== null && 'code' in cause
+      ? String((cause as { code?: unknown }).code)
+      : undefined;
+  if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
+    const details =
+      typeof cause === 'object' && cause !== null && 'message' in cause
+        ? String((cause as { message?: unknown }).message)
+        : 'connection timed out';
+    return new Error(`连接 GitCode 服务器超时: ${requestUrl}. ${details}`);
+  }
+  if (causeCode === 'UND_ERR_HEADERS_TIMEOUT' || causeCode === 'UND_ERR_RESPONSE_TIMEOUT') {
+    return new Error(`等待 GitCode 响应超时: ${requestUrl}`);
+  }
+  return error;
+}
+
+function resolveRequestBody(body: unknown, headers: Record<string, string>): RequestInit['body'] | undefined {
+  if (body === undefined) {
+    return undefined;
+  }
+
+  if (body === null) {
+    ensureHeader(headers, 'content-type', 'application/json');
+    return 'null';
+  }
+
+  if (typeof body === 'string') {
+    ensureHeader(headers, 'content-type', 'text/plain; charset=UTF-8');
+    return body;
+  }
+
+  if (typeof body === 'bigint') {
+    ensureHeader(headers, 'content-type', 'application/json');
+    return body.toString();
+  }
+
+  if (typeof body === 'number' || typeof body === 'boolean') {
+    ensureHeader(headers, 'content-type', 'application/json');
+    return JSON.stringify(body);
+  }
+
+  if (isURLSearchParams(body)) {
+    ensureHeader(headers, 'content-type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    return body;
+  }
+
+  if (isFormData(body) || isReadableStream(body)) {
+    return body as RequestInit['body'];
+  }
+
+  if (isBinaryBody(body) || isBlob(body)) {
+    return body as RequestInit['body'];
+  }
+
+  if (typeof body === 'object') {
+    ensureHeader(headers, 'content-type', 'application/json');
+    return JSON.stringify(body);
+  }
+
+  ensureHeader(headers, 'content-type', 'text/plain; charset=UTF-8');
+  return String(body);
+}
+
+function getHeaderKey(headers: Record<string, string>, name: string): string | undefined {
+  const target = name.toLowerCase();
+  return Object.keys(headers).find((key) => key.toLowerCase() === target);
+}
+
+function ensureHeader(headers: Record<string, string>, name: string, value: string): void {
+  const existingKey = getHeaderKey(headers, name);
+  if (existingKey) {
+    return;
+  }
+  headers[name] = value;
+}
+
+function isFormData(value: unknown): value is FormData {
+  return typeof FormData !== 'undefined' && value instanceof FormData;
+}
+
+function isURLSearchParams(value: unknown): value is URLSearchParams {
+  return typeof URLSearchParams !== 'undefined' && value instanceof URLSearchParams;
+}
+
+function isReadableStream(value: unknown): value is ReadableStream<unknown> {
+  return typeof ReadableStream !== 'undefined' && value instanceof ReadableStream;
+}
+
+function isBlob(value: unknown): value is Blob {
+  return typeof Blob !== 'undefined' && value instanceof Blob;
+}
+
+function isBinaryBody(value: unknown): value is BinaryLike {
+  if (typeof ArrayBuffer === 'undefined') {
+    return false;
+  }
+  return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
+}
+
+function formatBodyForLog(body: unknown): unknown {
+  if (body === undefined) {
+    return null;
+  }
+  if (isFormData(body)) {
+    return '[form-data]';
+  }
+  if (isReadableStream(body)) {
+    return '[readable-stream]';
+  }
+  if (isBinaryBody(body) || isBlob(body)) {
+    return '[binary-body]';
+  }
+  return body;
+}
+
 export async function httpRequest<T = unknown>(params: HttpRequestParams): Promise<T> {
   const { method, url, token, options } = params;
 
   const requestUrl = buildUrlWithQuery(url, options?.query);
 
   const headers: Record<string, string> = {
-    'content-type': 'application/json',
     ...(options?.headers ?? {}),
   };
 
@@ -86,51 +232,28 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
   }
 
   const init: RequestInit = { method, headers };
-  if (options?.body !== undefined) {
-    init.body = options.body;
+  const body = resolveRequestBody(options?.body, headers);
+  if (body !== undefined) {
+    init.body = body;
   }
 
   logHttp('request', {
     method,
     url: requestUrl,
     headers: redactHeaders(headers),
-    body: options?.body ?? null,
+    body: formatBodyForLog(options?.body),
   });
   const retries = options?.retries ?? 3;
-  let resp: Response;
-  for (let attempt = 0; ; attempt++) {
-    try {
-      resp = await fetch(requestUrl, init);
-      break;
-    } catch (error) {
-      if (attempt < retries) {
-        logHttp('retry', {
-          url: requestUrl,
-          attempt: attempt + 1,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        continue;
-      }
-      if (error instanceof Error) {
-        const cause = (error as { cause?: unknown }).cause;
-        const causeCode =
-          typeof cause === 'object' && cause !== null && 'code' in cause
-            ? String((cause as { code?: unknown }).code)
-            : undefined;
-        if (causeCode === 'UND_ERR_CONNECT_TIMEOUT') {
-          const details =
-            typeof cause === 'object' && cause !== null && 'message' in cause
-              ? String((cause as { message?: unknown }).message)
-              : 'connection timed out';
-          throw new Error(`连接 GitCode 服务器超时: ${requestUrl}. ${details}`);
-        }
-        if (causeCode === 'UND_ERR_HEADERS_TIMEOUT' || causeCode === 'UND_ERR_RESPONSE_TIMEOUT') {
-          throw new Error(`等待 GitCode 响应超时: ${requestUrl}`);
-        }
-      }
-      throw error;
-    }
-  }
+  const resp = await fetchWithRetries(requestUrl, init, {
+    retries,
+    onRetry: (attempt, error) => {
+      logHttp('retry', {
+        url: requestUrl,
+        attempt,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    },
+  });
 
   if (resp.status === 304 && cached) {
     if (typeof cached.payload === 'object' && cached.payload !== null) {
