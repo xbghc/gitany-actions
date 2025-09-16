@@ -55,6 +55,8 @@ title: gitcode 工具库
 
 - `Authorization: Bearer <token>`
 
+请求在网络连接失败时会自动重试 3 次，可通过 `retries` 选项自定义。
+
 环境变量：
 
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
@@ -147,6 +149,10 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 ### 2025-09-12 更新
 
 - 新增 Issue 列表 API 封装。
+
+### 2025-09-13 更新
+
+- 网络请求在连接失败时会自动重试 3 次，提高稳定性。
 
 ### 历史变更
 
