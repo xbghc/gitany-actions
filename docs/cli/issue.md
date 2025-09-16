@@ -85,7 +85,6 @@ gitcode issue create [owner] [repo] [title] [options]
 - `-m, --milestone <number>`: Add the issue to a milestone by number
 - `--security-hole <security-hole>`: Security hole level
 - `--template-path <template-path>`: Template path
-- `-w, --web`: Open the browser to create an issue
 - `--json`: Output raw JSON instead of formatted output
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
@@ -123,13 +122,11 @@ gitcode issue comment <issue> [body] [options]
 
 **Arguments**
 - `<issue>`: Issue URL, number, or OWNER/REPO/NUMBER
-- `[body]`: Comment body (will prompt if not provided)
+- `[body]`: Comment body. Required unless using `--body` or `--body-file`
 
 **Options**
 - `-b, --body <string>`: Supply a comment body
-- `-F, --body-file <file>`: Read body text from file (use "-" to read from standard input)
-- `-e, --editor`: Open text editor to write the comment
-- `-w, --web`: Open the browser to create a comment
+- `-F, --body-file <file>`: Read body text from a file
 - `--json`: Output raw JSON instead of formatted output
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
@@ -140,9 +137,6 @@ gitcode issue comment owner/repo/123 "This looks good to me"
 
 # Create comment on issue URL
 gitcode issue comment https://gitcode.com/owner/repo/issues/123 "LGTM"
-
-# Create comment using editor
-gitcode issue comment owner/repo/123 -e
 
 # Create comment using --repo flag
 gitcode issue comment 123 --repo owner/repo "My comment"

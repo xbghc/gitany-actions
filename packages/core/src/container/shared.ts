@@ -14,6 +14,17 @@ export const forward = [
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC',
 ];
 
+export function collectForwardEnv(): string[] {
+  const values: string[] = [];
+  for (const key of forward) {
+    const value = process.env[key];
+    if (value) {
+      values.push(`${key}=${value}`);
+    }
+  }
+  return values;
+}
+
 export async function ensureDocker() {
   try {
     await docker.ping();

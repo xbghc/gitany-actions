@@ -27,6 +27,7 @@ export {
   checkProjectFiles,
   installDependencies,
   installClaudeCli,
+  installGitcodeCli,
   chat,
   prepareImage,
   DockerUnavailableError,
@@ -38,5 +39,12 @@ export {
   collectDiagnostics,
   DiagnosticsCollectionError,
   cleanupPrContainers,
+  copyToContainer,
+  CopyToContainerError,
 } from './container';
-export type { ProjectCheckResult, ChatOptions, ChatResult } from './container';
+export type {
+  ProjectCheckResult,
+  ChatOptions,
+  ChatResult,
+  CopyToContainerOptions,
+} from './container';
