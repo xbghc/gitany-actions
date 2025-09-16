@@ -44,7 +44,7 @@ title: gitcode 工具库
 - `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
 - `PRComment`: PR 评论的类型定义，包含 `id`、`body`、`user` 等字段。
 - `PRCommentQueryOptions`: PR 评论查询选项，支持 `comment_type`（`diff_comment` | `pr_comment`）。
-- `ListIssuesQuery`: Issue 列表查询参数（`state`、`labels`、`page`、`per_page`）。
+- `ListIssuesQuery`: Issue 列表查询参数（`state`、`labels`、`page`、`per_page`、`sort`）。
 - `ListIssuesParams`: Issue 列表路径参数（`owner`、`repo`、`query?`）。
 - `Issue`: Issue 的字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
 - `ListIssuesResponse`: `Issue[]`。
