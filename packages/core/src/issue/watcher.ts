@@ -122,7 +122,7 @@ async function detectNewComments(
         const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
         state.lastCommentIdByIssue.set(issueNumber, highestId);
       }
-      break;
+      continue;
     }
 
     if (comments.length === 0) {
@@ -131,7 +131,7 @@ async function detectNewComments(
         state.lastCommentIdByIssue.set(issueNumber, 0);
         continue;
       }
-      break;
+      continue;
     }
 
     if (existingLastSeen === undefined) {
@@ -160,10 +160,12 @@ async function detectNewComments(
     }
 
     if (!hasNewComment) {
-      break;
+      continue;
     }
   }
 }
+
+export const __testing = { detectNewComments };
 
 function getStoreDir() {
   return path.join(resolveGitcodeSubdir('watchers'), 'issues');
