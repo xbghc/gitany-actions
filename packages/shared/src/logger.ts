@@ -3,12 +3,20 @@ import pino, { stdTimeFunctions, type Logger as PinoLogger, type LoggerOptions }
 
 type LogFormat = 'json' | 'human';
 
+const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
+export type LogLevel = (typeof LOG_LEVELS)[number];
+const LOG_LEVEL_SET = new Set<string>(LOG_LEVELS);
+
+function isLogLevel(value: string): value is LogLevel {
+  return LOG_LEVEL_SET.has(value);
+}
+
 // Resolve desired level from env; ignore invalid values
-function resolveLevel(): string | undefined {
-  const raw = (process.env.GITANY_LOG_LEVEL || process.env.LOG_LEVEL || '').trim().toLowerCase();
+function resolveLevel(): LogLevel | undefined {
+  const raw = (process.env.GITANY_LOG_LEVEL || '').trim().toLowerCase();
   if (!raw) return undefined;
-  const allowed = new Set(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
-  return allowed.has(raw) ? raw : undefined;
+  if (!isLogLevel(raw)) return undefined;
+  return raw;
 }
 
 function resolveFormat(): LogFormat {
@@ -144,7 +152,6 @@ class HumanReadableDestination extends Writable {
 }
 
 export type Logger = PinoLogger;
-export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
 
 // Track all created loggers so we can update levels globally (CLI flags)
 const registry: Logger[] = [];
