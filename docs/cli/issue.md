@@ -123,11 +123,11 @@ gitcode issue comment <issue> [body] [options]
 
 **Arguments**
 - `<issue>`: Issue URL, number, or OWNER/REPO/NUMBER
-- `[body]`: Comment body (will prompt if not provided)
+- `[body]`: Comment body. Required unless using `--body`, `--body-file`, or `--editor`
 
 **Options**
 - `-b, --body <string>`: Supply a comment body
-- `-F, --body-file <file>`: Read body text from file (use "-" to read from standard input)
+- `-F, --body-file <file>`: Read body text from a file
 - `-e, --editor`: Open text editor to write the comment
 - `-w, --web`: Open the browser to create a comment
 - `--json`: Output raw JSON instead of formatted output

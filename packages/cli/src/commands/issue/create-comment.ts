@@ -99,24 +99,17 @@ export async function createCommentAction(
     let finalBody = bodyArg || options.body || '';
 
     if (options.bodyFile) {
-      if (options.bodyFile === '-') {
-        finalBody = fs.readFileSync(0, 'utf-8').trim();
-      } else {
-        if (!fs.existsSync(options.bodyFile)) {
-          throw new Error(`File not found: ${options.bodyFile}`);
-        }
-        finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
+      if (!fs.existsSync(options.bodyFile)) {
+        throw new Error(`File not found: ${options.bodyFile}`);
       }
+      finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
     } else if (options.editor) {
       const template = `# Comment on Issue #${issueNumber}\n\n<!-- Write your comment below -->`;
       finalBody = await openEditor(template);
-    } else if (!finalBody) {
-      console.log('Enter comment body (press Ctrl+D when finished, or use -e/--editor):');
-      finalBody = fs.readFileSync(0, 'utf-8').trim();
     }
 
     if (!finalBody) {
-      throw new Error('Comment body is required');
+      throw new Error('Comment body is required. Use the body argument, --body, --body-file, or --editor.');
     }
 
     const comment = await client.issue.createComment({
@@ -151,9 +144,9 @@ export function createCommentCommand(): Command {
   return new Command('comment')
     .description('Create a comment on an issue')
     .argument('<issue>', 'Issue URL, number, or OWNER/REPO/NUMBER')
-    .argument('[body]', 'Comment body (will prompt if not provided)')
+    .argument('[body]', 'Comment body (required unless using --body, --body-file, or --editor)')
     .option('-b, --body <string>', 'Supply a comment body')
-    .option('-F, --body-file <file>', 'Read body text from file (use "-" to read from standard input)')
+    .option('-F, --body-file <file>', 'Read body text from a file')
     .option('-e, --editor', 'Open text editor to write the comment')
     .option('-w, --web', 'Open the browser to create a comment')
     .option('--json', 'Output raw JSON instead of formatted output')
