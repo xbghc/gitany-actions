@@ -228,17 +228,27 @@ async function main() {
   const timers = [];
   const loggingOptions = { verbose, showPrompt };
 
+  const issueWatchOptions = includeIssueComments
+    ? {
+        intervalSec: issueIntervalSec,
+        issueQuery: {
+          state: 'open',
+          page: 1,
+          per_page: 20,
+        },
+      }
+    : { enabled: false };
+
+  const pullRequestWatchOptions = includePullRequestComments
+    ? {
+        intervalSec: prIntervalSec,
+      }
+    : { enabled: false };
+
   const watcher = watchAiMentions(client, repoUrl, {
     mention: mentionToken,
-    issueIntervalSec,
-    prIntervalSec,
-    issueQuery: {
-      state: 'open',
-      page: 1,
-      per_page: 20,
-    },
-    includeIssueComments,
-    includePullRequestComments,
+    issue: issueWatchOptions,
+    pullRequest: pullRequestWatchOptions,
     chatOptions,
     chatExecutor: runChat ? createLoggedChatExecutor() : createDryRunExecutor(),
     replyWithComment: runChat,

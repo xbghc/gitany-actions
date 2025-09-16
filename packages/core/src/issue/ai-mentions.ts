@@ -36,19 +36,34 @@ export interface AiMentionContext {
   pullRequest?: PullRequest;
 }
 
+export interface IssueAiMentionWatchOptions {
+  /** Whether to monitor issue comments. Defaults to true. */
+  enabled?: boolean;
+  /** Polling interval (seconds) when monitoring issue comments. */
+  intervalSec?: number;
+  /** Query parameters used when listing issues for polling. */
+  issueQuery?: ListIssuesQuery;
+  /** Query parameters used when loading issue comments for context. */
+  commentQuery?: IssueCommentsQuery;
+}
+
+export interface PullRequestAiMentionWatchOptions {
+  /** Whether to monitor pull request review comments. Defaults to true. */
+  enabled?: boolean;
+  /** Polling interval (seconds) when monitoring pull request comments. */
+  intervalSec?: number;
+  /** Optional filter applied when fetching pull request comments. */
+  commentType?: 'diff_comment' | 'pr_comment';
+}
+
 export interface WatchAiMentionsOptions {
   mention?: string;
-  issueIntervalSec?: number;
-  prIntervalSec?: number;
-  issueQuery?: ListIssuesQuery;
-  issueCommentQuery?: IssueCommentsQuery;
-  prCommentType?: 'diff_comment' | 'pr_comment';
+  issue?: IssueAiMentionWatchOptions;
+  pullRequest?: PullRequestAiMentionWatchOptions;
   chatOptions?: ChatOptions;
   chatExecutor?: (repoUrl: string, prompt: string, options?: ChatOptions) => Promise<ChatResult>;
   buildPrompt?: (context: AiMentionContext) => string | Promise<string>;
   onChatResult?: (result: ChatResult, context: AiMentionContext) => void;
-  includeIssueComments?: boolean;
-  includePullRequestComments?: boolean;
   /** Whether to automatically reply to the mention with the chat output. Defaults to true. */
   replyWithComment?: boolean;
   /** Customizes the body used when posting the AI reply comment. */
@@ -89,6 +104,10 @@ export function watchAiMentions(
   const issueHandles: WatchIssueHandle[] = [];
   const prHandles: WatchPullRequestHandle[] = [];
   const replyEnabled = options.replyWithComment !== false;
+  const issueWatchOptions = (options.issue ?? {}) as IssueAiMentionWatchOptions;
+  const prWatchOptions = (options.pullRequest ?? {}) as PullRequestAiMentionWatchOptions;
+  const issueEnabled = issueWatchOptions.enabled ?? true;
+  const prEnabled = prWatchOptions.enabled ?? true;
 
   const handleMention = async (
     payload: {
@@ -121,7 +140,11 @@ export function watchAiMentions(
 
     let issueComments: IssueComment[] = [];
     try {
-      issueComments = await client.issue.comments(repoUrl, issueNumber, options.issueCommentQuery ?? {});
+      issueComments = await client.issue.comments(
+        repoUrl,
+        issueNumber,
+        issueWatchOptions.commentQuery ?? {},
+      );
     } catch (err) {
       logger.warn({ err, issueNumber }, '[watchAiMentions] failed to load issue comments');
     }
@@ -200,11 +223,11 @@ export function watchAiMentions(
     }
   };
 
-  if (options.includeIssueComments !== false) {
+  if (issueEnabled) {
     const issueHandle = watchIssues(client, repoUrl, {
-      intervalSec: options.issueIntervalSec,
-      issueQuery: options.issueQuery,
-      commentQuery: options.issueCommentQuery,
+      intervalSec: issueWatchOptions.intervalSec,
+      issueQuery: issueWatchOptions.issueQuery,
+      commentQuery: issueWatchOptions.commentQuery,
       onComment: (issue, comment) => {
         if (!mentionRegex.test(comment.body)) return;
         const issueNumber = Number(issue.number);
@@ -219,10 +242,10 @@ export function watchAiMentions(
     issueHandles.push(issueHandle);
   }
 
-  if (options.includePullRequestComments !== false) {
+  if (prEnabled) {
     const prHandle = watchPullRequest(client, repoUrl, {
-      intervalSec: options.prIntervalSec,
-      commentType: options.prCommentType,
+      intervalSec: prWatchOptions.intervalSec,
+      commentType: prWatchOptions.commentType,
       onComment: (pr, comment) => {
         if (!mentionRegex.test(comment.body)) return;
         void handleMention({

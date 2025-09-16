@@ -9,6 +9,8 @@ export { watchAiMentions, defaultPromptBuilder } from './issue/ai-mentions';
 export type { WatchIssueOptions, WatchIssueHandle } from './issue/watcher';
 export type {
   WatchAiMentionsOptions,
+  IssueAiMentionWatchOptions,
+  PullRequestAiMentionWatchOptions,
   AiMentionWatcherHandle,
   AiMentionContext,
   AiMentionSource,

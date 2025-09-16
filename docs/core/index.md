@@ -119,9 +119,16 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
 
 - `mention`: 触发标记，默认 `@AI`
 - `buildPrompt(context)`: 自定义提示语内容
-- `issueIntervalSec` / `prIntervalSec`: Issue 与 PR 轮询频率
+- `issue`: Issue 评论监听配置
+  - `enabled`: 是否监听 Issue 评论，默认 `true`
+  - `intervalSec`: Issue 轮询频率（秒）
+  - `issueQuery`: Issue 列表查询参数
+  - `commentQuery`: Issue 评论查询参数
+- `pullRequest`: PR 评论监听配置
+  - `enabled`: 是否监听 PR 评论，默认 `true`
+  - `intervalSec`: PR 轮询频率（秒）
+  - `commentType`: 仅拉取 `diff_comment` 或 `pr_comment`
 - `chatExecutor`: 自定义 chat 执行器，默认使用内置 `chat`
-- `includeIssueComments` / `includePullRequestComments`: 控制监听的评论类型
 - `replyWithComment`: 是否自动在 Issue/PR 下回复评论，默认 `true`
 - `buildReplyBody(result, context)`: 自定义回复内容
 - `onReplyCreated(reply, context)`: AI 回复成功创建时的回调
