@@ -232,6 +232,11 @@ async function main() {
     mention: mentionToken,
     issueIntervalSec,
     prIntervalSec,
+    issueQuery: {
+      state: 'open',
+      page: 1,
+      per_page: 20,
+    },
     includeIssueComments,
     includePullRequestComments,
     chatOptions,

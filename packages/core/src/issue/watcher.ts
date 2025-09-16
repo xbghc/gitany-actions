@@ -112,32 +112,39 @@ async function detectNewComments(
     }
 
     const { data: comments, notModified } = result;
-    if (notModified) continue;
-
     const existingLastSeen = state.lastCommentIdByIssue.get(issueNumber);
+
+    if (notModified) {
+      if (existingLastSeen === undefined) {
+        const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
+        state.lastCommentIdByIssue.set(issueNumber, highestId);
+      }
+      break;
+    }
 
     if (comments.length === 0) {
       if (existingLastSeen === undefined) {
         // 记录已建立的基线，即便当前还没有评论，后续新增的首条评论也能被捕获
         state.lastCommentIdByIssue.set(issueNumber, 0);
+        continue;
       }
-      continue;
+      break;
     }
 
     if (existingLastSeen === undefined) {
       const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-      if (highestId > 0) {
-        state.lastCommentIdByIssue.set(issueNumber, highestId);
-      }
+      state.lastCommentIdByIssue.set(issueNumber, highestId);
       continue;
     }
 
     const lastSeen = existingLastSeen;
 
     let maxId = lastSeen;
+    let hasNewComment = false;
     for (let i = comments.length - 1; i >= 0; i -= 1) {
       const comment = comments[i];
       if (comment.id > lastSeen) {
+        hasNewComment = true;
         options.onComment?.(issue, comment);
         if (comment.id > maxId) {
           maxId = comment.id;
@@ -147,6 +154,10 @@ async function detectNewComments(
 
     if (maxId !== lastSeen) {
       state.lastCommentIdByIssue.set(issueNumber, maxId);
+    }
+
+    if (!hasNewComment) {
+      break;
     }
   }
 }
