@@ -58,6 +58,7 @@ title: gitcode 工具库
 环境变量：
 
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
+- `GITCODE_API_RPM`：每分钟允许的请求数（默认 50，用于调试或调整限流队列）
 
 **Token 读取优先级**：
 1. 环境变量 `GITCODE_TOKEN`
@@ -151,3 +152,4 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 ### 历史变更
 
 - 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并通过 ETag 自动缓存未变更的响应；对外 API 与行为不变。
+- `httpRequest` 现支持全局限流队列，默认每分钟最多 50 次请求，并会在队列积压时指数级延长轮询间隔；可通过环境变量 `GITCODE_API_RPM` 进行调节以便调试或应对不同限额。
