@@ -12,7 +12,12 @@ import { API_BASE } from '../constants';
 export interface CreatePrCommentBody {
   /** Comment content. */
   body: string;
-  // TODO 还允许接收其它字段：path, position, need_to_resolve
+  /** File path to attach the comment to. */
+  path?: string;
+  /** Diff position (line index) for the comment. */
+  position?: number;
+  /** Whether the comment should resolve the thread. */
+  need_to_resolve?: boolean;
 }
 
 /**
