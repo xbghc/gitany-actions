@@ -49,14 +49,14 @@ export function watchIssues(
 
   const check = async () => {
     const startedAt = Date.now();
-    logger.info({ url }, '[watchIssues] poll start');
+    logger.info('[watchIssues] poll start');
     try {
       const { data: issues } = await fetchIssues(client, url, options);
       await detectNewComments(client, url, issues, state, options);
       await persistState(url, state);
-      logger.info({ url, durationMs: Date.now() - startedAt }, '[watchIssues] poll complete');
+      logger.info({ durationMs: Date.now() - startedAt }, '[watchIssues] poll complete');
     } catch (err) {
-      logger.error({ err, url, durationMs: Date.now() - startedAt }, '[watchIssues] poll failed');
+      logger.error({ err, durationMs: Date.now() - startedAt }, '[watchIssues] poll failed');
     }
   };
 
@@ -110,7 +110,7 @@ async function detectNewComments(
     try {
       result = await fetchIssueComments(client, url, issueNumber, options);
     } catch (err) {
-      logger.error({ err, url, issueNumber }, '[watchIssues] failed to fetch comments');
+      logger.error({ err, issueNumber }, '[watchIssues] failed to fetch comments');
       continue;
     }
 
@@ -195,7 +195,7 @@ function loadPersistedStateSync(url: string): WatcherState | null {
     }
     return { lastCommentIdByIssue: lastMap };
   } catch (err) {
-    logger.error({ url, err }, '[watchIssues] Failed to read persisted state');
+    logger.error({ err }, '[watchIssues] Failed to read persisted state');
     return null;
   }
 }
