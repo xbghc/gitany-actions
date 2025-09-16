@@ -221,6 +221,29 @@ console.log(container?.id);
 pnpm --filter @gitany/core cleanup
 ```
 
+### 将宿主机文件复制到容器
+
+`copyToContainer` 可将本地文件或目录打包后复制到指定容器目录中，并返回最终在容器内的路径。
+
+```ts
+import { copyToContainer } from '@gitany/core';
+
+const targetPath = await copyToContainer({
+  container,
+  srcPath: './artifacts/report.txt',
+  containerPath: '/tmp/workspace/',
+});
+
+console.log('文件已复制到容器内:', targetPath);
+```
+
+使用说明：
+
+- `containerPath` 以 `/` 结尾时，表示将文件或目录放入该目录下，并保留原文件名。
+- 若需要重命名文件，可传入完整的目标路径，例如 `/tmp/workspace/output.log`。
+- 目录同样支持复制，若希望重命名目录，可使用不带结尾 `/` 的路径（如 `/tmp/workspace/build-cache`）。
+- 该方法会自动在容器中创建缺失的父目录，并在必要时执行重命名操作。
+
 ### 通过 Claude Code 进行对话
 
 `chat(repoUrl, question, options)` 会在 Docker 容器中克隆项目、安装依赖与 Claude Code CLI，

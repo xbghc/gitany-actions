@@ -15,6 +15,8 @@ export { createWorkspaceContainer, ContainerCreationError } from './create-works
 export { executeStep, StepExecutionError } from './execute-step';
 export { collectDiagnostics, DiagnosticsCollectionError } from './collect-diagnostics';
 export { cleanupPrContainers } from './cleanup';
+export { copyToContainer, CopyToContainerError } from './copy-files';
 export type { ContainerOptions, TestShaBuildOptions, TestShaBuildResult } from './types';
 export type { ChatOptions, ChatResult } from './chat';
 export type { ProjectCheckResult } from './check-project-files';
+export type { CopyToContainerOptions } from './copy-files';
