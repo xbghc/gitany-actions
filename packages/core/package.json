@@ -20,6 +20,7 @@
     }
   },
   "dependencies": {
+    "@gitany/cli": "workspace:*",
     "@gitany/gitcode": "workspace:*",
     "@gitany/shared": "workspace:*",
     "dockerode": "^4.0.8",

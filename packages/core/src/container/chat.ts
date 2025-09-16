@@ -7,6 +7,7 @@ import { verifySha } from './verify-sha';
 import { checkoutSha } from './checkout-sha';
 import { installDependencies } from './install-dependencies';
 import { installClaudeCli } from './install-claude-cli';
+import { installGitcodeCli } from './install-gitcode-cli';
 import { executeStep } from './execute-step';
 
 export interface ChatOptions {
@@ -67,6 +68,8 @@ export async function chat(
         env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...registryEnv],
         log,
       });
+      const installCli = await installGitcodeCli({ container, log, verbose, env: registryEnv });
+      if (!installCli.success) return { success: false, error: installCli.output };
       const clone = await cloneRepo({ container, log, verbose });
       if (!clone.success) return { success: false, error: clone.output };
       const verify = await verifySha({ container, log, verbose });
