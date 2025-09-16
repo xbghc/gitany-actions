@@ -1,5 +1,21 @@
 #!/usr/bin/env node
 
+// 环境变量:
+// - TEST_REPO_URL: 必填，目标仓库 URL。
+// - TEST_MENTION: 可选，自定义触发标记，默认值为 @AI。
+// - TEST_ISSUE_INTERVAL: 可选，Issue 轮询间隔秒数。
+// - TEST_PR_INTERVAL: 可选，PR 轮询间隔秒数。
+// - TEST_WATCH_DURATION: 可选，监听持续秒数。
+// - TEST_INCLUDE_ISSUE_COMMENTS: 可选，设置为 "false" 时不监听 Issue 评论。
+// - TEST_INCLUDE_PR_COMMENTS: 可选，设置为 "false" 时不监听 PR 评论。
+// - TEST_RUN_CHAT: 可选，设置为 "false" 时仅进行 dry-run。
+// - TEST_SHA: 可选，chat 使用的目标 SHA。
+// - TEST_NODE_VERSION: 可选，chat 容器使用的 Node.js 版本。
+// - TEST_CHAT_KEEP_CONTAINER: 可选，设置为 "true" 时保留 chat 容器。
+// - TEST_CHAT_VERBOSE: 可选，设置为 "true" 时输出 chat 详细日志。
+// - TEST_VERBOSE: 可选，设置为 "true" 时打印评论正文等调试信息。
+// - TEST_SHOW_PROMPT: 可选，设置为 "true" 时输出生成的提示词。
+
 import { config } from 'dotenv';
 import { watchAiMentions, defaultPromptBuilder, chat } from '../../packages/core/dist/index.js';
 import { GitcodeClient } from '../../packages/gitcode/dist/index.js';
@@ -8,113 +24,12 @@ config({ path: new URL('.env', import.meta.url) });
 
 const DEFAULT_MENTION = '@AI';
 
-function usage() {
-  console.log(`
-用法: node test-ai-mentions.mjs [选项]
-
-选项:
-  --repo-url <url>          仓库 URL (默认: ${process.env.TEST_REPO_URL || '无'})
-  --mention <text>          触发标记 (默认: ${process.env.TEST_MENTION || DEFAULT_MENTION})
-  --issue-interval <sec>    Issue 轮询间隔秒数 (默认: ${process.env.TEST_ISSUE_INTERVAL || '5'})
-  --pr-interval <sec>       PR 轮询间隔秒数 (默认: ${process.env.TEST_PR_INTERVAL || '5'})
-  --issue-only              仅监听 Issue 评论
-  --pr-only                 仅监听 PR 评论
-  --duration <sec>          自动停止监听的秒数
-  --run-chat                实际调用 chat (默认模拟)
-  --chat-sha <sha>          chat 目标 SHA (默认: ${process.env.TEST_SHA || 'dev'})
-  --chat-node-version <v>   chat 容器 Node.js 版本 (默认: ${process.env.TEST_NODE_VERSION || '18'})
-  --chat-keep-container     chat 执行后保留容器
-  --chat-verbose            chat 执行输出详细日志
-  --show-prompt             打印拼装后的提示语
-  --verbose                 打印评论正文等更多信息
-  --help                    显示帮助信息
-`);
-}
-
-function expectValue(args, index, flag) {
-  if (index >= args.length) {
-    console.error(`错误: ${flag} 需要一个值`);
-    usage();
-    process.exit(1);
-  }
-  return args[index];
-}
-
-function parsePositiveNumber(raw, flag) {
-  const value = Number(raw);
-  if (!Number.isFinite(value) || value <= 0) {
-    console.error(`错误: ${flag} 需要正数, 收到 ${raw}`);
-    process.exit(1);
-  }
-  return value;
-}
-
-function parseArgs() {
-  const argv = process.argv.slice(2);
-  const opts = {
-    includeIssueComments: true,
-    includePullRequestComments: true,
-    runChat: true,
-    verbose: false,
-    showPrompt: false,
-  };
-
-  for (let i = 0; i < argv.length; i += 1) {
-    const arg = argv[i];
-    switch (arg) {
-      case '--help':
-        usage();
-        process.exit(0);
-      case '--repo-url':
-        opts.repoUrl = expectValue(argv, ++i, '--repo-url');
-        break;
-      case '--mention':
-        opts.mention = expectValue(argv, ++i, '--mention');
-        break;
-      case '--issue-interval':
-        opts.issueIntervalSec = parsePositiveNumber(expectValue(argv, ++i, '--issue-interval'), '--issue-interval');
-        break;
-      case '--pr-interval':
-        opts.prIntervalSec = parsePositiveNumber(expectValue(argv, ++i, '--pr-interval'), '--pr-interval');
-        break;
-      case '--issue-only':
-        opts.includePullRequestComments = false;
-        break;
-      case '--pr-only':
-        opts.includeIssueComments = false;
-        break;
-      case '--duration':
-        opts.durationSec = parsePositiveNumber(expectValue(argv, ++i, '--duration'), '--duration');
-        break;
-      case '--run-chat':
-        opts.runChat = true;
-        break;
-      case '--chat-sha':
-        opts.chatSha = expectValue(argv, ++i, '--chat-sha');
-        break;
-      case '--chat-node-version':
-        opts.chatNodeVersion = expectValue(argv, ++i, '--chat-node-version');
-        break;
-      case '--chat-keep-container':
-        opts.chatKeepContainer = true;
-        break;
-      case '--chat-verbose':
-        opts.chatVerbose = true;
-        break;
-      case '--show-prompt':
-        opts.showPrompt = true;
-        break;
-      case '--verbose':
-        opts.verbose = true;
-        break;
-      default:
-        console.error(`未知选项: ${arg}`);
-        usage();
-        process.exit(1);
-    }
-  }
-
-  return opts;
+function envBoolean(name, defaultValue) {
+  const raw = process.env[name];
+  if (raw === undefined) return defaultValue;
+  const normalized = raw.trim().toLowerCase();
+  if (!normalized) return defaultValue;
+  return ['1', 'true', 'yes', 'y', 'on'].includes(normalized);
 }
 
 function envNumber(name) {
@@ -226,68 +141,80 @@ function logReplyError(error, context) {
   }
 }
 
-function buildChatOptions(args) {
-  if (!args.runChat) return undefined;
+function buildChatOptions(runChat, chatKeepContainer, chatVerbose) {
+  if (!runChat) return undefined;
   const options = {};
-  const sha = args.chatSha || process.env.TEST_SHA;
+  const sha = (process.env.TEST_SHA || '').trim();
   if (sha) options.sha = sha;
-  const nodeVersion = args.chatNodeVersion || process.env.TEST_NODE_VERSION;
+  const nodeVersion = (process.env.TEST_NODE_VERSION || '').trim();
   if (nodeVersion) options.nodeVersion = nodeVersion;
-  if (args.chatKeepContainer) options.keepContainer = true;
-  if (args.chatVerbose) options.verbose = true;
+  if (chatKeepContainer) options.keepContainer = true;
+  if (chatVerbose) options.verbose = true;
   return options;
 }
 
 async function main() {
-  const args = parseArgs();
-  const repoUrl = args.repoUrl || process.env.TEST_REPO_URL;
+  const repoUrl = (process.env.TEST_REPO_URL || '').trim();
   if (!repoUrl) {
-    console.error('错误: 需要提供仓库 URL (--repo-url 或环境变量 TEST_REPO_URL)');
-    usage();
+    console.error('错误: 请设置 TEST_REPO_URL 环境变量。');
     process.exit(1);
   }
 
-  if (!args.includeIssueComments && !args.includePullRequestComments) {
+  const includeIssueComments = envBoolean('TEST_INCLUDE_ISSUE_COMMENTS', true);
+  const includePullRequestComments = envBoolean('TEST_INCLUDE_PR_COMMENTS', true);
+  if (!includeIssueComments && !includePullRequestComments) {
     console.error('错误: 至少需要监听 Issue 或 PR 评论中的一种');
     process.exit(1);
   }
 
-  const mentionToken = (args.mention || process.env.TEST_MENTION || DEFAULT_MENTION).trim();
-  const issueIntervalSec = args.issueIntervalSec || envNumber('TEST_ISSUE_INTERVAL');
-  const prIntervalSec = args.prIntervalSec || envNumber('TEST_PR_INTERVAL');
-  const durationSec = args.durationSec || envNumber('TEST_WATCH_DURATION');
+  const mentionToken = (process.env.TEST_MENTION || DEFAULT_MENTION).trim();
+  const issueIntervalSec = envNumber('TEST_ISSUE_INTERVAL');
+  const prIntervalSec = envNumber('TEST_PR_INTERVAL');
+  const durationSec = envNumber('TEST_WATCH_DURATION');
+  const runChat = envBoolean('TEST_RUN_CHAT', true);
+  const verbose = envBoolean('TEST_VERBOSE', false);
+  const showPrompt = envBoolean('TEST_SHOW_PROMPT', false);
+  const chatKeepContainer = envBoolean('TEST_CHAT_KEEP_CONTAINER', false);
+  const chatVerbose = envBoolean('TEST_CHAT_VERBOSE', false);
 
-  const chatOptions = buildChatOptions(args);
+  const chatOptions = buildChatOptions(runChat, chatKeepContainer, chatVerbose);
 
   console.log('👂 开始监听 AI 评论提及');
   console.log(`📦 仓库: ${repoUrl}`);
   console.log(`🏷️ 触发标记: ${mentionToken}`);
-  console.log(`📝 监听 Issue 评论: ${args.includeIssueComments ? '是' : '否'}`);
-  console.log(`📝 监听 PR 评论: ${args.includePullRequestComments ? '是' : '否'}`);
-  console.log(`🤖 chat 模式: ${args.runChat ? '实际调用' : '模拟 (dry-run)'}`);
+  console.log(`📝 监听 Issue 评论: ${includeIssueComments ? '是' : '否'}`);
+  console.log(`📝 监听 PR 评论: ${includePullRequestComments ? '是' : '否'}`);
+  console.log(`🤖 chat 模式: ${runChat ? '实际调用' : '模拟 (dry-run)'}`);
+  if (chatOptions?.sha) console.log(`🔗 chat 目标: ${chatOptions.sha}`);
+  if (chatOptions?.nodeVersion) console.log(`🟢 chat Node.js 版本: ${chatOptions.nodeVersion}`);
+  if (chatKeepContainer) console.log('🐳 chat 执行后将保留容器');
+  if (chatVerbose) console.log('🔍 chat 详细日志: 开启');
   if (issueIntervalSec) console.log(`⏱️ Issue 轮询间隔: ${issueIntervalSec}s`);
   if (prIntervalSec) console.log(`⏱️ PR 轮询间隔: ${prIntervalSec}s`);
   if (durationSec) console.log(`⌛ 自动停止: ${durationSec}s`);
+  if (showPrompt) console.log('📝 将输出生成的提示词');
+  if (verbose) console.log('🔍 将打印评论正文等调试信息');
 
   const client = new GitcodeClient();
   const timers = [];
+  const loggingOptions = { verbose, showPrompt };
 
   const watcher = watchAiMentions(client, repoUrl, {
     mention: mentionToken,
     issueIntervalSec,
     prIntervalSec,
-    includeIssueComments: args.includeIssueComments,
-    includePullRequestComments: args.includePullRequestComments,
+    includeIssueComments,
+    includePullRequestComments,
     chatOptions,
-    chatExecutor: args.runChat ? createLoggedChatExecutor() : createDryRunExecutor(),
-    replyWithComment: args.runChat,
+    chatExecutor: runChat ? createLoggedChatExecutor() : createDryRunExecutor(),
+    replyWithComment: runChat,
     buildPrompt: (context) => {
       const prompt = defaultPromptBuilder(context);
-      logMention(context, mentionToken, args, prompt);
+      logMention(context, mentionToken, loggingOptions, prompt);
       return prompt;
     },
     onChatResult: (result, context) => {
-      logChatResult(result, context, args.runChat);
+      logChatResult(result, context, runChat);
     },
     onReplyCreated: (reply, context) => {
       logReplySuccess(reply, context);
