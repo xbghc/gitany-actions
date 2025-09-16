@@ -11,7 +11,7 @@ export async function listCommand(
         const repoUrl = await resolveRepoUrl(url);
         const issues = await client.issue.list(repoUrl, {
           state: options.state as 'open' | 'closed' | 'all' | undefined,
-          labels: options.labels,
+          labels: options.label,
           page: options.page ? Number(options.page) : undefined,
           per_page: options.perPage ? Number(options.perPage) : undefined,
         });

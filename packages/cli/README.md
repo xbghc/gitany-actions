@@ -87,9 +87,15 @@ gitcode pr info settings owner repo
 # 列出 Issue
 gitcode issue list https://gitcode.com/owner/repo
 gitcode issue list https://gitcode.com/owner/repo --state closed
-
-# 查看 Issue 评论
-gitcode issue comments https://gitcode.com/owner/repo 1
+# 查看 Issue 详情
+gitcode issue view 42 https://gitcode.com/owner/repo
+# 查看 Issue 及其评论
+gitcode issue view 42 --repo owner/repo --comments
+# 编辑 Issue
+gitcode issue edit 42 --repo owner/repo --label bug --assignee dev
+# 关闭 / 重新打开 Issue
+gitcode issue close 42 --repo owner/repo
+gitcode issue reopen 42 --repo owner/repo
 ```
 
 ### URL 解析

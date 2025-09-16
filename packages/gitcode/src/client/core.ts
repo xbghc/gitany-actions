@@ -17,7 +17,7 @@ export class GitcodeClient {
 
   async request<T = unknown>(
     url: string,
-    method: 'GET' | 'POST' | 'PUT',
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH',
     options?: HttpRequestOptions,
   ): Promise<T> {
     return await httpRequest<T>({

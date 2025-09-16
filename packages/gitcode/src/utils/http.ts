@@ -3,7 +3,7 @@ import { createLogger } from '@gitany/shared';
 type BinaryLike = ArrayBuffer | NodeJS.ArrayBufferView;
 
 export type HttpRequestParams = {
-  method: 'GET' | 'POST' | 'PUT';
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH';
   url: string;
   token?: string;
   options?: HttpRequestOptions;
