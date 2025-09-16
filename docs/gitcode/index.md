@@ -60,6 +60,8 @@ title: gitcode 工具库
 环境变量：
 
 - `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
+- `GITCODE_HTTP_DEBUG`：开启 HTTP 调试日志，接受 `1`、`true`、`yes`、`on`、`debug` 等值
+- `GITCODE_HTTP_DEBUG_SHOW_SECRETS`：在调试日志中展示敏感头部（默认隐藏）
 
 **Token 读取优先级**：
 1. 环境变量 `GITCODE_TOKEN`

@@ -29,7 +29,7 @@ export function isNotModified(value: unknown): boolean {
   return typeof value === 'object' && value !== null && cacheHit.has(value as object);
 }
 
-const httpDebugFlag = process.env.GITCODE_HTTP_DEBUG || process.env.GITANY_HTTP_DEBUG || '';
+const httpDebugFlag = process.env.GITCODE_HTTP_DEBUG ?? '';
 const httpDebugEnabled = ['1', 'true', 'yes', 'on', 'debug']
   .includes(httpDebugFlag.trim().toLowerCase());
 const httpDebugShowSensitiveFlag = process.env.GITCODE_HTTP_DEBUG_SHOW_SECRETS || '';
