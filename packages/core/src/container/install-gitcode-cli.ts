@@ -65,7 +65,9 @@ if ! grep -Fq '.npm-global/bin' "$profile"; then
 fi
 `;
 
-    const step = await executeStep({
+    const outputs: string[] = [];
+
+    const linkStep = await executeStep({
       container,
       name: 'gitcode-cli-link',
       script,
@@ -74,8 +76,44 @@ fi
       env,
     });
 
+    outputs.push(linkStep.output);
+
+    if (!linkStep.success) {
+      const duration = Date.now() - startTime;
+      return {
+        success: false,
+        duration,
+        output: combineOutputs(outputs),
+      } satisfies StepResult;
+    }
+
+    const token = process.env.GITCODE_TOKEN?.trim();
+    if (token) {
+      const authStep = await syncGitcodeAuthConfig({
+        container,
+        log,
+        verbose,
+        env,
+        token,
+      });
+      outputs.push(authStep.output);
+
+      if (!authStep.success) {
+        const duration = Date.now() - startTime;
+        return {
+          success: false,
+          duration,
+          output: combineOutputs(outputs) || authStep.output,
+        } satisfies StepResult;
+      }
+    }
+
     const duration = Date.now() - startTime;
-    return { success: step.success, duration, output: step.output } satisfies StepResult;
+    return {
+      success: true,
+      duration,
+      output: combineOutputs(outputs),
+    } satisfies StepResult;
   } catch (error) {
     const duration = Date.now() - startTime;
     const message = error instanceof Error ? error.message : String(error);
@@ -164,4 +202,69 @@ fi`;
     const output = result.output.trim();
     throw new Error(output || `无法验证 gitcode CLI 目标目录权限: ${CLI_INSTALL_PATH}`);
   }
+}
+
+function combineOutputs(outputs: string[]): string {
+  return outputs.filter((value) => value.trim().length > 0).join('\n');
+}
+
+async function syncGitcodeAuthConfig({
+  container,
+  log,
+  verbose,
+  env,
+  token,
+}: StepOptions & { token: string }): Promise<StepResult> {
+  const envWithToken = [...(env ?? []), `GITCODE_TOKEN=${token}`];
+  const script = [
+    'set -e',
+    "node <<'NODE'",
+    "const fs = require('node:fs/promises');",
+    "const path = require('node:path');",
+    "const os = require('node:os');",
+    '',
+    'async function main() {',
+    '  const token = process.env.GITCODE_TOKEN;',
+    '  if (!token) {',
+    '    return;',
+    '  }',
+    "  const baseDir = path.join(os.homedir(), '.gitany', 'gitcode');",
+    '  await fs.mkdir(baseDir, { recursive: true });',
+    "  const configPath = path.join(baseDir, 'config.json');",
+    '  let existing = {};',
+    '  try {',
+    "    const raw = await fs.readFile(configPath, 'utf8');",
+    '    existing = JSON.parse(raw);',
+    '  } catch {',
+    '    existing = {};',
+    '  }',
+    '  const config = { ...existing, token };',
+    "  const serialized = JSON.stringify(config, null, 2) + '\n';",
+    '  await fs.writeFile(configPath, serialized, { mode: 0o600 });',
+    '  await fs.chmod(configPath, 0o600);',
+    "  process.stdout.write('gitcode auth config synced\n');",
+    '}',
+    '',
+    'main().catch((error) => {',
+    "  let message = 'unknown error';",
+    "  if (error && typeof error === 'object' && 'message' in error &&",
+    "      typeof error.message === 'string') {",
+    '    message = error.message;',
+    '  } else {',
+    '    message = String(error);',
+    '  }',
+    "  console.error('Failed to sync gitcode auth config: ' + message);",
+    '  process.exit(1);',
+    '});',
+    'NODE',
+  ].join('\n');
+
+  return await executeStep({
+    container,
+    name: 'gitcode-cli-auth',
+    script,
+    log,
+    verbose,
+    env: envWithToken,
+  });
 }
