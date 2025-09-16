@@ -48,15 +48,12 @@ export function watchIssues(
   const state = createWatcherState(url);
 
   const check = async () => {
-    const startedAt = Date.now();
-    logger.info('[watchIssues] poll start');
     try {
       const { data: issues } = await fetchIssues(client, url, options);
       await detectNewComments(client, url, issues, state, options);
       await persistState(url, state);
-      logger.info({ durationMs: Date.now() - startedAt }, '[watchIssues] poll complete');
     } catch (err) {
-      logger.error({ err, durationMs: Date.now() - startedAt }, '[watchIssues] poll failed');
+      logger.error({ err, url }, '[watchIssues] poll failed');
     }
   };
 
@@ -110,44 +107,37 @@ async function detectNewComments(
     try {
       result = await fetchIssueComments(client, url, issueNumber, options);
     } catch (err) {
-      logger.error({ err, issueNumber }, '[watchIssues] failed to fetch comments');
+      logger.error({ err, url, issueNumber }, '[watchIssues] failed to fetch comments');
       continue;
     }
 
     const { data: comments, notModified } = result;
-    const existingLastSeen = state.lastCommentIdByIssue.get(issueNumber);
+    if (notModified) continue;
 
-    if (notModified) {
-      if (existingLastSeen === undefined) {
-        const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-        state.lastCommentIdByIssue.set(issueNumber, highestId);
-      }
-      continue;
-    }
+    const existingLastSeen = state.lastCommentIdByIssue.get(issueNumber);
 
     if (comments.length === 0) {
       if (existingLastSeen === undefined) {
         // 记录已建立的基线，即便当前还没有评论，后续新增的首条评论也能被捕获
         state.lastCommentIdByIssue.set(issueNumber, 0);
-        continue;
       }
       continue;
     }
 
     if (existingLastSeen === undefined) {
       const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-      state.lastCommentIdByIssue.set(issueNumber, highestId);
+      if (highestId > 0) {
+        state.lastCommentIdByIssue.set(issueNumber, highestId);
+      }
       continue;
     }
 
     const lastSeen = existingLastSeen;
 
     let maxId = lastSeen;
-    let hasNewComment = false;
     for (let i = comments.length - 1; i >= 0; i -= 1) {
       const comment = comments[i];
       if (comment.id > lastSeen) {
-        hasNewComment = true;
         options.onComment?.(issue, comment);
         if (comment.id > maxId) {
           maxId = comment.id;
@@ -158,14 +148,8 @@ async function detectNewComments(
     if (maxId !== lastSeen) {
       state.lastCommentIdByIssue.set(issueNumber, maxId);
     }
-
-    if (!hasNewComment) {
-      continue;
-    }
   }
 }
-
-export const __testing = { detectNewComments };
 
 function getStoreDir() {
   return path.join(resolveGitcodeSubdir('watchers'), 'issues');
@@ -195,7 +179,7 @@ function loadPersistedStateSync(url: string): WatcherState | null {
     }
     return { lastCommentIdByIssue: lastMap };
   } catch (err) {
-    logger.error({ err }, '[watchIssues] Failed to read persisted state');
+    logger.error({ url, err }, '[watchIssues] Failed to read persisted state');
     return null;
   }
 }

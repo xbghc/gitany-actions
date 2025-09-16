@@ -44,7 +44,7 @@ title: gitcode 工具库
 - `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
 - `PRComment`: PR 评论的类型定义，包含 `id`、`body`、`user` 等字段。
 - `PRCommentQueryOptions`: PR 评论查询选项，支持 `comment_type`（`diff_comment` | `pr_comment`）。
-- `ListIssuesQuery`: Issue 列表查询参数（`state`、`labels`、`page`、`per_page`、`sort`）。
+- `ListIssuesQuery`: Issue 列表查询参数（`state`、`labels`、`page`、`per_page`）。
 - `ListIssuesParams`: Issue 列表路径参数（`owner`、`repo`、`query?`）。
 - `Issue`: Issue 的字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
 - `ListIssuesResponse`: `Issue[]`。
@@ -54,8 +54,6 @@ title: gitcode 工具库
 默认 API 基址：`https://gitcode.com/api/v5`，客户端固定使用请求头鉴权：
 
 - `Authorization: Bearer <token>`
-
-请求在网络连接失败时会自动重试 3 次，可通过 `retries` 选项自定义。
 
 环境变量：
 
@@ -149,10 +147,6 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 ### 2025-09-12 更新
 
 - 新增 Issue 列表 API 封装。
-
-### 2025-09-13 更新
-
-- 网络请求在连接失败时会自动重试 3 次，提高稳定性。
 
 ### 历史变更
 

@@ -119,24 +119,15 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
 
 - `mention`: 触发标记，默认 `@AI`
 - `buildPrompt(context)`: 自定义提示语内容
-- `issue`: Issue 评论监听配置
-  - `enabled`: 是否监听 Issue 评论，默认 `true`
-  - `intervalSec`: Issue 轮询频率（秒）
-  - `issueQuery`: Issue 列表查询参数
-  - `commentQuery`: Issue 评论查询参数
-- `pullRequest`: PR 评论监听配置
-  - `enabled`: 是否监听 PR 评论，默认 `true`
-  - `intervalSec`: PR 轮询频率（秒）
-  - `commentType`: 仅拉取 `diff_comment` 或 `pr_comment`
+- `issueIntervalSec` / `prIntervalSec`: Issue 与 PR 轮询频率
 - `chatExecutor`: 自定义 chat 执行器，默认使用内置 `chat`
+- `includeIssueComments` / `includePullRequestComments`: 控制监听的评论类型
 - `replyWithComment`: 是否自动在 Issue/PR 下回复评论，默认 `true`
 - `buildReplyBody(result, context)`: 自定义回复内容
 - `onReplyCreated(reply, context)`: AI 回复成功创建时的回调
 - `onReplyError(error, context)`: AI 回复失败时的回调
 
 若只希望监听但不自动回复，可设置 `replyWithComment: false`；如需对回复内容进行包装，例如附带原评论引用，可通过 `buildReplyBody` 返回自定义文本。
-
-默认提示语会包含仓库、Issue 与评论上下文，并明确要求 AI 使用中文进行回复。
 
 ## 工作原理
 
@@ -229,29 +220,6 @@ console.log(container?.id);
 ```bash
 pnpm --filter @gitany/core cleanup
 ```
-
-### 将宿主机文件复制到容器
-
-`copyToContainer` 可将本地文件或目录打包后复制到指定容器目录中，并返回最终在容器内的路径。
-
-```ts
-import { copyToContainer } from '@gitany/core';
-
-const targetPath = await copyToContainer({
-  container,
-  srcPath: './artifacts/report.txt',
-  containerPath: '/tmp/workspace/',
-});
-
-console.log('文件已复制到容器内:', targetPath);
-```
-
-使用说明：
-
-- `containerPath` 以 `/` 结尾时，表示将文件或目录放入该目录下，并保留原文件名。
-- 若需要重命名文件，可传入完整的目标路径，例如 `/tmp/workspace/output.log`。
-- 目录同样支持复制，若希望重命名目录，可使用不带结尾 `/` 的路径（如 `/tmp/workspace/build-cache`）。
-- 该方法会自动在容器中创建缺失的父目录，并在必要时执行重命名操作。
 
 ### 通过 Claude Code 进行对话
 

@@ -162,24 +162,9 @@ async function detectNewComments(
     if (pr.state !== 'open') continue;
 
     const { data: comments, notModified } = await fetchPrComments(client, url, pr.number, options);
+    if (notModified || !comments.length) continue;
+
     const lastSeen = state.lastCommentIdByPr.get(pr.number);
-
-    if (notModified) {
-      if (lastSeen === undefined) {
-        const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-        state.lastCommentIdByPr.set(pr.number, highestId);
-      }
-      break;
-    }
-
-    if (!comments.length) {
-      if (lastSeen === undefined) {
-        state.lastCommentIdByPr.set(pr.number, 0);
-        continue;
-      }
-      break;
-    }
-
     if (lastSeen === undefined) {
       // 首次建立基线：记录最新的评论 ID，避免历史评论触发
       state.lastCommentIdByPr.set(pr.number, comments[0].id);
@@ -188,20 +173,15 @@ async function detectNewComments(
 
     // 触发新增评论（按时间/ID 降序返回时，> lastSeen 即为新评论）
     let maxId = lastSeen;
-    let hasNewComment = false;
     for (let i = comments.length - 1; i >= 0; i--) {
       const c = comments[i];
       if (c.id > lastSeen) {
-        hasNewComment = true;
         options.onComment?.(pr, c);
         if (c.id > maxId) maxId = c.id;
       }
     }
     if (maxId !== lastSeen) {
       state.lastCommentIdByPr.set(pr.number, maxId);
-    }
-    if (!hasNewComment) {
-      break;
     }
   }
 }

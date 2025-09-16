@@ -16,7 +16,7 @@ title: Issues API
 ## 类型与导出
 
 ### 列表相关
-- `ListIssuesQuery`：Issue 列表查询参数（`state`、`labels`、`page`、`per_page`、`sort`）。
+- `ListIssuesQuery`：Issue 列表查询参数（`state`、`labels`、`page`、`per_page`）。
 - `ListIssuesParams`：包含 `owner`、`repo` 与可选 `query`。
 - `Issue`：Issue 的最小字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
 - `ListIssuesResponse`：`Issue[]`。
@@ -50,13 +50,12 @@ const client = new GitcodeClient({ token: process.env.GITCODE_TOKEN ?? null });
 // 1) 列表 Issues（通过 options.query 传参）
 const listUrl = listIssuesUrl('owner', 'repo');
 const issues = await client.request(listUrl, 'GET', {
-  query: { state: 'open', page: 1, per_page: 20, labels: 'bug', sort: 'updated' },
+  query: { state: 'open', page: 1, per_page: 20, labels: 'bug' },
 });
 
 // 也可通过模块方式调用：
 const issues2 = await client.issue.list('https://gitcode.com/owner/repo.git', {
   state: 'open',
-  sort: 'updated',
 });
 
 // 2) 列表 Issue 评论

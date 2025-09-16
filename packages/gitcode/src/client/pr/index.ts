@@ -25,9 +25,15 @@ export class GitcodeClientPr {
     return await getPullRequestSettings(this.client, owner, repo);
   }
 
-  async createComment(url: string, prNumber: number, body: string): Promise<CreatedPrComment> {
+  async createComment(
+    owner: string,
+    repo: string,
+    prNumber: number,
+    body: string,
+  ): Promise<CreatedPrComment> {
     return await createPrComment(this.client, {
-      url,
+      owner,
+      repo,
       number: prNumber,
       body: { body },
     });

@@ -17,9 +17,7 @@ export async function listIssues(
     throw new Error(`Invalid Git URL: ${url}`);
   }
   const apiUrl = listIssuesUrl(parsed.owner, parsed.repo);
-  const q: Record<string, string | number | boolean> = {
-    sort: 'updated',
-  };
+  const q: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(query)) {
     if (v !== undefined) {
       q[k] = v;

@@ -1,5 +1,5 @@
 import type Docker from 'dockerode';
-import { collectForwardEnv, docker, logger } from './shared';
+import { docker, logger } from './shared';
 import { prepareImage } from './prepare-image';
 import { createWorkspaceContainer } from './create-workspace-container';
 import { cloneRepo } from './clone-repo';
@@ -7,7 +7,6 @@ import { verifySha } from './verify-sha';
 import { checkoutSha } from './checkout-sha';
 import { installDependencies } from './install-dependencies';
 import { installClaudeCli } from './install-claude-cli';
-import { installGitcodeCli } from './install-gitcode-cli';
 import { executeStep } from './execute-step';
 
 export interface ChatOptions {
@@ -55,9 +54,6 @@ export async function chat(
     `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`,
   ];
 
-  const forwardedEnv = collectForwardEnv();
-  const sharedStepEnv = [...registryEnv, ...forwardedEnv];
-
   let container = options.container;
   const createdContainer = !container;
 
@@ -68,11 +64,9 @@ export async function chat(
       container = await createWorkspaceContainer({
         docker,
         image,
-        env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...sharedStepEnv],
+        env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...registryEnv],
         log,
       });
-      const installCli = await installGitcodeCli({ container, log, verbose, env: sharedStepEnv });
-      if (!installCli.success) return { success: false, error: installCli.output };
       const clone = await cloneRepo({ container, log, verbose });
       if (!clone.success) return { success: false, error: clone.output };
       const verify = await verifySha({ container, log, verbose });
@@ -81,9 +75,9 @@ export async function chat(
       if (!checkout.success) return { success: false, error: checkout.output };
     }
 
-    const installDeps = await installDependencies({ container, log, verbose, env: sharedStepEnv });
+    const installDeps = await installDependencies({ container, log, verbose, env: registryEnv });
     if (!installDeps.success) return { success: false, error: installDeps.output };
-    const installClaude = await installClaudeCli({ container, log, verbose, env: sharedStepEnv });
+    const installClaude = await installClaudeCli({ container, log, verbose, env: registryEnv });
     if (!installClaude.success) return { success: false, error: installClaude.output };
 
     const anthropicEnv: string[] = [];
@@ -93,8 +87,6 @@ export async function chat(
       }
     }
 
-    const chatEnv = [...anthropicEnv, ...forwardedEnv];
-
     const chatStep = await executeStep({
       container,
       name: 'claude',
@@ -102,7 +94,7 @@ export async function chat(
         `cd /tmp/workspace && ~/.npm-global/bin/claude -p ${JSON.stringify(
           question,
         )} 2>&1`,
-      env: chatEnv,
+      env: anthropicEnv,
       log,
       verbose,
     });

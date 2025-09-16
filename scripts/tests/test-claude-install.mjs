@@ -1,10 +1,5 @@
 #!/usr/bin/env node
 
-// 环境变量:
-// - TEST_NODE_VERSION: 可选，Docker 容器使用的 Node.js 版本，默认 20。
-// - TEST_VERBOSE: 可选，设置为 "true" 时输出详细安装日志。
-// - TEST_KEEP_CONTAINER: 可选，设置为 "true" 时在测试结束后保留容器。
-
 import Docker from '../../packages/core/node_modules/dockerode/lib/docker.js';
 import { createLogger } from '../../packages/shared/dist/index.js';
 import {
@@ -12,18 +7,49 @@ import {
   installClaudeCli,
 } from '../../packages/core/dist/index.js';
 
-function envBoolean(name, defaultValue) {
-  const raw = process.env[name];
-  if (raw === undefined) return defaultValue;
-  const normalized = raw.trim().toLowerCase();
-  if (!normalized) return defaultValue;
-  return ['1', 'true', 'yes', 'y', 'on'].includes(normalized);
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const options = {
+    nodeVersion: '20',
+    verbose: false,
+    keepContainer: false,
+  };
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    switch (arg) {
+      case '--node-version':
+        options.nodeVersion = args[++i];
+        break;
+      case '--verbose':
+      case '-v':
+        options.verbose = true;
+        break;
+      case '--keep-container':
+      case '-k':
+        options.keepContainer = true;
+        break;
+      case '--help':
+        console.log(`
+用法: node test-claude-install.mjs [选项]
+
+选项:
+  --node-version <v>     Node.js 版本 (默认: 20)
+  --verbose, -v          显示详细输出
+  --keep-container, -k   保留容器用于调试
+  --help                 显示帮助信息
+`);
+        process.exit(0);
+        break;
+      default:
+        console.error(`未知选项: ${arg}`);
+        process.exit(1);
+    }
+  }
+  return options;
 }
 
 async function main() {
-  const nodeVersion = (process.env.TEST_NODE_VERSION || '20').trim();
-  const verbose = envBoolean('TEST_VERBOSE', false);
-  const keepContainer = envBoolean('TEST_KEEP_CONTAINER', false);
+  const { nodeVersion, verbose, keepContainer } = parseArgs();
 
   const docker = new Docker();
   const log = createLogger('test:claude-install');
@@ -37,10 +63,6 @@ async function main() {
 
   try {
     console.log('⏳ 正在安装 Claude CLI...');
-    console.log(`🟢 Node.js 版本: ${nodeVersion}`);
-    if (verbose) {
-      console.log('🔍 详细模式: 开启');
-    }
     const result = await installClaudeCli({ container, log, verbose });
     if (verbose || !result.success) {
       console.log(result.output);

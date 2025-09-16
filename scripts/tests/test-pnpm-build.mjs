@@ -1,27 +1,32 @@
 #!/usr/bin/env node
 
-// 环境变量:
-// - TEST_REPO_URL: 必填，目标仓库 URL。
-// - TEST_SHA: 必填，要测试的提交 SHA 或分支。
-// - TEST_NODE_VERSION: 可选，Docker 容器使用的 Node.js 版本，默认 18。
-// - TEST_VERBOSE: 可选，设置为 "true" 时输出详细日志。
-// - TEST_KEEP_CONTAINER: 可选，设置为 "true" 时保留构建容器用于调试。
-
 import { testShaBuild } from '../../packages/core/dist/index.js';
 import { config } from 'dotenv';
 
 // 加载环境变量
 config({ path: new URL('.env', import.meta.url) });
 
-function envBoolean(name, defaultValue) {
-  const raw = process.env[name];
-  if (raw === undefined) return defaultValue;
-  const normalized = raw.trim().toLowerCase();
-  if (!normalized) return defaultValue;
-  return ['1', 'true', 'yes', 'y', 'on'].includes(normalized);
+function usage() {
+  console.log(`
+用法: node test-pnpm-build.mjs [选项]
+
+选项:
+  --repo-url <url>       仓库 URL (默认: ${process.env.TEST_REPO_URL})
+  --sha <hash>           提交 SHA 哈希 (默认: ${process.env.TEST_SHA})
+  --node-version <v>     Node.js 版本 (默认: ${process.env.TEST_NODE_VERSION || 18})
+  --verbose, -v          显示详细输出
+  --keep-container, -k   保留容器用于调试
+  --help                 显示帮助信息
+
+示例:
+  node test-pnpm-build.mjs
+  node test-pnpm-build.mjs --repo-url https://gitcode.com/user/repo --sha abc123
+  node test-pnpm-build.mjs --node-version 20 --verbose
+  node test-pnpm-build.mjs --keep-container
+`);
 }
 
-function showTroubleshootingGuide(result, repoUrl) {
+function showTroubleshootingGuide(result) {
   console.log('');
   console.log('🔧 故障排除指南:');
   console.log('');
@@ -38,9 +43,7 @@ function showTroubleshootingGuide(result, repoUrl) {
     console.log('❌ 仓库访问问题:');
     console.log('   - 检查仓库 URL 是否正确');
     console.log('   - 确认仓库是公开的或你有访问权限');
-    if (repoUrl) {
-      console.log(`   - 测试克隆: git clone ${repoUrl}`);
-    }
+    console.log('   - 测试克隆: git clone ' + process.env.TEST_REPO_URL);
     console.log('');
   }
 
@@ -108,8 +111,8 @@ function showTroubleshootingGuide(result, repoUrl) {
   }
 
   console.log('💡 调试建议:');
-  console.log('   1. 将 TEST_VERBOSE 设置为 true 查看详细输出');
-  console.log('   2. 将 TEST_KEEP_CONTAINER 设置为 true 保留容器进行手动调试');
+  console.log('   1. 使用 --verbose 参数查看详细输出');
+  console.log('   2. 使用 --keep-container 保留容器进行手动调试');
   console.log('   3. 检查网络连接和代理设置');
   console.log('   4. 验证 Node.js 版本兼容性');
   console.log('   5. 确认项目确实是 pnpm 项目');
@@ -119,16 +122,67 @@ function showTroubleshootingGuide(result, repoUrl) {
   console.log('');
 }
 
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const options = {};
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    switch (arg) {
+      case '--help':
+        usage();
+        process.exit(0);
+
+      case '--repo-url':
+        options.repoUrl = args[++i];
+        break;
+
+      case '--sha':
+        options.sha = args[++i];
+        break;
+
+      case '--node-version':
+        options.nodeVersion = args[++i];
+        break;
+
+      case '--verbose':
+      case '-v':
+        options.verbose = true;
+        break;
+
+      case '--keep-container':
+      case '-k':
+        options.keepContainer = true;
+        break;
+
+      default:
+        console.error(`未知选项: ${arg}`);
+        usage();
+        process.exit(1);
+    }
+  }
+
+  return options;
+}
+
 async function main() {
   try {
-    const repoUrl = (process.env.TEST_REPO_URL || '').trim();
-    const sha = (process.env.TEST_SHA || '').trim();
-    const nodeVersion = (process.env.TEST_NODE_VERSION || '18').trim();
-    const verbose = envBoolean('TEST_VERBOSE', false);
-    const keepContainer = envBoolean('TEST_KEEP_CONTAINER', false);
+    // 解析命令行参数
+    const cliArgs = parseArgs();
 
+    // 配置测试参数
+    const repoUrl = cliArgs.repoUrl || process.env.TEST_REPO_URL;
+    const sha = cliArgs.sha || process.env.TEST_SHA;
+    const nodeVersion = cliArgs.nodeVersion || process.env.TEST_NODE_VERSION || '18';
+    const verbose = cliArgs.verbose || false;
+    const keepContainer = cliArgs.keepContainer || false;
+
+    // 验证必要参数
     if (!repoUrl || !sha) {
-      console.error('错误: 请设置 TEST_REPO_URL 和 TEST_SHA 环境变量。');
+      console.error('错误: 请提供仓库 URL 和 SHA 提交哈希');
+      console.log('可以通过命令行参数或环境变量 TEST_REPO_URL 和 TEST_SHA 设置');
+      usage();
       process.exit(1);
     }
 
@@ -136,8 +190,8 @@ async function main() {
     console.log(`📦 仓库: ${repoUrl}`);
     console.log(`🔗 SHA: ${sha}`);
     console.log(`🟢 Node.js 版本: ${nodeVersion}`);
-    if (verbose) console.log('🔍 详细模式: 开启');
-    if (keepContainer) console.log('🐳 保留容器: 开启');
+    if (verbose) console.log(`🔍 详细模式: 开启`);
+    if (keepContainer) console.log(`🐳 保留容器: 开启`);
     console.log('');
 
     // 执行测试
@@ -147,7 +201,7 @@ async function main() {
     const result = await testShaBuild(repoUrl, sha, {
       nodeVersion,
       verbose,
-      keepContainer,
+      keepContainer
     });
 
     const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
@@ -194,7 +248,7 @@ async function main() {
       console.log(`   错误: ${result.error || '未知错误'}`);
 
       // 显示故障排除指南
-      showTroubleshootingGuide(result, repoUrl);
+      showTroubleshootingGuide(result);
 
       if (keepContainer && result.diagnostics.containerId) {
         console.log(`🐳 容器已保留用于调试，ID: ${result.diagnostics.containerId}`);

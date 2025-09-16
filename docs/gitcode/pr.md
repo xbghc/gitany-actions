@@ -58,16 +58,15 @@ const pr = await client.request(createPath, 'POST', { body: JSON.stringify(body)
 也可直接使用 `GitcodeClient` 提供的封装方法：
 
 ```ts
-const repoUrl = 'https://gitcode.com/owner/repo';
-const pulls2 = await client.pr.list(repoUrl, { state: 'open' });
-const pr2 = await client.pr.create(repoUrl, { title: '修复', head: 'feat/x' });
+const pulls2 = await client.pr.list('owner', 'repo', { state: 'open' });
+const pr2 = await client.pr.create('owner', 'repo', { title: '修复', head: 'feat/x' });
 ```
 
 或使用模块方式调用：
 
 ```ts
-const pulls3 = await client.pr.list(repoUrl, { state: 'open' });
-const pr3 = await client.pr.create(repoUrl, { title: '修复', head: 'feat/x' });
+const pulls3 = await client.pr.list('owner', 'repo', { state: 'open' });
+const pr3 = await client.pr.create('owner', 'repo', { title: '修复', head: 'feat/x' });
 ```
 
 ### 新增功能：PR 设置和评论
@@ -78,13 +77,15 @@ const settings = await client.pr.getSettings('owner', 'repo');
 console.log('允许合并提交:', settings.allow_merge_commits);
 
 // 获取 PR 评论
-const comments = await client.pr.comments(repoUrl, 123);
+const comments = await client.pr.comments('owner', 'repo', 123);
 comments.forEach(comment => {
   console.log(comment.user.login, comment.body);
 });
 
 // 创建 PR 评论
-const comment = await client.pr.createComment(repoUrl, 123, '这个修复看起来不错！');
+const comment = await client.pr.createComment('owner', 'repo', 123, {
+  body: '这个修复看起来不错！'
+});
 console.log('评论创建成功:', comment.id);
 ```
 
@@ -140,8 +141,10 @@ interface CreatePrCommentBody {
 
 ```typescript
 interface CreatePrCommentParams {
-  /** 仓库 URL（HTTP 或 SSH） */
-  url: string;
+  /** 仓库所有者（用户或组织） */
+  owner: string;
+  /** 仓库名称（不带.git） */
+  repo: string;
   /** PR 编号 */
   number: number;
   /** 评论数据 */
@@ -156,7 +159,7 @@ interface CreatePrCommentParams {
 ```typescript
 interface CreatedPrComment {
   /** 评论 ID */
-  id: number;
+  id: string;
   /** 评论内容 */
   body: string;
 }

@@ -8,7 +8,6 @@ import type {
   CreatedPrComment,
 } from '../../api/pr/create-comment';
 import { createPrCommentUrl, createdPrCommentSchema } from '../../api/pr/create-comment';
-import { parseGitUrl } from '../../utils';
 
 /**
  * Creates a new comment on a pull request.
@@ -20,14 +19,7 @@ export async function createPrComment(
   client: GitcodeClient,
   params: CreatePrCommentParams,
 ): Promise<CreatedPrComment> {
-  const parsed = parseGitUrl(params.url);
-  const owner = parsed?.owner;
-  const repo = parsed?.repo;
-  if (!owner || !repo) {
-    throw new Error(`Invalid repository URL: ${params.url}`);
-  }
-
-  const url = createPrCommentUrl(owner, repo, params.number);
+  const url = createPrCommentUrl(params.owner, params.repo, params.number);
   const response = await client.request(url, 'POST', {
     body: JSON.stringify(params.body),
   });
