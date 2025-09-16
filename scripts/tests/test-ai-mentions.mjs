@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { config } from 'dotenv';
-import { watchAiMentions, defaultPromptBuilder } from '../../packages/core/dist/index.js';
+import { watchAiMentions, defaultPromptBuilder, chat } from '../../packages/core/dist/index.js';
 import { GitcodeClient } from '../../packages/gitcode/dist/index.js';
 
 config({ path: new URL('.env', import.meta.url) });
@@ -132,6 +132,12 @@ function sourceLabel(source) {
   return source === 'pr_review_comment' ? 'PR 评论' : 'Issue 评论';
 }
 
+function promptPreview(prompt) {
+  const normalized = prompt.replace(/\s+/g, ' ').trim();
+  const shortened = normalized.length > 80 ? `${normalized.slice(0, 77)}...` : normalized;
+  return shortened.replace(/"/g, '\\"');
+}
+
 function logMention(context, mentionToken, options, prompt) {
   const header = `[${formatTimestamp()}] 🔔 检测到 ${sourceLabel(context.commentSource)} 中的 ${mentionToken}`;
   console.log('\n' + header);
@@ -156,13 +162,27 @@ function logMention(context, mentionToken, options, prompt) {
 
 function createDryRunExecutor() {
   return async () => {
+    console.log('   - (dry-run) 跳过执行 "claude -p ..."');
     console.log('🤖 (dry-run) 已捕获到提及, 未实际调用 chat。');
     return { success: true, output: 'Dry-run: chat 未执行。' };
   };
 }
 
+function createLoggedChatExecutor() {
+  return async (repoUrl, prompt, options) => {
+    console.log(`   - 执行命令 "claude -p ${promptPreview(prompt)}"`);
+    return chat(repoUrl, prompt, options);
+  };
+}
+
 function logChatResult(result, context, runChat) {
   if (result.success) {
+    if (runChat) {
+      const length = result.output ? result.output.length : 0;
+      console.log(`   - 获取到返回结果 (${length} 字符)`);
+    } else {
+      console.log('   - (dry-run) 获取到模拟结果');
+    }
     if (runChat) {
       console.log(`✅ chat 成功 (评论 ID ${context.mentionComment.id})`);
       if (result.output) {
@@ -174,6 +194,7 @@ function logChatResult(result, context, runChat) {
       console.log(`✅ 已模拟 chat (评论 ID ${context.mentionComment.id})`);
     }
   } else {
+    console.error('   - 获取返回结果失败');
     console.error(`❌ chat 失败 (评论 ID ${context.mentionComment.id})`);
     if (result.error) {
       console.error(result.error);
@@ -183,11 +204,15 @@ function logChatResult(result, context, runChat) {
 
 function logReplySuccess(reply, context) {
   const source = sourceLabel(reply.source);
+  console.log(
+    `   - 发送自动回复 (${source}, 原评论 ID ${context.mentionComment.id}, 新评论 ID ${reply.comment.id})`,
+  );
   console.log(`💬 已自动回复 ${source} (原评论 ID ${context.mentionComment.id})`);
   console.log(`   • 新评论 ID: ${reply.comment.id}`);
 }
 
 function logReplyError(error, context) {
+  console.error('   - 自动回复失败，详情如下');
   console.error(`⚠️ 自动回复失败 (评论 ID ${context.mentionComment.id})`);
   if (error) {
     console.error(error);
@@ -247,7 +272,7 @@ async function main() {
     includeIssueComments: args.includeIssueComments,
     includePullRequestComments: args.includePullRequestComments,
     chatOptions,
-    chatExecutor: args.runChat ? undefined : createDryRunExecutor(),
+    chatExecutor: args.runChat ? createLoggedChatExecutor() : createDryRunExecutor(),
     replyWithComment: args.runChat,
     buildPrompt: (context) => {
       const prompt = defaultPromptBuilder(context);

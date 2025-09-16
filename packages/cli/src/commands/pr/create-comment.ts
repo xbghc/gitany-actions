@@ -44,8 +44,9 @@ export async function createPrCommentAction(
   body: string,
   options: CreatePrCommentOptions = {},
 ) {
+  let repoUrl = '';
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(options.repo);
+    repoUrl = await resolveRepoUrl(options.repo);
 
     // 解析仓库URL获取 owner/repo（复用通用解析器）
     const parsed = parseGitUrl(repoUrl);
@@ -69,7 +70,7 @@ export async function createPrCommentAction(
       return;
     }
 
-    const comment = await client.pr.createComment(owner, repo, prNum, body);
+    const comment = await client.pr.createComment(repoUrl, prNum, body);
 
     if (options.json) {
       console.log(JSON.stringify(comment, null, 2));
@@ -88,7 +89,19 @@ export async function createPrCommentAction(
       console.log(`\n💡 Next steps:`);
       console.log(`   • Reply to comment:  gitcode pr comment ${prNumber} --body "Your reply"`);
     }
-  }, 'Failed to create PR comment');
+  }, (error) => {
+    const prNum = Number.parseInt(prNumber, 10);
+    const debugInfo = {
+      repoUrl,
+      prNumber: Number.isNaN(prNum) ? prNumber : prNum,
+      hasBody: Boolean(body && body.trim()),
+      bodyLength: body?.length ?? 0,
+      options,
+      error,
+    };
+    console.error('Failed to create PR comment', debugInfo);
+    return 'Failed to create PR comment';
+  });
 }
 
 export function createPrCommentCommand(): Command {

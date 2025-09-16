@@ -19,10 +19,8 @@ export interface CreatePrCommentBody {
  * Path params for create PR comment request.
  */
 export type CreatePrCommentParams = {
-  /** Repository owner (user or organization). */
-  owner: string;
-  /** Repository name (without .git). */
-  repo: string;
+  /** Repository URL (HTTP/SSH). */
+  url: string;
   /** PR number. */
   number: number;
   /** Comment data. */
@@ -33,7 +31,7 @@ export type CreatePrCommentParams = {
  * Complete PR Comment representation with all fields.
  */
 export const createdPrCommentSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   body: z.string(),
 });
 
