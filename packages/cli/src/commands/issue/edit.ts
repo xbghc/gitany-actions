@@ -75,61 +75,57 @@ export async function editAction(
         throw new Error('No changes specified. Use options like --title, --body, --label, --assignee, or --state.');
       }
 
-      try {
-        const issue = await client.issue.update(repoUrl, issueNumber, updateBody);
+      const issue = await client.issue.update(repoUrl, issueNumber, updateBody);
 
-        if (options.json) {
-          console.log(JSON.stringify(issue, null, 2));
-          return;
-        }
+      if (options.json) {
+        console.log(JSON.stringify(issue, null, 2));
+        return;
+      }
 
-        console.log(`\n✅ Issue #${issue.number} updated successfully.`);
-        console.log(`   Title: ${issue.title}`);
-        console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`);
-        const issueUrl = (issue as { html_url?: string }).html_url;
-        if (issueUrl) {
-          console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
-        }
+      console.log(`\n✅ Issue #${issue.number} updated successfully.`);
+      console.log(`   Title: ${issue.title}`);
+      console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`);
+      const issueUrl = (issue as { html_url?: string }).html_url;
+      if (issueUrl) {
+        console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
+      }
 
-        const labels = (issue as { labels?: unknown }).labels;
-        if (Array.isArray(labels) && labels.length > 0) {
-          const labelNames = labels
-            .map((label) => {
-              if (!label || typeof label !== 'object') {
-                return String(label ?? '');
-              }
-              const record = label as Record<string, unknown>;
-              return String(record.name ?? record.title ?? record.id ?? '');
-            })
-            .filter(Boolean)
-            .join(', ');
-          if (labelNames) {
-            console.log(`   Labels: ${labelNames}`);
-          }
+      const labels = (issue as { labels?: unknown }).labels;
+      if (Array.isArray(labels) && labels.length > 0) {
+        const labelNames = labels
+          .map((label) => {
+            if (!label || typeof label !== 'object') {
+              return String(label ?? '');
+            }
+            const record = label as Record<string, unknown>;
+            return String(record.name ?? record.title ?? record.id ?? '');
+          })
+          .filter(Boolean)
+          .join(', ');
+        if (labelNames) {
+          console.log(`   Labels: ${labelNames}`);
         }
+      }
 
-        const assignee = (issue as { assignee?: unknown }).assignee;
-        if (assignee) {
-          console.log(`   Assignee: ${formatUserName(assignee)}`);
-        }
+      const assignee = (issue as { assignee?: unknown }).assignee;
+      if (assignee) {
+        console.log(`   Assignee: ${formatUserName(assignee)}`);
+      }
 
-        if (state) {
-          console.log(`\nℹ️  You can reopen or close the issue anytime using: gitcode issue ${state === 'open' ? 'close' : 'reopen'} ${issue.number}`);
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (/\b404\b/.test(message)) {
-          if (options.json) {
-            console.log('null');
-          } else {
-            console.log('Issue not found.');
-          }
-          return;
-        }
-        throw err;
+      if (state) {
+        console.log(`\nℹ️  You can reopen or close the issue anytime using: gitcode issue ${state === 'open' ? 'close' : 'reopen'} ${issue.number}`);
       }
     },
     'Failed to edit issue',
+    {
+      onNotFound: () => {
+        if (options.json) {
+          console.log('null');
+        } else {
+          console.log('Issue not found.');
+        }
+      },
+    },
   );
 }
 
