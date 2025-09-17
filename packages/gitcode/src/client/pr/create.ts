@@ -12,5 +12,5 @@ export async function createPullRequest(
     throw new Error(`Invalid Git URL: ${url}`);
   }
   const apiUrl = createPullUrl(owner, repo);
-  return await client.request(apiUrl, 'POST', { body });
+  return await client.request(apiUrl, 'POST', { json: body });
 }

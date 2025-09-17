@@ -21,7 +21,7 @@ export async function createIssueComment(
 ): Promise<CreatedIssueComment> {
   const url = createIssueCommentUrl(params.owner, params.repo, params.number);
   const response = await client.request(url, 'POST', {
-    body: params.body,
+    json: params.body,
   });
 
   const result = createdIssueCommentSchema.safeParse(response);

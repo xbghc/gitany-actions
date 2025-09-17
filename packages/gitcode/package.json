@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@gitany/shared": "workspace:*",
+    "got": "^14.4.8",
     "zod": "^4.1.7"
   }
 }

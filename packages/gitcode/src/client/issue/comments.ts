@@ -24,6 +24,6 @@ export async function listIssueComments(
       q[k] = v;
     }
   }
-  const json = await client.request(apiUrl, 'GET', { query: q });
+  const json = await client.request(apiUrl, 'GET', { searchParams: q });
   return issueCommentSchema.array().parse(json);
 }

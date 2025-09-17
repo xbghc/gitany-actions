@@ -156,6 +156,13 @@ parseGitUrl('git@gitcode.com:owner/repo.git');
 
 - 网络请求在连接失败时会自动重试 3 次，提高稳定性。
 
+### 2025-09-17 更新
+
+- `utils/http.ts` 迁移至 `got`，并将 `HttpRequestOptions` 的字段与其约定对齐：
+  - `query` 更名为 `searchParams`
+  - 推荐使用 `json` 传递 JSON 负载，仍可通过 `body` 发送原始数据
+- 由于字段名称调整，调用方需要同步更新对应参数。
+
 ### 历史变更
 
-- 内部已统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并通过 ETag 自动缓存未变更的响应；对外 API 与行为不变。
+- 内部统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并在 2025-09-17 起交由 `got` 处理重试与解析逻辑，同时保留基于 ETag 的缓存。

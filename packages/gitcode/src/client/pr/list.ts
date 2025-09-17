@@ -23,6 +23,6 @@ export async function listPullRequests(
       query[k] = v;
     }
   }
-  const json = await client.request(apiUrl, 'GET', { query });
+  const json = await client.request(apiUrl, 'GET', { searchParams: query });
   return listPullsResponseSchema.parse(json);
 }
