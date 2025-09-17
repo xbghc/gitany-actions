@@ -9,7 +9,7 @@ import { createLogger } from '@gitany/shared';
 import { chat } from '../container';
 import { watchIssues, type WatchIssueHandle } from '../issue/watcher';
 import { watchPullRequest, type WatchPullRequestHandle } from '../pr/watcher';
-import { defaultPromptBuilder } from './prompt';
+import { defaultPromptBuilder } from '../prompt/prompt';
 import {
   createAiReplyComment,
   defaultReplyBodyBuilder,
