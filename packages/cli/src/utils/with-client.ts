@@ -15,7 +15,14 @@ export async function withClient(
     const client = new GitcodeClient();
     await fn(client);
   } catch (error) {
-    let message = 'Gitcode client operation failed';
+    let message: string;
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (typeof errorHandler === 'string') {
+      message = errorHandler;
+    } else {
+      message = 'Gitcode client operation failed';
+    }
 
     if (typeof errorHandler === 'function') {
       try {
@@ -26,8 +33,6 @@ export async function withClient(
       } catch (handlerError) {
         logger.error({ error: handlerError }, 'withClient error handler threw');
       }
-    } else if (typeof errorHandler === 'string' && errorHandler.trim().length > 0) {
-      message = errorHandler;
     }
 
     logger.error({ error }, message);

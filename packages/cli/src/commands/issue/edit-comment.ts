@@ -47,17 +47,23 @@ export async function editCommentAction(
 
     logger.debug({ owner, repo, comment_id }, 'Updating comment');
 
-    const comment = await client.issue.updateComment({
-      owner,
-      repo,
-      comment_id,
-      body: { body: finalBody },
-    });
+    try {
+      const comment = await client.issue.updateComment({
+        owner,
+        repo,
+        comment_id,
+        body: { body: finalBody },
+      });
 
-    if (options.json) {
-      console.log(JSON.stringify(comment, null, 2));
-    } else {
-      console.log(`✅ Comment ${comment.id} updated successfully.`);
+      if (options.json) {
+        console.log(JSON.stringify(comment, null, 2));
+      } else {
+        console.log(`✅ Comment ${comment.id} updated successfully.`);
+      }
+    } catch (error) {
+      throw new Error(
+        `Failed to update comment ${comment_id} in ${owner}/${repo}.`,
+      );
     }
   }, 'Failed to edit comment');
 }
