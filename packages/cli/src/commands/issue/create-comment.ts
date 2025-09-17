@@ -89,9 +89,6 @@ export async function createCommentAction(
       console.log('\n💬 Comment created successfully!');
       console.log('\n📋 Comment Details:');
       console.log(`   ID:       ${comment.id}`);
-      console.log(`   Author:   ${comment.user.name || comment.user.login}`);
-      console.log(`   Created:  ${new Date(comment.created_at).toLocaleString()}`);
-
       const bodyPreview = comment.body.length > 100
         ? comment.body.substring(0, 100) + '...'
         : comment.body;

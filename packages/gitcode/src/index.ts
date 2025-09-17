@@ -50,6 +50,7 @@ export type {
   UpdateIssueBody,
   UpdateIssueParams,
   UpdatedIssue,
+  UpdatedIssueComment,
 } from './api/issue';
 export {
   listIssuesUrl,

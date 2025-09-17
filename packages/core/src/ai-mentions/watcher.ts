@@ -157,7 +157,7 @@ export function watchAiMentions(
           {
             source: context.commentSource,
             body: replyBody,
-            comment: { id: finalComment.id }, // Simplified comment object
+            comment: { id: finalComment.id, body: replyBody }, // Simplified comment object
           },
           context,
         );

@@ -36,7 +36,7 @@ export type CreatePrCommentParams = {
  * Complete PR Comment representation with all fields.
  */
 export const createdPrCommentSchema = z.object({
-  id: z.string(),
+  id: z.number(),
   body: z.string(),
 });
 

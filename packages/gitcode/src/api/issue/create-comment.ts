@@ -34,22 +34,6 @@ export type CreateIssueCommentParams = {
 export const createdIssueCommentSchema = z.object({
   id: z.number(),
   body: z.string(),
-  user: z.object({
-    id: z.string(),
-    login: z.string(),
-    name: z.string(),
-    avatar_url: z.string(),
-    html_url: z.string(),
-  }),
-  created_at: z.string(),
-  updated_at: z.string(),
-  target: z.object({
-    issue: z.object({
-      id: z.number(),
-      title: z.string(),
-      number: z.number(),
-    }),
-  }),
 });
 
 export type CreatedIssueComment = z.infer<typeof createdIssueCommentSchema>;
@@ -57,11 +41,7 @@ export type CreatedIssueComment = z.infer<typeof createdIssueCommentSchema>;
 /**
  * Builds the request path for creating an issue comment.
  */
-export function createIssueCommentUrl(
-  owner: string,
-  repo: string,
-  issueNumber: number,
-): string {
+export function createIssueCommentUrl(owner: string, repo: string, issueNumber: number): string {
   return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
     repo,
   )}/issues/${issueNumber}/comments`;
