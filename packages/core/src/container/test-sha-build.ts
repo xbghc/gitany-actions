@@ -32,8 +32,8 @@ export async function testShaBuild(
   if (verbose) {
     try {
       log.level = 'debug';
-    } catch {
-      /* ignore */
+    } catch (error) {
+      log.debug({ error }, 'Failed to set log level to debug');
     }
   }
 
@@ -193,8 +193,8 @@ export async function testShaBuild(
     if (!keepContainer && container) {
       try {
         await container.remove({ force: true });
-      } catch {
-        /* ignore */
+      } catch (error) {
+        log.warn({ error, containerId: container.id }, 'Failed to remove container');
       }
     }
   }

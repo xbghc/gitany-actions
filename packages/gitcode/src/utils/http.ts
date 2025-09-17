@@ -292,7 +292,8 @@ function stringifyBody(body: unknown): string {
   }
   try {
     return JSON.stringify(body);
-  } catch {
+  } catch (error) {
+    httpLogger.warn({ error }, 'Failed to stringify body, falling back to String()');
     return String(body);
   }
 }

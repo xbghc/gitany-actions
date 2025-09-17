@@ -34,14 +34,14 @@ program.hook('preAction', (thisCommand) => {
   if (level) {
     try {
       setGlobalLogLevel(level);
-    } catch {
-      /* ignore */
+    } catch (error) {
+      logger.debug({ error }, 'Failed to set global log level');
     }
     // Also update local logger instance
     try {
       logger.level = level;
-    } catch {
-      /* ignore */
+    } catch (error) {
+      logger.debug({ error }, 'Failed to set local log level');
     }
   }
 });
