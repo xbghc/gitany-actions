@@ -1,8 +1,0 @@
-#!/usr/bin/env sh
-set -e
-
-# Lint check
-pnpm lint
-
-# Docs sync check
-node scripts/check-docs-updated.mjs
