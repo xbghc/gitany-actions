@@ -1,14 +1,7 @@
 import type Docker from 'dockerode';
-import { collectForwardEnv, docker, logger } from './shared';
-import { prepareImage } from './prepare-image';
-import { createWorkspaceContainer } from './create-workspace-container';
-import { cloneRepo } from './clone-repo';
-import { verifySha } from './verify-sha';
-import { checkoutSha } from './checkout-sha';
-import { installDependencies } from './install-dependencies';
-import { installClaudeCli } from './install-claude-cli';
-import { installGitcodeCli } from './install-gitcode-cli';
+import { collectForwardEnv, logger } from './shared';
 import { executeStep } from './execute-step';
+import { createChatContainer, ChatContainerCreationError } from './create-chat-container';
 
 export interface ChatOptions {
   /** Optional existing container to use. */
@@ -42,49 +35,45 @@ export async function chat(
   options: ChatOptions = {},
 ): Promise<ChatResult> {
   const sha = options.sha ?? 'dev';
-  const nodeVersion = options.nodeVersion ?? '18';
   const verbose = options.verbose ?? false;
   const keepContainer = options.keepContainer ?? false;
   const log = logger.child({ scope: 'core:container', func: 'chat', sha });
 
-  const defaultRegistry = 'https://registry.npmmirror.com';
-  const npmRegistry = options.npmRegistry ?? process.env.NPM_CONFIG_REGISTRY ?? defaultRegistry;
-  const pnpmRegistry = options.pnpmRegistry ?? process.env.PNPM_CONFIG_REGISTRY ?? defaultRegistry;
-  const registryEnv = [
-    `NPM_CONFIG_REGISTRY=${npmRegistry}`,
-    `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`,
-  ];
-
   const forwardedEnv = collectForwardEnv();
-  const sharedStepEnv = [...registryEnv, ...forwardedEnv];
 
   let container = options.container;
   const createdContainer = !container;
 
   try {
     if (!container) {
-      const image = `node:${nodeVersion}`;
-      await prepareImage({ docker, image, verbose, log });
-      container = await createWorkspaceContainer({
-        docker,
-        image,
-        env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...sharedStepEnv],
+      try {
+        container = await createChatContainer({
+          repoUrl,
+          sha,
+          nodeVersion: options.nodeVersion,
+          verbose: options.verbose,
+          npmRegistry: options.npmRegistry,
+          pnpmRegistry: options.pnpmRegistry,
+        });
+      } catch (err) {
+        if (err instanceof ChatContainerCreationError) {
+          return { success: false, error: `Container creation failed at step ${err.step}: ${err.message}` };
+        }
+        return { success: false, error: 'Container creation failed' };
+      }
+    } else {
+      // For existing containers, reset the workspace to a clean state.
+      const resetStep = await executeStep({
+        container,
+        name: 'git-reset',
+        script: 'cd /tmp/workspace && git reset --hard HEAD && git clean -fdx',
         log,
+        verbose,
       });
-      const installCli = await installGitcodeCli({ container, log, verbose, env: sharedStepEnv });
-      if (!installCli.success) return { success: false, error: installCli.output };
-      const clone = await cloneRepo({ container, log, verbose });
-      if (!clone.success) return { success: false, error: clone.output };
-      const verify = await verifySha({ container, log, verbose });
-      if (!verify.success) return { success: false, error: verify.output };
-      const checkout = await checkoutSha({ container, log, verbose });
-      if (!checkout.success) return { success: false, error: checkout.output };
+      if (!resetStep.success) {
+        return { success: false, error: `Failed to reset workspace: ${resetStep.output}` };
+      }
     }
-
-    const installDeps = await installDependencies({ container, log, verbose, env: sharedStepEnv });
-    if (!installDeps.success) return { success: false, error: installDeps.output };
-    const installClaude = await installClaudeCli({ container, log, verbose, env: sharedStepEnv });
-    if (!installClaude.success) return { success: false, error: installClaude.output };
 
     const anthropicEnv: string[] = [];
     for (const [key, value] of Object.entries(process.env)) {

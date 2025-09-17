@@ -68,6 +68,12 @@ export interface WatchAiMentionsOptions {
   onReplyCreated?: (reply: AiMentionReply, context: AiMentionContext) => void;
   /** Invoked when posting the AI reply fails. */
   onReplyError?: (error: unknown, context: AiMentionContext) => void;
+  /**
+   * Whether to use a shared container for chat commands.
+   * When true, a single container is created and reused for all chat commands.
+   * When false (default), a new container is created for each command.
+   */
+  useSharedContainer?: boolean;
 }
 
 export interface AiMentionWatcherHandle {

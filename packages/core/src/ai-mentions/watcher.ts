@@ -6,7 +6,8 @@ import {
   type PullRequest,
 } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
-import { chat } from '../container';
+import type Docker from 'dockerode';
+import { chat, createChatContainer } from '../container';
 import { watchIssues, type WatchIssueHandle } from '../issue/watcher';
 import { watchPullRequest, type WatchPullRequestHandle } from '../pr/watcher';
 import { defaultPromptBuilder } from './prompt';
@@ -31,6 +32,22 @@ export function watchAiMentions(
   const issueHandles: WatchIssueHandle[] = [];
   const prHandles: WatchPullRequestHandle[] = [];
   const replyEnabled = options.replyWithComment !== false;
+  const useSharedContainer = options.useSharedContainer ?? false;
+
+  let containerPromise: Promise<Docker.Container> | undefined;
+  if (useSharedContainer) {
+    containerPromise = createChatContainer({
+      repoUrl,
+      sha: options.chatOptions?.sha,
+      nodeVersion: options.chatOptions?.nodeVersion,
+      npmRegistry: options.chatOptions?.npmRegistry,
+      pnpmRegistry: options.chatOptions?.pnpmRegistry,
+      verbose: options.chatOptions?.verbose,
+    });
+    containerPromise.catch((err) => {
+      logger.error({ err }, '[watchAiMentions] failed to create shared container');
+    });
+  }
 
   const handleMention = async (
     payload: {
@@ -93,7 +110,21 @@ export function watchAiMentions(
     }
 
     try {
-      const result = await chatExecutor(repoUrl, prompt, options.chatOptions);
+      let container: Docker.Container | undefined;
+      if (containerPromise) {
+        try {
+          container = await containerPromise;
+        } catch (err) {
+          logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] shared container is not available');
+          // Optionally, decide if you want to fallback to creating a new container or just fail.
+          // For now, we'll just fail.
+          return;
+        }
+      }
+
+      const chatOptions = { ...options.chatOptions, container };
+      const result = await chatExecutor(repoUrl, prompt, chatOptions);
+
       options.onChatResult?.(result, context);
       if (!result.success) {
         logger.error({ issueNumber, commentId: comment.id, error: result.error }, '[watchAiMentions] chat failed');
@@ -178,22 +209,35 @@ export function watchAiMentions(
     prHandles.push(prHandle);
   }
 
+  const stop = async () => {
+    for (const handle of issueHandles) {
+      try {
+        handle.stop();
+      } catch (err) {
+        logger.error({ err }, '[watchAiMentions] failed to stop issue watcher');
+      }
+    }
+    for (const handle of prHandles) {
+      try {
+        handle.stop();
+      } catch (err) {
+        logger.error({ err }, '[watchAiMentions] failed to stop PR watcher');
+      }
+    }
+    if (containerPromise) {
+      try {
+        const container = await containerPromise;
+        await container.remove({ force: true });
+        logger.info('[watchAiMentions] shared container removed');
+      } catch (err) {
+        logger.error({ err }, '[watchAiMentions] failed to remove shared container');
+      }
+    }
+  };
+
   return {
     stop() {
-      for (const handle of issueHandles) {
-        try {
-          handle.stop();
-        } catch (err) {
-          logger.error({ err }, '[watchAiMentions] failed to stop issue watcher');
-        }
-      }
-      for (const handle of prHandles) {
-        try {
-          handle.stop();
-        } catch (err) {
-          logger.error({ err }, '[watchAiMentions] failed to stop PR watcher');
-        }
-      }
+      void stop();
     },
   } satisfies AiMentionWatcherHandle;
 }

@@ -11,6 +11,10 @@ export { installDependencies } from './install-dependencies';
 export { installClaudeCli } from './install-claude-cli';
 export { installGitcodeCli } from './install-gitcode-cli';
 export { chat } from './chat';
+export {
+  createChatContainer,
+  ChatContainerCreationError,
+} from './create-chat-container';
 export { prepareImage, DockerUnavailableError, ImagePullError } from './prepare-image';
 export { createWorkspaceContainer, ContainerCreationError } from './create-workspace-container';
 export { executeStep, StepExecutionError } from './execute-step';
@@ -19,5 +23,6 @@ export { cleanupPrContainers } from './cleanup';
 export { copyToContainer, CopyToContainerError } from './copy-files';
 export type { ContainerOptions, TestShaBuildOptions, TestShaBuildResult } from './types';
 export type { ChatOptions, ChatResult } from './chat';
+export type { CreateChatContainerOptions } from './create-chat-container';
 export type { ProjectCheckResult } from './check-project-files';
 export type { CopyToContainerOptions } from './copy-files';
