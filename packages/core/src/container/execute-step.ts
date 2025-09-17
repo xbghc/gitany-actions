@@ -106,9 +106,6 @@ export async function executeStep({
       const context = error.name === 'StepStreamError' ? '流错误' : '执行异常';
       throw new StepExecutionError(`步骤 ${name} ${context}: ${error.message}`, duration);
     }
-    throw new StepExecutionError(
-      `步骤 ${name} 执行异常: ${String(error)}`,
-      duration,
-    );
+    throw new StepExecutionError(`步骤 ${name} 执行异常: ${String(error)}`, duration);
   }
 }

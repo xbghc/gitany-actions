@@ -94,7 +94,12 @@ function logMention(context, mentionToken, options, prompt) {
     const body = context.mentionComment.body?.trim();
     if (body) {
       console.log('   • 评论正文:');
-      console.log(body.split('\n').map((line) => `     ${line}`).join('\n'));
+      console.log(
+        body
+          .split('\n')
+          .map((line) => `     ${line}`)
+          .join('\n'),
+      );
     }
   }
   if (options.showPrompt) {
@@ -157,9 +162,7 @@ function logReplySuccess(reply, context) {
   const source = sourceLabel(reply.source);
   // The new watcher logic handles logging for placeholder creation and editing internally.
   // This callback is now only for the final success case.
-  console.log(
-    `   - [后台] 成功更新占位评论 (${source}, 评论 ID ${context.mentionComment.id})`,
-  );
+  console.log(`   - [后台] 成功更新占位评论 (${source}, 评论 ID ${context.mentionComment.id})`);
   console.log(`💬 [后台] 已通过编辑评论进行回复 (评论 ID ${context.mentionComment.id})`);
 }
 
@@ -207,8 +210,8 @@ async function main() {
   const durationSec = envNumber('TEST_WATCH_DURATION');
 
   const client = new GitcodeClient();
-  const mentionToken = (process.env.TEST_MENTION || '').trim()
-    || (await resolveDefaultMention(client, verbose));
+  const mentionToken =
+    (process.env.TEST_MENTION || '').trim() || (await resolveDefaultMention(client, verbose));
   const chatOptions = buildChatOptions(runChat, chatKeepContainer, chatVerbose);
 
   console.log('👂 开始监听 AI 评论提及');
@@ -279,10 +282,12 @@ async function main() {
   });
 
   if (durationSec) {
-    timers.push(setTimeout(() => {
-      console.log('⏰ 达到设定监听时长, 自动停止');
-      stopWatcher(0);
-    }, durationSec * 1000));
+    timers.push(
+      setTimeout(() => {
+        console.log('⏰ 达到设定监听时长, 自动停止');
+        stopWatcher(0);
+      }, durationSec * 1000),
+    );
   }
 
   console.log('✅ 监听已启动，按 Ctrl+C 可随时退出。');

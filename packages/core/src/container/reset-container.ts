@@ -12,4 +12,3 @@ export async function resetContainer(
   await removeContainer(pr.id);
   await createPrContainer(repoUrl, pr, options);
 }
-

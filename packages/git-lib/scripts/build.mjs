@@ -29,7 +29,7 @@ async function build() {
     sourcesContent: true,
     outfile: 'dist/index.js',
     // Avoid bundling CJS deps into ESM output to prevent dynamic require
-    external: ['cross-spawn']
+    external: ['cross-spawn'],
   });
 }
 

@@ -12,16 +12,10 @@ export default defineConfig({
       { text: '贡献指南', link: '/contributing' },
     ],
     sidebar: {
-      '/gitcode/': [
-        { text: '概览', link: '/gitcode/' },
-      ],
-      '/cli/': [
-        { text: '概览', link: '/cli/' },
-      ],
+      '/gitcode/': [{ text: '概览', link: '/gitcode/' }],
+      '/cli/': [{ text: '概览', link: '/cli/' }],
     },
     outline: [2, 3],
-    socialLinks: [
-      { icon: 'github', link: 'https://gitcode.com' },
-    ],
+    socialLinks: [{ icon: 'github', link: 'https://gitcode.com' }],
   },
 });

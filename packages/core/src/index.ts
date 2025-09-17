@@ -3,50 +3,52 @@
  *
  */
 
-export { watchPullRequest } from './pr/watcher';
-export { watchIssues } from './issue/watcher';
-export { watchAiMentions, defaultPromptBuilder } from './ai-mentions';
-export type { WatchIssueOptions, WatchIssueHandle } from './issue/watcher';
+export { IssueWatcher, watchIssues } from './watcher/issue';
+export type { WatchIssueOptions } from './watcher/issue';
+export { PullRequestWatcher, watchPullRequest } from './watcher/pr';
+export type { WatchPullRequestOptions } from './watcher/pr';
+
+export { defaultPromptBuilder, watchAiMentions } from './ai-mentions';
 export type {
-  WatchAiMentionsOptions,
-  AiMentionWatcherHandle,
   AiMentionContext,
-  AiMentionSource,
   AiMentionReply,
+  AiMentionSource,
+  AiMentionWatcherHandle,
   BuildAiMentionPrompt,
   BuildAiMentionReplyBody,
+  WatchAiMentionsOptions,
 } from './ai-mentions';
 export {
-  createPrContainer,
-  resetContainer,
-  removeContainer,
-  getContainer,
-  getContainerStatus,
-  testShaBuild,
-  cloneRepo,
-  verifySha,
+  chat,
   checkoutSha,
   checkProjectFiles,
-  installDependencies,
-  installClaudeCli,
-  installGitcodeCli,
-  chat,
-  prepareImage,
-  DockerUnavailableError,
-  ImagePullError,
-  createWorkspaceContainer,
-  ContainerCreationError,
-  executeStep,
-  StepExecutionError,
-  collectDiagnostics,
-  DiagnosticsCollectionError,
   cleanupPrContainers,
+  cloneRepo,
+  collectDiagnostics,
+  ContainerCreationError,
   copyToContainer,
   CopyToContainerError,
+  createPrContainer,
+  createWorkspaceContainer,
+  DiagnosticsCollectionError,
+  DockerUnavailableError,
+  executeStep,
+  getContainer,
+  getContainerStatus,
+  ImagePullError,
+  installClaudeCli,
+  installDependencies,
+  installGitcodeCli,
+  prepareImage,
+  removeContainer,
+  resetContainer,
+  StepExecutionError,
+  testShaBuild,
+  verifySha,
 } from './container';
 export type {
-  ProjectCheckResult,
   ChatOptions,
   ChatResult,
   CopyToContainerOptions,
+  ProjectCheckResult,
 } from './container';

@@ -3,14 +3,8 @@
  */
 
 import type { GitcodeClient } from '../core';
-import type {
-  UpdateIssueCommentParams,
-  UpdatedIssueComment,
-} from '../../api/issue/update-comment';
-import {
-  updateIssueCommentUrl,
-  updatedIssueCommentSchema,
-} from '../../api/issue/update-comment';
+import type { UpdateIssueCommentParams, UpdatedIssueComment } from '../../api/issue/update-comment';
+import { updateIssueCommentUrl, updatedIssueCommentSchema } from '../../api/issue/update-comment';
 
 /**
  * Updates an existing comment on an issue.

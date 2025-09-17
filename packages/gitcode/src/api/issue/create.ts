@@ -48,19 +48,24 @@ export const createdIssueSchema = z.object({
   state: z.string(),
   title: z.string(),
   body: z.string().nullable().optional(),
-  user: z.object({
-    id: z.string(),
-    login: z.string(),
-    name: z.string(),
-  }).optional(),
-  assignee: z.object({
-    id: z.string(),
-    login: z.string(),
-    name: z.string(),
-    avatar_url: z.string(),
-    html_url: z.string(),
-    type: z.string(),
-  }).nullable().optional(),
+  user: z
+    .object({
+      id: z.string(),
+      login: z.string(),
+      name: z.string(),
+    })
+    .optional(),
+  assignee: z
+    .object({
+      id: z.string(),
+      login: z.string(),
+      name: z.string(),
+      avatar_url: z.string(),
+      html_url: z.string(),
+      type: z.string(),
+    })
+    .nullable()
+    .optional(),
   repository: z.object({
     id: z.number(),
     full_name: z.string(),
@@ -73,24 +78,32 @@ export const createdIssueSchema = z.object({
   }),
   created_at: z.string(),
   updated_at: z.string(),
-  labels: z.array(z.object({
-    id: z.number(),
-    name: z.string(),
-    color: z.string(),
-  })).optional(),
+  labels: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        color: z.string(),
+      }),
+    )
+    .optional(),
   issue_state: z.string().optional(),
   priority: z.number().optional(),
   issue_type: z.string().optional(),
-  issue_state_detail: z.object({
-    title: z.string(),
-    serial: z.number(),
-    id: z.number(),
-  }).optional(),
-  issue_type_detail: z.object({
-    title: z.string(),
-    id: z.number(),
-    is_system: z.boolean(),
-  }).optional(),
+  issue_state_detail: z
+    .object({
+      title: z.string(),
+      serial: z.number(),
+      id: z.number(),
+    })
+    .optional(),
+  issue_type_detail: z
+    .object({
+      title: z.string(),
+      id: z.number(),
+      is_system: z.boolean(),
+    })
+    .optional(),
   comments: z.number().optional(),
   parent_id: z.number().optional(),
   url: z.string().optional(),

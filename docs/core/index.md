@@ -20,50 +20,55 @@ import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient();
 
-// 监控 PR 状态变化和评论
-const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
-  onOpen: (pr) => {
-    console.log(`PR #${pr.number} 已打开: ${pr.title}`);
-  },
-  onClosed: (pr) => {
-    console.log(`PR #${pr.number} 已关闭: ${pr.title}`);
-  },
-  onMerged: (pr) => {
-    console.log(`PR #${pr.number} 已合并: ${pr.title}`);
-  },
-  onComment: (pr, comment) => {
-    console.log(`PR #${pr.number} 有新评论: ${comment.body}`);
-  },
-  intervalSec: 10 // 每10秒检查一次
+// 创建一个 PR 监视器实例
+const prWatcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
+  onOpen: (pr) => console.log(`PR #${pr.number} 已打开: ${pr.title}`),
+  onClosed: (pr) => console.log(`PR #${pr.number} 已关闭: ${pr.title}`),
+  onMerged: (pr) => console.log(`PR #${pr.number} 已合并: ${pr.title}`),
+  onComment: (pr, comment) => console.log(`PR #${pr.number} 有新评论: ${comment.body}`),
+  intervalSec: 10, // 每10秒检查一次
 });
 
-// 停止监控
-// watcher.stop();
+// 如需启动后台周期性监控
+prWatcher.start();
+
+// 在需要时停止
+// prWatcher.stop();
+
+// 您也可以按需手动触发一次检查，这不会启动后台定时器
+// await prWatcher.runOnce();
 ```
 
 #### API
 
 ##### watchPullRequest(client, url, options)
 
-监控指定仓库的 PR 状态变化和评论。
+创建一个用于监控指定仓库 PR 状态和评论的 `PullRequestWatcher` 实例。
 
 **参数:**
-- `client`: `GitcodeClient` 实例
-- `url`: 仓库 URL
-- `options`: 监控选项
+
+- `client`: `GitcodeClient` 实例。
+- `url`: 仓库 URL。
+- `options`: 监控选项。
 
 **选项:**
-- `onOpen`: PR 打开时触发
-- `onClosed`: PR 关闭时触发
-- `onMerged`: PR 合并时触发
-- `onComment`: PR 有新评论时触发
-- `intervalSec`: 检查间隔时间（秒），默认为 5
-- `container`: 传入对象以启用内置容器管理（传 `false` 禁用）
-- `onContainerCreated`: 容器创建后触发
-- `onContainerRemoved`: 容器删除后触发
+
+- `onOpen`: PR 打开时触发。
+- `onClosed`: PR 关闭时触发。
+- `onMerged`: PR 合并时触发。
+- `onComment`: PR 有新评论时触发。
+- `intervalSec`: 检查间隔时间（秒），默认为 5。
+- `container`: 传入对象以启用内置容器管理（传 `false` 禁用）。
+- `onContainerCreated`: 容器创建后触发。
+- `onContainerRemoved`: 容器删除后触发。
 
 **返回值:**
-- 返回一个句柄 `{ stop(), containers() }`
+
+- 返回一个 `PullRequestWatcher` 实例，该实例提供以下方法：
+  - `runOnce(): Promise<void>`: 执行一次状态检查。
+  - `start(): void`: 启动后台周期性检查。
+  - `stop(): void`: 停止后台检查。
+  - `getContainers(): Map<number, Docker.Container>`: 获取由监视器管理的容器实例映射。
 
 ### Issue 评论监控
 
@@ -75,15 +80,22 @@ import { GitcodeClient } from '@gitany/gitcode';
 
 const client = new GitcodeClient();
 
-const watcher = watchIssues(client, 'https://gitcode.com/owner/repo.git', {
+// 创建一个 Issue 监视器实例
+const issueWatcher = watchIssues(client, 'https://gitcode.com/owner/repo.git', {
   onComment: (issue, comment) => {
     console.log(`Issue #${issue.number} 有新评论: ${comment.body}`);
   },
   intervalSec: 10,
 });
 
-// 需要时停止监听
-// watcher.stop();
+// 启动后台周期性监控
+issueWatcher.start();
+
+// 在需要时停止
+// issueWatcher.stop();
+
+// 同样地，您也可以手动触发一次检查
+// await issueWatcher.runOnce();
 ```
 
 可通过 `issueQuery`/`commentQuery` 控制拉取范围，例如 `per_page`、`state` 等。
@@ -191,19 +203,24 @@ import { GitcodeClient } from '@gitany/gitcode';
 const client = new GitcodeClient();
 
 // 监控指定仓库的 PR，打开时创建容器，关闭或合并时删除容器
-const watcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
-  container: {},
+const prWatcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git', {
+  container: {}, // 启用容器管理
   onContainerCreated: (container, pr) => {
-    console.log('容器已创建', container.id);
-  }
+    console.log(`为 PR #${pr.number} 创建的容器已就绪: ${container.id}`);
+  },
 });
 
+// 启动监控
+prWatcher.start();
+
 // 根据 PR ID 获取对应的 Docker 容器
-const container = watcher.containers().get(123);
-console.log(container?.id);
+const container = prWatcher.getContainers().get(123);
+if (container) {
+  console.log('找到了 PR #123 对应的容器:', container.id);
+}
 
 // 停止监控
-// watcher.stop();
+// prWatcher.stop();
 ```
 
 容器内可访问以下环境变量：
@@ -254,10 +271,7 @@ console.log('文件已复制到容器内:', targetPath);
 ```ts
 import { chat } from '@gitany/core';
 
-const result = await chat(
-  'https://gitcode.com/owner/repo.git',
-  'Explain the project structure',
-);
+const result = await chat('https://gitcode.com/owner/repo.git', 'Explain the project structure');
 console.log(result.output);
 ```
 
@@ -268,4 +282,3 @@ console.log(result.output);
 - `keepContainer`: 创建的临时容器是否保留，默认 `false`
 
 调用过程中会自动转发宿主机上所有以 `ANTHROPIC_` 开头的环境变量，以便 Claude Code 正确认证。
-

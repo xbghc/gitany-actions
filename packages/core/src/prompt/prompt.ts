@@ -50,7 +50,9 @@ export function defaultPromptBuilder(context: AiMentionContext): string {
     .map((c) => c.body.trim())
     .filter(Boolean);
   if (history.length) {
-    lines.push(isPrReviewComment && pullRequest ? 'Recent pull request comments:' : 'Recent comments:');
+    lines.push(
+      isPrReviewComment && pullRequest ? 'Recent pull request comments:' : 'Recent comments:',
+    );
     for (const entry of history) {
       lines.push(entry);
     }

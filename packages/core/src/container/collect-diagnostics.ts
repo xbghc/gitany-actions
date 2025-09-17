@@ -12,8 +12,7 @@ export function collectDiagnostics(output: string): ProjectDiagnostics {
   }
   const packageJsonExists = output.includes('package.json');
   const pnpmLockExists = output.includes('pnpm-lock.yaml');
-  const isPnpmByPackageManager =
-    output.includes('"packageManager"') && output.includes('pnpm@');
+  const isPnpmByPackageManager = output.includes('"packageManager"') && output.includes('pnpm@');
   const isPnpmByLockFile = pnpmLockExists;
   return {
     packageJsonExists,
@@ -21,4 +20,3 @@ export function collectDiagnostics(output: string): ProjectDiagnostics {
     isPnpmProject: isPnpmByPackageManager || isPnpmByLockFile,
   };
 }
-

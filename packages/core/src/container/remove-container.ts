@@ -16,4 +16,3 @@ export async function removeContainer(prId: number) {
     /* ignore */
   }
 }
-

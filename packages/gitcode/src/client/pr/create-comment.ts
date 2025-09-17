@@ -3,10 +3,7 @@
  */
 
 import type { GitcodeClient } from '../core';
-import type {
-  CreatePrCommentParams,
-  CreatedPrComment,
-} from '../../api/pr/create-comment';
+import type { CreatePrCommentParams, CreatedPrComment } from '../../api/pr/create-comment';
 import { createPrCommentUrl, createdPrCommentSchema } from '../../api/pr/create-comment';
 import { parseGitUrl } from '../../utils';
 

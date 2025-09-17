@@ -26,22 +26,19 @@ export async function createCommand(
     body.issue = n;
   }
 
-  await withClient(
-    async (client) => {
-      const repoUrl = await resolveRepoUrl(url);
-      const created = await client.pr.create(repoUrl, body);
+  await withClient(async (client) => {
+    const repoUrl = await resolveRepoUrl(url);
+    const created = await client.pr.create(repoUrl, body);
 
-      if (options.json) {
-        console.log(JSON.stringify(created, null, 2));
-        return;
-      }
+    if (options.json) {
+      console.log(JSON.stringify(created, null, 2));
+      return;
+    }
 
-      const pr = created as Record<string, unknown>;
-      const num = (pr.number ?? pr.iid ?? pr.id) as number | string | undefined;
-      const titleOut = (pr.title ?? '(no title)') as string;
-      const numStr = typeof num === 'number' ? num : (num ?? '?');
-      console.log(`Created PR #${numStr}: ${titleOut}`);
-    },
-    'Failed to create PR',
-  );
+    const pr = created as Record<string, unknown>;
+    const num = (pr.number ?? pr.iid ?? pr.id) as number | string | undefined;
+    const titleOut = (pr.title ?? '(no title)') as string;
+    const numStr = typeof num === 'number' ? num : (num ?? '?');
+    console.log(`Created PR #${numStr}: ${titleOut}`);
+  }, 'Failed to create PR');
 }

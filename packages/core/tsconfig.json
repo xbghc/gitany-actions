@@ -6,8 +6,5 @@
     "emitDeclarationOnly": false
   },
   "include": ["src"],
-  "references": [
-    { "path": "../shared" },
-    { "path": "../gitcode" }
-  ]
+  "references": [{ "path": "../shared" }, { "path": "../gitcode" }]
 }

@@ -7,9 +7,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/packages/gitcode/src/index.ts",
       "preLaunchTask": "pnpm: build",
-      "outFiles": [
-        "${workspaceFolder}/packages/*/dist/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/packages/*/dist/**/*.js"],
       "sourceMaps": true,
       "resolveSourceMapLocations": [
         "${workspaceFolder}/packages/*/dist/**/*.js.map",
@@ -22,10 +20,7 @@
         "webpack:///./packages/*": "${workspaceFolder}/packages/*",
         "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
       },
-      "skipFiles": [
-        "<node_internals>/**",
-        "node_modules/**"
-      ],
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
@@ -35,9 +30,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/packages/cli/src/index.ts",
       "preLaunchTask": "pnpm: build",
-      "outFiles": [
-        "${workspaceFolder}/packages/*/dist/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/packages/*/dist/**/*.js"],
       "sourceMaps": true,
       "resolveSourceMapLocations": [
         "${workspaceFolder}/packages/*/dist/**/*.js.map",
@@ -50,10 +43,7 @@
         "webpack:///./packages/*": "${workspaceFolder}/packages/*",
         "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
       },
-      "skipFiles": [
-        "<node_internals>/**",
-        "node_modules/**"
-      ],
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "args": []
@@ -64,9 +54,7 @@
       "request": "launch",
       "program": "${file}",
       "preLaunchTask": "pnpm: build",
-      "outFiles": [
-        "${workspaceFolder}/packages/*/dist/**/*.js"
-      ],
+      "outFiles": ["${workspaceFolder}/packages/*/dist/**/*.js"],
       "sourceMaps": true,
       "resolveSourceMapLocations": [
         "${workspaceFolder}/packages/*/dist/**/*.js.map",
@@ -79,10 +67,7 @@
         "webpack:///./packages/*": "${workspaceFolder}/packages/*",
         "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
       },
-      "skipFiles": [
-        "<node_internals>/**",
-        "node_modules/**"
-      ],
+      "skipFiles": ["<node_internals>/**", "node_modules/**"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
@@ -103,19 +88,13 @@
         "webpack:///./packages/*": "${workspaceFolder}/packages/*",
         "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
       },
-      "skipFiles": [
-        "<node_internals>/**",
-        "node_modules/**"
-      ]
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
     }
   ],
   "compounds": [
     {
       "name": "Debug All",
-      "configurations": [
-        "Debug TypeScript",
-        "Debug CLI"
-      ],
+      "configurations": ["Debug TypeScript", "Debug CLI"],
       "presentation": {
         "hidden": false,
         "order": 1

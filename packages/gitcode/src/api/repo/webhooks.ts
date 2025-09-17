@@ -17,11 +17,13 @@ export const webhookSchema = z.object({
   }),
   updated_at: z.string(),
   created_at: z.string(),
-  last_response: z.object({
-    code: z.any().nullable(),
-    status: z.string(),
-    message: z.string(),
-  }).optional(),
+  last_response: z
+    .object({
+      code: z.any().nullable(),
+      status: z.string(),
+      message: z.string(),
+    })
+    .optional(),
 });
 
 export type Webhook = z.infer<typeof webhookSchema>;

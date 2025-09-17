@@ -49,7 +49,7 @@ export async function editAction(
       if (normalizedState && normalizedState !== 'open' && normalizedState !== 'closed') {
         throw new Error('State must be either "open" or "closed"');
       }
-      const state = normalizedState as ('open' | 'closed' | undefined);
+      const state = normalizedState as 'open' | 'closed' | undefined;
 
       const updateBody: UpdateIssueBody = {};
       if (options.title !== undefined) {
@@ -72,7 +72,9 @@ export async function editAction(
       }
 
       if (Object.keys(updateBody).length === 0) {
-        throw new Error('No changes specified. Use options like --title, --body, --label, --assignee, or --state.');
+        throw new Error(
+          'No changes specified. Use options like --title, --body, --label, --assignee, or --state.',
+        );
       }
 
       const issue = await client.issue.update(repoUrl, issueNumber, updateBody);
@@ -84,7 +86,9 @@ export async function editAction(
 
       console.log(`\n✅ Issue #${issue.number} updated successfully.`);
       console.log(`   Title: ${issue.title}`);
-      console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`);
+      console.log(
+        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`,
+      );
       const issueUrl = (issue as { html_url?: string }).html_url;
       if (issueUrl) {
         console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
@@ -113,7 +117,9 @@ export async function editAction(
       }
 
       if (state) {
-        console.log(`\nℹ️  You can reopen or close the issue anytime using: gitcode issue ${state === 'open' ? 'close' : 'reopen'} ${issue.number}`);
+        console.log(
+          `\nℹ️  You can reopen or close the issue anytime using: gitcode issue ${state === 'open' ? 'close' : 'reopen'} ${issue.number}`,
+        );
       }
     },
     'Failed to edit issue',
@@ -137,12 +143,20 @@ export function editCommand(): Command {
     .option('-t, --title <string>', 'Update the issue title')
     .option('-b, --body <string>', 'Update the issue body text')
     .option('-F, --body-file <file>', 'Read issue body text from a file (use "-" for stdin)')
-    .option('-l, --label <name>', 'Replace labels (can be used multiple times)', (value: string, previous: string[] = []) => previous.concat(value))
+    .option(
+      '-l, --label <name>',
+      'Replace labels (can be used multiple times)',
+      (value: string, previous: string[] = []) => previous.concat(value),
+    )
     .option('-a, --assignee <login>', 'Set the assignee login')
-    .option('-m, --milestone <number>', 'Set milestone by number', (value: string) => parseInt(value, 10))
+    .option('-m, --milestone <number>', 'Set milestone by number', (value: string) =>
+      parseInt(value, 10),
+    )
     .option('--state <state>', 'Update issue state: open | closed')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
+    .option(
+      '-R, --repo <[HOST/]OWNER/REPO>',
+      'Select another repository using the [HOST/]OWNER/REPO format',
+    )
     .action(editAction);
 }
-

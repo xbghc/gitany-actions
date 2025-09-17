@@ -36,4 +36,3 @@ export async function getContainerStatus(prId: number) {
     return null;
   }
 }
-

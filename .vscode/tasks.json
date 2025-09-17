@@ -11,10 +11,7 @@
         "reveal": "always",
         "panel": "shared"
       },
-      "problemMatcher": [
-        "$tsc",
-        "$eslint-stylish"
-      ]
+      "problemMatcher": ["$tsc", "$eslint-stylish"]
     },
     {
       "label": "pnpm: dev",
@@ -29,10 +26,7 @@
         "reveal": "always",
         "panel": "shared"
       },
-      "problemMatcher": [
-        "$tsc",
-        "$eslint-stylish"
-      ]
+      "problemMatcher": ["$tsc", "$eslint-stylish"]
     },
     {
       "label": "pnpm: clean",
@@ -54,9 +48,7 @@
         "reveal": "always",
         "panel": "shared"
       },
-      "problemMatcher": [
-        "$eslint-stylish"
-      ]
+      "problemMatcher": ["$eslint-stylish"]
     },
     {
       "label": "pnpm: format",
@@ -79,10 +71,7 @@
         "reveal": "always",
         "panel": "shared"
       },
-      "problemMatcher": [
-        "$tsc",
-        "$eslint-stylish"
-      ]
+      "problemMatcher": ["$tsc", "$eslint-stylish"]
     }
   ]
 }

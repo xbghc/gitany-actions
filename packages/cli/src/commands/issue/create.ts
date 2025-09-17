@@ -27,7 +27,7 @@ async function promptForInput(message: string, defaultValue?: string): Promise<s
   } else {
     process.stdout.write(`${message}: `);
   }
-  
+
   // 在真实环境中，这里应该使用 readline 或类似的库
   // 为了演示，我们返回默认值或空字符串
   return defaultValue || '';
@@ -42,7 +42,7 @@ function getDefaultEditor(): string {
 async function openEditor(content: string): Promise<string> {
   const editor = getDefaultEditor();
   const tempFile = path.join(process.cwd(), '.gitany-issue-temp.md');
-  
+
   try {
     fs.writeFileSync(tempFile, content);
     execSync(`${editor} "${tempFile}"`, { stdio: 'inherit' });
@@ -57,7 +57,12 @@ async function openEditor(content: string): Promise<string> {
   }
 }
 
-export async function createAction(owner: string, repo: string, title?: string, options: CreateOptions = {}) {
+export async function createAction(
+  owner: string,
+  repo: string,
+  title?: string,
+  options: CreateOptions = {},
+) {
   await withClient(async (client) => {
     // 获取 title（交互式提示）
     let finalTitle = title || options.title;
@@ -70,7 +75,7 @@ export async function createAction(owner: string, repo: string, title?: string, 
 
     // 获取 body
     let finalBody = options.body || '';
-    
+
     if (options.bodyFile) {
       if (options.bodyFile === '-') {
         // 从标准输入读取
@@ -136,7 +141,7 @@ export async function createAction(owner: string, repo: string, title?: string, 
       }
 
       if (issue.labels && issue.labels.length > 0) {
-        const labelNames = issue.labels.map(l => l.name).join(', ');
+        const labelNames = issue.labels.map((l) => l.name).join(', ');
         console.log(`   Labels:   ${labelNames}`);
       }
 
@@ -157,7 +162,7 @@ const colors = {
   blue: '\x1b[34m',
   magenta: '\x1b[35m',
   cyan: '\x1b[36m',
-  bright: '\x1b[1m'
+  bright: '\x1b[1m',
 };
 
 // 根据 issue 状态返回相应的颜色
@@ -175,47 +180,66 @@ function getStateColor(state: string): string {
 export function createCommand(): Command {
   return new Command('create')
     .description('Create a new issue')
-    .argument('[owner]', 'Repository owner (user or organization) - can be omitted if --repo is used')
+    .argument(
+      '[owner]',
+      'Repository owner (user or organization) - can be omitted if --repo is used',
+    )
     .argument('[repo]', 'Repository name - can be omitted if --repo is used')
     .argument('[title]', 'Issue title - will prompt if not provided')
     .option('-t, --title <string>', 'Supply a title. Will prompt for one otherwise')
     .option('-b, --body <string>', 'Supply a body. Will prompt for one otherwise')
-    .option('-F, --body-file <file>', 'Read body text from file (use "-" to read from standard input)')
+    .option(
+      '-F, --body-file <file>',
+      'Read body text from file (use "-" to read from standard input)',
+    )
     .option('-e, --editor', 'Skip prompts and open the text editor to write the title and body')
     .option('-a, --assignee <login>', 'Assign people by their login. Use "@me" to self-assign')
-    .option('-l, --label <name>', 'Add labels by name (can be used multiple times)', (val: string, previous: string[] = []) => previous.concat([val]))
-    .option('-m, --milestone <number>', 'Add the issue to a milestone by number', (val) => parseInt(val, 10))
+    .option(
+      '-l, --label <name>',
+      'Add labels by name (can be used multiple times)',
+      (val: string, previous: string[] = []) => previous.concat([val]),
+    )
+    .option('-m, --milestone <number>', 'Add the issue to a milestone by number', (val) =>
+      parseInt(val, 10),
+    )
     .option('--security-hole <security-hole>', 'Security hole level')
     .option('--template-path <template-path>', 'Template path')
     .option('--json', 'Output raw JSON instead of formatted output')
-    .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
-    .action(async (ownerArg?: string, repoArg?: string, titleArg?: string, options?: CreateOptions) => {
-      const optionsToUse = options || {};
-      
-      // 处理 --repo 标志
-      if (optionsToUse.repo) {
-        const parsed = parseGitUrl(optionsToUse.repo);
-        if (parsed) {
-          ownerArg = parsed.owner;
-          repoArg = parsed.repo;
-        } else {
-          const parts = optionsToUse.repo.split('/');
-          if (parts.length === 3) {
-            ownerArg = parts[1];
-            repoArg = parts[2];
-          } else if (parts.length === 2) {
-            ownerArg = parts[0];
-            repoArg = parts[1];
+    .option(
+      '-R, --repo <[HOST/]OWNER/REPO>',
+      'Select another repository using the [HOST/]OWNER/REPO format',
+    )
+    .action(
+      async (ownerArg?: string, repoArg?: string, titleArg?: string, options?: CreateOptions) => {
+        const optionsToUse = options || {};
+
+        // 处理 --repo 标志
+        if (optionsToUse.repo) {
+          const parsed = parseGitUrl(optionsToUse.repo);
+          if (parsed) {
+            ownerArg = parsed.owner;
+            repoArg = parsed.repo;
           } else {
-            throw new Error('Invalid repository format. Use [HOST/]OWNER/REPO');
+            const parts = optionsToUse.repo.split('/');
+            if (parts.length === 3) {
+              ownerArg = parts[1];
+              repoArg = parts[2];
+            } else if (parts.length === 2) {
+              ownerArg = parts[0];
+              repoArg = parts[1];
+            } else {
+              throw new Error('Invalid repository format. Use [HOST/]OWNER/REPO');
+            }
           }
         }
-      }
-      
-      if (!ownerArg || !repoArg) {
-        throw new Error('Repository owner and name are required. Use --repo OWNER/REPO or provide as arguments');
-      }
-      
-      await createAction(ownerArg, repoArg, titleArg || optionsToUse.title, optionsToUse);
-    });
+
+        if (!ownerArg || !repoArg) {
+          throw new Error(
+            'Repository owner and name are required. Use --repo OWNER/REPO or provide as arguments',
+          );
+        }
+
+        await createAction(ownerArg, repoArg, titleArg || optionsToUse.title, optionsToUse);
+      },
+    );
 }

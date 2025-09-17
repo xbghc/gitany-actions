@@ -20,7 +20,9 @@ export class GitClient {
       return await runGit(args, { cwd: this.cwd });
     } catch (err) {
       if (err instanceof GitNotFoundError) {
-        throw new GitNotFoundError('Git command not found. Please install Git and ensure it is in PATH.');
+        throw new GitNotFoundError(
+          'Git command not found. Please install Git and ensure it is in PATH.',
+        );
       }
       throw err;
     }

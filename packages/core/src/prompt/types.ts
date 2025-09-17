@@ -34,9 +34,7 @@ export type AiMentionReply =
       comment: CreatedPrComment;
     };
 
-export type BuildAiMentionPrompt = (
-  context: AiMentionContext,
-) => string | Promise<string>;
+export type BuildAiMentionPrompt = (context: AiMentionContext) => string | Promise<string>;
 
 export type BuildAiMentionReplyBody = (
   result: ChatResult,
@@ -51,11 +49,7 @@ export interface WatchAiMentionsOptions {
   issueCommentQuery?: IssueCommentsQuery;
   prCommentType?: 'diff_comment' | 'pr_comment';
   chatOptions?: ChatOptions;
-  chatExecutor?: (
-    repoUrl: string,
-    prompt: string,
-    options?: ChatOptions,
-  ) => Promise<ChatResult>;
+  chatExecutor?: (repoUrl: string, prompt: string, options?: ChatOptions) => Promise<ChatResult>;
   buildPrompt?: BuildAiMentionPrompt;
   onChatResult?: (result: ChatResult, context: AiMentionContext) => void;
   includeIssueComments?: boolean;

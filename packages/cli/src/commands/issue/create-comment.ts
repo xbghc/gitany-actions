@@ -53,7 +53,9 @@ export async function createCommentAction(
           repo = parts[1];
           issueNumber = parseInt(parts[2], 10);
         } else {
-          throw new Error('Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER');
+          throw new Error(
+            'Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER',
+          );
         }
       }
     }
@@ -100,13 +102,14 @@ export async function createCommentAction(
       console.log('\n💬 Comment created successfully!');
       console.log('\n📋 Comment Details:');
       console.log(`   ID:       ${comment.id}`);
-      const bodyPreview = comment.body.length > 100
-        ? comment.body.substring(0, 100) + '...'
-        : comment.body;
+      const bodyPreview =
+        comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
       console.log(`   Preview:  "${bodyPreview}"`);
 
       console.log(`\n💡 Next steps:`);
-      console.log(`   • Reply to comment:  gitcode issue comment ${issueNumber} --body "Your reply"`);
+      console.log(
+        `   • Reply to comment:  gitcode issue comment ${issueNumber} --body "Your reply"`,
+      );
     }
   }, 'Failed to create comment');
 }
@@ -119,6 +122,9 @@ export function createCommentCommand(): Command {
     .option('-b, --body <string>', 'Supply a comment body')
     .option('-F, --body-file <file>', 'Read body text from a file')
     .option('--json', 'Output raw JSON instead of formatted output')
-    .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
+    .option(
+      '-R, --repo <[HOST/]OWNER/REPO>',
+      'Select another repository using the [HOST/]OWNER/REPO format',
+    )
     .action(createCommentAction);
 }

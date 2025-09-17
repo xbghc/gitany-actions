@@ -51,7 +51,13 @@ const pulls = await client.request(listUrl, 'GET', {
 
 // 2) 创建 PR（使用绝对 URL 构建）
 const createPath = createPullUrl('owner', 'repo');
-const body: CreatePullBody = { title: '修复登录异常', head: 'feat/login-fix', base: 'main', body: '说明文本', issue: 123 };
+const body: CreatePullBody = {
+  title: '修复登录异常',
+  head: 'feat/login-fix',
+  base: 'main',
+  body: '说明文本',
+  issue: 123,
+};
 const pr = await client.request(createPath, 'POST', { body: JSON.stringify(body) });
 ```
 
@@ -79,7 +85,7 @@ console.log('允许合并提交:', settings.allow_merge_commits);
 
 // 获取 PR 评论
 const comments = await client.pr.comments(repoUrl, 123);
-comments.forEach(comment => {
+comments.forEach((comment) => {
   console.log(comment.user.login, comment.body);
 });
 

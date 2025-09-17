@@ -52,19 +52,19 @@ console.log(namespace);
 
 ```typescript
 interface UserProfile {
-  id: string;           // 用户 ID
-  login: string;        // 登录名
-  name: string;         // 用户名
-  email?: string;       // 邮箱（可选）
-  avatar_url: string;   // 头像 URL
-  html_url: string;     // 个人主页 URL
-  type: string;        // 用户类型
-  url: string;          // API URL
-  bio?: string;        // 个人简介（可选）
-  blog?: string;       // 个人博客（可选）
-  company?: string;    // 公司（可选）
-  followers: number;   // 关注者数量
-  following: number;   // 关注中数量
+  id: string; // 用户 ID
+  login: string; // 登录名
+  name: string; // 用户名
+  email?: string; // 邮箱（可选）
+  avatar_url: string; // 头像 URL
+  html_url: string; // 个人主页 URL
+  type: string; // 用户类型
+  url: string; // API URL
+  bio?: string; // 个人简介（可选）
+  blog?: string; // 个人博客（可选）
+  company?: string; // 公司（可选）
+  followers: number; // 关注者数量
+  following: number; // 关注中数量
   top_languages: string[]; // 常用编程语言
 }
 ```
@@ -75,11 +75,11 @@ interface UserProfile {
 
 ```typescript
 interface UserNamespace {
-  id: number;          // 命名空间 ID
-  path: string;        // 命名空间路径
-  name: string;        // 命名空间名称
-  html_url: string;    // 命名空间主页 URL
-  type: string;        // 命名空间类型
+  id: number; // 命名空间 ID
+  path: string; // 命名空间路径
+  name: string; // 命名空间名称
+  html_url: string; // 命名空间主页 URL
+  type: string; // 命名空间类型
 }
 ```
 

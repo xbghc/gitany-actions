@@ -159,7 +159,12 @@ export async function testShaBuild(
       return result;
     }
 
-    const installResult = await installDependencies({ container, log, verbose, env: [`NPM_CONFIG_REGISTRY=${npmRegistry}`, `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`] });
+    const installResult = await installDependencies({
+      container,
+      log,
+      verbose,
+      env: [`NPM_CONFIG_REGISTRY=${npmRegistry}`, `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`],
+    });
     fullOutput += installResult.output;
     result.diagnostics.steps.install = {
       success: installResult.success,

@@ -194,10 +194,12 @@ export GITCODE_API_BASE=https://gitcode.com/api/v5
 ### GitCode API 支持
 
 ✅ **用户 API**
+
 - 获取用户信息 (`/user`)
 - 获取用户命名空间 (`/user/namespace`)
 
 ✅ **仓库 API**
+
 - 仓库设置 (`/repos/{owner}/{repo}/repo_settings`)
 - 分支管理 (`/repos/{owner}/{repo}/branches`)
 - 提交历史 (`/repos/{owner}/{repo}/commits`)
@@ -208,12 +210,14 @@ export GITCODE_API_BASE=https://gitcode.com/api/v5
 - 仓库权限 (`/repos/{owner}/{repo}/collaborators/self-permission`)
 
 ✅ **Pull Request API**
+
 - PR 列表 (`/repos/{owner}/{repo}/pulls`)
 - 创建 PR (`/repos/{owner}/{repo}/pulls`)
 - PR 评论 (`/repos/{owner}/{repo}/pulls/{number}/comments`)
 - PR 设置 (`/repos/{owner}/{repo}/pull_request_settings`)
 
 ✅ **Issue API**
+
 - Issue 列表 (`/repos/{owner}/{repo}/issues`)
 - Issue 评论 (`/repos/{owner}/{repo}/issues/{number}/comments`)
 
@@ -270,6 +274,7 @@ pnpm --filter @gitany/core cleanup
 - 通过 Git hooks 在 `.husky/pre-commit` 中强制执行
 
 **绕过机制** (不推荐):
+
 ```bash
 SKIP_DOCS_CHECK=1 git commit -m "..."
 ```
@@ -283,6 +288,7 @@ SKIP_DOCS_CHECK=1 git commit -m "..."
 5. 创建 Pull Request
 
 请确保：
+
 - 代码通过所有检查 (`pnpm lint` 和 `pnpm build`)
 - 更新相关文档
 - 添加适当的测试

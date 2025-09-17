@@ -15,9 +15,11 @@ gitcode issue list <url> [options]
 ```
 
 **Arguments**
+
 - `<url>`: Repository URL or OWNER/REPO format (e.g., `https://gitcode.com/owner/repo` or `owner/repo`)
 
 **Options**
+
 - `-s, --state <state>`: Filter by state: open | closed | all (default: open)
 - `--label <labels>`: Comma-separated labels
 - `--page <n>`: Page number
@@ -26,6 +28,7 @@ gitcode issue list <url> [options]
 - `--json`: Output raw JSON instead of list
 
 **Examples**
+
 ```bash
 # List open issues
 gitcode issue list https://gitcode.com/owner/repo
@@ -47,10 +50,12 @@ gitcode issue view <number> [url] [options]
 ```
 
 **Arguments**
+
 - `<number>`: Issue number
 - `[url]`: Repository URL or OWNER/REPO (optional when running inside a Git repo)
 
 **Options**
+
 - `--comments`: Include comments in the output
 - `--page <n>`: Page number when fetching comments
 - `--per-page <n>`: Items per page when fetching comments
@@ -58,6 +63,7 @@ gitcode issue view <number> [url] [options]
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # View issue details
 gitcode issue view 42 https://gitcode.com/owner/repo
@@ -76,10 +82,12 @@ gitcode issue edit <number> [url] [options]
 ```
 
 **Arguments**
+
 - `<number>`: Issue number
 - `[url]`: Repository URL or OWNER/REPO
 
 **Options**
+
 - `-t, --title <string>`: Update the issue title
 - `-b, --body <string>`: Update the issue body
 - `-F, --body-file <file>`: Read the issue body from a file (use `-` for stdin)
@@ -91,6 +99,7 @@ gitcode issue edit <number> [url] [options]
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # Update title and body
 gitcode issue edit 42 owner/repo --title "New title" --body "Updated description"
@@ -109,10 +118,12 @@ gitcode issue close <number> [url] [options]
 ```
 
 **Options**
+
 - `--json`: Output raw JSON instead of formatted text
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # Close an issue
 gitcode issue close 123 https://gitcode.com/owner/repo
@@ -128,10 +139,12 @@ gitcode issue reopen <number> [url] [options]
 ```
 
 **Options**
+
 - `--json`: Output raw JSON instead of formatted text
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # Reopen an issue
 gitcode issue reopen 123 https://gitcode.com/owner/repo
@@ -147,11 +160,13 @@ gitcode issue create [owner] [repo] [title] [options]
 ```
 
 **Arguments**
+
 - `[owner]`: Repository owner (user or organization) - can be omitted if --repo is used
 - `[repo]`: Repository name - can be omitted if --repo is used
 - `[title]`: Issue title - will prompt if not provided
 
 **Options**
+
 - `-t, --title <string>`: Supply a title. Will prompt for one otherwise
 - `-b, --body <string>`: Supply a body. Will prompt for one otherwise
 - `-F, --body-file <file>`: Read body text from file (use "-" to read from standard input)
@@ -165,6 +180,7 @@ gitcode issue create [owner] [repo] [title] [options]
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # Create a simple issue
 gitcode issue create myusername my-repo "Found a bug"
@@ -198,16 +214,19 @@ gitcode issue comment <issue> [body] [options]
 ```
 
 **Arguments**
+
 - `<issue>`: Issue URL, number, or OWNER/REPO/NUMBER
 - `[body]`: Comment body. Required unless using `--body` or `--body-file`
 
 **Options**
+
 - `-b, --body <string>`: Supply a comment body
 - `-F, --body-file <file>`: Read body text from a file
 - `--json`: Output raw JSON instead of formatted output
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # Create a simple comment
 gitcode issue comment owner/repo/123 "This looks good to me"
@@ -234,13 +253,16 @@ gitcode issue status <url> [options]
 **Aliases:** `gitcode issue st`
 
 **Arguments**
+
 - `<url>`: Repository URL or OWNER/REPO
 
 **Options**
+
 - `--json`: Output raw JSON instead of formatted status
 - `-R, --repo <[HOST/]OWNER/REPO>`: Select another repository using the [HOST/]OWNER/REPO format
 
 **Examples**
+
 ```bash
 # Show issue status for a repository
 gitcode issue status owner/repo
@@ -274,4 +296,3 @@ for repo in repo1 repo2 repo3; do
     --body "This issue tracks the initial setup for $repo"
 done
 ```
-

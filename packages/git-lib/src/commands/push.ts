@@ -1,4 +1,4 @@
-import { GitClient } from "../client";
+import { GitClient } from '../client';
 
 export async function gitPush(
   client: GitClient,

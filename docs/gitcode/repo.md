@@ -39,7 +39,7 @@ console.log(settings.default_branch);
 ```typescript
 const client = new GitcodeClient();
 const branches = await client.repo.getBranches('owner', 'repo');
-branches.forEach(branch => {
+branches.forEach((branch) => {
   console.log(branch.name, branch.default);
 });
 ```
@@ -69,7 +69,7 @@ console.log(branch.commit.id);
 ```typescript
 const client = new GitcodeClient();
 const commits = await client.repo.getCommits('owner', 'repo');
-commits.forEach(commit => {
+commits.forEach((commit) => {
   console.log(commit.sha, commit.commit.message);
 });
 ```
@@ -85,7 +85,7 @@ commits.forEach(commit => {
 ```typescript
 const client = new GitcodeClient();
 const contributors = await client.repo.getContributors('owner', 'repo');
-contributors.forEach(contributor => {
+contributors.forEach((contributor) => {
   console.log(contributor.name, contributor.contributions);
 });
 ```
@@ -129,7 +129,7 @@ console.log(comparison.files.length);
 ```typescript
 const client = new GitcodeClient();
 const webhooks = await client.repo.getWebhooks('owner', 'repo');
-webhooks.forEach(webhook => {
+webhooks.forEach((webhook) => {
   console.log(webhook.url, webhook.active);
 });
 ```
@@ -359,7 +359,7 @@ if (commits.length > 0) {
 ```typescript
 const contributors = await client.repo.getContributors('myorg', 'myrepo');
 console.log('贡献者统计:');
-contributors.forEach(contributor => {
+contributors.forEach((contributor) => {
   console.log(`  ${contributor.name}: ${contributor.contributions} 次提交`);
 });
 ```
@@ -369,7 +369,7 @@ contributors.forEach(contributor => {
 ```typescript
 const comparison = await client.repo.compare('myorg', 'myrepo', 'main', 'feature');
 console.log(`发现 ${comparison.files.length} 个文件变更`);
-comparison.files.forEach(file => {
+comparison.files.forEach((file) => {
   console.log(`  ${file.filename}: +${file.additions} -${file.deletions}`);
 });
 ```

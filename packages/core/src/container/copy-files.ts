@@ -148,9 +148,7 @@ async function renameInContainer(container: Docker.Container, from: string, to: 
   const result = await runContainerCommand(container, ['mv', '-f', from, to]);
   if (result.exitCode !== 0) {
     const text = result.output.trim() || `exit code ${result.exitCode}`;
-    throw new CopyToContainerError(
-      `Failed to move '${from}' to '${to}' inside container: ${text}`,
-    );
+    throw new CopyToContainerError(`Failed to move '${from}' to '${to}' inside container: ${text}`);
   }
 }
 

@@ -8,10 +8,7 @@
 
 import Docker from '../../packages/core/node_modules/dockerode/lib/docker.js';
 import { createLogger } from '../../packages/shared/dist/index.js';
-import {
-  createWorkspaceContainer,
-  installClaudeCli,
-} from '../../packages/core/dist/index.js';
+import { createWorkspaceContainer, installClaudeCli } from '../../packages/core/dist/index.js';
 
 function envBoolean(name, defaultValue) {
   const raw = process.env[name];

@@ -10,10 +10,7 @@ export type {
   ResourceNode,
   SelfPermissionResponse,
 } from './api/repo/self-permission';
-export {
-  selfPermissionUrl,
-  selfPermissionResponseSchema,
-} from './api/repo/self-permission';
+export { selfPermissionUrl, selfPermissionResponseSchema } from './api/repo/self-permission';
 export { repoSchema, type Repo } from './api/repo';
 export { branchSchema, type Branch } from './api/branch';
 export type {
@@ -74,11 +71,7 @@ export {
   type UserProfile,
   type UserProfileResponse,
 } from './api/user';
-export {
-  userNamespaceSchema,
-  userNamespaceUrl,
-  type UserNamespace,
-} from './api/user';
+export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './api/user';
 export type { RepoRole } from './types/repo-role';
 export * from './utils';
 export { API_BASE } from './api/constants';

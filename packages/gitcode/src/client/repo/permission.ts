@@ -7,14 +7,13 @@ import type { RepoRole } from '../../types/repo-role';
 import { parseGitUrl } from '../../utils';
 import type { GitcodeClient } from '../core';
 
-
 /**
  * 获取全量的用户权限资料
  */
 
 export async function getSelfRepoPermission(
   client: GitcodeClient,
-  url: string
+  url: string,
 ): Promise<SelfPermissionResponse> {
   const { owner, repo } = parseGitUrl(url) || {};
   if (!owner || !repo) {
@@ -31,7 +30,7 @@ export async function getSelfRepoPermission(
 
 export async function getSelfRepoPermissionRole(
   client: GitcodeClient,
-  url: string
+  url: string,
 ): Promise<RepoRole> {
   try {
     const json = await getSelfRepoPermission(client, url);
@@ -52,10 +51,7 @@ export function extractRepoRoleFromSelfPermission(result: unknown): RepoRole {
     if (!role) {
       return 'read';
     }
-    const cn =
-      typeof role.cn_name === 'string'
-        ? (role.cn_name as string).trim()
-        : '';
+    const cn = typeof role.cn_name === 'string' ? (role.cn_name as string).trim() : '';
     if (cn.includes('管理员')) return 'admin';
     if (cn.includes('维护者') || cn.includes('开发者')) return 'write';
     return 'read';

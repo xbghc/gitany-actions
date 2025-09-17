@@ -16,6 +16,7 @@ title: Issues API
 ## 类型与导出
 
 ### 列表相关
+
 - `ListIssuesQuery`：Issue 列表查询参数（`state`、`labels`、`page`、`per_page`、`sort`）。
 - `ListIssuesParams`：包含 `owner`、`repo` 与可选 `query`。
 - `Issue`：Issue 的最小字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
@@ -27,6 +28,7 @@ title: Issues API
 - `issueCommentsUrl(owner, repo, number)`：构建评论列表接口绝对 URL。
 
 ### 创建相关
+
 - `CreateIssueBody`：创建 Issue 的请求体（`repo`、`title`、`body`、`assignee`、`milestone`、`labels` 等）。
 - `CreateIssueParams`：包含 `owner` 与 `body`。
 - `CreatedIssue`：创建成功的 Issue 完整字段表示。

@@ -10,8 +10,7 @@ import { reopenCommand } from './reopen';
 import { editCommentCommand } from './edit-comment';
 
 export function issueCommand(): Command {
-  const issueProgram = new Command('issue')
-    .description('Manage GitCode issues');
+  const issueProgram = new Command('issue').description('Manage GitCode issues');
 
   issueProgram
     .command('list')

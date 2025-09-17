@@ -32,9 +32,17 @@ program.hook('preAction', (thisCommand) => {
     if (allowed.has(v)) level = v as LogLevel;
   }
   if (level) {
-    try { setGlobalLogLevel(level); } catch { /* ignore */ }
+    try {
+      setGlobalLogLevel(level);
+    } catch {
+      /* ignore */
+    }
     // Also update local logger instance
-    try { logger.level = level; } catch { /* ignore */ }
+    try {
+      logger.level = level;
+    } catch {
+      /* ignore */
+    }
   }
 });
 

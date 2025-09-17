@@ -27,6 +27,7 @@ pnpm --filter @gitany/cli start -- --help
 - `--log-level <level>`：设置日志级别（`fatal|error|warn|info|debug|trace|silent`）。
 
 说明：
+
 - 日志统一通过 `@gitany/shared` 的 logger 输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
 - 也可使用环境变量 `GITANY_LOG_LEVEL` 控制默认日志级别；命令行选项优先级更高。
 - 日志默认以易读格式输出；若需要 JSON 结构化日志，可设置环境变量 `GITANY_LOG_FORMAT=json`。
@@ -84,6 +85,7 @@ gitcode repo info settings myorg myrepo
 ```
 
 输出示例：
+
 ```
 仓库设置:
 {
@@ -108,6 +110,7 @@ gitcode repo info branches myorg myrepo
 ```
 
 输出示例：
+
 ```
 仓库分支:
   main (默认: 是, 受保护: 是)
@@ -126,6 +129,7 @@ gitcode repo info commits myorg myrepo
 ```
 
 输出示例：
+
 ```
 仓库提交历史:
   1. a1b2c3d - 修复登录问题
@@ -148,6 +152,7 @@ gitcode repo info contributors myorg myrepo
 ```
 
 输出示例：
+
 ```
 仓库贡献者:
   John Doe <john@example.com> - 42 次贡献
@@ -165,6 +170,7 @@ gitcode repo info webhooks myorg myrepo
 ```
 
 输出示例：
+
 ```
 仓库 Webhooks:
   ID: 123
@@ -250,6 +256,7 @@ gitcode pr info settings myorg myrepo
 ```
 
 输出示例：
+
 ```
 PR 设置:
   允许合并提交: 是
@@ -447,6 +454,7 @@ gitcode user show
 ```
 
 输出示例：
+
 ```
 用户信息:
   ID: 68526f155e91be1053daf941
@@ -472,6 +480,7 @@ gitcode user namespace
 ```
 
 输出示例：
+
 ```
 用户命名空间:
   ID: 123456
