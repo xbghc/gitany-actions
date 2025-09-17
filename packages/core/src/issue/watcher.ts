@@ -26,12 +26,17 @@ export interface WatchIssueHandle {
   stop(): void;
 }
 
+type LastSeenComment = {
+  id: number;
+  createdAt: string | null;
+};
+
 type WatcherState = {
-  lastCommentIdByIssue: Map<number, number>;
+  lastCommentByIssue: Map<number, LastSeenComment>;
 };
 
 type PersistShape = {
-  lastCommentIdByIssue: Record<string, number>;
+  lastCommentByIssue: Record<string, LastSeenComment>;
 };
 
 export class IssueWatcher implements WatchIssueHandle {
@@ -68,7 +73,7 @@ export class IssueWatcher implements WatchIssueHandle {
   }
 
   getLastCommentId(issueNumber: number): number | undefined {
-    return this.state.lastCommentIdByIssue.get(issueNumber);
+    return this.state.lastCommentByIssue.get(issueNumber)?.id;
   }
 
   protected async detectNewComments(issues: Issue[]): Promise<void> {
@@ -76,7 +81,9 @@ export class IssueWatcher implements WatchIssueHandle {
       return;
     }
 
+    logger.info('[watchIssues] detecting new comments');
     for (const issue of issues) {
+      // TODO 拆分
       const issueNumber = Number(issue.number);
       if (!Number.isFinite(issueNumber)) continue;
 
@@ -89,54 +96,65 @@ export class IssueWatcher implements WatchIssueHandle {
       }
 
       const { data: comments, notModified } = result;
-      const existingLastSeen = this.state.lastCommentIdByIssue.get(issueNumber);
+      const existingLastSeen = this.state.lastCommentByIssue.get(issueNumber);
 
       if (notModified) {
-        if (existingLastSeen === undefined) {
-          const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-          this.state.lastCommentIdByIssue.set(issueNumber, highestId);
+        if (!existingLastSeen) {
+          const latest = comments[comments.length - 1];
+          if (latest) {
+            this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(latest));
+          } else {
+            this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.emptyLastSeen());
+          }
         }
         continue;
       }
 
       if (comments.length === 0) {
-        if (existingLastSeen === undefined) {
-          // 记录已建立的基线，即便当前还没有评论，后续新增的首条评论也能被捕获
-          this.state.lastCommentIdByIssue.set(issueNumber, 0);
-          continue;
+        if (!existingLastSeen) {
+          this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.emptyLastSeen());
         }
         continue;
       }
 
-      if (existingLastSeen === undefined) {
-        const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-        this.state.lastCommentIdByIssue.set(issueNumber, highestId);
+      const latestComment = comments[comments.length - 1];
+
+      if (!existingLastSeen) {
+        this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(latestComment));
         continue;
       }
 
-      const lastSeen = existingLastSeen;
-
-      let maxId = lastSeen;
-      let hasNewComment = false;
+      const collected: IssueComment[] = [];
+      let baselineFound = false;
       for (let i = comments.length - 1; i >= 0; i -= 1) {
         const comment = comments[i];
-        if (comment.id > lastSeen) {
-          hasNewComment = true;
+        if (comment.id === existingLastSeen.id) {
+          baselineFound = true;
+          break;
+        }
+        collected.push(comment);
+      }
+
+      const newComments = baselineFound ? collected.reverse() : [...comments];
+
+      if (newComments.length > 0) {
+        for (const comment of newComments) {
           this.options.onComment?.(issue, comment);
-          if (comment.id > maxId) {
-            maxId = comment.id;
-          }
         }
       }
 
-      if (maxId !== lastSeen) {
-        this.state.lastCommentIdByIssue.set(issueNumber, maxId);
-      }
-
-      if (!hasNewComment) {
-        continue;
-      }
+      this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(latestComment));
     }
+    logger.info('[watchIssues] detecting new comments complete');
+  }
+
+  private static emptyLastSeen(): LastSeenComment {
+    return { id: 0, createdAt: null };
+  }
+
+  private static toLastSeen(comment: IssueComment): LastSeenComment {
+    const createdAt = typeof comment.created_at === 'string' ? comment.created_at : null;
+    return { id: comment.id, createdAt };
   }
 
   private async poll(): Promise<void> {
@@ -166,7 +184,7 @@ export class IssueWatcher implements WatchIssueHandle {
   private loadState(): WatcherState {
     const persisted = IssueWatcher.loadPersistedStateSync(this.url);
     if (persisted) return persisted;
-    return { lastCommentIdByIssue: new Map() };
+    return { lastCommentByIssue: new Map() };
   }
 
   private async persistState(): Promise<void> {
@@ -175,7 +193,7 @@ export class IssueWatcher implements WatchIssueHandle {
       await ensureDir(dir);
       const file = IssueWatcher.getStoreFile(this.url);
       const data: PersistShape = {
-        lastCommentIdByIssue: Object.fromEntries(this.state.lastCommentIdByIssue),
+        lastCommentByIssue: Object.fromEntries(this.state.lastCommentByIssue),
       };
       await fs.writeFile(file, JSON.stringify(data), 'utf8');
     } catch (err) {
@@ -190,14 +208,18 @@ export class IssueWatcher implements WatchIssueHandle {
       const raw = fsSync.readFileSync(file, 'utf8');
       if (!raw) return null;
       const data = JSON.parse(raw) as PersistShape;
-      const lastMap = new Map<number, number>();
-      for (const [key, value] of Object.entries(data.lastCommentIdByIssue ?? {})) {
+      const lastMap = new Map<number, LastSeenComment>();
+      for (const [key, value] of Object.entries(data.lastCommentByIssue ?? {})) {
         const num = Number(key);
-        if (!Number.isNaN(num)) {
-          lastMap.set(num, value);
+        if (!Number.isNaN(num) && value && typeof value === 'object') {
+          const parsedValue = value as Partial<LastSeenComment>;
+          const id = typeof parsedValue.id === 'number' ? parsedValue.id : 0;
+          const createdAt =
+            typeof parsedValue.createdAt === 'string' ? parsedValue.createdAt : null;
+          lastMap.set(num, { id, createdAt });
         }
       }
-      return { lastCommentIdByIssue: lastMap };
+      return { lastCommentByIssue: lastMap };
     } catch (err) {
       logger.error({ err }, '[watchIssues] Failed to read persisted state');
       return null;

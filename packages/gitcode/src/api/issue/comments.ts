@@ -19,6 +19,8 @@ export const issueCommentSchema = z.object({
   id: z.number(),
   body: z.string(),
   user: z.unknown(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
 });
 
 export type IssueComment = z.infer<typeof issueCommentSchema>;
@@ -37,4 +39,3 @@ export function issueCommentsUrl(
     repo,
   )}/issues/${issueNumber}/comments`;
 }
-

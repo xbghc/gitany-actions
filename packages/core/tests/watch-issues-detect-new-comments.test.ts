@@ -56,8 +56,8 @@ async function run() {
           user: { login: 'bob' },
         },
         {
-          id: 11,
-          body: '@ai please check the second issue',
+          id: 4,
+          body: '@ai please check the second issue even though my id is smaller',
           user: { login: 'carol' },
         },
       ],
@@ -77,8 +77,8 @@ async function run() {
           user: { login: 'bob' },
         },
         {
-          id: 11,
-          body: '@ai please check the second issue',
+          id: 4,
+          body: '@ai please check the second issue even though my id is smaller',
           user: { login: 'carol' },
         },
         {
@@ -125,8 +125,8 @@ async function run() {
     'second poll should detect a new mention on the later issue even when the first issue has no comments',
   );
   assert.equal(seen[0].issue.number, '2');
-  assert.equal(seen[0].comment.id, 11);
-  assert.equal(watcher.getLastCommentId(2), 11);
+  assert.equal(seen[0].comment.id, 4);
+  assert.equal(watcher.getLastCommentId(2), 4);
 
   pollIndex += 1;
   await watcher.detect(issues);

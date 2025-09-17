@@ -200,7 +200,11 @@ export function watchAiMentions(
 
 function createMentionRegex(mention: string): RegExp {
   const escaped = escapeRegExp(mention.trim());
-  const source = String.raw`(^|\s)${escaped}(?=\b)`;
+
+  // 1. Markdown 链接格式: [@mention](...)
+  // 2. 纯文本格式: @mention
+  const source = String.raw`(^|\s)(?:\[${escaped}\]\(.*?\)|${escaped}(?=\b))`;
+
   return new RegExp(source, 'i');
 }
 
