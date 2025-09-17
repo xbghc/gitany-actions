@@ -1,11 +1,16 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "outDir": "./dist",
     "declaration": true,
     "emitDeclarationOnly": false
   },
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    { "path": "../shared" },
+    { "path": "../gitcode" },
+    { "path": "../git-lib" },
+    { "path": "../core" }
+  ]
 }
 

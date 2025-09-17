@@ -1,0 +1,125 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug TypeScript",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/gitcode/src/index.ts",
+      "preLaunchTask": "pnpm: build",
+      "outFiles": [
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/packages/*/dist/**/*.js.map",
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
+        "webpack:///*": "*",
+        "webpack:///@?:*/?:*/*": "${workspaceFolder}/*",
+        "webpack:///./packages/*": "${workspaceFolder}/packages/*",
+        "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
+      },
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Debug CLI",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/cli/src/index.ts",
+      "preLaunchTask": "pnpm: build",
+      "outFiles": [
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/packages/*/dist/**/*.js.map",
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
+        "webpack:///*": "*",
+        "webpack:///@?:*/?:*/*": "${workspaceFolder}/*",
+        "webpack:///./packages/*": "${workspaceFolder}/packages/*",
+        "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
+      },
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "args": []
+    },
+    {
+      "name": "Debug Current File",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      "preLaunchTask": "pnpm: build",
+      "outFiles": [
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/packages/*/dist/**/*.js.map",
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
+        "webpack:///*": "*",
+        "webpack:///@?:*/?:*/*": "${workspaceFolder}/*",
+        "webpack:///./packages/*": "${workspaceFolder}/packages/*",
+        "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
+      },
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Attach to Node Process",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "sourceMaps": true,
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/packages/*/dist/**/*.js.map",
+        "${workspaceFolder}/packages/*/dist/**/*.js"
+      ],
+      "sourceMapPathOverrides": {
+        "webpack:///./~/*": "${workspaceFolder}/node_modules/*",
+        "webpack:///*": "*",
+        "webpack:///@?:*/?:*/*": "${workspaceFolder}/*",
+        "webpack:///./packages/*": "${workspaceFolder}/packages/*",
+        "webpack:///src/*": "${workspaceFolder}/packages/*/src/*"
+      },
+      "skipFiles": [
+        "<node_internals>/**",
+        "node_modules/**"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug All",
+      "configurations": [
+        "Debug TypeScript",
+        "Debug CLI"
+      ],
+      "presentation": {
+        "hidden": false,
+        "order": 1
+      }
+    }
+  ]
+}

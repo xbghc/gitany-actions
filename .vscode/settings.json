@@ -1,0 +1,54 @@
+{
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.includeCompletionsForModuleExports": true,
+  "typescript.referencesCodeLens.enabled": true,
+  "typescript.implementationsCodeLens.enabled": true,
+
+  "search.exclude": {
+    "**/dist": true,
+    "**/node_modules": true
+  },
+
+  "files.exclude": {
+    "**/dist": true,
+    "**/node_modules": true
+  },
+
+  "files.watcherExclude": {
+    "**/dist": true,
+    "**/node_modules": true
+  },
+
+  "typescript.tsc.autoDetect": "off",
+  "typescript.disableAutomaticTypeAcquisition": true,
+
+  "debug.node.autoAttach": "on",
+  "debug.allowBreakpointsEverywhere": true,
+  "debug.openDebug": "openOnDebugBreak",
+
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+      "source.organizeImports": true
+    }
+  },
+
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true,
+      "source.organizeImports": true
+    }
+  }
+}

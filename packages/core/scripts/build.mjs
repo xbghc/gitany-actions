@@ -26,7 +26,8 @@ async function build() {
     platform: 'node',
     format: 'esm',
     target: 'node18',
-    sourcemap: true,
+    sourcemap: 'both',
+    sourcesContent: true,
     outfile: 'dist/index.js',
     // Do not bundle certain deps to avoid CJS-in-ESM dynamic require issues
     external: [
