@@ -1,20 +1,15 @@
 import type Docker from 'dockerode';
 
-import { docker, logger } from './shared';
-import {
-  prepareImage,
-  DockerUnavailableError,
-  ImagePullError,
-  type ImagePullStatus,
-} from './prepare-image';
-import { createWorkspaceContainer } from './create-workspace-container';
-import { cloneRepo } from './clone-repo';
-import { verifySha } from './verify-sha';
-import { checkoutSha } from './checkout-sha';
 import { checkProjectFiles } from './check-project-files';
-import { installDependencies } from './install-dependencies';
+import { checkoutSha } from './checkout-sha';
+import { cloneRepo } from './clone-repo';
 import { DiagnosticsCollectionError } from './collect-diagnostics';
+import { createWorkspaceContainer } from './create-workspace-container';
+import { installDependencies } from './install-dependencies';
+import { ImagePullError, prepareImage, type ImagePullStatus } from './prepare-image';
+import { docker, logger } from './shared';
 import type { TestShaBuildOptions, TestShaBuildResult } from './types';
+import { verifySha } from './verify-sha';
 
 /**
  * Run a sequence of build verification steps inside a disposable container.
@@ -182,9 +177,6 @@ export async function testShaBuild(
   } catch (error) {
     result.exitCode = 1;
     result.error = error instanceof Error ? error.message : String(error);
-    if (error instanceof DockerUnavailableError) {
-      result.diagnostics.dockerAvailable = false;
-    }
     if (error instanceof ImagePullError) {
       result.diagnostics.imagePullStatus = 'failed';
     }

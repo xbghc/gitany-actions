@@ -31,7 +31,6 @@ export {
   createPrContainer,
   createWorkspaceContainer,
   DiagnosticsCollectionError,
-  DockerUnavailableError,
   executeStep,
   getContainer,
   getContainerStatus,
