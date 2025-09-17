@@ -53,7 +53,7 @@ export async function editAiReplyComment(
       '--body-file',
       bodyFile,
       '--repo',
-      repoArg,
+      repoUrl,
       '--json',
     ];
     const { stdout } = await runGitcodeCli(args, { env: cliEnv });

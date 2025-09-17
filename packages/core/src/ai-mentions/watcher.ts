@@ -21,6 +21,7 @@ import {
   type AiMentionWatcherHandle,
   type WatchAiMentionsOptions,
 } from './types';
+import { debug } from 'console';
 
 const logger = createLogger('@gitany/core');
 
@@ -138,6 +139,7 @@ export function watchAiMentions(
 
         const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
         const replyBody = (await builder(result, context))?.trim();
+        console.log("replyBody", replyBody);
 
         if (!replyBody) {
           logger.warn(

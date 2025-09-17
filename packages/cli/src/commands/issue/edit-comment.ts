@@ -13,10 +13,7 @@ interface EditCommentOptions {
   repo?: string;
 }
 
-export async function editCommentAction(
-  commentIdArg: string,
-  options: EditCommentOptions = {},
-) {
+export async function editCommentAction(commentIdArg: string, options: EditCommentOptions = {}) {
   await withClient(async (client) => {
     if (!options.repo) {
       throw new Error('The --repo flag is required when editing a comment.');
@@ -24,7 +21,9 @@ export async function editCommentAction(
 
     const parsedRepo = parseGitUrl(options.repo);
     if (!parsedRepo) {
-      throw new Error(`Invalid repository format: "${options.repo}". Use OWNER/REPO or a full URL.`);
+      throw new Error(
+        `Invalid repository format: "${options.repo}". Use OWNER/REPO or a full URL.`,
+      );
     }
     const { owner, repo } = parsedRepo;
 
@@ -47,23 +46,17 @@ export async function editCommentAction(
 
     logger.debug({ owner, repo, comment_id }, 'Updating comment');
 
-    try {
-      const comment = await client.issue.updateComment({
-        owner,
-        repo,
-        comment_id,
-        body: { body: finalBody },
-      });
+    const comment = await client.issue.updateComment({
+      owner,
+      repo,
+      comment_id,
+      body: { body: finalBody },
+    });
 
-      if (options.json) {
-        console.log(JSON.stringify(comment, null, 2));
-      } else {
-        console.log(`✅ Comment ${comment.id} updated successfully.`);
-      }
-    } catch {
-      throw new Error(
-        `Failed to update comment ${comment_id} in ${owner}/${repo}.`,
-      );
+    if (options.json) {
+      console.log(JSON.stringify(comment, null, 2));
+    } else {
+      console.log(`✅ Comment ${comment.id} updated successfully.`);
     }
   }, 'Failed to edit comment');
 }
