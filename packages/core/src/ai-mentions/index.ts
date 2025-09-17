@@ -1,4 +1,4 @@
-export { watchAiMentions } from './watcher';
+export { runAiMentionsOnce, watchAiMentions } from './watcher';
 export { defaultPromptBuilder } from '../prompt/prompt';
 export type {
   AiMentionContext,
