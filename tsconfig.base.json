@@ -11,6 +11,20 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "noFallthroughCasesInSwitch": true,
-    "sourceMap": true
-  }
+    "sourceMap": true,
+    "declarationMap": true,
+    "inlineSources": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@gitany/*": ["packages/*/src"]
+    }
+  },
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/gitcode" },
+    { "path": "./packages/git-lib" },
+    { "path": "./packages/core" },
+    { "path": "./packages/cli" }
+  ]
 }

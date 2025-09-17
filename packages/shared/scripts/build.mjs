@@ -25,7 +25,8 @@ async function build() {
     platform: 'node',
     format: 'esm',
     target: 'node18',
-    sourcemap: true,
+    sourcemap: 'both',
+    sourcesContent: true,
     outfile: 'dist/index.js',
     // Keep pino & pino-pretty as runtime dependencies so Node can resolve
     // their CommonJS internals (notably pino-pretty's `tty` usage).

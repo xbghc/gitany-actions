@@ -4,6 +4,9 @@ dist/
 .env*
 !.env.example
 *.tsbuildinfo
+# 忽略 src 目录中的生成文件
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.d.ts.map
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 local_tests/

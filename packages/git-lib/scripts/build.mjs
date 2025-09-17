@@ -25,7 +25,8 @@ async function build() {
     platform: 'node',
     format: 'esm',
     target: 'node18',
-    sourcemap: true,
+    sourcemap: 'both',
+    sourcesContent: true,
     outfile: 'dist/index.js',
     // Avoid bundling CJS deps into ESM output to prevent dynamic require
     external: ['cross-spawn']

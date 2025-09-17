@@ -29,7 +29,8 @@ async function build() {
     platform: 'node',
     format: 'esm',
     target: 'node18',
-    sourcemap: true,
+    sourcemap: 'both',
+    sourcesContent: true,
     outfile: 'dist/index.js',
     external: ['@gitany/gitcode', '@gitany/shared', '@gitany/git-lib', 'commander'],
   });
