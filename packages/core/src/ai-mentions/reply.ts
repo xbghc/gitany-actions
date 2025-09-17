@@ -3,6 +3,7 @@ import {
   type CreatedIssueComment,
   type CreatedPrComment,
   type GitcodeClient,
+  type UpdatedIssueComment,
 } from '@gitany/gitcode';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -19,6 +20,51 @@ let cachedGitcodeCliEntry: string | null = null;
 export function defaultReplyBodyBuilder(result: ChatResult): string | null {
   const text = result.output?.trim();
   return text && text.length > 0 ? text : null;
+}
+
+export async function editAiReplyComment(
+  client: GitcodeClient,
+  repoUrl: string,
+  commentId: number,
+  body: string,
+): Promise<UpdatedIssueComment> {
+  const parsed = parseGitUrl(repoUrl);
+  if (!parsed) {
+    throw new Error(`Invalid repository URL: ${repoUrl}`);
+  }
+
+  const repoArg = `${parsed.owner}/${parsed.repo}`;
+  const token = (await client.auth.token())?.trim();
+  const cliEnv: NodeJS.ProcessEnv = {};
+  if (token) {
+    cliEnv.GITCODE_TOKEN = token;
+  }
+
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gitcode-cli-'));
+
+  try {
+    const bodyFile = path.join(tempDir, `${randomUUID()}.md`);
+    await fs.writeFile(bodyFile, body, 'utf8');
+
+    const args = [
+      'issue',
+      'edit-comment',
+      String(commentId),
+      '--body-file',
+      bodyFile,
+      '--repo',
+      repoArg,
+      '--json',
+    ];
+    const { stdout } = await runGitcodeCli(args, { env: cliEnv });
+    const text = stdout.trim();
+    if (!text) {
+      throw new Error('gitcode CLI returned empty output when editing issue comment');
+    }
+    return JSON.parse(text) as UpdatedIssueComment;
+  } finally {
+    await removeTempDir(tempDir);
+  }
 }
 
 export async function createAiReplyComment(
