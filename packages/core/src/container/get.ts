@@ -1,6 +1,6 @@
 import type Docker from 'dockerode';
 
-import { docker, ensureDocker } from './shared';
+import { docker } from './shared';
 
 export async function getContainer({
   pr,
@@ -9,8 +9,6 @@ export async function getContainer({
   pr: number;
   repoUrl?: string;
 }): Promise<Docker.Container | undefined> {
-  await ensureDocker();
-
   const filters: Record<string, string[]> = { label: [`gitany.prId=${pr}`] };
   if (repoUrl) filters.label.push(`gitany.repoUrl=${repoUrl}`);
 

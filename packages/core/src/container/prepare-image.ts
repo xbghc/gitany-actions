@@ -1,6 +1,5 @@
 import type Docker from 'dockerode';
 import type { Logger } from '@gitany/shared';
-import { ensureDocker } from './shared';
 
 export interface PrepareImageOptions {
   docker: Docker;
@@ -11,7 +10,6 @@ export interface PrepareImageOptions {
 
 export type ImagePullStatus = 'exists' | 'pulled';
 
-export class DockerUnavailableError extends Error {}
 export class ImagePullError extends Error {}
 
 export async function prepareImage({
@@ -20,12 +18,6 @@ export async function prepareImage({
   verbose = false,
   log,
 }: PrepareImageOptions): Promise<ImagePullStatus> {
-  try {
-    await ensureDocker();
-  } catch {
-    throw new DockerUnavailableError('Docker daemon is not available');
-  }
-
   try {
     await docker.getImage(image).inspect();
     log.debug(`🐳 镜像 ${image} 已存在`);

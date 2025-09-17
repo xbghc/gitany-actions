@@ -1,8 +1,6 @@
-import { ensureDocker } from './shared';
 import { getContainer } from './get';
 
 export async function removeContainer(prId: number) {
-  await ensureDocker();
   const container = await getContainer({ pr: prId });
   if (!container) return;
   try {

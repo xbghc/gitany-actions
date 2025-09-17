@@ -1,7 +1,7 @@
 import type { PullRequest } from '@gitany/gitcode';
 import { toGitUrl } from '@gitany/gitcode';
 
-import { collectForwardEnv, docker, ensureDocker } from './shared';
+import { collectForwardEnv, docker } from './shared';
 import type { ContainerOptions } from './types';
 import { getContainer } from './get';
 
@@ -10,8 +10,6 @@ export async function createPrContainer(
   pr: PullRequest,
   options: ContainerOptions = {},
 ) {
-  await ensureDocker();
-
   const baseRepoUrl = toGitUrl(repoUrl);
   const existing = await getContainer({ pr: pr.id, repoUrl: baseRepoUrl });
   if (existing) {
