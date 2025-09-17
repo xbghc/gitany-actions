@@ -1,55 +1,19 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Monorepo managed by `pnpm` with TypeScript.
-- `packages/gitcode`: Core library for GitCode API/auth and URL parsing.
-- `packages/cli`: CLI exposing auth and parsing commands (bin: `gitcode`).
-- `docs`: VitePress site mirroring packages (`docs/gitcode`, `docs/cli`).
-- `scripts`: Local utilities (e.g., docs sync check).
-- Git hooks: `.husky/pre-commit` runs a docs-sync check.
+This monorepo uses `pnpm` workspaces. Core logic lives in `packages/gitcode`, the CLI in `packages/cli`, and documentation in `docs` (mirrors package structure). Utility scripts sit in `scripts`, and Git hooks live under `.husky`. Keep shared config in root `tsconfig.base.json` and `.eslintrc.cjs`.
 
 ## Build, Test, and Development Commands
-- Install: `pnpm i` (Node >= 18.17).
-- Build all: `pnpm build` (recurses packages).
-- Dev (watch all): `pnpm dev`.
-- Lint / Format: `pnpm lint` / `pnpm format`.
-- Per‑package dev/build: `pnpm --filter @gitany/cli dev` or `pnpm --filter @gitany/gitcode build`.
-- Docs: `pnpm docs:dev`, `pnpm docs:build`, `pnpm docs:preview`.
-- Clean: `pnpm clean`.
+Install dependencies with `pnpm i`. Run `pnpm build` to compile every package, or target a single package (e.g., `pnpm --filter @gitany/gitcode build`). Use `pnpm dev` for watch mode across packages. Docs tooling ships with `pnpm docs:dev`, `pnpm docs:build`, and `pnpm docs:preview`. `pnpm lint` and `pnpm format` enforce style.
 
 ## Coding Style & Naming Conventions
-- Language: TypeScript (ESM). Strict compiler options shared via `tsconfig.base.json`.
-- Prettier: 2‑space indent, semicolons, single quotes, trailing commas, width 100.
-- ESLint: `@typescript-eslint` rules; ignore `dist/`, `node_modules/`.
-- Naming: files lower‑case (e.g., `client.ts`), types `PascalCase`, functions/vars `camelCase`.
+All code is TypeScript (ESM) with strict compiler options. Prettier enforces 2-space indent, single quotes, semicolons, trailing commas, and 100-character width. ESLint with `@typescript-eslint` rules is authoritative. Name files in lowercase (`client.ts`), types in PascalCase, functions and variables in camelCase.
 
 ## Testing Guidelines
-- No test runner configured yet. If adding tests:
-  - Place alongside source as `*.test.ts`.
-  - Keep units small and deterministic; mock network where feasible.
-  - Ensure `pnpm build` and `pnpm lint` pass before pushing.
+No test runner exists yet. Add lightweight unit tests alongside sources as `*.test.ts`. Keep tests deterministic and stub network calls. Ensure new tests succeed via `pnpm build` and `pnpm lint` until a test task exists.
 
 ## Commit & Pull Request Guidelines
-- Commits: clear, imperative mood; group related changes.
-- Docs sync is required when code changes affect behavior:
-  - `packages/gitcode` → update `docs/gitcode/*`
-  - `packages/cli` → update `docs/cli/*`
-- Pre‑commit hook enforces the docs check; to bypass temporarily (not recommended):
-  ```bash
-  SKIP_DOCS_CHECK=1 git commit -m "..."
-  ```
-- PRs: include description, relevant screenshots/output, and confirm docs updated. Ensure `pnpm build` and `pnpm lint` succeed.
+Write commits in imperative mood and group related changes. If code behavior shifts in `packages/gitcode` or `packages/cli`, update the matching docs (`docs/gitcode/*`, `docs/cli/*`). PRs must confirm lint/build status and explain the change; include screenshots or logs when UX or CLI output changes. The pre-commit hook runs the docs sync check; set `SKIP_DOCS_CHECK=1` only if explicitly approved.
 
 ## Security & Configuration Tips
-- Do not commit real tokens. Use a local `.env` for development (examples):
-  ```
-  GITCODE_TOKEN=
-  GITCODE_API_BASE=https://gitcode.com/api/v5
-  GITCODE_AUTH_STYLE=bearer
-  GITCODE_AUTH_HEADER=
-  ```
-- The CLI stores auth at `~/.gitany/gitcode/config.json`.
-
-## Appendix
-
-- 不考虑向后兼容，保持代码的简洁
+Never commit secrets. Use `.env` with keys such as `GITCODE_TOKEN` and `GITCODE_API_BASE`. The CLI stores auth under `~/.gitany/gitcode/config.json`. Favor clarity over backwards compatibility per project guidance.
