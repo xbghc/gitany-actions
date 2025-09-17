@@ -6,6 +6,7 @@ export interface CreateWorkspaceContainerOptions {
   image: string;
   env: string[];
   log: Logger;
+  labels?: Record<string, string>;
 }
 
 export class ContainerCreationError extends Error {}
@@ -15,6 +16,7 @@ export async function createWorkspaceContainer({
   image,
   env,
   log,
+  labels,
 }: CreateWorkspaceContainerOptions): Promise<Docker.Container> {
   try {
     const container = await docker.createContainer({
@@ -23,6 +25,7 @@ export async function createWorkspaceContainer({
       Env: env,
       User: 'node',
       HostConfig: { AutoRemove: false },
+      Labels: labels,
     });
     await container.start();
     log.debug(`🐳 容器已创建，ID: ${container.id}`);
