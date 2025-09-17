@@ -5,12 +5,14 @@ import { createIssue } from './create';
 import { createIssueComment } from './create-comment';
 import { getIssue } from './get';
 import { updateIssue } from './update';
+import { updateIssueComment } from './update-comment';
 import type {
   ListIssuesQuery,
   IssueCommentsQuery,
   CreateIssueParams,
   CreateIssueCommentParams,
   UpdateIssueBody,
+  UpdateIssueCommentParams,
 } from '../../api/issue';
 
 export class GitcodeClientIssue {
@@ -39,6 +41,18 @@ export class GitcodeClientIssue {
   createComment(params: CreateIssueCommentParams) {
     return createIssueComment(this.client, params);
   }
+
+  updateComment(params: UpdateIssueCommentParams) {
+    return updateIssueComment(this.client, params);
+  }
 }
 
-export { listIssues, listIssueComments, createIssue, createIssueComment, getIssue, updateIssue };
+export {
+  listIssues,
+  listIssueComments,
+  createIssue,
+  createIssueComment,
+  getIssue,
+  updateIssue,
+  updateIssueComment,
+};

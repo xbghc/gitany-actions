@@ -10,7 +10,11 @@ import { chat } from '../container';
 import { watchIssues, type WatchIssueHandle } from '../issue/watcher';
 import { watchPullRequest, type WatchPullRequestHandle } from '../pr/watcher';
 import { defaultPromptBuilder } from './prompt';
-import { createAiReplyComment, defaultReplyBodyBuilder } from './reply';
+import {
+  createAiReplyComment,
+  defaultReplyBodyBuilder,
+  editAiReplyComment,
+} from './reply';
 import {
   type AiMentionContext,
   type AiMentionSource,
@@ -46,6 +50,7 @@ export function watchAiMentions(
 
     logger.info({ issueNumber, commentId: comment.id, source }, '[watchAiMentions] mention detected');
 
+    // First, build the context needed for both placeholder and final reply.
     let issueDetail: Issue | undefined = payload.issueSnapshot;
     if (!issueDetail) {
       try {
@@ -78,68 +83,95 @@ export function watchAiMentions(
       pullRequest: payload.pullRequest,
     };
 
-    let prompt: string;
+    // If replies are disabled, we can still run the chat but won't post anything.
+    if (!replyEnabled) {
+      logger.info('[watchAiMentions] reply is disabled, running chat without posting comments.');
+      // Fire-and-forget the chat executor without creating/editing comments.
+      void (async () => {
+        try {
+          const prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
+          if (prompt?.trim()) {
+            await chatExecutor(repoUrl, prompt, options.chatOptions);
+          }
+        } catch (err) {
+          logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] background chat invocation failed');
+        }
+      })();
+      return;
+    }
+
+    // Create a placeholder comment first to provide immediate feedback.
+    let placeholderCommentId: number;
     try {
-      const builder = options.buildPrompt ?? defaultPromptBuilder;
-      prompt = await builder(context);
+      const placeholder = await createAiReplyComment(client, repoUrl, context, '思考中，请稍候... 🤔');
+      placeholderCommentId = placeholder.comment.id;
+      logger.info(
+        { issueNumber, originalCommentId: comment.id, placeholderCommentId },
+        '[watchAiMentions] created placeholder comment',
+      );
     } catch (err) {
-      logger.error({ err, issueNumber }, '[watchAiMentions] failed to build prompt');
+      logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to create placeholder comment');
+      // If we can't even create the first comment, abort.
+      options.onReplyError?.(err, context);
       return;
     }
 
-    if (!prompt?.trim()) {
-      logger.warn({ issueNumber }, '[watchAiMentions] empty prompt generated, skip chat invocation');
-      return;
-    }
+    // Now, run the actual chat and prompt building in the background.
+    void (async () => {
+      try {
+        const prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
+        if (!prompt?.trim()) {
+          logger.warn({ issueNumber }, '[watchAiMentions] empty prompt generated, skipping chat invocation');
+          await editAiReplyComment(client, repoUrl, placeholderCommentId, '任务已取消：生成的 Prompt 为空。');
+          return;
+        }
 
-    try {
-      const result = await chatExecutor(repoUrl, prompt, options.chatOptions);
-      options.onChatResult?.(result, context);
-      if (!result.success) {
-        logger.error({ issueNumber, commentId: comment.id, error: result.error }, '[watchAiMentions] chat failed');
-      } else {
+        const result = await chatExecutor(repoUrl, prompt, options.chatOptions);
+        options.onChatResult?.(result, context);
+
+        if (!result.success) {
+          throw result.error ?? new Error('Chat execution failed without a specific error.');
+        }
+
         logger.info({ issueNumber, commentId: comment.id }, '[watchAiMentions] chat completed');
-        if (replyEnabled) {
-          let replyBody: string | null | undefined;
-          try {
-            const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
-            replyBody = await builder(result, context);
-          } catch (err) {
-            logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to build reply body');
-            options.onReplyError?.(err, context);
-            return;
-          }
 
-          const trimmed = replyBody?.trim();
-          if (!trimmed) {
-            logger.warn(
-              { issueNumber, commentId: comment.id },
-              '[watchAiMentions] empty reply body generated, skip comment creation',
-            );
-            return;
-          }
+        const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
+        const replyBody = (await builder(result, context))?.trim();
 
-          try {
-            const reply = await createAiReplyComment(client, repoUrl, context, trimmed);
-            options.onReplyCreated?.(reply, context);
-            logger.info(
-              {
-                issueNumber,
-                commentId: comment.id,
-                replyId: reply.comment.id,
-                replySource: reply.source,
-              },
-              '[watchAiMentions] reply comment created',
-            );
-          } catch (err) {
-            logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to post reply');
-            options.onReplyError?.(err, context);
-          }
+        if (!replyBody) {
+          logger.warn(
+            { issueNumber, commentId: comment.id },
+            '[watchAiMentions] empty reply body generated, updating placeholder with notice.',
+          );
+          await editAiReplyComment(client, repoUrl, placeholderCommentId, '任务完成，但无内容可回复。');
+          return;
+        }
+
+        const finalComment = await editAiReplyComment(client, repoUrl, placeholderCommentId, replyBody);
+        logger.info(
+          { issueNumber, originalCommentId: comment.id, finalCommentId: finalComment.id },
+          '[watchAiMentions] successfully edited placeholder comment with final answer.',
+        );
+        // Note: We don't have a full AiMentionReply object here, so creating a synthetic one for the callback.
+        options.onReplyCreated?.(
+          {
+            source: context.commentSource,
+            body: replyBody,
+            comment: { id: finalComment.id }, // Simplified comment object
+          },
+          context,
+        );
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] background task failed');
+        try {
+          await editAiReplyComment(client, repoUrl, placeholderCommentId, `处理失败: ${errorMessage}`);
+          options.onReplyError?.(err, context);
+        } catch (editErr) {
+          logger.error({ err: editErr, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to update placeholder with error');
         }
       }
-    } catch (err) {
-      logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] chat invocation failed');
-    }
+    })();
   };
 
   if (options.includeIssueComments !== false) {

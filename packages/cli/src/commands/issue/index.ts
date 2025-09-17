@@ -7,6 +7,7 @@ import { viewCommand } from './view';
 import { editCommand } from './edit';
 import { closeCommand } from './close';
 import { reopenCommand } from './reopen';
+import { editCommentCommand } from './edit-comment';
 
 export function issueCommand(): Command {
   const issueProgram = new Command('issue')
@@ -36,6 +37,7 @@ export function issueCommand(): Command {
 
   // Comment command with simplified syntax
   issueProgram.addCommand(createCommentCommand());
+  issueProgram.addCommand(editCommentCommand());
 
   // Status command for issue statistics
   issueProgram.addCommand(statusCommand());
