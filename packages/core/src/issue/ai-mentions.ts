@@ -4,14 +4,12 @@ import {
   type IssueComment,
   type PullRequest,
   type PRComment,
-  type ListIssuesQuery,
-  type IssueCommentsQuery,
   type CreatedIssueComment,
   type CreatedPrComment,
   parseGitUrl,
 } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
-import { chat, type ChatOptions, type ChatResult } from '../container';
+import { chat, type ChatResult } from '../container';
 import { watchIssues, type WatchIssueHandle } from './watcher';
 import { watchPullRequest, type WatchPullRequestHandle } from '../pr/watcher';
 import { spawn } from 'node:child_process';

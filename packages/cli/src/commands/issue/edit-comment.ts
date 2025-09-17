@@ -60,7 +60,7 @@ export async function editCommentAction(
       } else {
         console.log(`✅ Comment ${comment.id} updated successfully.`);
       }
-    } catch (error) {
+    } catch {
       throw new Error(
         `Failed to update comment ${comment_id} in ${owner}/${repo}.`,
       );
