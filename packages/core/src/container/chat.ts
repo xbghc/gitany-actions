@@ -108,15 +108,12 @@ export async function chat(
       }
     }
 
-    const chatEnv = [...anthropicEnv, ...forwardedEnv];
+    const chatEnv = [...anthropicEnv, ...forwardedEnv, `CLAUDE_QUESTION=${question}`];
 
     const chatStep = await executeStep({
       container,
       name: 'claude',
-      script:
-        `cd /tmp/workspace && ~/.npm-global/bin/claude -p ${JSON.stringify(
-          question,
-        )} 2>&1`,
+      script: 'cd /tmp/workspace && ~/.npm-global/bin/claude -p "$CLAUDE_QUESTION" 2>&1',
       env: chatEnv,
       log,
       verbose,
