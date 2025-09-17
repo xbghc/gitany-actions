@@ -1,6 +1,7 @@
 import type Docker from 'dockerode';
 import { collectForwardEnv, docker, logger } from './shared';
 import { prepareImage } from './prepare-image';
+import { getDevContainer } from './get-dev-container';
 import { createWorkspaceContainer } from './create-workspace-container';
 import { cloneRepo } from './clone-repo';
 import { verifySha } from './verify-sha';
@@ -44,7 +45,7 @@ export async function chat(
   const sha = options.sha ?? 'dev';
   const nodeVersion = options.nodeVersion ?? '18';
   const verbose = options.verbose ?? false;
-  const keepContainer = options.keepContainer ?? false;
+  let keepContainer = options.keepContainer ?? false;
   const log = logger.child({ scope: 'core:container', func: 'chat', sha });
 
   const defaultRegistry = 'https://registry.npmmirror.com';
@@ -59,17 +60,31 @@ export async function chat(
   const sharedStepEnv = [...registryEnv, ...forwardedEnv];
 
   let container = options.container;
+  if (!container && sha === 'dev') {
+    container = await getDevContainer();
+    if (container) {
+      log.debug(' reusing dev container');
+    }
+  }
   const createdContainer = !container;
 
   try {
     if (!container) {
       const image = `node:${nodeVersion}`;
       await prepareImage({ docker, image, verbose, log });
+
+      const labels: Record<string, string> = {};
+      if (sha === 'dev') {
+        labels['gitany.branch'] = 'dev';
+        keepContainer = true;
+      }
+
       container = await createWorkspaceContainer({
         docker,
         image,
         env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...sharedStepEnv],
         log,
+        labels,
       });
       const installCli = await installGitcodeCli({ container, log, verbose, env: sharedStepEnv });
       if (!installCli.success) return { success: false, error: installCli.output };
