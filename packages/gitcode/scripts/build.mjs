@@ -21,6 +21,12 @@ async function main() {
 
   await runCmd('tsc', ['-p', 'tsconfig.json', '--emitDeclarationOnly']);
 
+  const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
+  const externalDeps = [
+    ...Object.keys(pkg.dependencies ?? {}),
+    ...Object.keys(pkg.peerDependencies ?? {}),
+  ];
+
   await esbuild({
     entryPoints: ['src/index.ts'],
     bundle: true,
@@ -29,7 +35,10 @@ async function main() {
     target: 'node18',
     sourcemap: true,
     outfile: 'dist/index.js',
-    external: ['@gitany/shared'],
+    // Keep runtime dependencies external so their native module format (CJS/ESM)
+    // is preserved. Bundling got -> keyv triggered dynamic `require('events')`
+    // in the emitted ESM, so we skip bundling dependencies altogether.
+    external: externalDeps,
   });
 }
 

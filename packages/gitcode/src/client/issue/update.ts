@@ -14,7 +14,6 @@ export async function updateIssue(
   }
 
   const apiUrl = updateIssueUrl(parsed.owner, parsed.repo, issueNumber);
-  const json = await client.request(apiUrl, 'PATCH', { body });
+  const json = await client.request(apiUrl, 'PATCH', { json: body });
   return updatedIssueSchema.parse(json);
 }
-

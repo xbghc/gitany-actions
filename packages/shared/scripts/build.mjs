@@ -27,7 +27,9 @@ async function build() {
     target: 'node18',
     sourcemap: true,
     outfile: 'dist/index.js',
-    external: ['pino'],
+    // Keep pino & pino-pretty as runtime dependencies so Node can resolve
+    // their CommonJS internals (notably pino-pretty's `tty` usage).
+    external: ['pino', 'pino-pretty'],
   });
 }
 
@@ -35,4 +37,3 @@ build().catch((err) => {
   console.error(err);
   process.exit(1);
 });
-

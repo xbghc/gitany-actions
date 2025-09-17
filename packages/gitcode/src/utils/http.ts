@@ -1,5 +1,4 @@
 import got, {
-  type OptionsInit,
   type OptionsOfJSONResponseBody,
   type OptionsOfTextResponseBody,
   type RetryOptions,
@@ -10,7 +9,7 @@ import got, {
 
 import { createLogger } from '@gitany/shared';
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH';
 
 export type HttpRequestParams = {
   method: HttpMethod;
@@ -40,11 +39,13 @@ export function isNotModified(value: unknown): boolean {
 }
 
 const httpDebugFlag = process.env.GITCODE_HTTP_DEBUG ?? '';
-const httpDebugEnabled = ['1', 'true', 'yes', 'on', 'debug']
-  .includes(httpDebugFlag.trim().toLowerCase());
+const httpDebugEnabled = ['1', 'true', 'yes', 'on', 'debug'].includes(
+  httpDebugFlag.trim().toLowerCase(),
+);
 const httpDebugShowSensitiveFlag = process.env.GITCODE_HTTP_DEBUG_SHOW_SECRETS || '';
-const httpDebugShowSensitive = ['1', 'true', 'yes', 'on']
-  .includes(httpDebugShowSensitiveFlag.trim().toLowerCase());
+const httpDebugShowSensitive = ['1', 'true', 'yes', 'on'].includes(
+  httpDebugShowSensitiveFlag.trim().toLowerCase(),
+);
 
 const httpLogger = createLogger('@gitany/gitcode:http');
 
@@ -83,25 +84,6 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
   const requestHooks = buildHooks(url);
   const retry = resolveRetry(options?.retry);
 
-  const commonOptions: OptionsInit = {
-    method,
-    headers,
-    searchParams,
-    retry,
-  };
-
-  if (requestHooks) {
-    commonOptions.hooks = requestHooks;
-  }
-
-  if (options?.json !== undefined) {
-    commonOptions.json = options.json;
-  }
-
-  if (options?.body !== undefined) {
-    commonOptions.body = options.body;
-  }
-
   logHttp('request', {
     method,
     url,
@@ -113,19 +95,33 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
   try {
     if (responseType === 'text') {
       const requestOptions: OptionsOfTextResponseBody = {
-        ...commonOptions,
+        method,
+        headers,
+        searchParams,
+        retry,
+        hooks: requestHooks,
+        isStream: false,
         responseType: 'text',
+        ...(options?.json !== undefined ? { json: options.json } : {}),
+        ...(options?.body !== undefined ? { body: options.body } : {}),
       };
-      const response = await http<string>(url, requestOptions);
-      return handleResponse(method, url, cacheKey, cached, response) as unknown as T;
+      const response = await http(url, requestOptions);
+      return handleResponse(method, url, cacheKey, cached, response as Response<string>) as unknown as T;
     }
 
     const requestOptions: OptionsOfJSONResponseBody = {
-      ...commonOptions,
+      method,
+      headers,
+      searchParams,
+      retry,
+      hooks: requestHooks,
+      isStream: false,
       responseType: 'json',
+      ...(options?.json !== undefined ? { json: options.json } : {}),
+      ...(options?.body !== undefined ? { body: options.body } : {}),
     };
-    const response = await http<T>(url, requestOptions);
-    return handleResponse(method, url, cacheKey, cached, response);
+    const response = await http(url, requestOptions);
+    return handleResponse(method, url, cacheKey, cached, response as Response<T>);
   } catch (error) {
     throw normalizeGotError(error, url);
   }
@@ -267,7 +263,9 @@ function handleResponse<T>(
   return response.body as T;
 }
 
-function normalizeHeaders(headers: Record<string, string | string[] | undefined>): Record<string, string> {
+function normalizeHeaders(
+  headers: Record<string, string | string[] | undefined>,
+): Record<string, string> {
   const normalized: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
     if (Array.isArray(value)) {
@@ -309,7 +307,11 @@ function normalizeGotError(error: unknown, requestUrl: string): Error {
     const details = extractErrorMessage(cause) ?? 'connection timed out';
     return new Error(`连接 GitCode 服务器超时: ${requestUrl}. ${details}`);
   }
-  if (code === 'UND_ERR_HEADERS_TIMEOUT' || code === 'UND_ERR_RESPONSE_TIMEOUT' || code === 'ETIMEDOUT') {
+  if (
+    code === 'UND_ERR_HEADERS_TIMEOUT' ||
+    code === 'UND_ERR_RESPONSE_TIMEOUT' ||
+    code === 'ETIMEDOUT'
+  ) {
     return new Error(`等待 GitCode 响应超时: ${requestUrl}`);
   }
 
