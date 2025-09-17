@@ -20,35 +20,31 @@ export async function closeAction(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
 
-      try {
-        const issue = await client.issue.update(repoUrl, issueNumber, { state: 'closed' });
+      const issue = await client.issue.update(repoUrl, issueNumber, { state: 'closed' });
 
-        if (options.json) {
-          console.log(JSON.stringify(issue, null, 2));
-          return;
-        }
-
-        console.log(`\n🔒 Issue #${issue.number} closed.`);
-        console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'closed'))}`);
-        const issueUrl = (issue as { html_url?: string }).html_url;
-        if (issueUrl) {
-          console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
-        }
-        console.log(`\n💡 Reopen the issue anytime with: gitcode issue reopen ${issue.number}`);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        if (/\b404\b/.test(message)) {
-          if (options.json) {
-            console.log('null');
-          } else {
-            console.log('Issue not found.');
-          }
-          return;
-        }
-        throw err;
+      if (options.json) {
+        console.log(JSON.stringify(issue, null, 2));
+        return;
       }
+
+      console.log(`\n🔒 Issue #${issue.number} closed.`);
+      console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'closed'))}`);
+      const issueUrl = (issue as { html_url?: string }).html_url;
+      if (issueUrl) {
+        console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
+      }
+      console.log(`\n💡 Reopen the issue anytime with: gitcode issue reopen ${issue.number}`);
     },
     'Failed to close issue',
+    {
+      onNotFound: () => {
+        if (options.json) {
+          console.log('null');
+        } else {
+          console.log('Issue not found.');
+        }
+      },
+    },
   );
 }
 

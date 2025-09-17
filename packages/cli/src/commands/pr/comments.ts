@@ -25,42 +25,38 @@ export async function prCommentsCommand(
 
   await withClient(
     async (client) => {
-      try {
-        const repoUrl = await resolveRepoUrl(url);
-        const comments = await client.pr.comments(repoUrl, n, {
-          page: options.page ? Number(options.page) : undefined,
-          per_page: options.perPage ? Number(options.perPage) : undefined,
-          comment_type: isPrCommentType(options.commentType)
-            ? options.commentType
-            : undefined,
-        });
+      const repoUrl = await resolveRepoUrl(url);
+      const comments = await client.pr.comments(repoUrl, n, {
+        page: options.page ? Number(options.page) : undefined,
+        per_page: options.perPage ? Number(options.perPage) : undefined,
+        comment_type: isPrCommentType(options.commentType)
+          ? options.commentType
+          : undefined,
+      });
 
-        if (options.json) {
-          console.log(JSON.stringify(comments, null, 2));
-          return;
-        }
+      if (options.json) {
+        console.log(JSON.stringify(comments, null, 2));
+        return;
+      }
 
-        for (const comment of comments as unknown[]) {
-          const item = comment as Record<string, unknown>;
-          const id = (item.id ?? item.comment_id ?? '?') as number | string;
-          const body = (item.body ?? '').toString().split('\n')[0];
-          const createdAt = (item.created_at ?? '') as string;
-          const author = (item.user as Record<string, unknown>)?.login ?? '?';
+      for (const comment of comments as unknown[]) {
+        const item = comment as Record<string, unknown>;
+        const id = (item.id ?? item.comment_id ?? '?') as number | string;
+        const body = (item.body ?? '').toString().split('\n')[0];
+        const createdAt = (item.created_at ?? '') as string;
+        const author = (item.user as Record<string, unknown>)?.login ?? '?';
 
-          const dateStr = createdAt ? new Date(createdAt).toLocaleDateString() : '';
-          console.log(`- [#${id}] ${author} on ${dateStr}: ${body}`);
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (/\b404\b/.test(msg)) {
-          if (options.json) {
-            console.log('[]');
-          }
-          return;
-        }
-        throw err;
+        const dateStr = createdAt ? new Date(createdAt).toLocaleDateString() : '';
+        console.log(`- [#${id}] ${author} on ${dateStr}: ${body}`);
       }
     },
     'Failed to list PR comments',
+    {
+      onNotFound: () => {
+        if (options.json) {
+          console.log('[]');
+        }
+      },
+    },
   );
 }
