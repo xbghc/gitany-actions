@@ -1,17 +1,14 @@
 import {
   GitcodeClient,
-  type PullRequest,
   type PRComment,
   type PRCommentQueryOptions,
+  type PullRequest,
   isNotModified,
 } from '@gitany/gitcode';
 import type Docker from 'dockerode';
-import { createLogger } from '@gitany/shared';
-import { createPrContainer, removeContainer, cleanupPrContainers as cleanup } from '../container';
+import { createPrContainer, removeContainer } from '../container';
 import type { ContainerOptions } from '../container/types';
 import { BaseWatcher, type WatcherOptions } from './common';
-
-const logger = createLogger('@gitany/core');
 
 export interface WatchPullRequestOptions extends WatcherOptions {
   onClosed?: (pr: PullRequest) => void;
@@ -36,7 +33,11 @@ type PersistShape = {
   lastCommentIdsByPr: Record<string, number[]>;
 };
 
-export class PullRequestWatcher extends BaseWatcher<WatchPullRequestOptions, WatcherState, PersistShape> {
+export class PullRequestWatcher extends BaseWatcher<
+  WatchPullRequestOptions,
+  WatcherState,
+  PersistShape
+> {
   private readonly containerMap = new Map<number, Docker.Container>();
 
   constructor(client: GitcodeClient, url: string, options: WatchPullRequestOptions = {}) {
@@ -60,11 +61,15 @@ export class PullRequestWatcher extends BaseWatcher<WatchPullRequestOptions, Wat
     for (const [k, v] of Object.entries(persisted.lastCommentIdsByPr ?? {})) {
       const num = Number(k);
       if (!Number.isNaN(num) && Array.isArray(v)) {
-        const commentIds = v.filter(id => typeof id === 'number' && !isNaN(id));
+        const commentIds = v.filter((id) => typeof id === 'number' && !isNaN(id));
         lastMap.set(num, new Set(commentIds));
       }
     }
-    const prList: BaselinePR[] = (persisted.prs ?? []).map((p) => ({ id: p.id, state: p.state, number: p.number }));
+    const prList: BaselinePR[] = (persisted.prs ?? []).map((p) => ({
+      id: p.id,
+      state: p.state,
+      number: p.number,
+    }));
     return { prList, lastCommentIdsByPr: lastMap };
   }
 
@@ -75,7 +80,7 @@ export class PullRequestWatcher extends BaseWatcher<WatchPullRequestOptions, Wat
         Array.from(state.lastCommentIdsByPr.entries()).map(([key, value]) => [
           key,
           Array.from(value),
-        ])
+        ]),
       ),
     };
   }
@@ -115,7 +120,7 @@ export class PullRequestWatcher extends BaseWatcher<WatchPullRequestOptions, Wat
 
       if (notModified) {
         if (!existingLastSeen) {
-          this.state.lastCommentIdsByPr.set(pr.number, new Set(comments.map(c => c.id)));
+          this.state.lastCommentIdsByPr.set(pr.number, new Set(comments.map((c) => c.id)));
         }
         continue;
       }
@@ -127,15 +132,19 @@ export class PullRequestWatcher extends BaseWatcher<WatchPullRequestOptions, Wat
         continue;
       }
 
-      const currentCommentIds = new Set(comments.map(c => c.id));
+      const currentCommentIds = new Set(comments.map((c) => c.id));
       if (!existingLastSeen) {
         this.state.lastCommentIdsByPr.set(pr.number, currentCommentIds);
         continue;
       }
 
-      const newCommentIds = new Set(comments.filter(c => !existingLastSeen.has(c.id)).map(c => c.id));
+      const newCommentIds = new Set(
+        comments.filter((c) => !existingLastSeen.has(c.id)).map((c) => c.id),
+      );
       if (newCommentIds.size > 0) {
-        const newComments = comments.filter(c => newCommentIds.has(c.id)).sort((a, b) => a.id - b.id);
+        const newComments = comments
+          .filter((c) => newCommentIds.has(c.id))
+          .sort((a, b) => a.id - b.id);
         for (const comment of newComments) {
           this.options.onComment?.(pr, comment);
         }
@@ -144,15 +153,19 @@ export class PullRequestWatcher extends BaseWatcher<WatchPullRequestOptions, Wat
     }
   }
 
-  private async fetchPrComments(prNumber: number): Promise<{ data: PRComment[]; notModified: boolean }> {
-    const query: PRCommentQueryOptions | undefined =
-      this.options.commentType ? { comment_type: this.options.commentType } : undefined;
+  private async fetchPrComments(
+    prNumber: number,
+  ): Promise<{ data: PRComment[]; notModified: boolean }> {
+    const query: PRCommentQueryOptions | undefined = this.options.commentType
+      ? { comment_type: this.options.commentType }
+      : undefined;
     const data = await this.client.pr.comments(this.url, prNumber, query);
     return { data, notModified: isNotModified(data) };
   }
 
   private async triggerPullRequestEvent(pr: PullRequest): Promise<void> {
-    const { onClosed, onMerged, onOpen, container, onContainerCreated, onContainerRemoved } = this.options;
+    const { onClosed, onMerged, onOpen, container, onContainerCreated, onContainerRemoved } =
+      this.options;
     const handleContainer = container !== false && container !== undefined;
 
     if (pr.state === 'open') {
@@ -181,5 +194,3 @@ export function watchPullRequest(
 ): PullRequestWatcher {
   return new PullRequestWatcher(client, url, options);
 }
-
-export const cleanupPrContainers = cleanup;
