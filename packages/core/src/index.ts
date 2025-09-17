@@ -8,7 +8,7 @@ export type { WatchIssueOptions } from './watcher/issue';
 export { PullRequestWatcher, watchPullRequest } from './watcher/pr';
 export type { WatchPullRequestOptions } from './watcher/pr';
 
-export { defaultPromptBuilder, watchAiMentions } from './ai-mentions';
+export { defaultPromptBuilder, runAiMentionsOnce, watchAiMentions } from './ai-mentions';
 export type {
   AiMentionContext,
   AiMentionReply,

@@ -20,46 +20,41 @@ import {
 
 const logger = createLogger('@gitany/core');
 
-export function watchAiMentions(
+type MentionHandler = (payload: {
+  source: AiMentionSource;
+  comment: IssueComment | PRComment;
+  issueNumber: number;
+  issueSnapshot?: Issue;
+  pullRequest?: PullRequest;
+}) => Promise<void>;
+
+function createMentionHandler(
   client: GitcodeClient,
   repoUrl: string,
-  options: WatchAiMentionsOptions = {},
-): AiMentionWatcherHandle {
-  const mentionToken = options.mention ?? '@AI';
-  const mentionRegex = createMentionRegex(mentionToken);
+  options: WatchAiMentionsOptions,
+  loggerPrefix: string,
+): MentionHandler {
   const chatExecutor = options.chatExecutor ?? chat;
-  const issueWatchers: IssueWatcher[] = [];
-  const prWatchers: PullRequestWatcher[] = [];
   const replyEnabled = options.replyWithComment !== false;
 
-  const handleMention = async (payload: {
-    source: AiMentionSource;
-    comment: IssueComment | PRComment;
-    issueNumber: number;
-    issueSnapshot?: Issue;
-    pullRequest?: PullRequest;
-  }) => {
+  return async (payload) => {
     const { issueNumber, comment, source } = payload;
     if (!Number.isFinite(issueNumber)) return;
 
-    logger.info(
-      { issueNumber, commentId: comment.id, source },
-      '[watchAiMentions] mention detected',
-    );
+    logger.info({ issueNumber, commentId: comment.id, source }, `[${loggerPrefix}] mention detected`);
 
-    // First, build the context needed for both placeholder and final reply.
     let issueDetail: Issue | undefined = payload.issueSnapshot;
     if (!issueDetail) {
       try {
         issueDetail = await client.issue.get(repoUrl, issueNumber);
       } catch (err) {
-        logger.error({ err, issueNumber }, '[watchAiMentions] failed to load issue detail');
+        logger.error({ err, issueNumber }, `[${loggerPrefix}] failed to load issue detail`);
         return;
       }
     }
 
     if (!issueDetail) {
-      logger.error({ issueNumber }, '[watchAiMentions] missing issue detail');
+      logger.error({ issueNumber }, `[${loggerPrefix}] missing issue detail`);
       return;
     }
 
@@ -71,7 +66,7 @@ export function watchAiMentions(
         options.issueCommentQuery ?? {},
       );
     } catch (err) {
-      logger.warn({ err, issueNumber }, '[watchAiMentions] failed to load issue comments');
+      logger.warn({ err, issueNumber }, `[${loggerPrefix}] failed to load issue comments`);
     }
 
     const context: AiMentionContext = {
@@ -84,10 +79,8 @@ export function watchAiMentions(
       pullRequest: payload.pullRequest,
     };
 
-    // If replies are disabled, we can still run the chat but won't post anything.
     if (!replyEnabled) {
-      logger.info('[watchAiMentions] reply is disabled, running chat without posting comments.');
-      // Fire-and-forget the chat executor without creating/editing comments.
+      logger.info(`[${loggerPrefix}] reply is disabled, running chat without posting comments.`);
       void (async () => {
         try {
           const prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
@@ -97,14 +90,13 @@ export function watchAiMentions(
         } catch (err) {
           logger.error(
             { err, issueNumber, commentId: comment.id },
-            '[watchAiMentions] background chat invocation failed',
+            `[${loggerPrefix}] background chat invocation failed`,
           );
         }
       })();
       return;
     }
 
-    // Create a placeholder comment first to provide immediate feedback.
     let placeholderCommentId: number;
     try {
       const placeholder = await createAiReplyComment(
@@ -116,19 +108,17 @@ export function watchAiMentions(
       placeholderCommentId = placeholder.comment.id;
       logger.info(
         { issueNumber, originalCommentId: comment.id, placeholderCommentId },
-        '[watchAiMentions] created placeholder comment',
+        `[${loggerPrefix}] created placeholder comment`,
       );
     } catch (err) {
       logger.error(
         { err, issueNumber, commentId: comment.id },
-        '[watchAiMentions] failed to create placeholder comment',
+        `[${loggerPrefix}] failed to create placeholder comment`,
       );
-      // If we can't even create the first comment, abort.
       options.onReplyError?.(err, context);
       return;
     }
 
-    // Now, run the actual chat and prompt building in the background.
     void (async () => {
       let prompt: string | undefined;
       try {
@@ -136,7 +126,7 @@ export function watchAiMentions(
         if (!prompt?.trim()) {
           logger.warn(
             { issueNumber },
-            '[watchAiMentions] empty prompt generated, skipping chat invocation',
+            `[${loggerPrefix}] empty prompt generated, skipping chat invocation`,
           );
           await editAiReplyComment(
             client,
@@ -154,7 +144,7 @@ export function watchAiMentions(
           throw result.error ?? new Error('Chat execution failed without a specific error.');
         }
 
-        logger.info({ issueNumber, commentId: comment.id }, '[watchAiMentions] chat completed');
+        logger.info({ issueNumber, commentId: comment.id }, `[${loggerPrefix}] chat completed`);
 
         const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
         const replyBody = (await builder(result, context))?.trim();
@@ -163,7 +153,7 @@ export function watchAiMentions(
         if (!replyBody) {
           logger.warn(
             { issueNumber, commentId: comment.id },
-            '[watchAiMentions] empty reply body generated, updating placeholder with notice.',
+            `[${loggerPrefix}] empty reply body generated, updating placeholder with notice.`,
           );
           await editAiReplyComment(
             client,
@@ -182,14 +172,13 @@ export function watchAiMentions(
         );
         logger.info(
           { issueNumber, originalCommentId: comment.id, finalCommentId: finalComment.id },
-          '[watchAiMentions] successfully edited placeholder comment with final answer.',
+          `[${loggerPrefix}] successfully edited placeholder comment with final answer.`,
         );
-        // Note: We don't have a full AiMentionReply object here, so creating a synthetic one for the callback.
         options.onReplyCreated?.(
           {
             source: context.commentSource,
             body: replyBody,
-            comment: { id: finalComment.id, body: replyBody }, // Simplified comment object
+            comment: { id: finalComment.id, body: replyBody },
           },
           context,
         );
@@ -197,7 +186,7 @@ export function watchAiMentions(
         const errorMessage = err instanceof Error ? err.message : String(err);
         logger.error(
           { err, issueNumber, commentId: comment.id, prompt },
-          '[watchAiMentions] background task failed',
+          `[${loggerPrefix}] background task failed`,
         );
         try {
           await editAiReplyComment(
@@ -210,12 +199,23 @@ export function watchAiMentions(
         } catch (editErr) {
           logger.error(
             { err: editErr, issueNumber, commentId: comment.id },
-            '[watchAiMentions] failed to update placeholder with error',
+            `[${loggerPrefix}] failed to update placeholder with error`,
           );
         }
       }
     })();
   };
+}
+
+export function watchAiMentions(
+  client: GitcodeClient,
+  repoUrl: string,
+  options: WatchAiMentionsOptions = {},
+): AiMentionWatcherHandle {
+  const mentionRegex = createMentionRegex(options.mention ?? '@AI');
+  const issueWatchers: IssueWatcher[] = [];
+  const prWatchers: PullRequestWatcher[] = [];
+  const handleMention = createMentionHandler(client, repoUrl, options, 'watchAiMentions');
 
   if (options.includeIssueComments !== false) {
     const issueWatcher = watchIssues(client, repoUrl, {
@@ -273,6 +273,60 @@ export function watchAiMentions(
       }
     },
   } satisfies AiMentionWatcherHandle;
+}
+
+export async function runAiMentionsOnce(
+  client: GitcodeClient,
+  repoUrl: string,
+  options: WatchAiMentionsOptions = {},
+): Promise<void> {
+  const mentionRegex = createMentionRegex(options.mention ?? '@AI');
+  const mentionHandlerPromises: Promise<void>[] = [];
+  const handleMention = createMentionHandler(client, repoUrl, options, 'runAiMentionsOnce');
+  const watcherPromises = [];
+
+  if (options.includeIssueComments !== false) {
+    const issueWatcher = watchIssues(client, repoUrl, {
+      intervalSec: options.issueIntervalSec,
+      issueQuery: options.issueQuery,
+      commentQuery: options.issueCommentQuery,
+      onComment: (issue, comment) => {
+        if (!mentionRegex.test(comment.body)) return;
+        const issueNumber = Number(issue.number);
+        mentionHandlerPromises.push(
+          handleMention({
+            source: 'issue_comment',
+            comment,
+            issueNumber,
+            issueSnapshot: issue,
+          }),
+        );
+      },
+    });
+    watcherPromises.push(issueWatcher.runOnce());
+  }
+
+  if (options.includePullRequestComments !== false) {
+    const prWatcher = watchPullRequest(client, repoUrl, {
+      intervalSec: options.prIntervalSec,
+      commentType: options.prCommentType,
+      onComment: (pr, comment) => {
+        if (!mentionRegex.test(comment.body)) return;
+        mentionHandlerPromises.push(
+          handleMention({
+            source: 'pr_review_comment',
+            comment,
+            issueNumber: pr.number,
+            pullRequest: pr,
+          }),
+        );
+      },
+    });
+    watcherPromises.push(prWatcher.runOnce());
+  }
+
+  await Promise.all(watcherPromises);
+  await Promise.all(mentionHandlerPromises);
 }
 
 function createMentionRegex(mention: string): RegExp {

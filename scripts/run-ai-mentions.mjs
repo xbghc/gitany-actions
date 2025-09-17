@@ -19,8 +19,8 @@
 // - SHOW_PROMPT: 可选，设置为 "true" 时输出生成的提示词。
 
 import { config } from 'dotenv';
-import { watchAiMentions, defaultPromptBuilder, chat } from '../../packages/core/dist/index.js';
-import { GitcodeClient } from '../../packages/gitcode/dist/index.js';
+import { runAiMentionsOnce, defaultPromptBuilder, chat } from '../packages/core/dist/index.js';
+import { GitcodeClient } from '../packages/gitcode/dist/index.js';
 import os from 'node:os';
 
 config({ path: new URL('.env', import.meta.url) });
@@ -208,33 +208,28 @@ async function main() {
   const chatVerbose = envBoolean('CHAT_VERBOSE', false);
   const issueIntervalSec = envNumber('ISSUE_INTERVAL_SEC');
   const prIntervalSec = envNumber('PR_INTERVAL_SEC');
-  const durationSec = envNumber('WATCH_DURATION_SEC');
 
   const client = new GitcodeClient();
   const mentionToken =
     (process.env.MENTION_TOKEN || '').trim() || (await resolveDefaultMention(client, verbose));
   const chatOptions = buildChatOptions(runChat, chatKeepContainer, chatVerbose);
 
-  console.log('👂 开始监听 AI 评论提及');
+  console.log('👂 开始扫描 AI 评论提及 (一次性)');
   console.log(`📦 仓库: ${repoUrl}`);
   console.log(`🏷️ 触发标记: ${mentionToken}`);
-  console.log(`📝 监听 Issue 评论: ${includeIssueComments ? '是' : '否'}`);
-  console.log(`📝 监听 PR 评论: ${includePullRequestComments ? '是' : '否'}`);
+  console.log(`📝 扫描 Issue 评论: ${includeIssueComments ? '是' : '否'}`);
+  console.log(`📝 扫描 PR 评论: ${includePullRequestComments ? '是' : '否'}`);
   console.log(`🤖 chat 模式: ${runChat ? '实际调用' : '模拟 (dry-run)'}`);
   if (chatOptions?.sha) console.log(`🔗 chat 目标: ${chatOptions.sha}`);
   if (chatOptions?.nodeVersion) console.log(`🟢 chat Node.js 版本: ${chatOptions.nodeVersion}`);
   if (chatKeepContainer) console.log('🐳 chat 执行后将保留容器');
   if (chatVerbose) console.log('🔍 chat 详细日志: 开启');
-  if (issueIntervalSec) console.log(`⏱️ Issue 轮询间隔: ${issueIntervalSec}s`);
-  if (prIntervalSec) console.log(`⏱️ PR 轮询间隔: ${prIntervalSec}s`);
-  if (durationSec) console.log(`⌛ 自动停止: ${durationSec}s`);
   if (showPrompt) console.log('📝 将输出生成的提示词');
   if (verbose) console.log('🔍 将打印评论正文等调试信息');
 
-  const timers = [];
   const loggingOptions = { verbose, showPrompt };
 
-  const watcher = watchAiMentions(client, repoUrl, {
+  await runAiMentionsOnce(client, repoUrl, {
     mention: mentionToken,
     issueIntervalSec,
     prIntervalSec,
@@ -264,39 +259,12 @@ async function main() {
     },
   });
 
-  function stopWatcher(exitCode = 0) {
-    watcher.stop();
-    for (const timer of timers) {
-      clearTimeout(timer);
-    }
-    process.exit(exitCode);
-  }
-
-  process.on('SIGINT', () => {
-    console.log('\n🛑 收到 SIGINT, 正在退出...');
-    stopWatcher(0);
-  });
-
-  process.on('SIGTERM', () => {
-    console.log('\n🛑 收到 SIGTERM, 正在退出...');
-    stopWatcher(0);
-  });
-
-  if (durationSec) {
-    timers.push(
-      setTimeout(() => {
-        console.log('⏰ 达到设定监听时长, 自动停止');
-        stopWatcher(0);
-      }, durationSec * 1000),
-    );
-  }
-
-  console.log('✅ 监听已启动，按 Ctrl+C 可随时退出。');
+  console.log('✅ 扫描完成。');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((err) => {
-    console.error('💥 监听过程中发生错误:');
+    console.error('💥 扫描过程中发生错误:');
     console.error(err);
     process.exit(1);
   });
