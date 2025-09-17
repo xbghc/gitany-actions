@@ -1,12 +1,37 @@
 import Docker from 'dockerode';
 import { createLogger } from '@gitany/shared';
 
+const dockerode = new Docker();
+
+async function ensureDocker() {
+  try {
+    await dockerode.ping();
+  } catch {
+    throw new Error('Docker daemon is not available. Ensure Docker is running.');
+  }
+}
+
 // No local filesystem/container image build needed; use official Node images.
-export const docker = new Docker();
+export const docker = new Proxy(dockerode, {
+  get(target, prop, receiver) {
+    const original = Reflect.get(target, prop, receiver);
+    if (typeof original === 'function') {
+      return async function (...args: any[]) {
+        await ensureDocker();
+        // eslint-disable-next-line @typescript-eslint/ban-types
+        return (original as Function).apply(target, args);
+      };
+    }
+    return original;
+  },
+});
+
 export const logger = createLogger('@gitany/core');
 
 /** Forwarded Claude related env vars */
-const anthropicEnvVars = Object.keys(process.env).filter((key) => key.startsWith('ANTHROPIC_'));
+const anthropicEnvVars = Object.keys(process.env).filter((key) =>
+  key.startsWith('ANTHROPIC_'),
+);
 
 export const forward = [
   ...anthropicEnvVars,
@@ -23,12 +48,4 @@ export function collectForwardEnv(): string[] {
     }
   }
   return values;
-}
-
-export async function ensureDocker() {
-  try {
-    await docker.ping();
-  } catch {
-    throw new Error('Docker daemon is not available. Ensure Docker is running.');
-  }
 }

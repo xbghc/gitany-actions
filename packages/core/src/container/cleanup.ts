@@ -1,4 +1,4 @@
-import { docker, ensureDocker, logger } from './shared';
+import { docker, logger } from './shared';
 
 /**
  * Scan and remove stale PR containers.
@@ -6,7 +6,6 @@ import { docker, ensureDocker, logger } from './shared';
  * Any container that is not in `running` state will be force removed.
  */
 export async function cleanupPrContainers() {
-  await ensureDocker();
   const containers = await docker.listContainers({
     all: true,
     filters: { label: ['gitany.prId'] },
