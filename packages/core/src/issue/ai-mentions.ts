@@ -139,7 +139,7 @@ export function watchAiMentions(
               {
                 issueNumber,
                 commentId: comment.id,
-                replyId: reply.comment.id,
+                replyCommentId: reply.comment.id,
                 replySource: reply.source,
               },
               '[watchAiMentions] reply comment created',

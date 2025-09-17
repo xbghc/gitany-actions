@@ -135,18 +135,18 @@ function logChatResult(result, context, runChat) {
       console.log('   - [后台] (dry-run) 获取到模拟结果');
     }
     if (runChat) {
-      console.log(`✅ [后台] chat 成功 (原评论 ID ${context.mentionComment.id})`);
+      console.log(`✅ [后台] chat 成功 (评论 ID ${context.mentionComment.id})`);
       if (result.output) {
         console.log('----- chat 输出 -----');
         console.log(result.output);
         console.log('----------------------');
       }
     } else {
-      console.log(`✅ [后台] 已模拟 chat (原评论 ID ${context.mentionComment.id})`);
+      console.log(`✅ [后台] 已模拟 chat (评论 ID ${context.mentionComment.id})`);
     }
   } else {
     console.error('   - [后台] 获取返回结果失败');
-    console.error(`❌ [后台] chat 失败 (原评论 ID ${context.mentionComment.id})`);
+    console.error(`❌ [后台] chat 失败 (评论 ID ${context.mentionComment.id})`);
     if (result.error) {
       console.error(result.error);
     }
@@ -158,10 +158,9 @@ function logReplySuccess(reply, context) {
   // The new watcher logic handles logging for placeholder creation and editing internally.
   // This callback is now only for the final success case.
   console.log(
-    `   - [后台] 成功更新占位评论 (${source}, 原评论 ID ${context.mentionComment.id}, 最终评论 ID ${reply.comment.id})`,
+    `   - [后台] 成功更新占位评论 (${source}, 评论 ID ${context.mentionComment.id})`,
   );
-  console.log(`💬 [后台] 已通过编辑评论进行回复 (原评论 ID ${context.mentionComment.id})`);
-  console.log(`   • 最终评论 ID: ${reply.comment.id}`);
+  console.log(`💬 [后台] 已通过编辑评论进行回复 (评论 ID ${context.mentionComment.id})`);
 }
 
 function logReplyError(error, context) {

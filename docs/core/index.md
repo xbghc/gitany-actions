@@ -108,7 +108,7 @@ const aiWatcher = watchAiMentions(client, 'https://gitcode.com/owner/repo.git', 
     }
   },
   onReplyCreated: (reply) => {
-    console.log('AI 已回复评论，ID:', reply.comment.id);
+    console.log('AI 已回复评论，回复 ID:', reply.comment.id);
   },
 });
 

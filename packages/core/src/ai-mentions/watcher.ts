@@ -21,7 +21,6 @@ import {
   type AiMentionWatcherHandle,
   type WatchAiMentionsOptions,
 } from './types';
-import { debug } from 'console';
 
 const logger = createLogger('@gitany/core');
 

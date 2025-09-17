@@ -33,7 +33,6 @@ export async function editAiReplyComment(
     throw new Error(`Invalid repository URL: ${repoUrl}`);
   }
 
-  const repoArg = `${parsed.owner}/${parsed.repo}`;
   const token = (await client.auth.token())?.trim();
   const cliEnv: NodeJS.ProcessEnv = {};
   if (token) {
