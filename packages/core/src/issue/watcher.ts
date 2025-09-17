@@ -26,17 +26,14 @@ export interface WatchIssueHandle {
   stop(): void;
 }
 
-type LastSeenComment = {
-  id: number;
-  createdAt: string | null;
-};
+type LastSeenComment = Set<number>;
 
 type WatcherState = {
   lastCommentByIssue: Map<number, LastSeenComment>;
 };
 
 type PersistShape = {
-  lastCommentByIssue: Record<string, LastSeenComment>;
+  lastCommentByIssue: Record<string, number[]>;
 };
 
 export class IssueWatcher implements WatchIssueHandle {
@@ -73,7 +70,9 @@ export class IssueWatcher implements WatchIssueHandle {
   }
 
   getLastCommentId(issueNumber: number): number | undefined {
-    return this.state.lastCommentByIssue.get(issueNumber)?.id;
+    const commentIds = this.state.lastCommentByIssue.get(issueNumber);
+    if (!commentIds || commentIds.size === 0) return undefined;
+    return Math.max(...commentIds);
   }
 
   protected async detectNewComments(issues: Issue[]): Promise<void> {
@@ -83,7 +82,6 @@ export class IssueWatcher implements WatchIssueHandle {
 
     logger.info('[watchIssues] detecting new comments');
     for (const issue of issues) {
-      // TODO 拆分
       const issueNumber = Number(issue.number);
       if (!Number.isFinite(issueNumber)) continue;
 
@@ -100,12 +98,7 @@ export class IssueWatcher implements WatchIssueHandle {
 
       if (notModified) {
         if (!existingLastSeen) {
-          const latest = comments[comments.length - 1];
-          if (latest) {
-            this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(latest));
-          } else {
-            this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.emptyLastSeen());
-          }
+          this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(comments));
         }
         continue;
       }
@@ -117,44 +110,40 @@ export class IssueWatcher implements WatchIssueHandle {
         continue;
       }
 
-      const latestComment = comments[comments.length - 1];
+      const currentCommentIds = new Set(comments.map(comment => comment.id));
 
       if (!existingLastSeen) {
-        this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(latestComment));
+        this.state.lastCommentByIssue.set(issueNumber, currentCommentIds);
         continue;
       }
 
-      const collected: IssueComment[] = [];
-      let baselineFound = false;
-      for (let i = comments.length - 1; i >= 0; i -= 1) {
-        const comment = comments[i];
-        if (comment.id === existingLastSeen.id) {
-          baselineFound = true;
-          break;
+      const newCommentIds = new Set<number>();
+      for (const commentId of currentCommentIds) {
+        if (!existingLastSeen.has(commentId)) {
+          newCommentIds.add(commentId);
         }
-        collected.push(comment);
       }
 
-      const newComments = baselineFound ? collected.reverse() : [...comments];
+      if (newCommentIds.size > 0) {
+        const newComments = comments.filter(comment => newCommentIds.has(comment.id));
+        newComments.sort((a, b) => a.id - b.id);
 
-      if (newComments.length > 0) {
         for (const comment of newComments) {
           this.options.onComment?.(issue, comment);
         }
       }
 
-      this.state.lastCommentByIssue.set(issueNumber, IssueWatcher.toLastSeen(latestComment));
+      this.state.lastCommentByIssue.set(issueNumber, currentCommentIds);
     }
     logger.info('[watchIssues] detecting new comments complete');
   }
 
   private static emptyLastSeen(): LastSeenComment {
-    return { id: 0, createdAt: null };
+    return new Set<number>();
   }
 
-  private static toLastSeen(comment: IssueComment): LastSeenComment {
-    const createdAt = typeof comment.created_at === 'string' ? comment.created_at : null;
-    return { id: comment.id, createdAt };
+  private static toLastSeen(comments: IssueComment[]): LastSeenComment {
+    return new Set(comments.map(comment => comment.id));
   }
 
   private async poll(): Promise<void> {
@@ -193,7 +182,12 @@ export class IssueWatcher implements WatchIssueHandle {
       await ensureDir(dir);
       const file = IssueWatcher.getStoreFile(this.url);
       const data: PersistShape = {
-        lastCommentByIssue: Object.fromEntries(this.state.lastCommentByIssue),
+        lastCommentByIssue: Object.fromEntries(
+          Array.from(this.state.lastCommentByIssue.entries()).map(([key, value]) => [
+            key,
+            Array.from(value),
+          ])
+        ),
       };
       await fs.writeFile(file, JSON.stringify(data), 'utf8');
     } catch (err) {
@@ -211,12 +205,9 @@ export class IssueWatcher implements WatchIssueHandle {
       const lastMap = new Map<number, LastSeenComment>();
       for (const [key, value] of Object.entries(data.lastCommentByIssue ?? {})) {
         const num = Number(key);
-        if (!Number.isNaN(num) && value && typeof value === 'object') {
-          const parsedValue = value as Partial<LastSeenComment>;
-          const id = typeof parsedValue.id === 'number' ? parsedValue.id : 0;
-          const createdAt =
-            typeof parsedValue.createdAt === 'string' ? parsedValue.createdAt : null;
-          lastMap.set(num, { id, createdAt });
+        if (!Number.isNaN(num) && Array.isArray(value)) {
+          const commentIds = value.filter(id => typeof id === 'number' && !isNaN(id));
+          lastMap.set(num, new Set(commentIds));
         }
       }
       return { lastCommentByIssue: lastMap };

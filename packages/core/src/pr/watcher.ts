@@ -107,16 +107,16 @@ export async function triggerPullRequestEvent(
 
 type WatcherState = {
   prList: BaselinePR[];
-  lastCommentIdByPr: Map<number, number>; // pr.number -> last seen comment id
+  lastCommentIdsByPr: Map<number, Set<number>>; // pr.number -> set of seen comment ids
 };
 
 type BaselinePR = Pick<PullRequest, 'id' | 'number' | 'state'>;
 
 function createWatcherState(url: string): WatcherState {
-  // 从磁盘加载上次的基线，避免程序重启后重复触发“新增/新评论”事件
+  // 从磁盘加载上次的基线，避免程序重启后重复触发"新增/新评论"事件
   const persisted = loadPersistedStateSync(url);
   if (persisted) return persisted;
-  return { prList: [], lastCommentIdByPr: new Map() };
+  return { prList: [], lastCommentIdsByPr: new Map() };
 }
 
 async function fetchPullRequests(
@@ -162,47 +162,46 @@ async function detectNewComments(
     if (pr.state !== 'open') continue;
 
     const { data: comments, notModified } = await fetchPrComments(client, url, pr.number, options);
-    const lastSeen = state.lastCommentIdByPr.get(pr.number);
+    const existingLastSeen = state.lastCommentIdsByPr.get(pr.number);
 
     if (notModified) {
-      if (lastSeen === undefined) {
-        const highestId = comments.reduce((max, comment) => (comment.id > max ? comment.id : max), 0);
-        state.lastCommentIdByPr.set(pr.number, highestId);
+      if (!existingLastSeen) {
+        state.lastCommentIdsByPr.set(pr.number, new Set(comments.map(comment => comment.id)));
       }
-      break;
-    }
-
-    if (!comments.length) {
-      if (lastSeen === undefined) {
-        state.lastCommentIdByPr.set(pr.number, 0);
-        continue;
-      }
-      break;
-    }
-
-    if (lastSeen === undefined) {
-      // 首次建立基线：记录最新的评论 ID，避免历史评论触发
-      state.lastCommentIdByPr.set(pr.number, comments[0].id);
       continue;
     }
 
-    // 触发新增评论（按时间/ID 降序返回时，> lastSeen 即为新评论）
-    let maxId = lastSeen;
-    let hasNewComment = false;
-    for (let i = comments.length - 1; i >= 0; i--) {
-      const c = comments[i];
-      if (c.id > lastSeen) {
-        hasNewComment = true;
-        options.onComment?.(pr, c);
-        if (c.id > maxId) maxId = c.id;
+    if (!comments.length) {
+      if (!existingLastSeen) {
+        state.lastCommentIdsByPr.set(pr.number, new Set());
+      }
+      continue;
+    }
+
+    const currentCommentIds = new Set(comments.map(comment => comment.id));
+
+    if (!existingLastSeen) {
+      state.lastCommentIdsByPr.set(pr.number, currentCommentIds);
+      continue;
+    }
+
+    const newCommentIds = new Set<number>();
+    for (const commentId of currentCommentIds) {
+      if (!existingLastSeen.has(commentId)) {
+        newCommentIds.add(commentId);
       }
     }
-    if (maxId !== lastSeen) {
-      state.lastCommentIdByPr.set(pr.number, maxId);
+
+    if (newCommentIds.size > 0) {
+      const newComments = comments.filter(comment => newCommentIds.has(comment.id));
+      newComments.sort((a, b) => a.id - b.id);
+
+      for (const comment of newComments) {
+        options.onComment?.(pr, comment);
+      }
     }
-    if (!hasNewComment) {
-      break;
-    }
+
+    state.lastCommentIdsByPr.set(pr.number, currentCommentIds);
   }
 }
 
@@ -224,7 +223,7 @@ async function fetchPrComments(
 type PersistShape = {
   // Minimal info to identify PRs and detect state changes across restarts
   prs: Array<{ id: number; number: number; state: PullRequest['state'] }>;
-  lastCommentIdByPr: Record<string, number>; // key: pr.number
+  lastCommentIdsByPr: Record<string, number[]>; // key: pr.number
 };
 
 function getStoreDir() {
@@ -247,14 +246,17 @@ function loadPersistedStateSync(url: string): WatcherState | null {
     const raw = fsSync.readFileSync(file, 'utf8');
     if (!raw) return null;
     const data = JSON.parse(raw) as PersistShape;
-    const lastMap = new Map<number, number>();
-    for (const [k, v] of Object.entries(data.lastCommentIdByPr ?? {})) {
+    const lastMap = new Map<number, Set<number>>();
+    for (const [k, v] of Object.entries(data.lastCommentIdsByPr ?? {})) {
       const num = Number(k);
-      if (!Number.isNaN(num)) lastMap.set(num, v);
+      if (!Number.isNaN(num) && Array.isArray(v)) {
+        const commentIds = v.filter(id => typeof id === 'number' && !isNaN(id));
+        lastMap.set(num, new Set(commentIds));
+      }
     }
     // 仅需要 id/state/number 用于事件对比；避免在类型上引入过多属性
     const prList: BaselinePR[] = (data.prs ?? []).map((p) => ({ id: p.id, state: p.state, number: p.number }));
-    return { prList, lastCommentIdByPr: lastMap };
+    return { prList, lastCommentIdsByPr: lastMap };
   } catch (err) {
     // 使用统一 logger 记录错误（stderr）
     const msg = '[watchPullRequest] 读取持久化状态失败';
@@ -270,7 +272,12 @@ async function persistState(url: string, state: WatcherState) {
     const file = getStoreFile(url);
     const data: PersistShape = {
       prs: state.prList.map((p) => ({ id: p.id, state: p.state, number: p.number })),
-      lastCommentIdByPr: Object.fromEntries(state.lastCommentIdByPr),
+      lastCommentIdsByPr: Object.fromEntries(
+        Array.from(state.lastCommentIdsByPr.entries()).map(([key, value]) => [
+          key,
+          Array.from(value),
+        ])
+      ),
     };
     await fs.writeFile(file, JSON.stringify(data), 'utf8');
   } catch (err) {
