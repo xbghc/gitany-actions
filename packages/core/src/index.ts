@@ -3,10 +3,12 @@
  *
  */
 
-export { watchPullRequest } from './pr/watcher';
-export { watchIssues } from './issue/watcher';
+export { watchIssues, IssueWatcher } from './watcher/issue';
+export type { WatchIssueOptions } from './watcher/issue';
+export { watchPullRequest, PullRequestWatcher, cleanupPrContainers } from './watcher/pr';
+export type { WatchPullRequestOptions } from './watcher/pr';
+
 export { watchAiMentions, defaultPromptBuilder } from './ai-mentions';
-export type { WatchIssueOptions, WatchIssueHandle } from './issue/watcher';
 export type {
   WatchAiMentionsOptions,
   AiMentionWatcherHandle,

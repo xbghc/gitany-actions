@@ -7,8 +7,8 @@ import {
 } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 import { chat } from '../container';
-import { watchIssues, type WatchIssueHandle } from '../issue/watcher';
-import { watchPullRequest, type WatchPullRequestHandle } from '../pr/watcher';
+import { watchIssues, type IssueWatcher } from '../watcher/issue';
+import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr';
 import { defaultPromptBuilder } from '../prompt/prompt';
 import {
   createAiReplyComment,
@@ -32,8 +32,8 @@ export function watchAiMentions(
   const mentionToken = options.mention ?? '@AI';
   const mentionRegex = createMentionRegex(mentionToken);
   const chatExecutor = options.chatExecutor ?? chat;
-  const issueHandles: WatchIssueHandle[] = [];
-  const prHandles: WatchPullRequestHandle[] = [];
+  const issueWatchers: IssueWatcher[] = [];
+  const prWatchers: PullRequestWatcher[] = [];
   const replyEnabled = options.replyWithComment !== false;
 
   const handleMention = async (
@@ -177,7 +177,7 @@ export function watchAiMentions(
   };
 
   if (options.includeIssueComments !== false) {
-    const issueHandle = watchIssues(client, repoUrl, {
+    const issueWatcher = watchIssues(client, repoUrl, {
       intervalSec: options.issueIntervalSec,
       issueQuery: options.issueQuery,
       commentQuery: options.issueCommentQuery,
@@ -192,11 +192,12 @@ export function watchAiMentions(
         });
       },
     });
-    issueHandles.push(issueHandle);
+    issueWatcher.start();
+    issueWatchers.push(issueWatcher);
   }
 
   if (options.includePullRequestComments !== false) {
-    const prHandle = watchPullRequest(client, repoUrl, {
+    const prWatcher = watchPullRequest(client, repoUrl, {
       intervalSec: options.prIntervalSec,
       commentType: options.prCommentType,
       onComment: (pr, comment) => {
@@ -209,21 +210,22 @@ export function watchAiMentions(
         });
       },
     });
-    prHandles.push(prHandle);
+    prWatcher.start();
+    prWatchers.push(prWatcher);
   }
 
   return {
     stop() {
-      for (const handle of issueHandles) {
+      for (const watcher of issueWatchers) {
         try {
-          handle.stop();
+          watcher.stop();
         } catch (err) {
           logger.error({ err }, '[watchAiMentions] failed to stop issue watcher');
         }
       }
-      for (const handle of prHandles) {
+      for (const watcher of prWatchers) {
         try {
-          handle.stop();
+          watcher.stop();
         } catch (err) {
           logger.error({ err }, '[watchAiMentions] failed to stop PR watcher');
         }
