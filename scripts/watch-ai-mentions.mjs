@@ -1,21 +1,22 @@
 #!/usr/bin/env node
 
-// Smoke test to exercise watchAiMentions end-to-end via CLI options.
+// Watch for AI mentions in a repository and trigger a chat response.
+//
 // 环境变量:
-// - TEST_REPO_URL: 必填，目标仓库 URL。
-// - TEST_MENTION: 可选，自定义触发标记，默认值为 Gitcode 当前用户的 @用户名。
-// - TEST_ISSUE_INTERVAL: 可选，Issue 轮询间隔秒数。
-// - TEST_PR_INTERVAL: 可选，PR 轮询间隔秒数。
-// - TEST_WATCH_DURATION: 可选，监听持续秒数。
-// - TEST_INCLUDE_ISSUE_COMMENTS: 可选，设置为 "false" 时不监听 Issue 评论。
-// - TEST_INCLUDE_PR_COMMENTS: 可选，设置为 "false" 时不监听 PR 评论。
-// - TEST_RUN_CHAT: 可选，设置为 "false" 时仅进行 dry-run。
-// - TEST_SHA: 可选，chat 使用的目标 SHA。
-// - TEST_NODE_VERSION: 可选，chat 容器使用的 Node.js 版本。
-// - TEST_CHAT_KEEP_CONTAINER: 可选，设置为 "true" 时保留 chat 容器。
-// - TEST_CHAT_VERBOSE: 可选，设置为 "true" 时输出 chat 详细日志。
-// - TEST_VERBOSE: 可选，设置为 "true" 时打印评论正文等调试信息。
-// - TEST_SHOW_PROMPT: 可选，设置为 "true" 时输出生成的提示词。
+// - REPO_URL: 必填，目标仓库 URL。
+// - MENTION_TOKEN: 可选，自定义触发标记，默认值为 Gitcode 当前用户的 @用户名。
+// - ISSUE_INTERVAL_SEC: 可选，Issue 轮询间隔秒数。
+// - PR_INTERVAL_SEC: 可选，PR 轮询间隔秒数。
+// - WATCH_DURATION_SEC: 可选，监听持续秒数。
+// - INCLUDE_ISSUE_COMMENTS: 可选，设置为 "false" 时不监听 Issue 评论。
+// - INCLUDE_PR_COMMENTS: 可选，设置为 "false" 时不监听 PR 评论。
+// - RUN_CHAT: 可选，设置为 "false" 时仅进行 dry-run。
+// - CHAT_SHA: 可选，chat 使用的目标 SHA。
+// - CHAT_NODE_VERSION: 可选，chat 容器使用的 Node.js 版本。
+// - CHAT_KEEP_CONTAINER: 可选，设置为 "true" 时保留 chat 容器。
+// - CHAT_VERBOSE: 可选，设置为 "true" 时输出 chat 详细日志。
+// - VERBOSE: 可选，设置为 "true" 时打印评论正文等调试信息。
+// - SHOW_PROMPT: 可选，设置为 "true" 时输出生成的提示词。
 
 import { config } from 'dotenv';
 import { watchAiMentions, defaultPromptBuilder, chat } from '../../packages/core/dist/index.js';
@@ -177,9 +178,9 @@ function logReplyError(error, context) {
 function buildChatOptions(runChat, chatKeepContainer, chatVerbose) {
   if (!runChat) return undefined;
   const options = {};
-  const sha = (process.env.TEST_SHA || '').trim();
+  const sha = (process.env.CHAT_SHA || '').trim();
   if (sha) options.sha = sha;
-  const nodeVersion = (process.env.TEST_NODE_VERSION || '').trim();
+  const nodeVersion = (process.env.CHAT_NODE_VERSION || '').trim();
   if (nodeVersion) options.nodeVersion = nodeVersion;
   if (chatKeepContainer) options.keepContainer = true;
   if (chatVerbose) options.verbose = true;
@@ -187,31 +188,31 @@ function buildChatOptions(runChat, chatKeepContainer, chatVerbose) {
 }
 
 async function main() {
-  const repoUrl = (process.env.TEST_REPO_URL || '').trim();
+  const repoUrl = (process.env.REPO_URL || '').trim();
   if (!repoUrl) {
-    console.error('错误: 请设置 TEST_REPO_URL 环境变量。');
+    console.error('错误: 请设置 REPO_URL 环境变量。');
     process.exit(1);
   }
 
-  const includeIssueComments = envBoolean('TEST_INCLUDE_ISSUE_COMMENTS', true);
-  const includePullRequestComments = envBoolean('TEST_INCLUDE_PR_COMMENTS', true);
+  const includeIssueComments = envBoolean('INCLUDE_ISSUE_COMMENTS', true);
+  const includePullRequestComments = envBoolean('INCLUDE_PR_COMMENTS', true);
   if (!includeIssueComments && !includePullRequestComments) {
     console.error('错误: 至少需要监听 Issue 或 PR 评论中的一种');
     process.exit(1);
   }
 
-  const runChat = envBoolean('TEST_RUN_CHAT', true);
-  const verbose = envBoolean('TEST_VERBOSE', false);
-  const showPrompt = envBoolean('TEST_SHOW_PROMPT', false);
-  const chatKeepContainer = envBoolean('TEST_CHAT_KEEP_CONTAINER', false);
-  const chatVerbose = envBoolean('TEST_CHAT_VERBOSE', false);
-  const issueIntervalSec = envNumber('TEST_ISSUE_INTERVAL');
-  const prIntervalSec = envNumber('TEST_PR_INTERVAL');
-  const durationSec = envNumber('TEST_WATCH_DURATION');
+  const runChat = envBoolean('RUN_CHAT', true);
+  const verbose = envBoolean('VERBOSE', false);
+  const showPrompt = envBoolean('SHOW_PROMPT', false);
+  const chatKeepContainer = envBoolean('CHAT_KEEP_CONTAINER', false);
+  const chatVerbose = envBoolean('CHAT_VERBOSE', false);
+  const issueIntervalSec = envNumber('ISSUE_INTERVAL_SEC');
+  const prIntervalSec = envNumber('PR_INTERVAL_SEC');
+  const durationSec = envNumber('WATCH_DURATION_SEC');
 
   const client = new GitcodeClient();
   const mentionToken =
-    (process.env.TEST_MENTION || '').trim() || (await resolveDefaultMention(client, verbose));
+    (process.env.MENTION_TOKEN || '').trim() || (await resolveDefaultMention(client, verbose));
   const chatOptions = buildChatOptions(runChat, chatKeepContainer, chatVerbose);
 
   console.log('👂 开始监听 AI 评论提及');
