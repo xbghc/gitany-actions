@@ -21,14 +21,10 @@ export function urlKey(url: string) {
 }
 
 export function getWatcherStoreDir(subDir: string): string {
-    return path.join(resolveGitcodeSubdir('watchers'), subDir);
+  return path.join(resolveGitcodeSubdir('watchers'), subDir);
 }
 
-export abstract class BaseWatcher<
-  TOptions extends WatcherOptions,
-  TState,
-  TPersist
-> {
+export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPersist> {
   protected readonly client: GitcodeClient;
   protected readonly url: string;
   protected readonly options: TOptions;
@@ -99,7 +95,10 @@ export abstract class BaseWatcher<
       const data = JSON.parse(raw) as TPersist;
       return this.fromPersisted(data);
     } catch (err) {
-      logger.error({ err }, `[BaseWatcher] Failed to read persisted state for ${this.getStoreSubDir()}`);
+      logger.error(
+        { err },
+        `[BaseWatcher] Failed to read persisted state for ${this.getStoreSubDir()}`,
+      );
       return this.getInitialState();
     }
   }

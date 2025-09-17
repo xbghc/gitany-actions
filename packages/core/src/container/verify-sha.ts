@@ -28,4 +28,3 @@ export async function verifySha({ container, log, verbose }: StepOptions): Promi
   duration += checkBranch.duration;
   return { success: checkBranch.success, duration, output };
 }
-

@@ -3,10 +3,7 @@
  */
 
 import type { GitcodeClient } from '../core';
-import type {
-  CreateIssueCommentParams,
-  CreatedIssueComment,
-} from '../../api/issue/create-comment';
+import type { CreateIssueCommentParams, CreatedIssueComment } from '../../api/issue/create-comment';
 import { createIssueCommentUrl, createdIssueCommentSchema } from '../../api/issue/create-comment';
 
 /**

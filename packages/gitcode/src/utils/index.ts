@@ -1,4 +1,4 @@
-export type Remote = { owner: string; repo: string; host?: string; };
+export type Remote = { owner: string; repo: string; host?: string };
 /**
  * Parses a Git remote URL like:
  *  - https://github.com/owner/repo(.git)

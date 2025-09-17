@@ -47,4 +47,3 @@ export type UpdatedIssue = z.infer<typeof updatedIssueSchema>;
 export function updateIssueUrl(owner: string, repo: string, issueNumber: number): string {
   return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${issueNumber}`;
 }
-

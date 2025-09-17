@@ -64,6 +64,7 @@ title: gitcode 工具库
 - `GITCODE_HTTP_DEBUG_SHOW_SECRETS`：在调试日志中展示敏感头部（默认隐藏）
 
 **Token 读取优先级**：
+
 1. 环境变量 `GITCODE_TOKEN`
 2. 本地配置文件 `~/.gitany/gitcode/config.json`
 
@@ -99,7 +100,11 @@ const profile = await client.getUserProfile();
 const perm = await client.getSelfRepoPermission('owner', 'repo');
 
 // 获取 PR 列表（GET /repos/{owner}/{repo}/pulls）
-const pulls = await client.listPullRequests('owner', 'repo', { state: 'open', page: 1, per_page: 20 });
+const pulls = await client.listPullRequests('owner', 'repo', {
+  state: 'open',
+  page: 1,
+  per_page: 20,
+});
 
 // 创建 PR（POST /repos/{owner}/{repo}/pulls）
 const pr = await client.createPullRequest('owner', 'repo', {
@@ -113,7 +118,7 @@ const pr = await client.createPullRequest('owner', 'repo', {
 
 // 获取 PR 评论（GET /repos/{owner}/{repo}/pulls/{number}/comments）
 const comments = await client.listPullRequestComments('https://gitcode.com/owner/repo.git', 123, {
-  comment_type: 'pr_comment'
+  comment_type: 'pr_comment',
 });
 
 // 获取 Issue 列表（GET /repos/{owner}/{repo}/issues）

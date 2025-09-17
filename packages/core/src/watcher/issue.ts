@@ -51,7 +51,7 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
     for (const [key, value] of Object.entries(persisted.lastCommentByIssue ?? {})) {
       const num = Number(key);
       if (!Number.isNaN(num) && Array.isArray(value)) {
-        const commentIds = value.filter(id => typeof id === 'number' && !isNaN(id));
+        const commentIds = value.filter((id) => typeof id === 'number' && !isNaN(id));
         lastMap.set(num, new Set(commentIds));
       }
     }
@@ -64,7 +64,7 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
         Array.from(state.lastCommentByIssue.entries()).map(([key, value]) => [
           key,
           Array.from(value),
-        ])
+        ]),
       ),
     };
   }
@@ -97,7 +97,7 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
 
       if (notModified) {
         if (!existingLastSeen) {
-          this.state.lastCommentByIssue.set(issueNumber, new Set(comments.map(c => c.id)));
+          this.state.lastCommentByIssue.set(issueNumber, new Set(comments.map((c) => c.id)));
         }
         continue;
       }
@@ -109,7 +109,7 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
         continue;
       }
 
-      const currentCommentIds = new Set(comments.map(comment => comment.id));
+      const currentCommentIds = new Set(comments.map((comment) => comment.id));
 
       if (!existingLastSeen) {
         this.state.lastCommentByIssue.set(issueNumber, currentCommentIds);
@@ -124,7 +124,7 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
       }
 
       if (newCommentIds.size > 0) {
-        const newComments = comments.filter(comment => newCommentIds.has(comment.id));
+        const newComments = comments.filter((comment) => newCommentIds.has(comment.id));
         newComments.sort((a, b) => a.id - b.id);
 
         for (const comment of newComments) {
@@ -142,7 +142,9 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
     return this.client.issue.list(this.url, query);
   }
 
-  private async fetchIssueComments(issueNumber: number): Promise<{ data: IssueComment[]; notModified: boolean }> {
+  private async fetchIssueComments(
+    issueNumber: number,
+  ): Promise<{ data: IssueComment[]; notModified: boolean }> {
     const query = this.options.commentQuery;
     const data = await this.client.issue.comments(this.url, issueNumber, query ?? {});
     return { data, notModified: isNotModified(data) };

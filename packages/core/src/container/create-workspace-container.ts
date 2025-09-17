@@ -31,9 +31,6 @@ export async function createWorkspaceContainer({
     log.debug(`🐳 容器已创建，ID: ${container.id}`);
     return container;
   } catch (error) {
-    throw new ContainerCreationError(
-      error instanceof Error ? error.message : String(error),
-    );
+    throw new ContainerCreationError(error instanceof Error ? error.message : String(error));
   }
 }
-

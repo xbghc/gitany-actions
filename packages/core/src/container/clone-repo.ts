@@ -11,4 +11,3 @@ export async function cloneRepo({ container, log, verbose }: StepOptions): Promi
     verbose,
   });
 }
-

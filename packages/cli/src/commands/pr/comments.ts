@@ -29,9 +29,7 @@ export async function prCommentsCommand(
       const comments = await client.pr.comments(repoUrl, n, {
         page: options.page ? Number(options.page) : undefined,
         per_page: options.perPage ? Number(options.perPage) : undefined,
-        comment_type: isPrCommentType(options.commentType)
-          ? options.commentType
-          : undefined,
+        comment_type: isPrCommentType(options.commentType) ? options.commentType : undefined,
       });
 
       if (options.json) {

@@ -140,7 +140,9 @@ async function ensureLocalCliDirectory(dir: string): Promise<void> {
   }
 }
 
-async function createCliStagingDirectory(dir: string): Promise<{ path: string; cleanup: () => Promise<void> }> {
+async function createCliStagingDirectory(
+  dir: string,
+): Promise<{ path: string; cleanup: () => Promise<void> }> {
   const prefix = path.join(os.tmpdir(), 'gitcode-cli-');
   const tempRoot = await mkdtemp(prefix);
   const stagedDir = path.join(tempRoot, 'gitcode-cli');

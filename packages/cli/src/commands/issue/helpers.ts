@@ -51,4 +51,3 @@ export function colorizeState(state: string): string {
   }
   return `${colors.yellow}${state}${colors.reset}`;
 }
-

@@ -1,11 +1,6 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import {
-  colors,
-  colorizeState,
-  resolveIssueContext,
-  type IssueTargetOptions,
-} from './helpers';
+import { colors, colorizeState, resolveIssueContext, type IssueTargetOptions } from './helpers';
 
 interface ReopenOptions extends IssueTargetOptions {
   json?: boolean;
@@ -28,7 +23,9 @@ export async function reopenAction(
       }
 
       console.log(`\n🔓 Issue #${issue.number} reopened.`);
-      console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'open'))}`);
+      console.log(
+        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'open'))}`,
+      );
       const issueUrl = (issue as { html_url?: string }).html_url;
       if (issueUrl) {
         console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
@@ -54,7 +51,9 @@ export function reopenCommand(): Command {
     .argument('<number>', 'Issue number')
     .argument('[url]', 'Repository URL')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
+    .option(
+      '-R, --repo <[HOST/]OWNER/REPO>',
+      'Select another repository using the [HOST/]OWNER/REPO format',
+    )
     .action(reopenAction);
 }
-

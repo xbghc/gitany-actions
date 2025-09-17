@@ -39,7 +39,7 @@ console.log(settings.default_branch);
 
 // 获取仓库分支
 const branches = await client.repo.getBranches('owner', 'repo');
-branches.forEach(branch => {
+branches.forEach((branch) => {
   console.log(branch.name, branch.default);
 });
 
@@ -49,7 +49,7 @@ console.log(commits[0].sha, commits[0].commit.message);
 
 // 获取贡献者
 const contributors = await client.repo.getContributors('owner', 'repo');
-contributors.forEach(contributor => {
+contributors.forEach((contributor) => {
   console.log(contributor.name, contributor.contributions);
 });
 
@@ -71,7 +71,7 @@ console.log(comparison.files.length);
 ```typescript
 // 获取 PR 列表
 const pulls = await client.pr.list('https://gitcode.com/owner/repo', {
-  state: 'open'
+  state: 'open',
 });
 
 // 创建 PR
@@ -79,7 +79,7 @@ const newPR = await client.pr.create('https://gitcode.com/owner/repo', {
   title: '新功能',
   head: 'feature-branch',
   base: 'main',
-  body: '这是一个新功能的 PR'
+  body: '这是一个新功能的 PR',
 });
 
 // 获取 PR 评论
@@ -95,7 +95,7 @@ console.log(prSettings.allow_merge_commits);
 ```typescript
 // 获取 Issue 列表
 const issues = await client.issue.list('https://gitcode.com/owner/repo', {
-  state: 'open'
+  state: 'open',
 });
 
 // 获取 Issue 评论

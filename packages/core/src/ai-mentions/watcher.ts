@@ -10,11 +10,7 @@ import { chat } from '../container';
 import { watchIssues, type IssueWatcher } from '../watcher/issue';
 import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr';
 import { defaultPromptBuilder } from '../prompt/prompt';
-import {
-  createAiReplyComment,
-  defaultReplyBodyBuilder,
-  editAiReplyComment,
-} from './reply';
+import { createAiReplyComment, defaultReplyBodyBuilder, editAiReplyComment } from './reply';
 import {
   type AiMentionContext,
   type AiMentionSource,
@@ -36,19 +32,20 @@ export function watchAiMentions(
   const prWatchers: PullRequestWatcher[] = [];
   const replyEnabled = options.replyWithComment !== false;
 
-  const handleMention = async (
-    payload: {
-      source: AiMentionSource;
-      comment: IssueComment | PRComment;
-      issueNumber: number;
-      issueSnapshot?: Issue;
-      pullRequest?: PullRequest;
-    },
-  ) => {
+  const handleMention = async (payload: {
+    source: AiMentionSource;
+    comment: IssueComment | PRComment;
+    issueNumber: number;
+    issueSnapshot?: Issue;
+    pullRequest?: PullRequest;
+  }) => {
     const { issueNumber, comment, source } = payload;
     if (!Number.isFinite(issueNumber)) return;
 
-    logger.info({ issueNumber, commentId: comment.id, source }, '[watchAiMentions] mention detected');
+    logger.info(
+      { issueNumber, commentId: comment.id, source },
+      '[watchAiMentions] mention detected',
+    );
 
     // First, build the context needed for both placeholder and final reply.
     let issueDetail: Issue | undefined = payload.issueSnapshot;
@@ -68,7 +65,11 @@ export function watchAiMentions(
 
     let issueComments: IssueComment[] = [];
     try {
-      issueComments = await client.issue.comments(repoUrl, issueNumber, options.issueCommentQuery ?? {});
+      issueComments = await client.issue.comments(
+        repoUrl,
+        issueNumber,
+        options.issueCommentQuery ?? {},
+      );
     } catch (err) {
       logger.warn({ err, issueNumber }, '[watchAiMentions] failed to load issue comments');
     }
@@ -94,7 +95,10 @@ export function watchAiMentions(
             await chatExecutor(repoUrl, prompt, options.chatOptions);
           }
         } catch (err) {
-          logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] background chat invocation failed');
+          logger.error(
+            { err, issueNumber, commentId: comment.id },
+            '[watchAiMentions] background chat invocation failed',
+          );
         }
       })();
       return;
@@ -103,14 +107,22 @@ export function watchAiMentions(
     // Create a placeholder comment first to provide immediate feedback.
     let placeholderCommentId: number;
     try {
-      const placeholder = await createAiReplyComment(client, repoUrl, context, '思考中，请稍候... 🤔');
+      const placeholder = await createAiReplyComment(
+        client,
+        repoUrl,
+        context,
+        '思考中，请稍候... 🤔',
+      );
       placeholderCommentId = placeholder.comment.id;
       logger.info(
         { issueNumber, originalCommentId: comment.id, placeholderCommentId },
         '[watchAiMentions] created placeholder comment',
       );
     } catch (err) {
-      logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to create placeholder comment');
+      logger.error(
+        { err, issueNumber, commentId: comment.id },
+        '[watchAiMentions] failed to create placeholder comment',
+      );
       // If we can't even create the first comment, abort.
       options.onReplyError?.(err, context);
       return;
@@ -122,8 +134,16 @@ export function watchAiMentions(
       try {
         prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
         if (!prompt?.trim()) {
-          logger.warn({ issueNumber }, '[watchAiMentions] empty prompt generated, skipping chat invocation');
-          await editAiReplyComment(client, repoUrl, placeholderCommentId, '任务已取消：生成的 Prompt 为空。');
+          logger.warn(
+            { issueNumber },
+            '[watchAiMentions] empty prompt generated, skipping chat invocation',
+          );
+          await editAiReplyComment(
+            client,
+            repoUrl,
+            placeholderCommentId,
+            '任务已取消：生成的 Prompt 为空。',
+          );
           return;
         }
 
@@ -138,18 +158,28 @@ export function watchAiMentions(
 
         const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
         const replyBody = (await builder(result, context))?.trim();
-        console.log("replyBody", replyBody);
+        console.log('replyBody', replyBody);
 
         if (!replyBody) {
           logger.warn(
             { issueNumber, commentId: comment.id },
             '[watchAiMentions] empty reply body generated, updating placeholder with notice.',
           );
-          await editAiReplyComment(client, repoUrl, placeholderCommentId, '任务完成，但无内容可回复。');
+          await editAiReplyComment(
+            client,
+            repoUrl,
+            placeholderCommentId,
+            '任务完成，但无内容可回复。',
+          );
           return;
         }
 
-        const finalComment = await editAiReplyComment(client, repoUrl, placeholderCommentId, replyBody);
+        const finalComment = await editAiReplyComment(
+          client,
+          repoUrl,
+          placeholderCommentId,
+          replyBody,
+        );
         logger.info(
           { issueNumber, originalCommentId: comment.id, finalCommentId: finalComment.id },
           '[watchAiMentions] successfully edited placeholder comment with final answer.',
@@ -165,12 +195,23 @@ export function watchAiMentions(
         );
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.error({ err, issueNumber, commentId: comment.id, prompt }, '[watchAiMentions] background task failed');
+        logger.error(
+          { err, issueNumber, commentId: comment.id, prompt },
+          '[watchAiMentions] background task failed',
+        );
         try {
-          await editAiReplyComment(client, repoUrl, placeholderCommentId, `处理失败: ${errorMessage}`);
+          await editAiReplyComment(
+            client,
+            repoUrl,
+            placeholderCommentId,
+            `处理失败: ${errorMessage}`,
+          );
           options.onReplyError?.(err, context);
         } catch (editErr) {
-          logger.error({ err: editErr, issueNumber, commentId: comment.id }, '[watchAiMentions] failed to update placeholder with error');
+          logger.error(
+            { err: editErr, issueNumber, commentId: comment.id },
+            '[watchAiMentions] failed to update placeholder with error',
+          );
         }
       }
     })();

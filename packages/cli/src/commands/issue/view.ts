@@ -41,7 +41,9 @@ export async function viewAction(
       }
 
       console.log(`\n🪪 Issue #${issue.number}: ${issue.title}`);
-      console.log(`   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`);
+      console.log(
+        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`,
+      );
 
       const issueUrl = (issue as { html_url?: string }).html_url;
       if (issueUrl) {
@@ -105,14 +107,17 @@ export async function viewAction(
             const id = item.id ?? item.comment_id ?? '?';
             const user = formatUserName(item.user);
             const bodyText = String(item.body ?? '').split('\n')[0];
-            const created = typeof item.created_at === 'string'
-              ? new Date(String(item.created_at)).toLocaleString()
-              : undefined;
+            const created =
+              typeof item.created_at === 'string'
+                ? new Date(String(item.created_at)).toLocaleString()
+                : undefined;
             const metaParts = [user];
             if (created) {
               metaParts.push(created);
             }
-            console.log(`   • [#${id}] ${metaParts.join(' · ')}${bodyText ? ` — ${bodyText}` : ''}`);
+            console.log(
+              `   • [#${id}] ${metaParts.join(' · ')}${bodyText ? ` — ${bodyText}` : ''}`,
+            );
           });
         } else {
           console.log('   (no comments)');
@@ -141,7 +146,9 @@ export function viewCommand(): Command {
     .option('--page <n>', 'Page number when fetching comments')
     .option('--per-page <n>', 'Items per page when fetching comments')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option('-R, --repo <[HOST/]OWNER/REPO>', 'Select another repository using the [HOST/]OWNER/REPO format')
+    .option(
+      '-R, --repo <[HOST/]OWNER/REPO>',
+      'Select another repository using the [HOST/]OWNER/REPO format',
+    )
     .action(viewAction);
 }
-

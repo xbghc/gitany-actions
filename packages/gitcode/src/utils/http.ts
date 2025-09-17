@@ -106,7 +106,13 @@ export async function httpRequest<T = unknown>(params: HttpRequestParams): Promi
         ...(options?.body !== undefined ? { body: options.body } : {}),
       };
       const response = await http(url, requestOptions);
-      return handleResponse(method, url, cacheKey, cached, response as Response<string>) as unknown as T;
+      return handleResponse(
+        method,
+        url,
+        cacheKey,
+        cached,
+        response as Response<string>,
+      ) as unknown as T;
     }
 
     const requestOptions: OptionsOfJSONResponseBody = {

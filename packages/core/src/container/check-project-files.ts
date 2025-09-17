@@ -8,7 +8,11 @@ export interface ProjectCheckResult {
   diagnostics: ProjectDiagnostics;
 }
 
-export async function checkProjectFiles({ container, log, verbose }: StepOptions): Promise<ProjectCheckResult> {
+export async function checkProjectFiles({
+  container,
+  log,
+  verbose,
+}: StepOptions): Promise<ProjectCheckResult> {
   const step = await executeStep({
     container,
     name: 'checkProject',
@@ -20,4 +24,3 @@ export async function checkProjectFiles({ container, log, verbose }: StepOptions
   const diagnostics = collectDiagnostics(step.output);
   return { step, diagnostics };
 }
-

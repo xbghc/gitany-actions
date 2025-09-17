@@ -48,7 +48,8 @@ export function createLogger(name?: string): Logger {
   }
 
   const format = resolveFormat();
-  const destination: NodeJS.WritableStream = format === 'human' ? createPrettyStream() : process.stderr;
+  const destination: NodeJS.WritableStream =
+    format === 'human' ? createPrettyStream() : process.stderr;
 
   const instance = pino(opts, destination);
   registry.push(instance);

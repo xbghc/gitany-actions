@@ -36,16 +36,18 @@ export function pullRequestSettingsUrl(owner: string, repo: string): string {
   return `${API_BASE}/repos/${owner}/${repo}/pull_request_settings`;
 }
 
-export const repoEventsSchema = z.array(z.object({
-  id: z.string(),
-  type: z.string(),
-  actor: z.any(),
-  repo: z.any(),
-  payload: z.any(),
-  public: z.boolean(),
-  created_at: z.string(),
-  org: z.any().optional(),
-}));
+export const repoEventsSchema = z.array(
+  z.object({
+    id: z.string(),
+    type: z.string(),
+    actor: z.any(),
+    repo: z.any(),
+    payload: z.any(),
+    public: z.boolean(),
+    created_at: z.string(),
+    org: z.any().optional(),
+  }),
+);
 
 export type RepoEvent = z.infer<typeof repoEventsSchema>[0];
 export type RepoEvents = z.infer<typeof repoEventsSchema>;

@@ -1,10 +1,10 @@
-import { 
-  userProfileSchema, 
-  userProfileUrl, 
-  userNamespaceSchema, 
+import {
+  userProfileSchema,
+  userProfileUrl,
+  userNamespaceSchema,
   userNamespaceUrl,
   type UserProfile,
-  type UserNamespace 
+  type UserNamespace,
 } from '../../api/user';
 import type { GitcodeClient } from '../core';
 
@@ -31,4 +31,3 @@ export class GitcodeClientUser {
     return await getUserNamespace(this.client);
   }
 }
-

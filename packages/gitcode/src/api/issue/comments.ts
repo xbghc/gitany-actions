@@ -30,11 +30,7 @@ export const issueCommentsResponseSchema = issueCommentSchema.array();
 export type IssueCommentsResponse = IssueComment[];
 
 /** Builds the request path for listing issue comments. */
-export function issueCommentsUrl(
-  owner: string,
-  repo: string,
-  issueNumber: number,
-): string {
+export function issueCommentsUrl(owner: string, repo: string, issueNumber: number): string {
   return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(
     repo,
   )}/issues/${issueNumber}/comments`;

@@ -5,8 +5,4 @@ export {
   type UserProfileResponse,
 } from './profile';
 
-export {
-  userNamespaceSchema,
-  userNamespaceUrl,
-  type UserNamespace,
-} from './namespace';
+export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './namespace';

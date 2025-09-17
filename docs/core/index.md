@@ -46,11 +46,13 @@ prWatcher.start();
 创建一个用于监控指定仓库 PR 状态和评论的 `PullRequestWatcher` 实例。
 
 **参数:**
+
 - `client`: `GitcodeClient` 实例。
 - `url`: 仓库 URL。
 - `options`: 监控选项。
 
 **选项:**
+
 - `onOpen`: PR 打开时触发。
 - `onClosed`: PR 关闭时触发。
 - `onMerged`: PR 合并时触发。
@@ -61,6 +63,7 @@ prWatcher.start();
 - `onContainerRemoved`: 容器删除后触发。
 
 **返回值:**
+
 - 返回一个 `PullRequestWatcher` 实例，该实例提供以下方法：
   - `runOnce(): Promise<void>`: 执行一次状态检查。
   - `start(): void`: 启动后台周期性检查。
@@ -204,7 +207,7 @@ const prWatcher = watchPullRequest(client, 'https://gitcode.com/owner/repo.git',
   container: {}, // 启用容器管理
   onContainerCreated: (container, pr) => {
     console.log(`为 PR #${pr.number} 创建的容器已就绪: ${container.id}`);
-  }
+  },
 });
 
 // 启动监控
@@ -268,10 +271,7 @@ console.log('文件已复制到容器内:', targetPath);
 ```ts
 import { chat } from '@gitany/core';
 
-const result = await chat(
-  'https://gitcode.com/owner/repo.git',
-  'Explain the project structure',
-);
+const result = await chat('https://gitcode.com/owner/repo.git', 'Explain the project structure');
 console.log(result.output);
 ```
 
@@ -282,4 +282,3 @@ console.log(result.output);
 - `keepContainer`: 创建的临时容器是否保留，默认 `false`
 
 调用过程中会自动转发宿主机上所有以 `ANTHROPIC_` 开头的环境变量，以便 Claude Code 正确认证。
-

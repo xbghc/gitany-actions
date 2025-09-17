@@ -4,7 +4,13 @@ import { listPullRequestComments } from './comments';
 import { createPullRequest } from './create';
 import { getPullRequestSettings } from './settings';
 import { createPrComment } from './create-comment';
-import type { ListPullsQuery, CreatePullBody, PRCommentQueryOptions, PullRequestSettings, CreatedPrComment } from '../../api/pr';
+import type {
+  ListPullsQuery,
+  CreatePullBody,
+  PRCommentQueryOptions,
+  PullRequestSettings,
+  CreatedPrComment,
+} from '../../api/pr';
 
 export class GitcodeClientPr {
   constructor(private client: GitcodeClient) {}

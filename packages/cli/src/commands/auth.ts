@@ -9,13 +9,10 @@ export function authCommand(): Command {
     .description('Set authentication token')
     .argument('<token>', 'Authentication token')
     .action(async (token) => {
-      await withClient(
-        async (client) => {
-          await client.auth.setToken(token.trim());
-          console.log('Token saved successfully');
-        },
-        'Failed to save token',
-      );
+      await withClient(async (client) => {
+        await client.auth.setToken(token.trim());
+        console.log('Token saved successfully');
+      }, 'Failed to save token');
     });
 
   return authProgram;

@@ -59,11 +59,7 @@ export class GitcodeClientAuth {
     this.storage = storage;
   }
 
-  async setToken(
-    token: string,
-    authStyle?: AuthConfig['authStyle'],
-    customAuthHeader?: string,
-  ) {
+  async setToken(token: string, authStyle?: AuthConfig['authStyle'], customAuthHeader?: string) {
     const cfg: AuthConfig = { token, authStyle, customAuthHeader };
     await this.storage.write(cfg);
   }
@@ -79,4 +75,3 @@ export class GitcodeClientAuth {
     return token;
   }
 }
-

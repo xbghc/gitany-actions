@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { API_BASE } from '../constants';
 
-export const contributorsSchema = z.array(z.object({
-  name: z.string(),
-  contributions: z.number(),
-  email: z.string(),
-}));
+export const contributorsSchema = z.array(
+  z.object({
+    name: z.string(),
+    contributions: z.number(),
+    email: z.string(),
+  }),
+);
 
 export type Contributor = z.infer<typeof contributorsSchema>[0];
 export type Contributors = z.infer<typeof contributorsSchema>;
