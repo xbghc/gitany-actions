@@ -68,6 +68,17 @@ export async function createCommentAction(
       if (!fs.existsSync(options.bodyFile)) {
         throw new Error(`File not found: ${options.bodyFile}`);
       }
+      const stats = fs.statSync(options.bodyFile);
+      if (stats.isDirectory()) {
+        throw new Error(`Cannot read body from a directory: ${options.bodyFile}`);
+      }
+      if (stats.size === 0) {
+        throw new Error(`File is empty: ${options.bodyFile}`);
+      }
+      if (stats.size > 65536) {
+        // 64KB 限制
+        throw new Error(`File is too large: ${options.bodyFile}`);
+      }
       finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
     }
 

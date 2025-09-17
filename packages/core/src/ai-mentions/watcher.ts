@@ -118,8 +118,9 @@ export function watchAiMentions(
 
     // Now, run the actual chat and prompt building in the background.
     void (async () => {
+      let prompt: string | undefined;
       try {
-        const prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
+        prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
         if (!prompt?.trim()) {
           logger.warn({ issueNumber }, '[watchAiMentions] empty prompt generated, skipping chat invocation');
           await editAiReplyComment(client, repoUrl, placeholderCommentId, '任务已取消：生成的 Prompt 为空。');
@@ -163,7 +164,7 @@ export function watchAiMentions(
         );
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.error({ err, issueNumber, commentId: comment.id }, '[watchAiMentions] background task failed');
+        logger.error({ err, issueNumber, commentId: comment.id, prompt }, '[watchAiMentions] background task failed');
         try {
           await editAiReplyComment(client, repoUrl, placeholderCommentId, `处理失败: ${errorMessage}`);
           options.onReplyError?.(err, context);
