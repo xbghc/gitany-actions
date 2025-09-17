@@ -1,3 +1,4 @@
+// Manual playground for Gitcode client and PR watcher workflows.
 import { GitcodeClient } from '../packages/gitcode/dist/index.js';
 
 import { watchPullRequest } from '../packages/core/dist/index.js';

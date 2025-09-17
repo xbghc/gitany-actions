@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Verifies Claude CLI can be installed inside a workspace Docker container.
 // 环境变量:
 // - TEST_NODE_VERSION: 可选，Docker 容器使用的 Node.js 版本，默认 20。
 // - TEST_VERBOSE: 可选，设置为 "true" 时输出详细安装日志。
@@ -65,4 +66,3 @@ main().catch((err) => {
   console.error(err.message);
   process.exit(1);
 });
-

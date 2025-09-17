@@ -1,3 +1,4 @@
+// Scratchpad script for experimenting with the GitClient helpers.
 import { GitClient } from '../packages/git-lib/dist/index.js';
 
 // const client = new GitClient('~/projects/MateChat');

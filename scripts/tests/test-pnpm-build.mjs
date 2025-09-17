@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Runs a Docker-based smoke test to verify pnpm build succeeds for a SHA.
 // 环境变量:
 // - TEST_REPO_URL: 必填，目标仓库 URL。
 // - TEST_SHA: 必填，要测试的提交 SHA 或分支。

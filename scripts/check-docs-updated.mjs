@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// Guard pre-commit by ensuring docs change alongside package updates.
 import { execSync } from 'node:child_process';
 
 function sh(cmd) {

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Exercises PR container lifecycle and comment posting in Gitcode.
 import { config } from 'dotenv';
 import {
   createPrContainer,

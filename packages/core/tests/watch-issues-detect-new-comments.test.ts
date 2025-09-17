@@ -1,8 +1,12 @@
 import assert from 'node:assert/strict';
 import type { GitcodeClient, Issue, IssueComment } from '@gitany/gitcode';
-import { __testing } from '../src/issue/watcher';
+import { IssueWatcher, type WatchIssueOptions } from '../src/issue/watcher';
 
-const { detectNewComments } = __testing;
+class TestIssueWatcher extends IssueWatcher {
+  async detect(issues: Issue[]) {
+    await this.detectNewComments(issues);
+  }
+}
 
 async function run() {
   const issues: Issue[] = [
@@ -98,25 +102,23 @@ async function run() {
     },
   } as unknown as GitcodeClient;
 
-  const state: Parameters<typeof detectNewComments>[3] = {
-    lastCommentIdByIssue: new Map<number, number>(),
-  };
-
   const seen: Array<{ issue: Issue; comment: IssueComment }> = [];
 
-  const options: Parameters<typeof detectNewComments>[4] = {
+  const options: WatchIssueOptions = {
     onComment: (issue, comment) => {
       seen.push({ issue, comment });
     },
   };
 
-  await detectNewComments(client, 'https://gitcode.com/owner/repo.git', issues, state, options);
+  const watcher = new TestIssueWatcher(client, 'https://gitcode.com/owner/repo.git', options);
+
+  await watcher.detect(issues);
   assert.equal(seen.length, 0, 'first poll should only establish the baseline');
-  assert.equal(state.lastCommentIdByIssue.get(1), 1, 'issue 1 baseline should be recorded');
-  assert.equal(state.lastCommentIdByIssue.get(2), 10, 'issue 2 baseline should be recorded');
+  assert.equal(watcher.getLastCommentId(1), 1, 'issue 1 baseline should be recorded');
+  assert.equal(watcher.getLastCommentId(2), 10, 'issue 2 baseline should be recorded');
 
   pollIndex += 1;
-  await detectNewComments(client, 'https://gitcode.com/owner/repo.git', issues, state, options);
+  await watcher.detect(issues);
   assert.equal(
     seen.length,
     1,
@@ -124,10 +126,10 @@ async function run() {
   );
   assert.equal(seen[0].issue.number, '2');
   assert.equal(seen[0].comment.id, 11);
-  assert.equal(state.lastCommentIdByIssue.get(2), 11);
+  assert.equal(watcher.getLastCommentId(2), 11);
 
   pollIndex += 1;
-  await detectNewComments(client, 'https://gitcode.com/owner/repo.git', issues, state, options);
+  await watcher.detect(issues);
   assert.equal(
     seen.length,
     2,
@@ -135,7 +137,7 @@ async function run() {
   );
   assert.equal(seen[1].issue.number, '2');
   assert.equal(seen[1].comment.id, 12);
-  assert.equal(state.lastCommentIdByIssue.get(2), 12);
+  assert.equal(watcher.getLastCommentId(2), 12);
 
   console.log('✅ detectNewComments processes later issues with new mentions');
 }

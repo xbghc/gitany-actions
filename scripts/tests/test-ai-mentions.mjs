@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// Smoke test to exercise watchAiMentions end-to-end via CLI options.
 // 环境变量:
 // - TEST_REPO_URL: 必填，目标仓库 URL。
 // - TEST_MENTION: 可选，自定义触发标记，默认值为 Gitcode 当前用户的 @用户名。

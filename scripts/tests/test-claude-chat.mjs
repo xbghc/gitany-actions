@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// CLI harness to manually invoke Claude chat against a repository.
 // 环境变量:
 // - TEST_REPO_URL: 必填，目标仓库 URL。
 // - TEST_QUESTION: 必填，要提交给 chat 的问题或提示词。
@@ -67,4 +68,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   });
 }
-

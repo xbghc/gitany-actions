@@ -1,3 +1,4 @@
+// Quick check to confirm Docker can run containers on this machine.
 import { execSync } from 'node:child_process';
 
 try {
