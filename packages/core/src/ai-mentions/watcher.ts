@@ -74,6 +74,7 @@ function createMentionHandler(
     let context: AiMentionContext;
     if (source === 'issue_comment') {
       context = {
+        mention: options.mention ?? '@AI',
         repoUrl,
         issueNumber,
         issue: issueDetail,
@@ -88,6 +89,7 @@ function createMentionHandler(
         return;
       }
       context = {
+        mention: options.mention ?? '@AI',
         repoUrl,
         issueNumber,
         issue: issueDetail,

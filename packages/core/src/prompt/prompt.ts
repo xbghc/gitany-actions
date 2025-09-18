@@ -12,7 +12,7 @@ import type { AiMentionContext, IssueContext, PrContext } from './types';
  * - The specific comment that contains the AI mention
  */
 function buildIssuePrompt(context: IssueContext): string {
-  const { issue, issueComments, mentionComment, repoUrl } = context;
+  const { issue, issueComments, mentionComment, repoUrl, mention } = context;
   const lines: string[] = [];
 
   lines.push('You are an AI assistant helping with GitCode issues and pull requests.');
@@ -38,9 +38,10 @@ function buildIssuePrompt(context: IssueContext): string {
     }
   }
 
-  lines.push('Issue comment mentioning @AI:');
+  lines.push(
+    `My question is in the following comment, which mentions ${mention}. Please provide a helpful answer to the question in my comment. Here is my comment:`,
+  );
   lines.push(mentionComment.body);
-  lines.push('Provide a helpful answer or recommended next steps for the maintainers.');
   lines.push('Your entire reply must be written in Simplified Chinese.');
 
   return lines.join('\n\n');
@@ -59,7 +60,7 @@ function buildIssuePrompt(context: IssueContext): string {
  * - The specific comment that contains the AI mention
  */
 function buildPrPrompt(context: PrContext): string {
-  const { issue, issueComments, mentionComment, repoUrl, pullRequest } = context;
+  const { issue, issueComments, mentionComment, repoUrl, pullRequest, mention } = context;
   const lines: string[] = [];
 
   lines.push('You are an AI assistant helping with GitCode issues and pull requests.');
@@ -110,9 +111,10 @@ function buildPrPrompt(context: PrContext): string {
     lines.push(`Code context:\n${diffHunk}`);
   }
 
-  lines.push('Pull request review comment mentioning @AI:');
+  lines.push(
+    `My question is in the following pull request review comment, which mentions ${mention}. Please provide a helpful answer to the question in my comment. Here is my comment:`,
+  );
   lines.push(mentionComment.body);
-  lines.push('Provide a helpful answer or recommended next steps for the maintainers.');
   lines.push('Your entire reply must be written in Simplified Chinese.');
 
   return lines.join('\n\n');
