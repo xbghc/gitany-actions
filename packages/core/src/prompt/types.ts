@@ -13,6 +13,7 @@ import type { ChatOptions, ChatResult } from '../container';
 export type AiMentionSource = 'issue_comment' | 'pr_review_comment';
 
 export interface IssueContext {
+  mention: string;
   repoUrl: string;
   issueNumber: number;
   issue: Issue;
@@ -23,6 +24,7 @@ export interface IssueContext {
 }
 
 export interface PrContext {
+  mention: string;
   repoUrl: string;
   issueNumber: number; // This is the PR number
   issue: Issue; // A PR is also an issue, so this is still needed for body etc.
