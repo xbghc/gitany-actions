@@ -24,6 +24,26 @@ export async function getContainer({
   }
 }
 
+export async function getContainerByRepo({
+  repoUrl,
+  branch,
+}: {
+  repoUrl: string;
+  branch: string;
+}): Promise<Docker.Container | undefined> {
+  const filters: Record<string, string[]> = {
+    label: [`gitany.repoUrl=${repoUrl}`, `gitany.branch=${branch}`, `gitany.reusable=true`],
+  };
+
+  const list = await docker.listContainers({ all: true, filters });
+  if (list.length > 0) {
+    list.sort((a, b) => b.Created - a.Created);
+    return docker.getContainer(list[0].Id);
+  }
+
+  return undefined;
+}
+
 export async function getContainerStatus(prId: number) {
   const container = await getContainer({ pr: prId });
   if (!container) return null;

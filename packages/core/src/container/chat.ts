@@ -85,6 +85,9 @@ export async function chat(
         env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...sharedStepEnv],
         log,
         labels,
+        repoUrl: repoUrl,
+        branch: sha,
+        reusable: keepContainer,
       });
       const installCli = await installGitcodeCli({ container, log, verbose, env: sharedStepEnv });
       if (!installCli.success) return { success: false, error: installCli.output };

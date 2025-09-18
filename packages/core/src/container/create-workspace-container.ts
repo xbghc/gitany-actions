@@ -1,5 +1,7 @@
 import type Docker from 'dockerode';
 import type { Logger } from '@gitany/shared';
+import { getContainerByRepo } from './get';
+import { executeStep } from './execute-step';
 
 export interface CreateWorkspaceContainerOptions {
   docker: Docker;
@@ -7,6 +9,9 @@ export interface CreateWorkspaceContainerOptions {
   env: string[];
   log: Logger;
   labels?: Record<string, string>;
+  repoUrl?: string;
+  branch?: string;
+  reusable?: boolean;
 }
 
 export class ContainerCreationError extends Error {}
@@ -16,9 +21,38 @@ export async function createWorkspaceContainer({
   image,
   env,
   log,
-  labels,
+  labels: customLabels,
+  repoUrl,
+  branch,
+  reusable,
 }: CreateWorkspaceContainerOptions): Promise<Docker.Container> {
+  if (reusable && repoUrl && branch) {
+    const existingContainer = await getContainerByRepo({ repoUrl, branch });
+    if (existingContainer) {
+      log.debug(`🐳 发现已有的容器，ID: ${existingContainer.id}`);
+      const info = await existingContainer.inspect();
+      if (info.State?.Status !== 'running') {
+        await existingContainer.start();
+      }
+      log.debug(`🔄 更新容器中的代码`);
+      await executeStep({
+        container: existingContainer,
+        name: 'Update Code',
+        script: `git checkout ${branch} && git pull`,
+        log,
+      });
+      return existingContainer;
+    }
+  }
+
   try {
+    const labels: Record<string, string> = { ...customLabels };
+    if (reusable && repoUrl && branch) {
+      labels['gitany.repoUrl'] = repoUrl;
+      labels['gitany.branch'] = branch;
+      labels['gitany.reusable'] = 'true';
+    }
+
     const container = await docker.createContainer({
       Image: image,
       Cmd: ['sh', '-lc', 'tail -f /dev/null'],
