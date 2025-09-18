@@ -1,5 +1,7 @@
 export { chat } from './chat';
 export type { ChatOptions, ChatResult } from './chat';
+export { code } from './code';
+export type { CodeOptions, CodeResult } from './code';
 export { checkProjectFiles } from './check-project-files';
 export type { ProjectCheckResult } from './check-project-files';
 export { checkoutSha } from './checkout-sha';

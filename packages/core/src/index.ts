@@ -44,10 +44,13 @@ export {
   StepExecutionError,
   testShaBuild,
   verifySha,
+  code,
 } from './container';
 export type {
   ChatOptions,
   ChatResult,
+  CodeOptions,
+  CodeResult,
   CopyToContainerOptions,
   ProjectCheckResult,
 } from './container';

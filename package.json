@@ -17,7 +17,8 @@
     "dev:core": "pnpm --filter @gitany/core dev",
     "d": "pnpm build && node ./scripts/dev-gitcode.mjs",
     "d:git": "pnpm build && node ./scripts/dev-git.mjs",
-    "d:docker": "pnpm build && node ./scripts/dev-docker.mjs"
+    "d:docker": "pnpm build && node ./scripts/dev-docker.mjs",
+    "test:code-task": "tsx scripts/run-ai-code-task.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.18.1",

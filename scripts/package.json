@@ -1,0 +1,10 @@
+{
+  "name": "@gitany/scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@gitany/core": "workspace:*",
+    "@gitany/gitcode": "workspace:*",
+    "@gitany/shared": "workspace:*"
+  }
+}
