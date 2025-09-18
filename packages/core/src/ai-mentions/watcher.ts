@@ -16,6 +16,8 @@ import {
   type AiMentionSource,
   type AiMentionWatcherHandle,
   type WatchAiMentionsOptions,
+  type IssueContext,
+  type PrContext,
 } from './types';
 
 const logger = createLogger('@gitany/core');
@@ -69,15 +71,35 @@ function createMentionHandler(
       logger.warn({ err, issueNumber }, `[${loggerPrefix}] failed to load issue comments`);
     }
 
-    const context: AiMentionContext = {
-      repoUrl,
-      issueNumber,
-      issue: issueDetail,
-      mentionComment: comment,
-      commentSource: source,
-      issueComments,
-      pullRequest: payload.pullRequest,
-    };
+    let context: AiMentionContext;
+    if (source === 'issue_comment') {
+      context = {
+        repoUrl,
+        issueNumber,
+        issue: issueDetail,
+        mentionComment: comment as IssueComment,
+        commentSource: source,
+        issueComments,
+        pullRequest: undefined,
+      } satisfies IssueContext;
+    } else if (source === 'pr_review_comment') {
+      if (!payload.pullRequest) {
+        logger.error({ issueNumber, commentId: comment.id }, `[${loggerPrefix}] missing pull request detail for PR comment`);
+        return;
+      }
+      context = {
+        repoUrl,
+        issueNumber,
+        issue: issueDetail,
+        mentionComment: comment as PRComment,
+        commentSource: source,
+        issueComments,
+        pullRequest: payload.pullRequest,
+      } satisfies PrContext;
+    } else {
+      // Should not happen
+      return;
+    }
 
     if (!replyEnabled) {
       logger.info(`[${loggerPrefix}] reply is disabled, running chat without posting comments.`);

@@ -12,15 +12,27 @@ import type { ChatOptions, ChatResult } from '../container';
 
 export type AiMentionSource = 'issue_comment' | 'pr_review_comment';
 
-export interface AiMentionContext {
+export interface IssueContext {
   repoUrl: string;
   issueNumber: number;
   issue: Issue;
-  mentionComment: IssueComment | PRComment;
-  commentSource: AiMentionSource;
+  mentionComment: IssueComment;
+  commentSource: 'issue_comment';
   issueComments: IssueComment[];
-  pullRequest?: PullRequest;
+  pullRequest: undefined;
 }
+
+export interface PrContext {
+  repoUrl: string;
+  issueNumber: number; // This is the PR number
+  issue: Issue; // A PR is also an issue, so this is still needed for body etc.
+  mentionComment: PRComment;
+  commentSource: 'pr_review_comment';
+  issueComments: IssueComment[]; // These are the PR comments
+  pullRequest: PullRequest; // This is now mandatory
+}
+
+export type AiMentionContext = IssueContext | PrContext;
 
 export type AiMentionReply =
   | {

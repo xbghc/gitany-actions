@@ -110,7 +110,8 @@ export async function createAiReplyComment(
       return { source: 'issue_comment', body, comment } satisfies AiMentionReply;
     }
 
-    const prNumber = context.pullRequest?.number ?? context.issueNumber;
+    // At this point, context is guaranteed to be PrContext
+    const prNumber = context.pullRequest.number;
     if (!Number.isFinite(prNumber)) {
       throw new Error(`Invalid pull request number: ${prNumber}`);
     }
