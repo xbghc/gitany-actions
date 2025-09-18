@@ -129,8 +129,8 @@ User Request: "${instruction}"
 
     const codeStep = await executeStep({
       container,
-      name: 'claude-code',
-      script: 'cd /tmp/workspace && ~/.npm-global/bin/claude-code -p "$CLAUDE_INSTRUCTION" 2>&1',
+      name: 'claude',
+      script: 'cd /tmp/workspace && ~/.npm-global/bin/claude -p "$CLAUDE_INSTRUCTION" 2>&1',
       env: codeEnv,
       log,
       verbose,
