@@ -25,17 +25,6 @@ import os from 'node:os';
 
 config({ path: new URL('.env', import.meta.url) });
 
-function resolveLocalUsername() {
-  try {
-    const username = os.userInfo().username?.trim();
-    if (username) return username;
-  } catch (error) {
-    // ignore - fall back to legacy default below
-  }
-
-  return undefined;
-}
-
 async function resolveDefaultMention(client, verbose) {
   try {
     const profile = await client.user.getProfile();
@@ -43,13 +32,10 @@ async function resolveDefaultMention(client, verbose) {
     if (login) return `@${login}`;
   } catch (error) {
     if (verbose) {
-      console.warn('⚠️ 无法从 Gitcode 获取当前用户名, 将使用本地用户名或默认值 @AI。');
+      console.warn('⚠️ 无法从 Gitcode 获取当前用户名, 将使用默认值 @AI。');
       console.warn(error);
     }
   }
-
-  const localUsername = resolveLocalUsername();
-  if (localUsername) return `@${localUsername}`;
 
   return '@AI';
 }
