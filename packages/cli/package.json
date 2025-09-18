@@ -20,6 +20,7 @@
     "esbuild": "^0.21.5"
   },
   "dependencies": {
+    "dotenv": "^16.4.5",
     "@gitany/gitcode": "workspace:*",
     "@gitany/git-lib": "workspace:*",
     "@gitany/shared": "workspace:*",
