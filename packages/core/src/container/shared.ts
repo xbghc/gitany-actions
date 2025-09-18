@@ -16,10 +16,9 @@ export const docker = new Proxy(dockerode, {
   get(target, prop, receiver) {
     const original = Reflect.get(target, prop, receiver);
     if (typeof original === 'function') {
-      return async function (...args: any[]) {
+      return async function (...args: unknown[]) {
         await ensureDocker();
-        // eslint-disable-next-line @typescript-eslint/ban-types
-        return (original as Function).apply(target, args);
+        return (original as (...args: unknown[]) => unknown).apply(target, args);
       };
     }
     return original;
