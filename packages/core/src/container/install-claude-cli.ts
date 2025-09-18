@@ -1,4 +1,5 @@
-import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step';
+import { installCli } from './install-cli';
+import type { ExecuteStepOptions, StepResult } from './execute-step';
 
 export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
 
@@ -8,9 +9,9 @@ export async function installClaudeCli({
   verbose,
   env,
 }: StepOptions): Promise<StepResult> {
-  return executeStep({
+  return installCli({
     container,
-    name: 'claude-cli',
+    name: 'claude',
     script:
       'mkdir -p ~/.npm-global \
 && npm install -g @anthropic-ai/claude-code --prefix ~/.npm-global \
