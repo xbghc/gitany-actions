@@ -36,6 +36,7 @@ export const forward = [
   ...anthropicEnvVars,
   'API_TIMEOUT_MS',
   'CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC',
+  'GITCODE_TOKEN',
 ];
 
 export function collectForwardEnv(): string[] {
