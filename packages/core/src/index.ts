@@ -35,6 +35,7 @@ export {
   getContainer,
   getContainerStatus,
   ImagePullError,
+  installCli,
   installClaudeCli,
   installDependencies,
   installGitcodeCli,

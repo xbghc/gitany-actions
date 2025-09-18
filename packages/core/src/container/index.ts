@@ -12,6 +12,8 @@ export { createPrContainer } from './create';
 export { ContainerCreationError, createWorkspaceContainer } from './create-workspace-container';
 export { executeStep, StepExecutionError } from './execute-step';
 export { getContainer, getContainerStatus } from './get';
+export { installCli } from './install-cli';
+export type { InstallCliOptions } from './install-cli';
 export { installClaudeCli } from './install-claude-cli';
 export { installDependencies } from './install-dependencies';
 export { installGitcodeCli } from './install-gitcode-cli';
