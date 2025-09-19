@@ -46,7 +46,7 @@ export async function editCommentAction(commentIdArg: string, options: EditComme
 
     logger.debug({ owner, repo, comment_id }, 'Updating comment');
 
-    const comment = await client.issue.updateComment({
+    const comment = await client.issues.updateComment({
       owner,
       repo,
       comment_id,

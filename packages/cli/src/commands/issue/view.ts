@@ -7,6 +7,7 @@ import {
   resolveIssueContext,
   type IssueTargetOptions,
 } from './helpers';
+import { parseGitUrl, type IssueComment, type IssueLabel } from '@gitany/gitcode';
 
 interface ViewOptions extends IssueTargetOptions {
   comments?: boolean;
@@ -23,14 +24,23 @@ export async function viewAction(
   await withClient(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
+      const { owner, repo } = parseGitUrl(repoUrl) ?? {};
+      if (!owner || !repo) {
+        throw new Error(`Could not parse owner and repo from URL: ${repoUrl}`);
+      }
 
-      const issue = await client.issue.get(repoUrl, issueNumber);
-      let comments: unknown[] | undefined;
+      const issue = await client.issues.get({ owner, repo, issueNumber });
+      let comments: IssueComment[] | undefined;
 
       if (options.comments) {
-        comments = await client.issue.comments(repoUrl, issueNumber, {
-          page: options.page ? Number(options.page) : undefined,
-          per_page: options.perPage ? Number(options.perPage) : undefined,
+        comments = await client.issues.listComments({
+          owner,
+          repo,
+          issueNumber,
+          query: {
+            page: options.page ? Number(options.page) : undefined,
+            per_page: options.perPage ? Number(options.perPage) : undefined,
+          },
         });
       }
 
@@ -65,16 +75,10 @@ export async function viewAction(
         console.log(`   Updated: ${updatedDate.toLocaleString()}`);
       }
 
-      const labels = (issue as { labels?: unknown }).labels;
+      const labels = (issue as { labels?: IssueLabel[] }).labels;
       if (Array.isArray(labels) && labels.length > 0) {
         const labelNames = labels
-          .map((label) => {
-            if (!label || typeof label !== 'object') {
-              return String(label ?? '');
-            }
-            const record = label as Record<string, unknown>;
-            return String(record.name ?? record.title ?? record.id ?? '');
-          })
+          .map((label: IssueLabel) => label.name)
           .filter(Boolean)
           .join(', ');
         if (labelNames) {

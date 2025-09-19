@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl, type Issue } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 
@@ -51,11 +51,10 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
     }
 
     // 获取 issues 统计信息
-    const repoUrl = `${owner}/${repo}`;
     const [openIssues, closedIssues, recentIssues] = await Promise.all([
-      client.issue.list(repoUrl, { state: 'open', per_page: 100 }),
-      client.issue.list(repoUrl, { state: 'closed', per_page: 100 }),
-      client.issue.list(repoUrl, { state: 'open', per_page: 5 }),
+      client.issues.list({ owner, repo, query: { state: 'open', per_page: 100 } }),
+      client.issues.list({ owner, repo, query: { state: 'closed', per_page: 100 } }),
+      client.issues.list({ owner, repo, query: { state: 'open', per_page: 5 } }),
     ]);
 
     if (options.json) {
@@ -110,7 +109,7 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
 
       if (recentIssues.length > 0) {
         console.log(`\n🔥 Recent Open Issues:`);
-        recentIssues.slice(0, 5).forEach((issue, index) => {
+        recentIssues.slice(0, 5).forEach((issue: Issue, index: number) => {
           console.log(
             `   ${index + 1}. ${colors.blue}#${issue.number}${colors.reset} ${issue.title}`,
           );

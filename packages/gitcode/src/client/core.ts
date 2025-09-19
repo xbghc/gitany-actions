@@ -1,15 +1,15 @@
 import { httpRequest, type HttpRequestOptions } from '../utils/http';
-import { GitcodeClientUser } from './user';
-import { GitcodeClientPr } from './pr';
-import { GitcodeClientRepo } from './repo';
-import { GitcodeClientIssue } from './issue';
+import { UserClient } from './UserClient';
+import { PullRequestClient } from './PullRequestClient';
+import { RepoClient } from './RepoClient';
+import { IssueClient } from './IssueClient';
 import { GitcodeClientAuth } from './auth';
 
 export class GitcodeClient {
-  pr = new GitcodeClientPr(this);
-  repo = new GitcodeClientRepo(this);
-  issue = new GitcodeClientIssue(this);
-  user = new GitcodeClientUser(this);
+  pulls = new PullRequestClient(this);
+  repo = new RepoClient(this);
+  issues = new IssueClient(this);
+  user = new UserClient(this);
   auth = new GitcodeClientAuth(this);
 
   constructor() {}

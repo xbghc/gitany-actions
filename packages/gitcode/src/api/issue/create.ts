@@ -38,6 +38,14 @@ export type CreateIssueParams = {
   body: CreateIssueBody;
 };
 
+export const issueLabelSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  color: z.string(),
+});
+
+export type IssueLabel = z.infer<typeof issueLabelSchema>;
+
 /**
  * Complete Issue representation with all fields.
  */
@@ -78,15 +86,7 @@ export const createdIssueSchema = z.object({
   }),
   created_at: z.string(),
   updated_at: z.string(),
-  labels: z
-    .array(
-      z.object({
-        id: z.number(),
-        name: z.string(),
-        color: z.string(),
-      }),
-    )
-    .optional(),
+  labels: z.array(issueLabelSchema).optional(),
   issue_state: z.string().optional(),
   priority: z.number().optional(),
   issue_type: z.string().optional(),

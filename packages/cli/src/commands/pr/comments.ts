@@ -1,4 +1,4 @@
-import type { PRCommentQueryOptions } from '@gitany/gitcode';
+import { type PRCommentQueryOptions, parseGitUrl } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
@@ -26,10 +26,20 @@ export async function prCommentsCommand(
   await withClient(
     async (client) => {
       const repoUrl = await resolveRepoUrl(url);
-      const comments = await client.pr.comments(repoUrl, n, {
-        page: options.page ? Number(options.page) : undefined,
-        per_page: options.perPage ? Number(options.perPage) : undefined,
-        comment_type: isPrCommentType(options.commentType) ? options.commentType : undefined,
+      const { owner, repo } = parseGitUrl(repoUrl) ?? {};
+      if (!owner || !repo) {
+        throw new Error(`Could not parse owner and repo from URL: ${repoUrl}`);
+      }
+
+      const comments = await client.pulls.listComments({
+        owner,
+        repo,
+        prNumber: n,
+        query: {
+          page: options.page ? Number(options.page) : undefined,
+          per_page: options.perPage ? Number(options.perPage) : undefined,
+          comment_type: isPrCommentType(options.commentType) ? options.commentType : undefined,
+        },
       });
 
       if (options.json) {
