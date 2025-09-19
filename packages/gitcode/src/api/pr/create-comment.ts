@@ -24,8 +24,10 @@ export interface CreatePrCommentBody {
  * Path params for create PR comment request.
  */
 export type CreatePrCommentParams = {
-  /** Repository URL (HTTP/SSH). */
-  url: string;
+  /** The account owner of the repository. */
+  owner: string;
+  /** The name of the repository. */
+  repo: string;
   /** PR number. */
   number: number;
   /** Comment data. */

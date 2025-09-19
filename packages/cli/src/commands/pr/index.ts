@@ -1,59 +1,53 @@
 import { Command } from 'commander';
-import { listCommand } from './list';
-import { createCommand } from './create';
-import { prSubCommand } from './settings';
-import { createPrCommentCommand } from './create-comment';
+import { createCommand as createPrCommand } from './create';
 import { prCommentsCommand } from './comments';
+import { settingsCommand } from './settings';
+import { listCommand } from './list';
+import { createCommentCommand } from './create-comment';
 
-export function prCommand(): Command {
-  const prProgram = new Command('pr').description('Pull request commands');
-
-  prProgram
-    .command('list')
-    .description('List pull requests for a repository')
-    .argument('[url]', 'Repository URL')
-    .option('--state <state>', 'Filter by state: open | closed | all', 'open')
-    .option('--head <ref>', 'Filter by head (branch or repo:branch)')
-    .option('--base <branch>', 'Filter by base branch')
-    .option('--sort <field>', 'Optional sort field if supported')
-    .option('--direction <dir>', 'asc | desc')
-    .option('--json', 'Output raw JSON instead of list')
-    .action(listCommand);
+function prSubCommand(): Command {
+  const prProgram = new Command('pr');
 
   prProgram
-    .command('create')
-    .description('Create a new pull request')
-    .argument('[url]', 'Repository URL')
-    .requiredOption('--title <title>', 'Title of the PR')
-    .requiredOption('--head <branch>', 'Source branch name')
-    .option('--base <branch>', 'Target branch')
-    .option('--body <text>', 'Description/body text')
-    .option('--issue <n>', 'Associate an issue number with the PR')
-    .option('--json', 'Output created PR as JSON')
-    .action(createCommand);
+    .command('create [url]')
+    .description('Create a pull request')
+    .option('--title <string>', 'Title of the PR')
+    .option('--head <string>', 'Head branch')
+    .option('--base <string>', 'Base branch')
+    .option('--body <string>', 'Body of the PR')
+    .option('--issue <number>', 'Associated issue number')
+    .option('--json', 'Output raw JSON')
+    .action(createPrCommand);
 
-  // Comment command
-  prProgram.addCommand(createPrCommentCommand());
-
-  // Comments list command
   prProgram
-    .command('comments')
+    .command('comments <pr-number> [url]')
     .description('List comments on a pull request')
-    .argument('<pr-number>', 'Pull request number')
-    .argument('[url]', 'Repository URL')
     .option('--page <number>', 'Page number')
-    .option('--perPage <number>', 'Items per page')
-    .option('--commentType <type>', 'Comment type: diff_comment | pr_comment')
+    .option('--per-page <number>', 'Items per page')
+    .option('--comment-type <type>', 'Type of comment: diff_comment, pr_comment')
     .option('--json', 'Output raw JSON')
     .action(prCommentsCommand);
 
-  // 添加子命令组
-  const infoGroup = prProgram.command('info').description('Pull request information commands');
+  prProgram
+    .command('settings <url>')
+    .description('Show PR settings for a repository')
+    .action(settingsCommand);
 
-  const subCommands = prSubCommand().commands;
-  subCommands.forEach((cmd) => {
-    infoGroup.addCommand(cmd);
-  });
+  prProgram
+    .command('list [url]')
+    .description('List pull requests')
+    .option('--state <state>', 'State of the PR (open, closed, merged, all)')
+    .option('--head <branch>', 'Filter by head branch')
+    .option('--base <branch>', 'Filter by base branch')
+    .option('--sort <sort>', 'Sort by: created, updated, popularity, long-running')
+    .option('--direction <direction>', 'Sort direction: asc, desc')
+    .option('--json', 'Output raw JSON')
+    .action(listCommand);
+
+  const allCommands = [prProgram, createCommentCommand()];
+  allCommands.forEach((cmd) => prProgram.addCommand(cmd));
 
   return prProgram;
 }
+
+export { prSubCommand };

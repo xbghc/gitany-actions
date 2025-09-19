@@ -1,84 +1,44 @@
 #!/usr/bin/env node
-import 'dotenv/config';
+
 import { Command } from 'commander';
-import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand } from './commands/auth';
 import { createLogger, setGlobalLogLevel, type LogLevel } from '@gitany/shared';
-import { repoCommand } from './commands/repo';
-import { prCommand } from './commands/pr';
+import { prSubCommand } from './commands/pr';
 import { userCommand } from './commands/user';
 import { issueCommand } from './commands/issue';
-import { resolveRepoUrl } from '@gitany/git-lib';
+import { repoCommand } from './commands/repo';
 
 const program = new Command();
-const logger = createLogger('@gitany/cli');
 
-program
-  .name('gitcode')
-  .description('tools for GitCode')
-  .version('0.1.0')
-  .option('-v, --verbose', 'Enable debug logging')
-  .option('-q, --quiet', 'Silence all logs (silent level)')
-  .option('--log-level <level>', 'Set log level (fatal|error|warn|info|debug|trace|silent)');
+program.version('0.1.0').description('A CLI for GitCode');
 
-// Apply logging options before any command action
-program.hook('preAction', (thisCommand) => {
-  const opts = thisCommand.opts<{ verbose?: boolean; quiet?: boolean; logLevel?: string }>();
-  let level: LogLevel | undefined;
-  if (opts.quiet) level = 'silent';
-  else if (opts.verbose) level = 'debug';
-  else if (opts.logLevel) {
-    const v = String(opts.logLevel).toLowerCase();
-    const allowed = new Set(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
-    if (allowed.has(v)) level = v as LogLevel;
-  }
-  if (level) {
-    try {
-      setGlobalLogLevel(level);
-    } catch (error) {
-      logger.debug({ error }, 'Failed to set global log level');
-    }
-    // Also update local logger instance
-    try {
-      logger.level = level;
-    } catch (error) {
-      logger.debug({ error }, 'Failed to set local log level');
-    }
-  }
-});
-
-// parse command
-program
-  .command('parse [url]')
-  .description('Parse Git URL and output JSON')
-  .action(async (url?: string) => {
-    try {
-      const repoUrl = await resolveRepoUrl(url);
-      const parsed = parseGitUrl(repoUrl);
-      if (!parsed) {
-        logger.error({ url: repoUrl }, 'Unrecognized git URL');
-        process.exit(1);
-      }
-      console.log(JSON.stringify(parsed, null, 2));
-    } catch (err) {
-      logger.error({ err }, 'Failed to parse git URL');
-      process.exit(1);
-    }
-  });
-
-// auth command
 program.addCommand(authCommand());
-
-// repo command
+program.addCommand(prSubCommand());
+program.addCommand(issueCommand());
+program.addCommand(userCommand());
 program.addCommand(repoCommand());
 
-// pr command
-program.addCommand(prCommand());
+program
+  .option('-l, --log-level <level>', 'Set log level', 'info')
+  .hook('preAction', (thisCommand) => {
+    const options = thisCommand.opts();
+    setGlobalLogLevel(options.logLevel as LogLevel);
+  });
 
-// user command
-program.addCommand(userCommand());
+program.parse(process.argv);
 
-// issue command
-program.addCommand(issueCommand());
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}
 
-program.parse();
+const logger = createLogger('@gitany/cli');
+
+process.on('uncaughtException', (err) => {
+  logger.error(`Uncaught exception: ${err.stack || err.message}`);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error(`Unhandled rejection: ${reason}`);
+  process.exit(1);
+});

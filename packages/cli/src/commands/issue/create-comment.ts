@@ -88,7 +88,7 @@ export async function createCommentAction(
       throw new Error('Comment body is required. Use the body argument, --body, or --body-file.');
     }
 
-    const comment = await client.issue.createComment({
+    const comment = await client.issues.createComment({
       owner,
       repo,
       number: issueNumber,

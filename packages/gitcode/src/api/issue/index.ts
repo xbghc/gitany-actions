@@ -2,8 +2,8 @@ export type { ListIssuesQuery, ListIssuesParams, Issue, ListIssuesResponse } fro
 export { listIssuesUrl, issueSchema, listIssuesResponseSchema } from './list';
 export type { IssueCommentsQuery, IssueComment, IssueCommentsResponse } from './comments';
 export { issueCommentsUrl, issueCommentSchema, issueCommentsResponseSchema } from './comments';
-export type { CreateIssueBody, CreateIssueParams, CreatedIssue } from './create';
-export { createIssueUrl, createdIssueSchema } from './create';
+export type { CreateIssueBody, CreateIssueParams, CreatedIssue, IssueLabel } from './create';
+export { createIssueUrl, createdIssueSchema, issueLabelSchema } from './create';
 export type {
   CreateIssueCommentBody,
   CreateIssueCommentParams,

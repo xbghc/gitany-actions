@@ -1,4 +1,4 @@
-import { type CreatePullBody } from '@gitany/gitcode';
+import { type CreatePullBody, parseGitUrl } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
@@ -28,7 +28,11 @@ export async function createCommand(
 
   await withClient(async (client) => {
     const repoUrl = await resolveRepoUrl(url);
-    const created = await client.pr.create(repoUrl, body);
+    const { owner, repo } = parseGitUrl(repoUrl) ?? {};
+    if (!owner || !repo) {
+      throw new Error(`Could not parse owner and repo from URL: ${repoUrl}`);
+    }
+    const created = await client.pulls.create({ owner, repo, body });
 
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));

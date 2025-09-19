@@ -72,17 +72,17 @@ const user = await client.user.getProfile();
 const namespace = await client.user.getNamespace();
 
 // 仓库操作
-const settings = await client.repo.getSettings('owner', 'repo');
-const branches = await client.repo.getBranches('owner', 'repo');
-const commits = await client.repo.getCommits('owner', 'repo');
-const contributors = await client.repo.getContributors('owner', 'repo');
+const settings = await client.repo.getSettings({ owner: 'owner', repo: 'repo' });
+const branches = await client.repo.getBranches({ owner: 'owner', repo: 'repo' });
+const commits = await client.repo.getCommits({ owner: 'owner', repo: 'repo' });
+const contributors = await client.repo.getContributors({ owner: 'owner', repo: 'repo' });
 
 // PR 操作
-const pulls = await client.pr.list('https://gitcode.com/owner/repo');
-const prSettings = await client.pr.getSettings('owner', 'repo');
+const pulls = await client.pulls.list({ owner: 'owner', repo: 'repo' });
+const prSettings = await client.pulls.getSettings({ owner: 'owner', repo: 'repo' });
 
 // Issue 操作
-const issues = await client.issue.list('https://gitcode.com/owner/repo');
+const issues = await client.issues.list({ owner: 'owner', repo: 'repo' });
 ```
 
 ## 项目结构
@@ -232,7 +232,7 @@ const client = new GitcodeClient();
 
 // 完全类型安全的 API 调用
 const user: UserProfile = await client.user.getProfile();
-const settings: RepoSettings = await client.repo.getSettings('owner', 'repo');
+const settings: RepoSettings = await client.repo.getSettings({ owner: 'owner', repo: 'repo' });
 ```
 
 ## 构建系统

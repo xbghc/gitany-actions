@@ -1,6 +1,5 @@
 import { Command } from 'commander';
-import { parseGitUrl } from '@gitany/gitcode';
-import type { CreateIssueBody } from '@gitany/gitcode';
+import { parseGitUrl, type CreateIssueBody, type IssueLabel } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -120,7 +119,7 @@ export async function createAction(
     if (options.security_hole) body.security_hole = options.security_hole;
     if (options.template_path) body.template_path = options.template_path;
 
-    const issue = await client.issue.create({
+    const issue = await client.issues.create({
       owner,
       body,
     });
@@ -133,7 +132,7 @@ export async function createAction(
       console.log('\n📋 Issue Details:');
       console.log(`   Title:    ${issue.title}`);
       console.log(`   Number:   #${issue.number}`);
-      console.log(`   State:    ${getStateColor(issue.state)}${issue.state}${colors.reset}`);
+      console.log(`   State:    ${getStateColor(issue.state)}${colors.reset}`);
       console.log(`   URL:      ${colors.blue}${issue.html_url}${colors.reset}`);
 
       if (issue.assignee) {
@@ -141,7 +140,7 @@ export async function createAction(
       }
 
       if (issue.labels && issue.labels.length > 0) {
-        const labelNames = issue.labels.map((l) => l.name).join(', ');
+        const labelNames = issue.labels.map((l: IssueLabel) => l.name).join(', ');
         console.log(`   Labels:   ${labelNames}`);
       }
 

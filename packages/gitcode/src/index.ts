@@ -48,6 +48,7 @@ export type {
   UpdateIssueParams,
   UpdatedIssue,
   UpdatedIssueComment,
+  IssueLabel,
 } from './api/issue';
 export {
   listIssuesUrl,

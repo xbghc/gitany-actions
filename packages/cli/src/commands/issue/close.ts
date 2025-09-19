@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
 import { colors, colorizeState, resolveIssueContext, type IssueTargetOptions } from './helpers';
+import { parseGitUrl } from '@gitany/gitcode';
 
 interface CloseOptions extends IssueTargetOptions {
   json?: boolean;
@@ -14,8 +15,17 @@ export async function closeAction(
   await withClient(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
+      const { owner, repo } = parseGitUrl(repoUrl) ?? {};
+      if (!owner || !repo) {
+        throw new Error(`Could not parse owner and repo from URL: ${repoUrl}`);
+      }
 
-      const issue = await client.issue.update(repoUrl, issueNumber, { state: 'closed' });
+      const issue = await client.issues.update({
+        owner,
+        repo,
+        issueNumber,
+        body: { state: 'closed' },
+      });
 
       if (options.json) {
         console.log(JSON.stringify(issue, null, 2));
