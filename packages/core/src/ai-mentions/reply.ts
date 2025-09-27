@@ -142,14 +142,14 @@ function resolveGitcodeCliEntry(): string {
 
   let packageJsonPath: string;
   try {
-    packageJsonPath = require.resolve('@gitany/cli/package.json');
+    packageJsonPath = require.resolve('@xbghc/gitcode-cli/package.json');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Unable to locate @gitany/cli package: ${message}`);
+    throw new Error(`Unable to locate @xbghc/gitcode-cli package: ${message}`);
   }
 
   const cliDir = path.dirname(packageJsonPath);
-  const pkg = require('@gitany/cli/package.json') as { bin?: Record<string, string> };
+  const pkg = require('@xbghc/gitcode-cli/package.json') as { bin?: Record<string, string> };
   const binRelative = pkg.bin?.gitcode ?? 'dist/index.js';
   const entry = path.resolve(cliDir, binRelative);
   cachedGitcodeCliEntry = entry;

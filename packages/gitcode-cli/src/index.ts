@@ -11,7 +11,7 @@ import { issueCommand } from './commands/issue';
 import { resolveRepoUrl } from '@gitany/git-lib';
 
 const program = new Command();
-const logger = createLogger('@gitany/cli');
+const logger = createLogger('@xbghc/gitcode-cli');
 
 program
   .name('gitcode')

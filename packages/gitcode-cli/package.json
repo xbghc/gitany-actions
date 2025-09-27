@@ -1,5 +1,5 @@
 {
-  "name": "@gitany/cli",
+  "name": "@xbghc/gitcode-cli",
   "version": "0.1.0",
   "description": "CLI for gitany projects.",
   "type": "module",

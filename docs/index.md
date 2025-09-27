@@ -7,7 +7,7 @@ title: 首页
 本仓库包含两个包：
 
 - `@gitany/gitcode`: GitCode API 工具库（认证、请求、URL 解析）。
-- `@gitany/cli`: 命令行工具，提供认证与解析能力。
+- `@xbghc/gitcode-cli`: 命令行工具，提供认证与解析能力。
 
 使用 pnpm 管理的 Monorepo，统一 ESLint/Prettier/TypeScript 配置。
 

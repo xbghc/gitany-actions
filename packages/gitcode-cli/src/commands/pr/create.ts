@@ -3,7 +3,7 @@ import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 
-const logger = createLogger('@gitany/cli');
+const logger = createLogger('@xbghc/gitcode-cli');
 
 export async function createCommand(
   url?: string,

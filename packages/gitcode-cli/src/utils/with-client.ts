@@ -1,7 +1,7 @@
 import { GitcodeClient } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 
-const logger = createLogger('@gitany/cli');
+const logger = createLogger('@xbghc/gitcode-cli');
 
 type WithClientErrorHandler = string | ((error: unknown) => void | string | Promise<void | string>);
 

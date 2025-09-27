@@ -2,9 +2,9 @@
 title: CLI 工具
 ---
 
-# @gitany/cli（命令行）
+# @xbghc/gitcode-cli（命令行）
 
-包路径：`packages/cli`，可执行名：`gitcode`
+包路径：`packages/gitcode-cli`，可执行名：`gitcode`
 
 说明：本 CLI 的命令与使用方式参考 GitHub CLI（`gh`），是其在 GitCode 平台上的等价实现与封装。例如：
 
@@ -15,10 +15,10 @@ title: CLI 工具
 
 ```bash
 pnpm build
-pnpm --filter @gitany/cli start -- --help
+pnpm --filter @xbghc/gitcode-cli start -- --help
 ```
 
-> 开发模式：`pnpm --filter @gitany/cli dev`
+> 开发模式：`pnpm --filter @xbghc/gitcode-cli dev`
 
 ## 全局选项
 
@@ -505,7 +505,7 @@ CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`
 在编写自定义命令时，可使用 `withClient` 工具统一创建 `GitcodeClient` 并处理错误：
 
 ```ts
-import { withClient } from '@gitany/cli/utils/with-client';
+import { withClient } from '@xbghc/gitcode-cli/utils/with-client';
 
 await withClient(async (client) => {
   const user = await client.user.getProfile();

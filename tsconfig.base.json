@@ -25,6 +25,6 @@
     { "path": "./packages/gitcode" },
     { "path": "./packages/git-lib" },
     { "path": "./packages/core" },
-    { "path": "./packages/cli" }
+    { "path": "./packages/gitcode-cli" }
   ]
 }

@@ -1,17 +1,17 @@
-# @gitany/cli
+# @xbghc/gitcode-cli
 
 GitCode 命令行工具，提供与 GitCode 平台的交互式命令行界面。
 
 ## 安装
 
 ```bash
-pnpm add -g @gitany/cli
+pnpm add -g @xbghc/gitcode-cli
 ```
 
 或使用项目本地安装：
 
 ```bash
-pnpm add @gitany/cli
+pnpm add @xbghc/gitcode-cli
 pnpm gitcode --help
 ```
 
@@ -224,7 +224,7 @@ pnpm install
 pnpm build
 
 # 运行 CLI
-node packages/cli/dist/index.js --help
+node packages/gitcode-cli/dist/index.js --help
 ```
 
 ### 贡献

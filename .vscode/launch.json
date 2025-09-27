@@ -28,7 +28,7 @@
       "name": "Debug CLI",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/cli/src/index.ts",
+      "program": "${workspaceFolder}/packages/gitcode-cli/src/index.ts",
       "preLaunchTask": "pnpm: build",
       "outFiles": ["${workspaceFolder}/packages/*/dist/**/*.js"],
       "sourceMaps": true,

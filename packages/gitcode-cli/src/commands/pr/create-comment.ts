@@ -7,7 +7,7 @@ import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
 
-const logger = createLogger('@gitany/cli');
+const logger = createLogger('@xbghc/gitcode-cli');
 
 interface CreatePrCommentOptions {
   body?: string;
