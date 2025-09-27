@@ -34,6 +34,6 @@
     "@types/dockerode": "^3.3.43"
   },
   "engines": {
-    "node": ">=18.17"
+    "node": ">=22.0.0"
   }
 }
