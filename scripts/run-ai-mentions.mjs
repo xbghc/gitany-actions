@@ -19,24 +19,22 @@
 // - SHOW_PROMPT: 可选，设置为 "true" 时输出生成的提示词。
 
 import { config } from 'dotenv';
-import { runAiMentionsOnce, defaultPromptBuilder, chat } from '../packages/core/dist/index.js';
+import { chat, defaultPromptBuilder, runAiMentionsOnce } from '../packages/core/dist/index.js';
 import { GitcodeClient } from '../packages/gitcode/dist/index.js';
-import os from 'node:os';
+import { createLogger } from '../packages/shared/dist/index.js';
+const logger = createLogger('script:ai-mentions');
 
 config({ path: new URL('.env', import.meta.url) });
 
-async function resolveDefaultMention(client, verbose) {
+async function resolveDefaultMention(client) {
   try {
     const profile = await client.user.getProfile();
     const login = profile.login?.trim();
     if (login) return `@${login}`;
   } catch (error) {
-    if (verbose) {
-      console.warn('⚠️ 无法从 Gitcode 获取当前用户名, 将使用默认值 @AI。');
-      console.warn(error);
-    }
+    logger.warn('⚠️ 无法从 Gitcode 获取当前用户名');
+    logger.error(error);
   }
-
   return '@AI';
 }
 
@@ -71,17 +69,17 @@ function promptPreview(prompt) {
 
 function logMention(context, mentionToken, options, prompt) {
   const header = `[${formatTimestamp()}] 🔔 检测到 ${sourceLabel(context.commentSource)} 中的 ${mentionToken}`;
-  console.log('\n' + header);
-  console.log(`   • Issue #${context.issueNumber}: ${context.issue.title}`);
+  logger.info('\n' + header);
+  logger.info(`   • Issue #${context.issueNumber}: ${context.issue.title}`);
   if (context.pullRequest) {
-    console.log(`   • PR #${context.pullRequest.number}: ${context.pullRequest.title}`);
+    logger.info(`   • PR #${context.pullRequest.number}: ${context.pullRequest.title}`);
   }
-  console.log(`   • 评论 ID: ${context.mentionComment.id}`);
+  logger.info(`   • 评论 ID: ${context.mentionComment.id}`);
   if (options.verbose) {
     const body = context.mentionComment.body?.trim();
     if (body) {
-      console.log('   • 评论正文:');
-      console.log(
+      logger.info('   • 评论正文:');
+      logger.info(
         body
           .split('\n')
           .map((line) => `     ${line}`)
@@ -90,16 +88,16 @@ function logMention(context, mentionToken, options, prompt) {
     }
   }
   if (options.showPrompt) {
-    console.log('----- Prompt 开始 -----');
-    console.log(prompt);
-    console.log('----- Prompt 结束 -----');
+    logger.info('----- Prompt 开始 -----');
+    logger.info(prompt);
+    logger.info('----- Prompt 结束 -----');
   }
 }
 
 function createDryRunExecutor() {
   return async () => {
-    console.log('   - (dry-run) 跳过执行 "claude -p ..."');
-    console.log('🤖 (dry-run) 已捕获到提及, 未实际调用 chat。');
+    logger.info('   - (dry-run) 跳过执行 "claude -p ..."');
+    logger.info('🤖 (dry-run) 已捕获到提及, 未实际调用 chat。');
     return { success: true, output: 'Dry-run: chat 未执行。' };
   };
 }
@@ -109,11 +107,11 @@ function createLoggedChatExecutor() {
     const reused = Boolean(options?.container);
     if (reused) {
       const id = options.container?.id ? options.container.id.slice(0, 12) : '未知';
-      console.log(`   - chat 容器: 复用 (ID: ${id})`);
+      logger.info(`   - chat 容器: 复用 (ID: ${id})`);
     } else {
-      console.log('   - chat 容器: 新建');
+      logger.info('   - chat 容器: 新建');
     }
-    console.log(`   - 执行命令 "claude -p ${promptPreview(prompt)}"`);
+    logger.info(`   - 执行命令 "claude -p ${promptPreview(prompt)}"`);
     return chat(repoUrl, prompt, options);
   };
 }
@@ -122,25 +120,25 @@ function logChatResult(result, context, runChat) {
   if (result.success) {
     if (runChat) {
       const length = result.output ? result.output.length : 0;
-      console.log(`   - [后台] 获取到返回结果 (${length} 字符)`);
+      logger.info(`   - [后台] 获取到返回结果 (${length} 字符)`);
     } else {
-      console.log('   - [后台] (dry-run) 获取到模拟结果');
+      logger.info('   - [后台] (dry-run) 获取到模拟结果');
     }
     if (runChat) {
-      console.log(`✅ [后台] chat 成功 (评论 ID ${context.mentionComment.id})`);
+      logger.info(`✅ [后台] chat 成功 (评论 ID ${context.mentionComment.id})`);
       if (result.output) {
-        console.log('----- chat 输出 -----');
-        console.log(result.output);
-        console.log('----------------------');
+        logger.info('----- chat 输出 -----');
+        logger.info(result.output);
+        logger.info('----------------------');
       }
     } else {
-      console.log(`✅ [后台] 已模拟 chat (评论 ID ${context.mentionComment.id})`);
+      logger.info(`✅ [后台] 已模拟 chat (评论 ID ${context.mentionComment.id})`);
     }
   } else {
-    console.error('   - [后台] 获取返回结果失败');
-    console.error(`❌ [后台] chat 失败 (评论 ID ${context.mentionComment.id})`);
+    logger.error('   - [后台] 获取返回结果失败');
+    logger.error(`❌ [后台] chat 失败 (评论 ID ${context.mentionComment.id})`);
     if (result.error) {
-      console.error(result.error);
+      logger.error(result.error);
     }
   }
 }
@@ -149,15 +147,15 @@ function logReplySuccess(reply, context) {
   const source = sourceLabel(reply.source);
   // The new watcher logic handles logging for placeholder creation and editing internally.
   // This callback is now only for the final success case.
-  console.log(`   - [后台] 成功更新占位评论 (${source}, 评论 ID ${context.mentionComment.id})`);
-  console.log(`💬 [后台] 已通过编辑评论进行回复 (评论 ID ${context.mentionComment.id})`);
+  logger.info(`   - [后台] 成功更新占位评论 (${source}, 评论 ID ${context.mentionComment.id})`);
+  logger.info(`💬 [后台] 已通过编辑评论进行回复 (评论 ID ${context.mentionComment.id})`);
 }
 
 function logReplyError(error, context) {
-  console.error('   - 自动回复失败，详情如下');
-  console.error(`⚠️ 自动回复失败 (评论 ID ${context.mentionComment.id})`);
+  logger.error('   - 自动回复失败，详情如下');
+  logger.error(`⚠️ 自动回复失败 (评论 ID ${context.mentionComment.id})`);
   if (error) {
-    console.error(error);
+    logger.error(error);
   }
 }
 
@@ -176,14 +174,14 @@ function buildChatOptions(runChat, chatKeepContainer, chatVerbose) {
 async function main() {
   const repoUrl = (process.env.REPO_URL || '').trim();
   if (!repoUrl) {
-    console.error('错误: 请设置 REPO_URL 环境变量。');
+    logger.error('错误: 请设置 REPO_URL 环境变量。');
     process.exit(1);
   }
 
   const includeIssueComments = envBoolean('INCLUDE_ISSUE_COMMENTS', true);
   const includePullRequestComments = envBoolean('INCLUDE_PR_COMMENTS', true);
   if (!includeIssueComments && !includePullRequestComments) {
-    console.error('错误: 至少需要监听 Issue 或 PR 评论中的一种');
+    logger.error('错误: 至少需要监听 Issue 或 PR 评论中的一种');
     process.exit(1);
   }
 
@@ -200,18 +198,18 @@ async function main() {
     (process.env.MENTION_TOKEN || '').trim() || (await resolveDefaultMention(client, verbose));
   const chatOptions = buildChatOptions(runChat, chatKeepContainer, chatVerbose);
 
-  console.log('👂 开始扫描 AI 评论提及 (一次性)');
-  console.log(`📦 仓库: ${repoUrl}`);
-  console.log(`🏷️ 触发标记: ${mentionToken}`);
-  console.log(`📝 扫描 Issue 评论: ${includeIssueComments ? '是' : '否'}`);
-  console.log(`📝 扫描 PR 评论: ${includePullRequestComments ? '是' : '否'}`);
-  console.log(`🤖 chat 模式: ${runChat ? '实际调用' : '模拟 (dry-run)'}`);
-  if (chatOptions?.sha) console.log(`🔗 chat 目标: ${chatOptions.sha}`);
-  if (chatOptions?.nodeVersion) console.log(`🟢 chat Node.js 版本: ${chatOptions.nodeVersion}`);
-  if (chatKeepContainer) console.log('🐳 chat 执行后将保留容器');
-  if (chatVerbose) console.log('🔍 chat 详细日志: 开启');
-  if (showPrompt) console.log('📝 将输出生成的提示词');
-  if (verbose) console.log('🔍 将打印评论正文等调试信息');
+  logger.info('👂 开始扫描 AI 评论提及 (一次性)');
+  logger.info(`📦 仓库: ${repoUrl}`);
+  logger.info(`🏷️ 触发标记: ${mentionToken}`);
+  logger.info(`📝 扫描 Issue 评论: ${includeIssueComments ? '是' : '否'}`);
+  logger.info(`📝 扫描 PR 评论: ${includePullRequestComments ? '是' : '否'}`);
+  logger.info(`🤖 chat 模式: ${runChat ? '实际调用' : '模拟 (dry-run)'}`);
+  if (chatOptions?.sha) logger.info(`🔗 chat 目标: ${chatOptions.sha}`);
+  if (chatOptions?.nodeVersion) logger.info(`🟢 chat Node.js 版本: ${chatOptions.nodeVersion}`);
+  if (chatKeepContainer) logger.info('🐳 chat 执行后将保留容器');
+  if (chatVerbose) logger.info('🔍 chat 详细日志: 开启');
+  if (showPrompt) logger.info('📝 将输出生成的提示词');
+  if (verbose) logger.info('🔍 将打印评论正文等调试信息');
 
   const loggingOptions = { verbose, showPrompt };
 
@@ -245,13 +243,13 @@ async function main() {
     },
   });
 
-  console.log('✅ 扫描完成。');
+  logger.info('✅ 扫描完成。');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((err) => {
-    console.error('💥 扫描过程中发生错误:');
-    console.error(err);
+    logger.error('💥 扫描过程中发生错误:');
+    logger.error(err);
     process.exit(1);
   });
 }
