@@ -42,7 +42,7 @@ function main() {
         '检测到 packages/* 源码改动，但本次提交没有包含 docs/* 的更新。',
         '请根据变更同步更新：',
         '  - packages/gitcode → docs/gitcode',
-        '  - packages/cli     → docs/cli',
+        '  - packages/gitcode-cli     → docs/gitcode-cli',
         '如需暂时跳过（不推荐）：SKIP_DOCS_CHECK=1 git commit -m "..."',
         '',
       ].join('\n'),

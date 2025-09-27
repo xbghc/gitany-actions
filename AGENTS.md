@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This monorepo uses `pnpm` workspaces. Core logic lives in `packages/gitcode`, the CLI in `packages/cli`, and documentation in `docs` (mirrors package structure). Utility scripts sit in `scripts`, and Git hooks live under `.husky`. Keep shared config in root `tsconfig.base.json` and `.eslintrc.cjs`.
+This monorepo uses `pnpm` workspaces. Core logic lives in `packages/gitcode`, the CLI in `packages/gitcode-cli`, and documentation in `docs` (mirrors package structure). Utility scripts sit in `scripts`, and Git hooks live under `.husky`. Keep shared config in root `tsconfig.base.json` and `.eslintrc.cjs`.
 
 ## Build, Test, and Development Commands
 
@@ -18,7 +18,7 @@ No test runner exists yet. Add lightweight unit tests alongside sources as `*.te
 
 ## Commit & Pull Request Guidelines
 
-Write commits in imperative mood and group related changes. If code behavior shifts in `packages/gitcode` or `packages/cli`, update the matching docs (`docs/gitcode/*`, `docs/cli/*`). PRs must confirm lint/build status and explain the change; include screenshots or logs when UX or CLI output changes. The pre-commit hook runs the docs sync check; set `SKIP_DOCS_CHECK=1` only if explicitly approved.
+Write commits in imperative mood and group related changes. If code behavior shifts in `packages/gitcode` or `packages/gitcode-cli`, update the matching docs (`docs/gitcode/*`, `docs/gitcode-cli/*`). PRs must confirm lint/build status and explain the change; include screenshots or logs when UX or CLI output changes. The pre-commit hook runs the docs sync check; set `SKIP_DOCS_CHECK=1` only if explicitly approved.
 
 ## Security & Configuration Tips
 

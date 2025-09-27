@@ -1,7 +1,7 @@
 import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 
-const logger = createLogger('@gitany/cli');
+const logger = createLogger('@xbghc/gitcode-cli');
 
 export const colors = {
   reset: '\x1b[0m',

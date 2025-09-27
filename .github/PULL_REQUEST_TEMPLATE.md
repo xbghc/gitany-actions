@@ -6,7 +6,7 @@
 
 - [ ] 我已同步更新文档（docs/\*）或此改动不影响对外接口
   - 影响 gitcode 库 → docs/gitcode
-  - 影响 CLI → docs/cli
+  - 影响 CLI → docs/gitcode-cli
 
 ## 自检清单
 

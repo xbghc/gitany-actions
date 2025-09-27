@@ -6,7 +6,7 @@
 
 GitAny Actions 是一个 TypeScript 项目，提供以下核心功能：
 
-- **@gitany/cli**: 命令行界面工具，提供 `gitcode` 命令行接口
+- **@xbghc/gitcode-cli**: 命令行界面工具，提供 `gitcode` 命令行接口
 - **@gitany/gitcode**: GitCode API 客户端库，提供完整的 GitCode 平台集成
 - **@gitany/git-lib**: Git 命令包装器，提供跨平台的 Git 操作支持
 - **@gitany/core**: 核心共享工具和功能库
@@ -162,7 +162,7 @@ pnpm docs:preview  # 预览构建的文档
 
 ```bash
 # 工作特定包
-pnpm --filter @gitany/cli dev
+pnpm --filter @xbghc/gitcode-cli dev
 pnpm --filter @gitany/gitcode build
 pnpm --filter @gitany/core dev
 pnpm --filter @gitany/git-lib build
@@ -270,7 +270,7 @@ pnpm --filter @gitany/core cleanup
 项目强制要求文档与代码同步更新：
 
 - 任何对 `packages/gitcode/src/*` 的更改都需要更新 `docs/gitcode/*`
-- 任何对 `packages/cli/src/*` 的更改都需要更新 `docs/cli/*`
+- 任何对 `packages/gitcode-cli/src/*` 的更改都需要更新 `docs/gitcode-cli/*`
 - 通过 Git hooks 在 `.husky/pre-commit` 中强制执行
 
 **绕过机制** (不推荐):

@@ -14,7 +14,7 @@ const execAsync = promisify(exec);
 export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
 
 export async function installGitcodeCli(options: StepOptions): Promise<StepResult> {
-  const packageJsonPath = require.resolve('@gitany/cli/package.json');
+  const packageJsonPath = require.resolve('@xbghc/gitcode-cli/package.json');
   const cliDir = path.dirname(packageJsonPath);
 
   const { stdout } = await execAsync('npm pack', { cwd: cliDir });

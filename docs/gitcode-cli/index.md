@@ -2,9 +2,9 @@
 title: CLI 工具
 ---
 
-# @gitany/cli（命令行）
+# @xbghc/gitcode-cli（命令行）
 
-包路径：`packages/cli`，可执行名：`gitcode`
+包路径：`packages/gitcode-cli`，可执行名：`gitcode`
 
 说明：本 CLI 的命令与使用方式参考 GitHub CLI（`gh`），是其在 GitCode 平台上的等价实现与封装。例如：
 
@@ -15,10 +15,10 @@ title: CLI 工具
 
 ```bash
 pnpm build
-pnpm --filter @gitany/cli start -- --help
+pnpm --filter @xbghc/gitcode-cli start -- --help
 ```
 
-> 开发模式：`pnpm --filter @gitany/cli dev`
+> 开发模式：`pnpm --filter @xbghc/gitcode-cli dev`
 
 ## 全局选项
 
@@ -496,6 +496,32 @@ gitcode user namespace
 
 - `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
 
+### 加载 .env（使用 NODE_OPTIONS）
+
+Node.js v20.6.0 起内置支持通过 `--env-file` 加载 `.env` 文件。推荐用 `NODE_OPTIONS` 开启：
+
+```bash
+# 当前会话生效
+export NODE_OPTIONS="--env-file=.env"
+
+# 运行 CLI（示例）
+gitcode --help
+
+# 指定多个 env 文件（后者覆盖前者）
+export NODE_OPTIONS="--env-file=.env --env-file=.env.local"
+```
+
+或对单条命令内联设置：
+
+```bash
+NODE_OPTIONS="--env-file=.env" gitcode pr list
+```
+
+注意：
+- `.env` 路径基于当前工作目录（`process.cwd()`）。
+- 内置加载器按 `KEY=VALUE` 简单解析，不做变量插值。
+- 需要 Node ≥ 20.6；更旧版本请显式 `export` 环境变量或升级 Node。
+
 ## 本地存储路径
 
 CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`
@@ -505,7 +531,7 @@ CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`
 在编写自定义命令时，可使用 `withClient` 工具统一创建 `GitcodeClient` 并处理错误：
 
 ```ts
-import { withClient } from '@gitany/cli/utils/with-client';
+import { withClient } from '@xbghc/gitcode-cli/utils/with-client';
 
 await withClient(async (client) => {
   const user = await client.user.getProfile();
