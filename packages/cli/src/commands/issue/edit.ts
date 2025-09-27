@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import type { UpdateIssueBody } from '@gitany/gitcode';
+import { parseGitUrl, type UpdateIssueBody, type IssueLabel } from '@gitany/gitcode';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
 import {
@@ -39,6 +39,10 @@ export async function editAction(
   await withClient(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
+      const { owner, repo } = parseGitUrl(repoUrl) ?? {};
+      if (!owner || !repo) {
+        throw new Error(`Could not parse owner and repo from URL: ${repoUrl}`);
+      }
 
       let finalBody = options.body;
       if (options.bodyFile) {
@@ -77,7 +81,12 @@ export async function editAction(
         );
       }
 
-      const issue = await client.issue.update(repoUrl, issueNumber, updateBody);
+      const issue = await client.issues.update({
+        owner,
+        repo,
+        issueNumber,
+        body: updateBody,
+      });
 
       if (options.json) {
         console.log(JSON.stringify(issue, null, 2));
@@ -94,16 +103,10 @@ export async function editAction(
         console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
       }
 
-      const labels = (issue as { labels?: unknown }).labels;
+      const labels = (issue as { labels?: IssueLabel[] }).labels;
       if (Array.isArray(labels) && labels.length > 0) {
         const labelNames = labels
-          .map((label) => {
-            if (!label || typeof label !== 'object') {
-              return String(label ?? '');
-            }
-            const record = label as Record<string, unknown>;
-            return String(record.name ?? record.title ?? record.id ?? '');
-          })
+          .map((label: IssueLabel) => label.name)
           .filter(Boolean)
           .join(', ');
         if (labelNames) {

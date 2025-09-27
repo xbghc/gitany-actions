@@ -1,196 +1,76 @@
-import {
-  GitcodeClient,
-  type PRComment,
-  type PRCommentQueryOptions,
-  type PullRequest,
-  isNotModified,
-} from '@gitany/gitcode';
-import type Docker from 'dockerode';
-import { createPrContainer, removeContainer } from '../container';
-import type { ContainerOptions } from '../container/types';
-import { BaseWatcher, type WatcherOptions } from './common';
+import { type GitcodeClient, type ListPullsQuery, parseGitUrl, type PRCommentQueryOptions } from '@gitany/gitcode';
+import { EventEmitter } from 'events';
 
-export interface WatchPullRequestOptions extends WatcherOptions {
-  onClosed?: (pr: PullRequest) => void;
-  onOpen?: (pr: PullRequest) => void;
-  onMerged?: (pr: PullRequest) => void;
-  onComment?: (pr: PullRequest, comment: PRComment) => void;
-  commentType?: 'diff_comment' | 'pr_comment';
-  container?: ContainerOptions | false;
-  onContainerCreated?: (container: Docker.Container, pr: PullRequest) => void;
-  onContainerRemoved?: (prId: number) => void;
-}
+export class PrWatcher extends EventEmitter {
+  private interval: NodeJS.Timeout | null = null;
+  private lastFetchTime: Date | null = null;
+  private seenPrs: Set<number> = new Set();
+  private owner: string;
+  private repo: string;
 
-type BaselinePR = Pick<PullRequest, 'id' | 'number' | 'state'>;
-
-type WatcherState = {
-  prList: BaselinePR[];
-  lastCommentIdsByPr: Map<number, Set<number>>;
-};
-
-type PersistShape = {
-  prs: Array<{ id: number; number: number; state: PullRequest['state'] }>;
-  lastCommentIdsByPr: Record<string, number[]>;
-};
-
-export class PullRequestWatcher extends BaseWatcher<
-  WatchPullRequestOptions,
-  WatcherState,
-  PersistShape
-> {
-  private readonly containerMap = new Map<number, Docker.Container>();
-
-  constructor(client: GitcodeClient, url: string, options: WatchPullRequestOptions = {}) {
-    super(client, url, options);
-  }
-
-  public getContainers(): Map<number, Docker.Container> {
-    return this.containerMap;
-  }
-
-  protected getStoreSubDir(): string {
-    return 'prs';
-  }
-
-  protected getInitialState(): WatcherState {
-    return { prList: [], lastCommentIdsByPr: new Map() };
-  }
-
-  protected fromPersisted(persisted: PersistShape): WatcherState {
-    const lastMap = new Map<number, Set<number>>();
-    for (const [k, v] of Object.entries(persisted.lastCommentIdsByPr ?? {})) {
-      const num = Number(k);
-      if (!Number.isNaN(num) && Array.isArray(v)) {
-        const commentIds = v.filter((id) => typeof id === 'number' && !isNaN(id));
-        lastMap.set(num, new Set(commentIds));
-      }
+  constructor(
+    private client: GitcodeClient,
+    private url: string,
+    private pollIntervalSeconds: number = 60,
+  ) {
+    super();
+    const parsed = parseGitUrl(url);
+    if (!parsed) {
+      throw new Error(`Invalid repo URL: ${url}`);
     }
-    const prList: BaselinePR[] = (persisted.prs ?? []).map((p) => ({
-      id: p.id,
-      state: p.state,
-      number: p.number,
-    }));
-    return { prList, lastCommentIdsByPr: lastMap };
+    this.owner = parsed.owner;
+    this.repo = parsed.repo;
   }
 
-  protected toPersisted(state: WatcherState): PersistShape {
-    return {
-      prs: state.prList.map((p) => ({ id: p.id, state: p.state, number: p.number })),
-      lastCommentIdsByPr: Object.fromEntries(
-        Array.from(state.lastCommentIdsByPr.entries()).map(([key, value]) => [
-          key,
-          Array.from(value),
-        ]),
-      ),
-    };
-  }
-
-  protected async poll(): Promise<void> {
-    const { data: currentList, notModified } = await this.fetchPullRequests();
-    if (!notModified) {
-      await this.detectStateChanges(currentList);
-      this.state.prList = currentList.map((p) => ({ id: p.id, number: p.number, state: p.state }));
+  start() {
+    if (this.interval) {
+      this.stop();
     }
-    await this.detectNewComments(currentList);
+    this.lastFetchTime = new Date();
+    this.interval = setInterval(() => this.poll(), this.pollIntervalSeconds * 1000);
+    this.poll(); // Poll immediately on start
   }
 
-  private async fetchPullRequests(): Promise<{ data: PullRequest[]; notModified: boolean }> {
-    const data = await this.client.pr.list(this.url, { state: 'all', page: 1, per_page: 10 });
-    return { data, notModified: isNotModified(data) };
-  }
-
-  private async detectStateChanges(newList: PullRequest[]): Promise<void> {
-    const prev = this.state.prList;
-    for (const pr of newList) {
-      const existed = prev.find((p) => p.id === pr.id);
-      if (!existed || existed.state !== pr.state) {
-        await this.triggerPullRequestEvent(pr);
-      }
+  stop() {
+    if (this.interval) {
+      clearInterval(this.interval);
+      this.interval = null;
     }
   }
 
-  private async detectNewComments(newList: PullRequest[]): Promise<void> {
-    if (!this.options.onComment) return;
-
-    for (const pr of newList) {
-      if (pr.state !== 'open') continue;
-
-      const { data: comments, notModified } = await this.fetchPrComments(pr.number);
-      const existingLastSeen = this.state.lastCommentIdsByPr.get(pr.number);
-
-      if (notModified) {
-        if (!existingLastSeen) {
-          this.state.lastCommentIdsByPr.set(pr.number, new Set(comments.map((c) => c.id)));
-        }
-        continue;
-      }
-
-      if (!comments.length) {
-        if (!existingLastSeen) {
-          this.state.lastCommentIdsByPr.set(pr.number, new Set());
-        }
-        continue;
-      }
-
-      const currentCommentIds = new Set(comments.map((c) => c.id));
-      if (!existingLastSeen) {
-        this.state.lastCommentIdsByPr.set(pr.number, currentCommentIds);
-        continue;
-      }
-
-      const newCommentIds = new Set(
-        comments.filter((c) => !existingLastSeen.has(c.id)).map((c) => c.id),
+  private async poll() {
+    try {
+      const prs = await this.listPrs({ state: 'open', sort: 'updated' });
+      const newPrs = prs.filter(
+        (pr) => !this.seenPrs.has(pr.id)
       );
-      if (newCommentIds.size > 0) {
-        const newComments = comments
-          .filter((c) => newCommentIds.has(c.id))
-          .sort((a, b) => a.id - b.id);
-        for (const comment of newComments) {
-          this.options.onComment?.(pr, comment);
-        }
+
+      if (newPrs.length > 0) {
+        this.emit('new-prs', newPrs);
+        newPrs.forEach((pr) => this.seenPrs.add(pr.id));
       }
-      this.state.lastCommentIdsByPr.set(pr.number, currentCommentIds);
+
+      this.lastFetchTime = new Date();
+    } catch (error) {
+      this.emit('error', error);
     }
   }
 
-  private async fetchPrComments(
-    prNumber: number,
-  ): Promise<{ data: PRComment[]; notModified: boolean }> {
-    const query: PRCommentQueryOptions | undefined = this.options.commentType
-      ? { comment_type: this.options.commentType }
-      : undefined;
-    const data = await this.client.pr.comments(this.url, prNumber, query);
-    return { data, notModified: isNotModified(data) };
+  async listPrs(query: ListPullsQuery) {
+    return this.client.pulls.list({
+      owner: this.owner,
+      repo: this.repo,
+      query,
+    });
   }
 
-  private async triggerPullRequestEvent(pr: PullRequest): Promise<void> {
-    const { onClosed, onMerged, onOpen, container, onContainerCreated, onContainerRemoved } =
-      this.options;
-    const handleContainer = container !== false && container !== undefined;
-
-    if (pr.state === 'open') {
-      if (handleContainer) {
-        const created = await createPrContainer(this.url, pr, container || {});
-        this.containerMap.set(pr.id, created);
-        onContainerCreated?.(created, pr);
-      }
-      onOpen?.(pr);
-    } else if (pr.state === 'closed' || pr.state === 'merged') {
-      if (handleContainer) {
-        await removeContainer(pr.id);
-        this.containerMap.delete(pr.id);
-        onContainerRemoved?.(pr.id);
-      }
-      if (pr.state === 'closed') onClosed?.(pr);
-      if (pr.state === 'merged') onMerged?.(pr);
-    }
+  async listComments(prNumber: number, query?: PRCommentQueryOptions) {
+    const data = await this.client.pulls.listComments({
+      owner: this.owner,
+      repo: this.repo,
+      prNumber,
+      query,
+    });
+    return data ?? [];
   }
-}
-
-export function watchPullRequest(
-  client: GitcodeClient,
-  url: string,
-  options: WatchPullRequestOptions = {},
-): PullRequestWatcher {
-  return new PullRequestWatcher(client, url, options);
 }

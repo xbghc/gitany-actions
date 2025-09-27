@@ -1,4 +1,5 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
+import { parseGitUrl } from '@gitany/gitcode';
 import { withClient } from '../../utils/with-client';
 
 export async function listCommand(
@@ -8,11 +9,19 @@ export async function listCommand(
   await withClient(
     async (client) => {
       const repoUrl = await resolveRepoUrl(url);
-      const issues = await client.issue.list(repoUrl, {
-        state: options.state as 'open' | 'closed' | 'all' | undefined,
-        labels: options.label,
-        page: options.page ? Number(options.page) : undefined,
-        per_page: options.perPage ? Number(options.perPage) : undefined,
+      const { owner, repo } = parseGitUrl(repoUrl) ?? {};
+      if (!owner || !repo) {
+        throw new Error(`Could not parse owner and repo from URL: ${repoUrl}`);
+      }
+      const issues = await client.issues.list({
+        owner,
+        repo,
+        query: {
+          state: options.state as 'open' | 'closed' | 'all' | undefined,
+          labels: options.label,
+          page: options.page ? Number(options.page) : undefined,
+          per_page: options.perPage ? Number(options.perPage) : undefined,
+        },
       });
 
       if (options.json) {
