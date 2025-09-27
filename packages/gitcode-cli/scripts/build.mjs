@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { build as esbuild } from 'esbuild';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 
 async function runCmd(cmd, args = []) {
   await new Promise((resolve, reject) => {
@@ -22,17 +22,22 @@ async function build() {
   // Generate type declarations only
   await runCmd('tsc', ['-p', 'tsconfig.json', '--emitDeclarationOnly']);
 
-  // Bundle runtime ESM
+  const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
+  const externalDeps = [
+    ...Object.keys(pkg.dependencies ?? {}),
+    ...Object.keys(pkg.peerDependencies ?? {}),
+  ];
+
   await esbuild({
     entryPoints: ['src/index.ts'],
     bundle: true,
     platform: 'node',
     format: 'esm',
-    target: 'node18',
+    target: 'node20',
     sourcemap: 'both',
     sourcesContent: true,
     outfile: 'dist/index.js',
-    external: ['@gitany/gitcode', '@gitany/shared', '@gitany/git-lib', 'commander'],
+    external: externalDeps,
   });
 }
 

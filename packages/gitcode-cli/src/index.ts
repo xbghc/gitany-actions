@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import 'dotenv/config';
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import { authCommand } from './commands/auth';
