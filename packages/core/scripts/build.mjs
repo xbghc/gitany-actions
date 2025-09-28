@@ -25,7 +25,7 @@ async function build() {
     bundle: true,
     platform: 'node',
     format: 'esm',
-    target: 'node18',
+    target: 'node22',
     sourcemap: 'both',
     sourcesContent: true,
     outfile: 'dist/index.js',
