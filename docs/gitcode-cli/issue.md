@@ -244,7 +244,37 @@ gitcode issue comment owner/repo/123 -F comment.txt
 gitcode issue comment owner/repo/123 "Test comment" --json
 ```
 
-### 8. Issue Status
+### 8. Edit Comment
+
+```bash
+gitcode issue edit-comment <comment-id> [options]
+```
+
+**Arguments**
+
+- `<comment-id>`: The ID of the comment to edit.
+
+**Options**
+
+- `-b, --body <string>`: New comment body.
+- `-F, --body-file <file>`: Read new body text from a file.
+- `-R, --repo <OWNER/REPO>`: Specify the repository (required).
+- `--json`: Output raw JSON.
+
+**Examples**
+
+```bash
+# Edit a comment by its ID
+gitcode issue edit-comment 98765 --repo owner/repo --body "This is the updated comment text."
+
+# Read the new comment body from a file
+gitcode issue edit-comment 98765 -R owner/repo -F updated-comment.md
+
+# Output JSON after editing
+gitcode issue edit-comment 98765 -R owner/repo -b "New content" --json
+```
+
+### 9. Issue Status
 
 ```bash
 gitcode issue status <url> [options]

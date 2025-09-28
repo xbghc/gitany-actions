@@ -41,19 +41,22 @@ gitcode user show
 gitcode user namespace
 
 # 仓库操作
-gitcode repo info settings owner repo
-gitcode repo info branches owner repo
-gitcode repo info commits owner repo
-gitcode repo info contributors owner repo
-gitcode repo info webhooks owner repo
+gitcode repo settings owner repo
+gitcode repo branches owner repo
+gitcode repo commits owner repo
+gitcode repo contributors owner repo
+gitcode repo webhooks owner repo
+gitcode repo permission owner repo
 
 # Pull Request 操作
 gitcode pr list https://gitcode.com/owner/repo
 gitcode pr create https://gitcode.com/owner/repo --title "新功能" --head feature-branch
-gitcode pr info settings owner repo
+gitcode pr settings owner repo
+gitcode pr comments 123 --repo owner/repo
 
 # Issue 操作
 gitcode issue list https://gitcode.com/owner/repo
+gitcode issue create --repo owner/repo --title "新 Issue" --body "这是内容"
 gitcode issue view 42 https://gitcode.com/owner/repo
 gitcode issue edit 42 --repo owner/repo --label bug
 gitcode issue close 42 --repo owner/repo
@@ -200,26 +203,29 @@ export GITCODE_API_BASE=https://gitcode.com/api/v5
 
 ✅ **仓库 API**
 
-- 仓库设置 (`/repos/{owner}/{repo}/repo_settings`)
-- 分支管理 (`/repos/{owner}/{repo}/branches`)
-- 提交历史 (`/repos/{owner}/{repo}/commits`)
-- 贡献者 (`/repos/{owner}/{repo}/contributors`)
-- 文件操作 (`/repos/{owner}/{repo}/git/blobs/{sha}`)
-- 代码比较 (`/repos/{owner}/{repo}/compare/{base}...{head}`)
-- WebHooks (`/repos/{owner}/{repo}/hooks`)
-- 仓库权限 (`/repos/{owner}/{repo}/collaborators/self-permission`)
+- 仓库设置 (`client.repo.getSettings`)
+- 仓库事件 (`client.repo.getEvents`)
+- 分支管理 (`client.repo.getBranches`, `client.repo.getBranch`)
+- 提交历史 (`client.repo.getCommits`)
+- 贡献者 (`client.repo.getContributors`)
+- 文件操作 (`client.repo.getFileBlob`)
+- 代码比较 (`client.repo.compare`)
+- WebHooks (`client.repo.getWebhooks`, `client.repo.getWebhook`)
+- 仓库权限 (`client.repo.getSelfRepoPermission`)
 
 ✅ **Pull Request API**
 
-- PR 列表 (`/repos/{owner}/{repo}/pulls`)
-- 创建 PR (`/repos/{owner}/{repo}/pulls`)
-- PR 评论 (`/repos/{owner}/{repo}/pulls/{number}/comments`)
-- PR 设置 (`/repos/{owner}/{repo}/pull_request_settings`)
+- PR 列表 (`client.pr.list`)
+- 创建 PR (`client.pr.create`)
+- PR 评论 (`client.pr.comments`, `client.pr.createComment`)
+- PR 设置 (`client.pr.getSettings`)
 
 ✅ **Issue API**
 
-- Issue 列表 (`/repos/{owner}/{repo}/issues`)
-- Issue 评论 (`/repos/{owner}/{repo}/issues/{number}/comments`)
+- Issue 列表 (`client.issue.list`)
+- Issue 详情 (`client.issue.get`)
+- 创建/更新 Issue (`client.issue.create`, `client.issue.update`)
+- Issue 评论 (`client.issue.comments`, `client.issue.createComment`, `client.issue.updateComment`)
 
 ## 类型安全
 

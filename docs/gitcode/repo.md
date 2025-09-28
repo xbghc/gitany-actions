@@ -28,6 +28,22 @@ const settings = await client.repo.getSettings('owner', 'repo');
 console.log(settings.default_branch);
 ```
 
+### `getEvents(owner, repo)`
+
+获取仓库的活动事件。
+
+**API 端点**: `GET /api/v5/repos/{owner}/{repo}/events`
+
+**返回类型**: `RepoEvent[]`
+
+```typescript
+const client = new GitcodeClient();
+const events = await client.repo.getEvents('owner', 'repo');
+events.forEach((event) => {
+  console.log(event.type, event.actor.login);
+});
+```
+
 ### `getBranches(owner, repo)`
 
 获取仓库所有分支信息。
@@ -146,6 +162,35 @@ webhooks.forEach((webhook) => {
 const client = new GitcodeClient();
 const webhook = await client.repo.getWebhook('owner', 'repo', 123);
 console.log(webhook.config);
+```
+
+### `getSelfRepoPermission(url)`
+
+获取当前认证用户在指定仓库的权限。
+
+**API 端点**: `GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
+
+**返回类型**: `SelfPermissionResponse`
+
+```typescript
+const client = new GitcodeClient();
+// URL can be a full repo URL or just 'owner/repo'
+const permission = await client.repo.getSelfRepoPermission('owner/repo');
+console.log(permission.role_name, permission.permissions);
+```
+
+### `getSelfRepoPermissionRole(url)`
+
+获取当前认证用户在指定仓库的角色名称。
+
+**API 端点**: `GET /api/v5/repos/{owner}/{repo}/collaborators/self-permission`
+
+**返回类型**: `RepoRole` (string enum)
+
+```typescript
+const client = new GitcodeClient();
+const role = await client.repo.getSelfRepoPermissionRole('owner/repo');
+console.log('User role:', role); // e.g., 'admin', 'write', 'read'
 ```
 
 ## 类型定义

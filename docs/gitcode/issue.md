@@ -68,6 +68,26 @@ const comments = await client.issue.comments('https://gitcode.com/owner/repo.git
 });
 ```
 
+### 读取与更新操作
+
+```ts
+import { GitcodeClient } from '@gitany/gitcode';
+
+const client = new GitcodeClient();
+
+// 1) 获取单个 Issue 详情
+const issueDetails = await client.issue.get('https://gitcode.com/owner/repo', 42);
+console.log(issueDetails.title, issueDetails.state);
+
+// 2) 更新一个 Issue
+const updatedIssue = await client.issue.update('https://gitcode.com/owner/repo', 42, {
+  title: '新的 Issue 标题',
+  body: '更新后的内容。',
+  state: 'closed', // 可选
+});
+console.log(`Issue #${updatedIssue.number} 已更新并关闭。`);
+```
+
 ### 创建操作
 
 ```ts
@@ -101,6 +121,17 @@ const comment = await client.issue.createComment({
 });
 
 console.log(`评论创建成功，ID: ${comment.id}`);
+
+// 3) 更新 Issue 评论
+const updatedComment = await client.issue.updateComment({
+  owner: 'username',
+  repo: 'my-repo',
+  comment_id: comment.id,
+  body: {
+    body: '这是更新后的评论内容。',
+  },
+});
+console.log(`评论 ${updatedComment.id} 已更新。`);
 ```
 
 ## 说明
