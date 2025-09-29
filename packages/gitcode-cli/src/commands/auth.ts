@@ -1,5 +1,8 @@
 import { Command } from 'commander';
 import { withClient } from '../utils/with-client';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('gitcode-cli:auth');
 
 export function authCommand(): Command {
   const authProgram = new Command('auth').description('Authentication commands');
@@ -11,7 +14,7 @@ export function authCommand(): Command {
     .action(async (token) => {
       await withClient(async (client) => {
         await client.auth.setToken(token.trim());
-        console.log('Token saved successfully');
+        logger.info('Token saved successfully');
       }, 'Failed to save token');
     });
 

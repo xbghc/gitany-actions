@@ -9,13 +9,15 @@ async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo
     output: process.stdout,
   });
 
-  console.log('Found running PR containers:');
+  logger.info('Found running PR containers:');
   for (const info of runningContainers) {
-    console.log(`  - ${info.Names[0]} (ID: ${info.Id}, PR: ${info.Labels['gitany.prId']})`);
+    logger.info(`  - ${info.Names[0]} (ID: ${info.Id}, PR: ${info.Labels['gitany.prId']})`);
   }
 
   const answer = await new Promise<string>((resolve) => {
-    rl.question('Do you want to remove them? (y/N) ', (answer) => {
+    // Use process.stdout.write for interactive prompt without logger
+    process.stdout.write('Do you want to remove them? (y/N) ');
+    rl.question('', (answer) => {
       rl.close();
       resolve(answer);
     });

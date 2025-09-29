@@ -1,5 +1,8 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
+import { createLogger } from '@gitany/shared';
+
+const logger = createLogger('gitcode-cli:issue');
 
 export async function listCommand(
   url?: string,
@@ -16,7 +19,7 @@ export async function listCommand(
       });
 
       if (options.json) {
-        console.log(JSON.stringify(issues, null, 2));
+        logger.info(issues, 'Issues list');
         return;
       }
 
@@ -25,14 +28,14 @@ export async function listCommand(
         const num = (item.number ?? item.iid ?? item.id) as number | string | undefined;
         const title = (item.title ?? item.subject ?? item.name ?? '(no title)') as string;
         const numStr = typeof num === 'number' ? num : (num ?? '?');
-        console.log(`- [#${numStr}] ${title}`);
+        logger.info({ issueNumber: numStr, title }, `[#${numStr}] ${title}`);
       }
     },
     'Failed to list issues',
     {
       onNotFound: () => {
         if (options.json) {
-          console.log('[]');
+          logger.info([], 'Empty issues list');
         }
       },
     },

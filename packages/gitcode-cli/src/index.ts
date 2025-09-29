@@ -58,7 +58,7 @@ program
         logger.error({ url: repoUrl }, 'Unrecognized git URL');
         process.exit(1);
       }
-      console.log(JSON.stringify(parsed, null, 2));
+      logger.info(parsed, 'Parsed git URL');
     } catch (err) {
       logger.error({ err }, 'Failed to parse git URL');
       process.exit(1);

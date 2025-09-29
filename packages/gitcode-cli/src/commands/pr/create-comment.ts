@@ -69,33 +69,17 @@ export async function createPrCommentAction(
       const comment = await client.pr.createComment(repoUrl, prNum, body);
 
       if (options.json) {
-        console.log(JSON.stringify(comment, null, 2));
+        logger.info(comment, 'PR comment created');
       } else {
-        // GitHub CLI 风格的彩色输出
-        const successMsg = '\n💬 PR comment created successfully!';
-        console.log(successMsg);
         logger.info(
-          { prNumber: prNum, repoUrl, commentId: comment.id },
-          'PR comment created successfully',
+          {
+            prNumber: prNum,
+            repoUrl,
+            commentId: comment.id,
+            preview: comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body
+          },
+          '💬 PR comment created successfully',
         );
-
-        const detailsMsg = '\n📋 Comment Details:';
-        console.log(detailsMsg);
-        const idLine = `   ID:       ${comment.id}`;
-        console.log(idLine);
-
-        // 显示评论内容预览
-        const bodyPreview =
-          comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
-        const previewLine = `   Preview:  "${bodyPreview}"`;
-        console.log(previewLine);
-        logger.info({ preview: bodyPreview }, previewLine);
-
-        const nextStepsMsg = '\n💡 Next steps:';
-        const replyLine = `   • Reply to comment:  gitcode pr comment ${prNumber} --body "Your reply"`;
-        console.log(nextStepsMsg);
-        console.log(replyLine);
-        logger.info({ nextSteps: ['reply-to-comment'] }, 'Displayed next steps for PR comment');
       }
     },
     (error) => {
