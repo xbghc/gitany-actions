@@ -1,21 +1,16 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('gitcode-cli:pr');
 
 export async function prSettingsCommand(owner: string, repo: string): Promise<void> {
   await withClient(async (client) => {
     const settings = await client.pr.getSettings(owner, repo);
-
-    logger.info({
-      allow_merge_commits: settings.allow_merge_commits,
-      allow_squash_commits: settings.allow_squash_commits,
-      allow_rebase_commits: settings.allow_rebase_commits,
-      allow_updates_from_default_branch: settings.allow_updates_from_default_branch,
-      allow_worktree_inheritance: settings.allow_worktree_inheritance,
-      allow_auto_close_on_conflict: settings.allow_auto_close_on_conflict
-    }, 'PR 设置');
+    console.log('PR 设置');
+    console.log(`  allow_merge_commits: ${settings.allow_merge_commits}`);
+    console.log(`  allow_squash_commits: ${settings.allow_squash_commits}`);
+    console.log(`  allow_rebase_commits: ${settings.allow_rebase_commits}`);
+    console.log(`  allow_updates_from_default_branch: ${settings.allow_updates_from_default_branch}`);
+    console.log(`  allow_worktree_inheritance: ${settings.allow_worktree_inheritance}`);
+    console.log(`  allow_auto_close_on_conflict: ${settings.allow_auto_close_on_conflict}`);
   }, '获取 PR 设置失败');
 }
 

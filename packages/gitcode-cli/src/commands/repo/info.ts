@@ -1,14 +1,10 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('gitcode-cli:repo');
 
 export async function repoSettingsCommand(owner: string, repo: string): Promise<void> {
   await withClient(async (client) => {
     const settings = await client.repo.getSettings(owner, repo);
-
-    logger.info(settings, '仓库设置');
+    console.log(JSON.stringify(settings, null, 2));
   }, '获取仓库设置失败');
 }
 
@@ -16,10 +12,9 @@ export async function repoBranchesCommand(owner: string, repo: string): Promise<
   await withClient(async (client) => {
     const branches = await client.repo.getBranches(owner, repo);
 
-    logger.info({ branches: branches.length }, '仓库分支');
+    console.log(`仓库分支: ${branches.length}`);
     branches.forEach((branch) => {
-      logger.info(
-        { name: branch.name, default: branch.default, protected: branch.protected },
+      console.log(
         `${branch.name} (默认: ${branch.default ? '是' : '否'}, 受保护: ${branch.protected ? '是' : '否'})`,
       );
     });
@@ -30,19 +25,9 @@ export async function repoCommitsCommand(owner: string, repo: string): Promise<v
   await withClient(async (client) => {
     const commits = await client.repo.getCommits(owner, repo);
 
-    logger.info({ commits: commits.length }, '仓库提交历史');
+    console.log(`仓库提交历史: ${commits.length}`);
     commits.forEach((commit, index) => {
-      logger.info(
-        {
-          index: index + 1,
-          sha: commit.sha.substring(0, 7),
-          message: commit.commit.message.trim(),
-          author: commit.commit.author.name,
-          email: commit.commit.author.email,
-          date: commit.commit.author.date,
-        },
-        `${index + 1}. ${commit.sha.substring(0, 7)} - ${commit.commit.message.trim()}`,
-      );
+      console.log(`${index + 1}. ${commit.sha.substring(0, 7)} - ${commit.commit.message.trim()}`);
     });
   }, '获取仓库提交历史失败');
 }
@@ -51,16 +36,9 @@ export async function repoContributorsCommand(owner: string, repo: string): Prom
   await withClient(async (client) => {
     const contributors = await client.repo.getContributors(owner, repo);
 
-    logger.info({ contributors: contributors.length }, '仓库贡献者');
+    console.log(`仓库贡献者: ${contributors.length}`);
     contributors.forEach((contributor) => {
-      logger.info(
-        {
-          name: contributor.name,
-          email: contributor.email,
-          contributions: contributor.contributions,
-        },
-        `${contributor.name} <${contributor.email}> - ${contributor.contributions} 次贡献`,
-      );
+      console.log(`${contributor.name} <${contributor.email}> - ${contributor.contributions} 次贡献`);
     });
   }, '获取仓库贡献者失败');
 }
@@ -69,19 +47,9 @@ export async function repoWebhooksCommand(owner: string, repo: string): Promise<
   await withClient(async (client) => {
     const webhooks = await client.repo.getWebhooks(owner, repo);
 
-    logger.info({ webhooks: webhooks.length }, '仓库 Webhooks');
+    console.log(`仓库 Webhooks: ${webhooks.length}`);
     webhooks.forEach((webhook) => {
-      logger.info(
-        {
-          id: webhook.id,
-          url: webhook.url,
-          name: webhook.name,
-          active: webhook.active,
-          events: webhook.events,
-          created_at: webhook.created_at,
-        },
-        `Webhook ${webhook.id}: ${webhook.name}`,
-      );
+      console.log(`Webhook ${webhook.id}: ${webhook.name}`);
     });
   }, '获取仓库 Webhooks 失败');
 }

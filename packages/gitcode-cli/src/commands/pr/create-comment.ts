@@ -69,17 +69,13 @@ export async function createPrCommentAction(
       const comment = await client.pr.createComment(repoUrl, prNum, body);
 
       if (options.json) {
-        logger.info(comment, 'PR comment created');
+        console.log(JSON.stringify(comment, null, 2));
       } else {
-        logger.info(
-          {
-            prNumber: prNum,
-            repoUrl,
-            commentId: comment.id,
-            preview: comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body
-          },
-          '💬 PR comment created successfully',
-        );
+        const preview = comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
+        console.log('💬 PR comment created successfully');
+        console.log(`   PR:        #${prNum}`);
+        console.log(`   Comment:   ${comment.id}`);
+        console.log(`   Preview:   "${preview}"`);
       }
     },
     (error) => {
@@ -148,7 +144,6 @@ export function createPrCommentCommand(): Command {
         } else if (!finalBody) {
           const promptMsg = 'Enter comment body (press Ctrl+D when finished, or use -e/--editor):';
           console.log(promptMsg);
-          logger.info(promptMsg);
           finalBody = fs.readFileSync(0, 'utf-8').trim();
         }
 

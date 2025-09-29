@@ -3,7 +3,7 @@ import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
 
-const logger = createLogger('gitcode-cli:pr');
+const logger = createLogger('@xbghc/gitcode-cli');
 
 export async function createCommand(
   url?: string,
@@ -36,9 +36,9 @@ export async function createCommand(
     const numStr = typeof num === 'number' ? num : (num ?? '?');
     
     if (options.json) {
-      logger.info(created, 'PR created');
+      console.log(JSON.stringify(created, null, 2));
     } else {
-      logger.info({ prNumber: numStr, title: titleOut }, `Created PR #${numStr}: ${titleOut}`);
+      console.log(`Created PR #${numStr}: ${titleOut}`);
     }
   }, 'Failed to create PR');
 }

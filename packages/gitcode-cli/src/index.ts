@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
-import { parseGitUrl } from '@gitany/gitcode';
-import { authCommand } from './commands/auth';
-import { createLogger, setGlobalLogLevel, type LogLevel } from '@gitany/shared';
-import { repoCommand } from './commands/repo';
-import { prCommand } from './commands/pr';
-import { userCommand } from './commands/user';
-import { issueCommand } from './commands/issue';
 import { resolveRepoUrl } from '@gitany/git-lib';
+import { parseGitUrl } from '@gitany/gitcode';
+import { createLogger, setGlobalLogLevel, type LogLevel } from '@gitany/shared';
+import { Command } from 'commander';
+import { authCommand } from './commands/auth';
+import { issueCommand } from './commands/issue';
+import { prCommand } from './commands/pr';
+import { repoCommand } from './commands/repo';
+import { userCommand } from './commands/user';
 
 const program = new Command();
 const logger = createLogger('@xbghc/gitcode-cli');
@@ -58,7 +58,7 @@ program
         logger.error({ url: repoUrl }, 'Unrecognized git URL');
         process.exit(1);
       }
-      logger.info(parsed, 'Parsed git URL');
+      console.log(JSON.stringify(parsed, null, 2));
     } catch (err) {
       logger.error({ err }, 'Failed to parse git URL');
       process.exit(1);
