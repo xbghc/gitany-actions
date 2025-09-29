@@ -24,7 +24,7 @@ export async function listCommand(
       // Default: print bullet list of titles: - [#<number>] <title>
       for (const pr of pulls as unknown[]) {
         const item = pr as Record<string, unknown>;
-        const num = (item.number ?? item.iid ?? item.id) as number | string | undefined;
+        const num = (item.number ?? item.id) as number | string | undefined;
         const title = (item.title ?? item.subject ?? item.name ?? '(no title)') as string;
         const numStr = typeof num === 'number' ? num : (num ?? '?');
         console.log(`- [#${numStr}] ${title}`);

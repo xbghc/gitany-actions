@@ -31,7 +31,7 @@ export async function createCommand(
     const created = await client.pr.create(repoUrl, body);
 
     const pr = created;
-    const num = (pr.number ?? (pr as any).iid ?? pr.id) as number | string | undefined;
+    const num = (pr.number ?? pr.id) as number | string | undefined;
     const titleOut = (pr.title ?? '(no title)') as string;
     const numStr = typeof num === 'number' ? num : (num ?? '?');
     
