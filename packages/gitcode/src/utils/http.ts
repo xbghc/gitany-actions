@@ -8,6 +8,7 @@ import got, {
 } from 'got';
 
 import { createLogger } from '@gitany/shared';
+import { isObjectLike } from './types';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH';
 
@@ -35,7 +36,7 @@ const etagStore = new Map<string, { etag: string; payload: unknown }>();
 const cacheHit = new WeakSet<object>();
 
 export function isNotModified(value: unknown): boolean {
-  return typeof value === 'object' && value !== null && cacheHit.has(value as object);
+  return isObjectLike(value) && cacheHit.has(value);
 }
 
 const httpDebugFlag = process.env.GITCODE_HTTP_DEBUG ?? '';
@@ -227,8 +228,8 @@ function handleResponse<T>(
   const normalizedHeaders = normalizeHeaders(response.headers);
 
   if (response.statusCode === 304 && cached) {
-    if (typeof cached.payload === 'object' && cached.payload !== null) {
-      cacheHit.add(cached.payload as object);
+    if (isObjectLike(cached.payload)) {
+      cacheHit.add(cached.payload);
     }
     logHttp('response-cache', {
       method,
@@ -329,7 +330,7 @@ function normalizeGotError(error: unknown, requestUrl: string): Error {
 }
 
 function extractErrorCode(value: unknown): string | undefined {
-  if (typeof value !== 'object' || value === null) {
+  if (!isObjectLike(value)) {
     return undefined;
   }
   const rawCode = (value as { code?: unknown }).code;
@@ -340,7 +341,7 @@ function extractErrorMessage(value: unknown): string | undefined {
   if (typeof value === 'string') {
     return value;
   }
-  if (typeof value !== 'object' || value === null) {
+  if (!isObjectLike(value)) {
     return undefined;
   }
   const message = (value as { message?: unknown }).message;

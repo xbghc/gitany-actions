@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
+import { isObjectLike } from '@gitany/gitcode';
 import {
   colors,
   colorizeState,
@@ -67,7 +68,7 @@ export async function viewAction(
       if (Array.isArray(labels) && labels.length > 0) {
         const labelNames = labels
           .map((label) => {
-            if (!label || typeof label !== 'object') {
+            if (!isObjectLike(label)) {
               return String(label ?? '');
             }
             const name = Reflect.get(label, 'name');
@@ -92,7 +93,7 @@ export async function viewAction(
       }
 
       const milestone = (issue as { milestone?: unknown }).milestone;
-      if (milestone && typeof milestone === 'object') {
+      if (isObjectLike(milestone)) {
         const mTitle = Reflect.get(milestone, 'title');
         const mName = Reflect.get(milestone, 'name');
         const mId = Reflect.get(milestone, 'id');

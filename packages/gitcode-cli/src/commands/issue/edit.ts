@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import type { UpdateIssueBody } from '@gitany/gitcode';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
+import { isObjectLike } from '@gitany/gitcode';
 import {
   colors,
   colorizeState,
@@ -98,7 +99,7 @@ export async function editAction(
       if (Array.isArray(labels) && labels.length > 0) {
         const labelNames = labels
           .map((label) => {
-            if (!label || typeof label !== 'object') {
+            if (!isObjectLike(label)) {
               return String(label ?? '');
             }
             const record = label as Record<string, unknown>;

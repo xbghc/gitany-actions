@@ -1,4 +1,5 @@
 import { createLogger } from '@gitany/shared';
+import { isObjectLike } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
 
 const logger = createLogger('@xbghc/gitcode-cli');
@@ -34,7 +35,7 @@ export async function resolveIssueContext(
 }
 
 export function formatUserName(user: unknown): string {
-  if (!user || typeof user !== 'object') {
+  if (!isObjectLike(user)) {
     return 'Unknown';
   }
   const tryKeys = ['name', 'login', 'username'] as const;
