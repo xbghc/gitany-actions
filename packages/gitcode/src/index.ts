@@ -34,6 +34,7 @@ export type {
   ListIssuesParams,
   Issue,
   ListIssuesResponse,
+  IssueUser,
   IssueCommentsQuery,
   IssueComment,
   IssueCommentsResponse,
@@ -72,6 +73,7 @@ export {
   type UserProfileResponse,
 } from './api/user';
 export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './api/user';
+export { userSummarySchema, type UserSummary } from './api/user';
 export type { RepoRole } from './types/repo-role';
 export * from './utils';
 export { API_BASE } from './api/constants';

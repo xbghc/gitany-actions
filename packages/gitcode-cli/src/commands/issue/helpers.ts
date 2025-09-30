@@ -1,6 +1,6 @@
-import { createLogger } from '@gitany/shared';
-import { isObjectLike } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
+import { isObjectLike, type IssueUser } from '@gitany/gitcode';
+import { createLogger } from '@gitany/shared';
 
 const logger = createLogger('@xbghc/gitcode-cli');
 
@@ -44,6 +44,13 @@ export function formatUserName(user: unknown): string {
     if (typeof val === 'string' && val.trim()) return val;
   }
   return 'Unknown';
+}
+
+export function formatAssignees(users: IssueUser[]): string | undefined {
+  if (users.length === 0) return undefined;
+  const names = users.map((u) => formatUserName(u)).filter(Boolean);
+  if (names.length === 0) return undefined;
+  return names.join(', ');
 }
 
 export function colorizeState(state: string): string {

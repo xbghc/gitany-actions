@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import { colors, colorizeState, resolveIssueContext, type IssueTargetOptions } from './helpers';
+import { colorizeState, colors, resolveIssueContext, type IssueTargetOptions } from './helpers';
 
 interface CloseOptions extends IssueTargetOptions {
   json?: boolean;
@@ -23,13 +23,10 @@ export async function closeAction(
       }
 
       console.log(`\n🔒 Issue #${issue.number} closed.`);
-      console.log(
-        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'closed'))}`,
-      );
-      const issueUrl = (issue as { html_url?: string }).html_url;
-      if (issueUrl) {
-        console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
-      }
+      console.log(`   State: ${colorizeState(String(issue.state ?? 'closed'))}`);
+
+      console.log(`   URL: ${colors.blue}${issue.html_url}${colors.reset}`);
+
       console.log(`\n💡 Reopen the issue anytime with: gitcode issue reopen ${issue.number}`);
     },
     'Failed to close issue',

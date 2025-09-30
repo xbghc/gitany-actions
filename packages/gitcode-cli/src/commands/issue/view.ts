@@ -1,5 +1,7 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
+import { formatAssignees } from './helpers';
+import type { IssueDetail } from '@gitany/gitcode';
 import { isObjectLike } from '@gitany/gitcode';
 import {
   colors,
@@ -25,7 +27,7 @@ export async function viewAction(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
 
-      const issue = await client.issue.get(repoUrl, issueNumber);
+      const issue: IssueDetail = await client.issue.get(repoUrl, issueNumber);
       let comments: unknown[] | undefined;
 
       if (options.comments) {
@@ -49,7 +51,7 @@ export async function viewAction(
         console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
       }
 
-      const author = formatUserName((issue as { user?: unknown }).user);
+      const author = formatUserName(issue.user);
       console.log(`   Author: ${author}`);
 
       const createdAt = (issue as { created_at?: string }).created_at;
@@ -87,9 +89,9 @@ export async function viewAction(
         }
       }
 
-      const assignee = (issue as { assignee?: unknown }).assignee;
-      if (assignee) {
-        console.log(`   Assignee: ${formatUserName(assignee)}`);
+      const assigneesText = formatAssignees(issue.assignees);
+      if (assigneesText) {
+        console.log(`   Assignees: ${assigneesText}`);
       }
 
       const milestone = (issue as { milestone?: unknown }).milestone;

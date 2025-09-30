@@ -1,10 +1,11 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
-import type { CreateIssueBody } from '@gitany/gitcode';
+import type { CreateIssueBody, CreatedIssue } from '@gitany/gitcode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client';
+import { formatAssignees } from './helpers';
 
 export interface CreateOptions {
   title?: string;
@@ -120,7 +121,7 @@ export async function createAction(
     if (options.security_hole) body.security_hole = options.security_hole;
     if (options.template_path) body.template_path = options.template_path;
 
-    const issue = await client.issue.create({
+    const issue: CreatedIssue = await client.issue.create({
       owner,
       body,
     });
@@ -136,8 +137,9 @@ export async function createAction(
       console.log(`   State:    ${getStateColor(issue.state)}${issue.state}${colors.reset}`);
       console.log(`   URL:      ${colors.blue}${issue.html_url}${colors.reset}`);
 
-      if (issue.assignee) {
-        console.log(`   Assignee: ${issue.assignee.name || issue.assignee.login}`);
+      const assigneesText = formatAssignees(issue.assignees);
+      if (assigneesText) {
+        console.log(`   Assignees: ${assigneesText}`);
       }
 
       if (issue.labels && issue.labels.length > 0) {

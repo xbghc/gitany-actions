@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import { colors, colorizeState, resolveIssueContext, type IssueTargetOptions } from './helpers';
+import { colorizeState, colors, resolveIssueContext, type IssueTargetOptions } from './helpers';
 
 interface ReopenOptions extends IssueTargetOptions {
   json?: boolean;
@@ -23,13 +23,8 @@ export async function reopenAction(
       }
 
       console.log(`\n🔓 Issue #${issue.number} reopened.`);
-      console.log(
-        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'open'))}`,
-      );
-      const issueUrl = (issue as { html_url?: string }).html_url;
-      if (issueUrl) {
-        console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
-      }
+      console.log(`   State: ${colorizeState(issue.state)}`);
+      console.log(`   URL: ${colors.blue}${issue.html_url}${colors.reset}`);
       console.log(`\n💡 Close the issue again with: gitcode issue close ${issue.number}`);
     },
     'Failed to reopen issue',

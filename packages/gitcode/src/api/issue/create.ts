@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { API_BASE } from '../constants';
+import { userSummarySchema } from '../user/summary';
 
 /**
  * Request body for creating an issue.
@@ -55,17 +56,7 @@ export const createdIssueSchema = z.object({
       name: z.string(),
     })
     .optional(),
-  assignee: z
-    .object({
-      id: z.string(),
-      login: z.string(),
-      name: z.string(),
-      avatar_url: z.string(),
-      html_url: z.string(),
-      type: z.string(),
-    })
-    .nullable()
-    .optional(),
+  assignees: z.array(userSummarySchema).default([]),
   repository: z.object({
     id: z.number(),
     full_name: z.string(),

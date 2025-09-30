@@ -1,12 +1,12 @@
+import type { UpdateIssueBody, UpdatedIssue } from '@gitany/gitcode';
+import { isObjectLike } from '@gitany/gitcode';
 import { Command } from 'commander';
-import type { UpdateIssueBody } from '@gitany/gitcode';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
-import { isObjectLike } from '@gitany/gitcode';
 import {
-  colors,
   colorizeState,
-  formatUserName,
+  colors,
+  formatAssignees,
   resolveIssueContext,
   type IssueTargetOptions,
 } from './helpers';
@@ -78,7 +78,7 @@ export async function editAction(
         );
       }
 
-      const issue = await client.issue.update(repoUrl, issueNumber, updateBody);
+      const issue: UpdatedIssue = await client.issue.update(repoUrl, issueNumber, updateBody);
 
       if (options.json) {
         console.log(JSON.stringify(issue, null, 2));
@@ -87,13 +87,8 @@ export async function editAction(
 
       console.log(`\n✅ Issue #${issue.number} updated successfully.`);
       console.log(`   Title: ${issue.title}`);
-      console.log(
-        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`,
-      );
-      const issueUrl = (issue as { html_url?: string }).html_url;
-      if (issueUrl) {
-        console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
-      }
+      console.log(`   State: ${colorizeState(issue.state)}`);
+      console.log(`   URL: ${colors.blue}${issue.html_url}${colors.reset}`);
 
       const labels = (issue as { labels?: unknown }).labels;
       if (Array.isArray(labels) && labels.length > 0) {
@@ -112,9 +107,9 @@ export async function editAction(
         }
       }
 
-      const assignee = (issue as { assignee?: unknown }).assignee;
-      if (assignee) {
-        console.log(`   Assignee: ${formatUserName(assignee)}`);
+      const assigneesText = formatAssignees(issue.assignees);
+      if (assigneesText) {
+        console.log(`   Assignees: ${assigneesText}`);
       }
 
       if (state) {
