@@ -31,7 +31,7 @@ export class FileAuthStorage implements AuthStorage {
     await fs.mkdir(dirname(this.filePath), { recursive: true });
     await fs.writeFile(this.filePath, JSON.stringify(cfg, null, 2), {
       encoding: 'utf8',
-      mode: 0o600 as number,
+      mode: 0o600,
     });
   }
 

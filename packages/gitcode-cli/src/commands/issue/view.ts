@@ -41,11 +41,9 @@ export async function viewAction(
       }
 
       console.log(`\n🪪 Issue #${issue.number}: ${issue.title}`);
-      console.log(
-        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`,
-      );
+      console.log(`   State: ${colorizeState(String(issue.state ?? 'unknown'))}`);
 
-      const issueUrl = (issue as { html_url?: string }).html_url;
+      const issueUrl = issue.html_url;
       if (issueUrl) {
         console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
       }
@@ -72,8 +70,14 @@ export async function viewAction(
             if (!label || typeof label !== 'object') {
               return String(label ?? '');
             }
-            const record = label as Record<string, unknown>;
-            return String(record.name ?? record.title ?? record.id ?? '');
+            const name = Reflect.get(label, 'name');
+            const title = Reflect.get(label, 'title');
+            const idVal = Reflect.get(label, 'id');
+            if (typeof name === 'string' && name) return name;
+            if (typeof title === 'string' && title) return title;
+            if (typeof idVal === 'string' && idVal) return idVal;
+            if (typeof idVal === 'number') return String(idVal);
+            return '';
           })
           .filter(Boolean)
           .join(', ');
@@ -88,9 +92,17 @@ export async function viewAction(
       }
 
       const milestone = (issue as { milestone?: unknown }).milestone;
-      if (milestone && typeof milestone === 'object' && milestone !== null) {
-        const record = milestone as Record<string, unknown>;
-        console.log(`   Milestone: ${String(record.title ?? record.name ?? record.id ?? '')}`);
+      if (milestone && typeof milestone === 'object') {
+        const mTitle = Reflect.get(milestone, 'title');
+        const mName = Reflect.get(milestone, 'name');
+        const mId = Reflect.get(milestone, 'id');
+        const display =
+          (typeof mTitle === 'string' && mTitle) ||
+          (typeof mName === 'string' && mName) ||
+          (typeof mId === 'string' && mId) ||
+          (typeof mId === 'number' && String(mId)) ||
+          '';
+        console.log(`   Milestone: ${display}`);
       }
 
       const body = (issue as { body?: string | null }).body;
@@ -103,14 +115,13 @@ export async function viewAction(
         console.log('\n💬 Comments:');
         if (comments && comments.length > 0) {
           comments.forEach((comment) => {
-            const item = comment as Record<string, unknown>;
-            const id = item.id ?? item.comment_id ?? '?';
-            const user = formatUserName(item.user);
-            const bodyText = String(item.body ?? '').split('\n')[0];
-            const created =
-              typeof item.created_at === 'string'
-                ? new Date(String(item.created_at)).toLocaleString()
-                : undefined;
+            const id = (comment as { id?: unknown; comment_id?: unknown }).id ??
+              (comment as { comment_id?: unknown }).comment_id ??
+              '?';
+            const user = formatUserName((comment as { user?: unknown }).user);
+            const bodyText = String((comment as { body?: unknown }).body ?? '').split('\n')[0];
+            const createdRaw = (comment as { created_at?: unknown }).created_at;
+            const created = typeof createdRaw === 'string' ? new Date(createdRaw).toLocaleString() : undefined;
             const metaParts = [user];
             if (created) {
               metaParts.push(created);

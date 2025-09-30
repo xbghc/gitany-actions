@@ -1,4 +1,4 @@
-import type { PRCommentQueryOptions } from '@gitany/gitcode';
+import type { PRComment, PRCommentQueryOptions } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
@@ -26,7 +26,7 @@ export async function prCommentsCommand(
   await withClient(
     async (client) => {
       const repoUrl = await resolveRepoUrl(url);
-      const comments = await client.pr.comments(repoUrl, n, {
+      const comments: PRComment[] = await client.pr.comments(repoUrl, n, {
         page: options.page ? Number(options.page) : undefined,
         per_page: options.perPage ? Number(options.perPage) : undefined,
         comment_type: isPrCommentType(options.commentType) ? options.commentType : undefined,
@@ -37,15 +37,13 @@ export async function prCommentsCommand(
         return;
       }
 
-      for (const comment of comments as unknown[]) {
-        const item = comment as Record<string, unknown>;
-        const id = (item.id ?? item.comment_id ?? '?') as number | string;
-        const body = (item.body ?? '').toString().split('\n')[0];
-        const createdAt = (item.created_at ?? '') as string;
-        const author = (item.user as Record<string, unknown>)?.login ?? '?';
-
-        const dateStr = createdAt ? new Date(createdAt).toLocaleDateString() : '';
-        console.log(`- [#${id}] ${author} on ${dateStr}: ${body}`);
+      for (const comment of comments) {
+        const id = comment.id;
+        const bodyFirstLine = comment.body.split('\n')[0] ?? '';
+        const author = (comment.user && typeof comment.user === 'object'
+          ? (comment.user as { id?: string }).id
+          : undefined) || '?';
+        console.log(`- [#${id}] ${author}: ${bodyFirstLine}`);
       }
     },
     'Failed to list PR comments',

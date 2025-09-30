@@ -31,9 +31,8 @@ export async function createCommand(
     const created = await client.pr.create(repoUrl, body);
 
     const pr = created;
-    const num = (pr.number ?? pr.id) as number | string | undefined;
-    const titleOut = (pr.title ?? '(no title)') as string;
-    const numStr = typeof num === 'number' ? num : (num ?? '?');
+    const numStr = String(pr.number ?? pr.id ?? '?');
+    const titleOut = pr.title || '(no title)';
     
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));

@@ -37,8 +37,12 @@ export function formatUserName(user: unknown): string {
   if (!user || typeof user !== 'object') {
     return 'Unknown';
   }
-  const record = user as Record<string, unknown>;
-  return String(record.name ?? record.login ?? record.username ?? 'Unknown');
+  const tryKeys = ['name', 'login', 'username'] as const;
+  for (const key of tryKeys) {
+    const val = Reflect.get(user, key);
+    if (typeof val === 'string' && val.trim()) return val;
+  }
+  return 'Unknown';
 }
 
 export function colorizeState(state: string): string {

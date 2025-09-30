@@ -1,5 +1,6 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
+import type { PullRequest } from '@gitany/gitcode';
 
 export async function listCommand(
   url?: string,
@@ -8,7 +9,7 @@ export async function listCommand(
   await withClient(
     async (client) => {
       const repoUrl = await resolveRepoUrl(url);
-      const pulls = await client.pr.list(repoUrl, {
+      const pulls: PullRequest[] = await client.pr.list(repoUrl, {
         state: options.state,
         head: options.head,
         base: options.base,
@@ -22,11 +23,9 @@ export async function listCommand(
       }
 
       // Default: print bullet list of titles: - [#<number>] <title>
-      for (const pr of pulls as unknown[]) {
-        const item = pr as Record<string, unknown>;
-        const num = (item.number ?? item.id) as number | string | undefined;
-        const title = (item.title ?? item.subject ?? item.name ?? '(no title)') as string;
-        const numStr = typeof num === 'number' ? num : (num ?? '?');
+      for (const pr of pulls) {
+        const numStr = String(pr.number ?? pr.id ?? '?');
+        const title = pr.title || '(no title)';
         console.log(`- [#${numStr}] ${title}`);
       }
     },
