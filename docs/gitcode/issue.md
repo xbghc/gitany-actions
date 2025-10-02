@@ -19,10 +19,10 @@ title: Issues API
 
 - `ListIssuesQuery`：Issue 列表查询参数（`state`、`labels`、`page`、`per_page`、`sort`）。
 - `ListIssuesParams`：包含 `owner`、`repo` 与可选 `query`。
-- `Issue`：Issue 的最小字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
+- `Issue`：Issue 的最小字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`、`assignees`、`labels`、`created_at`、`updated_at`）。
 - `ListIssuesResponse`：`Issue[]`。
 - `IssueCommentsQuery`：Issue 评论查询参数（`page`、`per_page`）。
-- `IssueComment`：Issue 评论的最小字段表示（`id`、`body`、`user`）。
+- `IssueComment`：Issue 评论的最小字段表示（`id`、`comment_id?`、`body`、`user`、`created_at?`、`updated_at?`）。
 - `IssueCommentsResponse`：`IssueComment[]`。
 - `listIssuesUrl(owner, repo)`：构建列表接口绝对 URL。
 - `issueCommentsUrl(owner, repo, number)`：构建评论列表接口绝对 URL。

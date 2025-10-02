@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { API_BASE } from '../constants';
+import { userSummarySchema } from '../user/summary';
 
 /** Query parameters for listing issue comments. */
 export interface IssueCommentsQuery {
@@ -17,8 +18,9 @@ export interface IssueCommentsQuery {
 /** Minimal Issue Comment representation. */
 export const issueCommentSchema = z.object({
   id: z.number(),
+  comment_id: z.number().optional(),
   body: z.string(),
-  user: z.unknown(),
+  user: userSummarySchema.optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
 });
