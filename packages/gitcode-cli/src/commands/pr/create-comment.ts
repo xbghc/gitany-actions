@@ -71,31 +71,11 @@ export async function createPrCommentAction(
       if (options.json) {
         console.log(JSON.stringify(comment, null, 2));
       } else {
-        // GitHub CLI 风格的彩色输出
-        const successMsg = '\n💬 PR comment created successfully!';
-        console.log(successMsg);
-        logger.info(
-          { prNumber: prNum, repoUrl, commentId: comment.id },
-          'PR comment created successfully',
-        );
-
-        const detailsMsg = '\n📋 Comment Details:';
-        console.log(detailsMsg);
-        const idLine = `   ID:       ${comment.id}`;
-        console.log(idLine);
-
-        // 显示评论内容预览
-        const bodyPreview =
-          comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
-        const previewLine = `   Preview:  "${bodyPreview}"`;
-        console.log(previewLine);
-        logger.info({ preview: bodyPreview }, previewLine);
-
-        const nextStepsMsg = '\n💡 Next steps:';
-        const replyLine = `   • Reply to comment:  gitcode pr comment ${prNumber} --body "Your reply"`;
-        console.log(nextStepsMsg);
-        console.log(replyLine);
-        logger.info({ nextSteps: ['reply-to-comment'] }, 'Displayed next steps for PR comment');
+        const preview = comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
+        console.log('💬 PR comment created successfully');
+        console.log(`   PR:        #${prNum}`);
+        console.log(`   Comment:   ${comment.id}`);
+        console.log(`   Preview:   "${preview}"`);
       }
     },
     (error) => {
@@ -164,7 +144,6 @@ export function createPrCommentCommand(): Command {
         } else if (!finalBody) {
           const promptMsg = 'Enter comment body (press Ctrl+D when finished, or use -e/--editor):';
           console.log(promptMsg);
-          logger.info(promptMsg);
           finalBody = fs.readFileSync(0, 'utf-8').trim();
         }
 

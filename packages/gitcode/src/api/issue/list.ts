@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { API_BASE } from '../constants';
+import { userSummarySchema, type UserSummary } from '../user/summary';
 
 /**
  * Query parameters for listing issues.
@@ -38,6 +39,18 @@ export type ListIssuesParams = {
 /**
  * Minimal Issue representation with common fields.
  */
+export type IssueUser = UserSummary;
+
+const issueLabelSchema = z
+  .object({
+    id: z.union([z.number(), z.string()]).optional(),
+    name: z.string().optional(),
+    title: z.string().optional(),
+    color: z.string().optional(),
+    description: z.string().optional(),
+  })
+  .passthrough();
+
 export const issueSchema = z.object({
   id: z.number(),
   html_url: z.string(),
@@ -45,7 +58,11 @@ export const issueSchema = z.object({
   state: z.string(),
   title: z.string(),
   body: z.string().nullable().optional(),
-  user: z.unknown().optional(),
+  user: userSummarySchema.optional(),
+  assignees: z.array(userSummarySchema).default([]),
+  labels: z.array(issueLabelSchema).default([]),
+  created_at: z.string(),
+  updated_at: z.string(),
 });
 
 export type Issue = z.infer<typeof issueSchema>;

@@ -1,5 +1,6 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
+import type { Issue } from '@gitany/gitcode';
 
 export async function listCommand(
   url?: string,
@@ -8,7 +9,7 @@ export async function listCommand(
   await withClient(
     async (client) => {
       const repoUrl = await resolveRepoUrl(url);
-      const issues = await client.issue.list(repoUrl, {
+      const issues: Issue[] = await client.issue.list(repoUrl, {
         state: options.state as 'open' | 'closed' | 'all' | undefined,
         labels: options.label,
         page: options.page ? Number(options.page) : undefined,
@@ -20,12 +21,10 @@ export async function listCommand(
         return;
       }
 
-      for (const issue of issues as unknown[]) {
-        const item = issue as Record<string, unknown>;
-        const num = (item.number ?? item.iid ?? item.id) as number | string | undefined;
-        const title = (item.title ?? item.subject ?? item.name ?? '(no title)') as string;
-        const numStr = typeof num === 'number' ? num : (num ?? '?');
-        console.log(`- [#${numStr}] ${title}`);
+      for (const issue of issues) {
+        const numStr = issue.number || String(issue.id ?? '?');
+        const title = issue.title || '(no title)';
+        console.log(`[#${numStr}] ${title}`);
       }
     },
     'Failed to list issues',

@@ -50,3 +50,4 @@ export function toQuery<T extends object | undefined | null>(
 }
 
 export { isNotModified } from './http';
+export { isObjectLike } from './types';

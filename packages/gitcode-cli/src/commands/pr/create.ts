@@ -1,7 +1,7 @@
 import { type CreatePullBody } from '@gitany/gitcode';
-import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
+import { createLogger } from '@gitany/shared';
 
 const logger = createLogger('@xbghc/gitcode-cli');
 
@@ -30,15 +30,14 @@ export async function createCommand(
     const repoUrl = await resolveRepoUrl(url);
     const created = await client.pr.create(repoUrl, body);
 
+    const pr = created;
+    const numStr = String(pr.number ?? pr.id ?? '?');
+    const titleOut = pr.title || '(no title)';
+    
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));
-      return;
+    } else {
+      console.log(`Created PR #${numStr}: ${titleOut}`);
     }
-
-    const pr = created as Record<string, unknown>;
-    const num = (pr.number ?? pr.iid ?? pr.id) as number | string | undefined;
-    const titleOut = (pr.title ?? '(no title)') as string;
-    const numStr = typeof num === 'number' ? num : (num ?? '?');
-    console.log(`Created PR #${numStr}: ${titleOut}`);
   }, 'Failed to create PR');
 }

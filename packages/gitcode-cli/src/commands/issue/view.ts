@@ -1,5 +1,8 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
+import { formatAssignees } from './helpers';
+import type { IssueComment, IssueDetail } from '@gitany/gitcode';
+import { isObjectLike } from '@gitany/gitcode';
 import {
   colors,
   colorizeState,
@@ -24,8 +27,8 @@ export async function viewAction(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
 
-      const issue = await client.issue.get(repoUrl, issueNumber);
-      let comments: unknown[] | undefined;
+      const issue: IssueDetail = await client.issue.get(repoUrl, issueNumber);
+      let comments: IssueComment[] | undefined;
 
       if (options.comments) {
         comments = await client.issue.comments(repoUrl, issueNumber, {
@@ -41,39 +44,34 @@ export async function viewAction(
       }
 
       console.log(`\n🪪 Issue #${issue.number}: ${issue.title}`);
-      console.log(
-        `   State: ${colorizeState(String((issue as { state?: string }).state ?? 'unknown'))}`,
-      );
+      console.log(`   State: ${colorizeState(String(issue.state ?? 'unknown'))}`);
 
-      const issueUrl = (issue as { html_url?: string }).html_url;
+      const issueUrl = issue.html_url;
       if (issueUrl) {
         console.log(`   URL: ${colors.blue}${issueUrl}${colors.reset}`);
       }
 
-      const author = formatUserName((issue as { user?: unknown }).user);
+      const author = formatUserName(issue.user);
       console.log(`   Author: ${author}`);
 
-      const createdAt = (issue as { created_at?: string }).created_at;
-      if (createdAt) {
-        const createdDate = new Date(createdAt);
+      if (issue.created_at) {
+        const createdDate = new Date(issue.created_at);
         console.log(`   Created: ${createdDate.toLocaleString()}`);
       }
 
-      const updatedAt = (issue as { updated_at?: string }).updated_at;
-      if (updatedAt) {
-        const updatedDate = new Date(updatedAt);
+      if (issue.updated_at) {
+        const updatedDate = new Date(issue.updated_at);
         console.log(`   Updated: ${updatedDate.toLocaleString()}`);
       }
 
-      const labels = (issue as { labels?: unknown }).labels;
-      if (Array.isArray(labels) && labels.length > 0) {
-        const labelNames = labels
+      if (issue.labels.length > 0) {
+        const labelNames = issue.labels
           .map((label) => {
-            if (!label || typeof label !== 'object') {
-              return String(label ?? '');
-            }
-            const record = label as Record<string, unknown>;
-            return String(record.name ?? record.title ?? record.id ?? '');
+            if (label.name) return label.name;
+            if (label.title) return label.title;
+            if (typeof label.id === 'string' && label.id) return label.id;
+            if (typeof label.id === 'number') return String(label.id);
+            return '';
           })
           .filter(Boolean)
           .join(', ');
@@ -82,15 +80,23 @@ export async function viewAction(
         }
       }
 
-      const assignee = (issue as { assignee?: unknown }).assignee;
-      if (assignee) {
-        console.log(`   Assignee: ${formatUserName(assignee)}`);
+      const assigneesText = formatAssignees(issue.assignees);
+      if (assigneesText) {
+        console.log(`   Assignees: ${assigneesText}`);
       }
 
       const milestone = (issue as { milestone?: unknown }).milestone;
-      if (milestone && typeof milestone === 'object' && milestone !== null) {
-        const record = milestone as Record<string, unknown>;
-        console.log(`   Milestone: ${String(record.title ?? record.name ?? record.id ?? '')}`);
+      if (isObjectLike(milestone)) {
+        const mTitle = Reflect.get(milestone, 'title');
+        const mName = Reflect.get(milestone, 'name');
+        const mId = Reflect.get(milestone, 'id');
+        const display =
+          (typeof mTitle === 'string' && mTitle) ||
+          (typeof mName === 'string' && mName) ||
+          (typeof mId === 'string' && mId) ||
+          (typeof mId === 'number' && String(mId)) ||
+          '';
+        console.log(`   Milestone: ${display}`);
       }
 
       const body = (issue as { body?: string | null }).body;
@@ -103,14 +109,10 @@ export async function viewAction(
         console.log('\n💬 Comments:');
         if (comments && comments.length > 0) {
           comments.forEach((comment) => {
-            const item = comment as Record<string, unknown>;
-            const id = item.id ?? item.comment_id ?? '?';
-            const user = formatUserName(item.user);
-            const bodyText = String(item.body ?? '').split('\n')[0];
-            const created =
-              typeof item.created_at === 'string'
-                ? new Date(String(item.created_at)).toLocaleString()
-                : undefined;
+            const id = comment.comment_id ?? comment.id ?? '?';
+            const user = formatUserName(comment.user);
+            const bodyText = (comment.body ?? '').split('\n')[0];
+            const created = comment.created_at ? new Date(comment.created_at).toLocaleString() : undefined;
             const metaParts = [user];
             if (created) {
               metaParts.push(created);

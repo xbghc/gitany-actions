@@ -6,3 +6,5 @@ export {
 } from './profile';
 
 export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './namespace';
+
+export { userSummarySchema, type UserSummary } from './summary';

@@ -172,7 +172,7 @@ function createMentionHandler(
 
         const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
         const replyBody = (await builder(result, context))?.trim();
-        console.log('replyBody', replyBody);
+        logger.debug({ replyBody }, 'Generated reply body');
 
         if (!replyBody) {
           logger.warn(
