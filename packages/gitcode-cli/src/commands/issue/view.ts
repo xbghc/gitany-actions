@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
 import { formatAssignees } from './helpers';
-import type { IssueDetail } from '@gitany/gitcode';
+import type { IssueComment, IssueDetail } from '@gitany/gitcode';
 import { isObjectLike } from '@gitany/gitcode';
 import {
   colors,
@@ -28,7 +28,7 @@ export async function viewAction(
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
 
       const issue: IssueDetail = await client.issue.get(repoUrl, issueNumber);
-      let comments: unknown[] | undefined;
+      let comments: IssueComment[] | undefined;
 
       if (options.comments) {
         comments = await client.issue.comments(repoUrl, issueNumber, {
@@ -54,32 +54,23 @@ export async function viewAction(
       const author = formatUserName(issue.user);
       console.log(`   Author: ${author}`);
 
-      const createdAt = (issue as { created_at?: string }).created_at;
-      if (createdAt) {
-        const createdDate = new Date(createdAt);
+      if (issue.created_at) {
+        const createdDate = new Date(issue.created_at);
         console.log(`   Created: ${createdDate.toLocaleString()}`);
       }
 
-      const updatedAt = (issue as { updated_at?: string }).updated_at;
-      if (updatedAt) {
-        const updatedDate = new Date(updatedAt);
+      if (issue.updated_at) {
+        const updatedDate = new Date(issue.updated_at);
         console.log(`   Updated: ${updatedDate.toLocaleString()}`);
       }
 
-      const labels = (issue as { labels?: unknown }).labels;
-      if (Array.isArray(labels) && labels.length > 0) {
-        const labelNames = labels
+      if (issue.labels.length > 0) {
+        const labelNames = issue.labels
           .map((label) => {
-            if (!isObjectLike(label)) {
-              return String(label ?? '');
-            }
-            const name = Reflect.get(label, 'name');
-            const title = Reflect.get(label, 'title');
-            const idVal = Reflect.get(label, 'id');
-            if (typeof name === 'string' && name) return name;
-            if (typeof title === 'string' && title) return title;
-            if (typeof idVal === 'string' && idVal) return idVal;
-            if (typeof idVal === 'number') return String(idVal);
+            if (label.name) return label.name;
+            if (label.title) return label.title;
+            if (typeof label.id === 'string' && label.id) return label.id;
+            if (typeof label.id === 'number') return String(label.id);
             return '';
           })
           .filter(Boolean)
@@ -118,13 +109,10 @@ export async function viewAction(
         console.log('\n💬 Comments:');
         if (comments && comments.length > 0) {
           comments.forEach((comment) => {
-            const id = (comment as { id?: unknown; comment_id?: unknown }).id ??
-              (comment as { comment_id?: unknown }).comment_id ??
-              '?';
-            const user = formatUserName((comment as { user?: unknown }).user);
-            const bodyText = String((comment as { body?: unknown }).body ?? '').split('\n')[0];
-            const createdRaw = (comment as { created_at?: unknown }).created_at;
-            const created = typeof createdRaw === 'string' ? new Date(createdRaw).toLocaleString() : undefined;
+            const id = comment.comment_id ?? comment.id ?? '?';
+            const user = formatUserName(comment.user);
+            const bodyText = (comment.body ?? '').split('\n')[0];
+            const created = comment.created_at ? new Date(comment.created_at).toLocaleString() : undefined;
             const metaParts = [user];
             if (created) {
               metaParts.push(created);

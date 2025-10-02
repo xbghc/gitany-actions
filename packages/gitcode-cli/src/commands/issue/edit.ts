@@ -1,5 +1,4 @@
 import type { UpdateIssueBody, UpdatedIssue } from '@gitany/gitcode';
-import { isObjectLike } from '@gitany/gitcode';
 import { Command } from 'commander';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
@@ -90,15 +89,14 @@ export async function editAction(
       console.log(`   State: ${colorizeState(issue.state)}`);
       console.log(`   URL: ${colors.blue}${issue.html_url}${colors.reset}`);
 
-      const labels = (issue as { labels?: unknown }).labels;
-      if (Array.isArray(labels) && labels.length > 0) {
-        const labelNames = labels
+      if (issue.labels.length > 0) {
+        const labelNames = issue.labels
           .map((label) => {
-            if (!isObjectLike(label)) {
-              return String(label ?? '');
-            }
-            const record = label as Record<string, unknown>;
-            return String(record.name ?? record.title ?? record.id ?? '');
+            if (label.name) return label.name;
+            if (label.title) return label.title;
+            if (typeof label.id === 'string' && label.id) return label.id;
+            if (typeof label.id === 'number') return String(label.id);
+            return '';
           })
           .filter(Boolean)
           .join(', ');
