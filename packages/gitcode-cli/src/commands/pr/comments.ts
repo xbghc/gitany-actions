@@ -1,5 +1,4 @@
 import type { PRComment, PRCommentQueryOptions } from '@gitany/gitcode';
-import { isObjectLike } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
@@ -41,9 +40,7 @@ export async function prCommentsCommand(
       for (const comment of comments) {
         const id = comment.id;
         const bodyFirstLine = comment.body.split('\n')[0] ?? '';
-        const author = (isObjectLike(comment.user)
-          ? (comment.user as { id?: string }).id
-          : undefined) || '?';
+        const author = comment.user?.id ?? '?';
         console.log(`- [#${id}] ${author}: ${bodyFirstLine}`);
       }
     },
