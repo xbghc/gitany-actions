@@ -14,14 +14,14 @@ export const colors = {
   bright: '\x1b[1m',
 };
 
-export interface IssueTargetOptions {
+export interface RepoOption {
   repo?: string;
 }
 
 export async function resolveIssueContext(
   issueNumberArg: string,
   urlArg: string | undefined,
-  options: IssueTargetOptions = {},
+  options: RepoOption = {},
 ) {
   const issueNumber = Number(issueNumberArg);
   if (!Number.isFinite(issueNumber) || issueNumber <= 0) {

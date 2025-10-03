@@ -3,14 +3,14 @@ import { parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
+import { type RepoOption } from './helpers';
 
 const logger = createLogger('cli:issue:edit-comment');
 
-interface EditCommentOptions {
+interface EditCommentOptions extends RepoOption {
   body?: string;
   bodyFile?: string;
   json?: boolean;
-  repo?: string;
 }
 
 export async function editCommentAction(commentIdArg: string, options: EditCommentOptions = {}) {

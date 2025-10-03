@@ -2,10 +2,10 @@ import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
+import { type RepoOption } from './helpers';
 
-interface StatusOptions {
+interface StatusOptions extends RepoOption {
   json?: boolean;
-  repo?: string;
 }
 
 export async function statusAction(urlArg?: string, options: StatusOptions = {}) {

@@ -5,9 +5,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client';
-import { formatAssignees } from './helpers';
+import { formatAssignees, type RepoOption } from './helpers';
 
-export interface CreateOptions {
+export interface CreateOptions extends RepoOption {
   title?: string;
   body?: string;
   assignee?: string;
@@ -18,7 +18,6 @@ export interface CreateOptions {
   bodyFile?: string;
   editor?: boolean;
   json?: boolean;
-  repo?: string;
 }
 
 // 模拟交互式提示（简化版本）
