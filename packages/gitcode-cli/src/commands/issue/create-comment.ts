@@ -2,12 +2,12 @@ import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
+import { type RepoOption } from './helpers';
 
-interface CreateCommentOptions {
+interface CreateCommentOptions extends RepoOption {
   body?: string;
   bodyFile?: string;
   json?: boolean;
-  repo?: string;
 }
 
 export async function createCommentAction(

@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import { colorizeState, colors, resolveIssueContext, type IssueTargetOptions } from './helpers';
+import { colorizeState, colors, resolveIssueContext, type RepoOption } from './helpers';
 
-interface ReopenOptions extends IssueTargetOptions {
+interface ReopenOptions extends RepoOption {
   json?: boolean;
 }
 

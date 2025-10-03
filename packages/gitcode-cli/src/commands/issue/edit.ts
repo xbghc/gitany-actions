@@ -7,10 +7,10 @@ import {
   colors,
   formatAssignees,
   resolveIssueContext,
-  type IssueTargetOptions,
+  type RepoOption,
 } from './helpers';
 
-interface EditOptions extends IssueTargetOptions {
+interface EditOptions extends RepoOption {
   title?: string;
   body?: string;
   bodyFile?: string;

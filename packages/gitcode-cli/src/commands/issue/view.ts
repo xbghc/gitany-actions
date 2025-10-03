@@ -8,10 +8,10 @@ import {
   colorizeState,
   formatUserName,
   resolveIssueContext,
-  type IssueTargetOptions,
+  type RepoOption,
 } from './helpers';
 
-interface ViewOptions extends IssueTargetOptions {
+interface ViewOptions extends RepoOption {
   comments?: boolean;
   page?: string;
   perPage?: string;

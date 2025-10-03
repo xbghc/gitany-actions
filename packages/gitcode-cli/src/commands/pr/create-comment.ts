@@ -6,15 +6,15 @@ import { execSync } from 'child_process';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
+import { type RepoOption } from '../issue/helpers';
 
 const logger = createLogger('@xbghc/gitcode-cli');
 
-interface CreatePrCommentOptions {
+interface CreatePrCommentOptions extends RepoOption {
   body?: string;
   bodyFile?: string;
   editor?: boolean;
   json?: boolean;
-  repo?: string;
 }
 
 // 获取默认编辑器
