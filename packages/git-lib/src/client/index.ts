@@ -11,13 +11,14 @@ import { gitSetRemote } from '../commands/remote';
 import { gitDiffCommits, DiffOptions } from '../commands/diff';
 import { gitClone } from '../commands/clone';
 import { GitAddOptions, gitAdd } from '../commands/add';
+import type { GitResult } from '../types';
 
-export class GitClient {
-  constructor(public cwd: string = process.cwd()) {}
+export type GitRunner = (args: string[]) => Promise<GitResult>;
 
-  async run(args: string[]) {
+function withGitNotFoundHandling(cwd?: string): GitRunner {
+  return async (args: string[]) => {
     try {
-      return await runGit(args, { cwd: this.cwd });
+      return await runGit(args, { cwd });
     } catch (err) {
       if (err instanceof GitNotFoundError) {
         throw new GitNotFoundError(
@@ -26,49 +27,51 @@ export class GitClient {
       }
       throw err;
     }
-  }
+  };
+}
 
-  async status() {
-    return gitStatus(this);
-  }
+export function createGitRunner(cwd?: string): GitRunner {
+  return withGitNotFoundHandling(cwd);
+}
 
-  async showFile(ref: string, filePath: string) {
-    return gitShowFile(this, ref, filePath);
-  }
+export function createGitClient(cwd: string = process.cwd()) {
+  const run = withGitNotFoundHandling(cwd);
 
-  async branch(name: string, base?: string) {
-    return gitBranch(this, name, base);
-  }
-
-  async checkout(name: string) {
-    return gitCheckout(this, name);
-  }
-
-  async fetch(branch?: string, options: { remote?: string } = {}) {
-    return gitFetch(this, branch, options);
-  }
-
-  async push(branch: string, options: { remote?: string } = {}) {
-    return gitPush(this, branch, options);
-  }
-
-  async commit(message: string, options: { addAll?: boolean } = {}) {
-    return gitCommit(this, message, options);
-  }
-
-  async setRemote(remote: string, url: string) {
-    return gitSetRemote(this, remote, url);
-  }
-
-  async diffCommits(commit1: string, commit2: string, options: DiffOptions = {}) {
-    return gitDiffCommits(this, commit1, commit2, options);
-  }
-
-  async clone(repo: string, directory?: string) {
-    return gitClone(this, repo, directory);
-  }
-
-  async add(files?: string | string[], options: GitAddOptions = {}) {
-    return gitAdd(this, files, options);
-  }
+  return {
+    cwd,
+    run,
+    status() {
+      return gitStatus(run);
+    },
+    showFile(ref: string, filePath: string) {
+      return gitShowFile(run, ref, filePath);
+    },
+    branch(name: string, base?: string) {
+      return gitBranch(run, name, base);
+    },
+    checkout(name: string) {
+      return gitCheckout(run, name);
+    },
+    fetch(branch?: string, options: { remote?: string } = {}) {
+      return gitFetch(run, branch, options);
+    },
+    push(branch: string, options: { remote?: string } = {}) {
+      return gitPush(run, branch, options);
+    },
+    commit(message: string, options: { addAll?: boolean } = {}) {
+      return gitCommit(run, message, options);
+    },
+    setRemote(remote: string, url: string) {
+      return gitSetRemote(run, remote, url);
+    },
+    diffCommits(commit1: string, commit2: string, options: DiffOptions = {}) {
+      return gitDiffCommits(run, commit1, commit2, options);
+    },
+    clone(repo: string, directory?: string) {
+      return gitClone(run, repo, directory);
+    },
+    add(files?: string | string[], options: GitAddOptions = {}) {
+      return gitAdd(run, files, options);
+    },
+  };
 }

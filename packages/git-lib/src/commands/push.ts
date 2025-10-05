@@ -1,10 +1,10 @@
-import { GitClient } from '../client';
+import type { GitRunner } from '../client';
 
 export async function gitPush(
-  client: GitClient,
+  run: GitRunner,
   branch: string,
   options: { remote?: string } = {},
 ) {
   const { remote = 'origin' } = options;
-  return client.run(['push', remote, branch]);
+  return run(['push', remote, branch]);
 }

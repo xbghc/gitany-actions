@@ -1,4 +1,4 @@
-import { GitClient } from '../client';
+import type { GitRunner } from '../client';
 
 export interface DiffOptions {
   diffFilter?: 'A' | 'M' | 'D';
@@ -7,7 +7,7 @@ export interface DiffOptions {
 }
 
 export async function gitDiffCommits(
-  client: GitClient,
+  run: GitRunner,
   commit1: string,
   commit2: string,
   options: DiffOptions = {},
@@ -23,6 +23,6 @@ export async function gitDiffCommits(
     args.push('--', ...options.patterns);
   }
 
-  const res = await client.run(args);
+  const res = await run(args);
   return res;
 }
