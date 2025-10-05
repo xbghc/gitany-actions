@@ -1,8 +1,8 @@
-// Scratchpad script for experimenting with the GitClient helpers.
-import { GitClient } from '../packages/git-lib/dist/index.js';
+// Scratchpad script for experimenting with the git-lib helpers.
+import { createGitClient } from '../packages/git-lib/dist/index.js';
 
-// const client = new GitClient('~/projects/MateChat');
-const client = new GitClient();
+// const client = createGitClient('~/projects/MateChat');
+const client = createGitClient();
 
 // const result = await client.showFile('HEAD', 'package.json');
 // const result = await client.branch('test-branch', true);

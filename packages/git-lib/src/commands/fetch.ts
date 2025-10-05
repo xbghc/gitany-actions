@@ -1,11 +1,11 @@
-import { GitClient } from '../client';
+import type { GitRunner } from '../client';
 
 export async function gitFetch(
-  client: GitClient,
+  run: GitRunner,
   branch?: string,
   options: { remote?: string } = {},
 ) {
   const { remote = 'origin' } = options;
   const args = branch ? ['fetch', remote, branch] : ['fetch', remote];
-  return client.run(args);
+  return run(args);
 }
