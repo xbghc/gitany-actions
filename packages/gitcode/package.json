@@ -27,6 +27,7 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "@gitany/git-lib": "workspace:*",
     "@gitany/shared": "workspace:*",
     "got": "^14.4.9",
     "zod": "^4.1.7"

@@ -1,3 +1,5 @@
+import { parseRepoUrl } from '@gitany/git-lib';
+
 export type Remote = { owner: string; repo: string; host?: string };
 /**
  * Parses a Git remote URL like:
@@ -6,18 +8,15 @@ export type Remote = { owner: string; repo: string; host?: string };
  */
 
 export function parseGitUrl(url: string): Remote | null {
-  // Simple, safe parsing — returns null on unknown shapes.
-  const https = url.match(/^https?:\/\/([^/]+)\/([^/]+)\/([^/.]+)(?:\.git)?$/);
-  if (https) {
-    return { host: https[1], owner: https[2], repo: https[3] };
+  try {
+    const resolved = parseRepoUrl(url);
+    if (!resolved.owner || !resolved.repo) {
+      return null;
+    }
+    return { host: resolved.host, owner: resolved.owner, repo: resolved.repo };
+  } catch {
+    return null;
   }
-
-  const ssh = url.match(/^git@([^:]+):([^/]+)\/([^/.]+)(?:\.git)?$/);
-  if (ssh) {
-    return { host: ssh[1], owner: ssh[2], repo: ssh[3] };
-  }
-
-  return null;
 }
 
 /**

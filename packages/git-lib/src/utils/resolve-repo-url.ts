@@ -162,7 +162,7 @@ function parseShorthand(raw: string): ResolvedRepoUrl | undefined {
   return buildResolved('https:', host, owner, repo, resourceSegments, hash);
 }
 
-function normalizeRepoUrlInput(raw: string): ResolvedRepoUrl {
+export function parseRepoUrl(raw: string): ResolvedRepoUrl {
   const trimmed = raw.trim();
   if (!trimmed) {
     throw new Error('Repository URL cannot be empty');
@@ -191,7 +191,7 @@ export async function resolveRepoUrl(
   options: { cwd?: string } = {},
 ): Promise<ResolvedRepoUrl> {
   if (url) {
-    return normalizeRepoUrlInput(url);
+    return parseRepoUrl(url);
   }
   const client = new GitClient(options.cwd);
   try {
@@ -202,7 +202,7 @@ export async function resolveRepoUrl(
           'Failed to get remote URL. Provide repository URL or run inside a git repo.',
       );
     }
-    return normalizeRepoUrlInput(result.stdout.trim());
+    return parseRepoUrl(result.stdout.trim());
   } catch (err) {
     if (err instanceof GitNotFoundError) {
       throw new GitNotFoundError('git not found. Provide repository URL or install git.');
