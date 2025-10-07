@@ -2,6 +2,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 export { resolveRepoUrl } from './resolve-repo-url';
+export type { ResolvedRepoUrl, ResolvedRepoResource } from './resolve-repo-url';
 
 export function expandCwd(cwd?: string) {
   if (!cwd) return cwd;

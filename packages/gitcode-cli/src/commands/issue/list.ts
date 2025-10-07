@@ -8,7 +8,8 @@ export async function listCommand(
 ): Promise<void> {
   await withClient(
     async (client) => {
-      const repoUrl = await resolveRepoUrl(url);
+      const resolved = await resolveRepoUrl(url);
+      const repoUrl = resolved.repoUrl;
       const issues: Issue[] = await client.issue.list(repoUrl, {
         state: options.state as 'open' | 'closed' | 'all' | undefined,
         labels: options.label,

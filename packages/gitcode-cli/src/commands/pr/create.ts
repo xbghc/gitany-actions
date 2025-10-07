@@ -27,7 +27,8 @@ export async function createCommand(
   }
 
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(url);
+    const resolved = await resolveRepoUrl(url);
+    const repoUrl = resolved.repoUrl;
     const created = await client.pr.create(repoUrl, body);
 
     const pr = created;

@@ -64,13 +64,17 @@ export async function createAction(
   options: CreateOptions = {},
 ) {
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(repoUrlArg);
-    const parsedRepo = parseGitUrl(repoUrl);
-    if (!parsedRepo) {
-      throw new Error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
+    const resolved = await resolveRepoUrl(repoUrlArg);
+    let owner = resolved.owner;
+    let repo = resolved.repo;
+    if (!owner || !repo) {
+      const parsedRepo = parseGitUrl(resolved.repoUrl);
+      if (!parsedRepo) {
+        throw new Error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
+      }
+      owner = parsedRepo.owner;
+      repo = parsedRepo.repo;
     }
-
-    const { owner, repo } = parsedRepo;
 
     // 获取 title（交互式提示）
     let finalTitle = titleArg ?? options.title;

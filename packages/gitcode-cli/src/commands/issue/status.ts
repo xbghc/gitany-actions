@@ -9,16 +9,21 @@ interface StatusOptions {
 
 export async function statusAction(urlArg?: string, options: StatusOptions = {}) {
   await withClient(async (client) => {
-    const url = await resolveRepoUrl(urlArg);
-    const parsed = parseGitUrl(url);
-    if (!parsed) {
-      throw new Error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
+    const resolved = await resolveRepoUrl(urlArg);
+    let owner = resolved.owner;
+    let repo = resolved.repo;
+
+    if (!owner || !repo) {
+      const parsed = parseGitUrl(resolved.repoUrl);
+      if (!parsed) {
+        throw new Error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
+      }
+      owner = parsed.owner;
+      repo = parsed.repo;
     }
 
-    const { owner, repo } = parsed;
-
     // 获取 issues 统计信息
-    const repoUrl = `${owner}/${repo}`;
+    const repoUrl = resolved.repoUrl;
     const [openIssues, closedIssues, recentIssues] = await Promise.all([
       client.issue.list(repoUrl, { state: 'open', per_page: 100 }),
       client.issue.list(repoUrl, { state: 'closed', per_page: 100 }),

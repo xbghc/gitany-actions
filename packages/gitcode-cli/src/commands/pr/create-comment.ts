@@ -50,20 +50,33 @@ export async function createPrCommentAction(
   let repoUrl = '';
   await withClient(
     async (client) => {
-      repoUrl = await resolveRepoUrl(repoUrlArg);
+      const resolved = await resolveRepoUrl(repoUrlArg);
+      repoUrl = resolved.repoUrl;
 
-      // 解析仓库URL获取 owner/repo（复用通用解析器）
-      const parsed = parseGitUrl(repoUrl);
-      if (!parsed) {
-        throw new Error(
-          'Unrecognized repository URL. Provide a full git URL or run inside a git repo.',
-        );
+      if (!resolved.owner || !resolved.repo) {
+        const parsed = parseGitUrl(repoUrl);
+        if (!parsed) {
+          throw new Error(
+            'Unrecognized repository URL. Provide a full git URL or run inside a git repo.',
+          );
+        }
       }
 
-      const prNum = parseInt(prNumber, 10);
+      let prNum = Number.parseInt(prNumber, 10);
+      const resourcePrNumber = resolved.resource?.type === 'pull' ? resolved.resource.number : undefined;
 
-      if (isNaN(prNum)) {
+      if (Number.isNaN(prNum)) {
+        if (resourcePrNumber !== undefined) {
+          prNum = resourcePrNumber;
+        }
+      }
+
+      if (Number.isNaN(prNum)) {
         throw new Error('Invalid PR number');
+      }
+
+      if (resourcePrNumber !== undefined && prNum !== resourcePrNumber) {
+        throw new Error('PR number mismatch between argument and repository reference');
       }
 
       const comment = await client.pr.createComment(repoUrl, prNum, body);

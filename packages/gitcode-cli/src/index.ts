@@ -52,13 +52,29 @@ program
   .description('Parse Git URL and output JSON')
   .action(async (url?: string) => {
     try {
-      const repoUrl = await resolveRepoUrl(url);
-      const parsed = parseGitUrl(repoUrl);
+      const resolved = await resolveRepoUrl(url);
+      const repoUrl = resolved.repoUrl;
+      const parsed =
+        resolved.owner && resolved.repo
+          ? { owner: resolved.owner, repo: resolved.repo, host: resolved.host }
+          : parseGitUrl(repoUrl);
       if (!parsed) {
         logger.error({ url: repoUrl }, 'Unrecognized git URL');
         process.exit(1);
       }
-      console.log(JSON.stringify(parsed, null, 2));
+      console.log(
+        JSON.stringify(
+          {
+            repoUrl,
+            owner: parsed.owner,
+            repo: parsed.repo,
+            host: parsed.host,
+            resource: resolved.resource ?? null,
+          },
+          null,
+          2,
+        ),
+      );
     } catch (err) {
       logger.error({ err }, 'Failed to parse git URL');
       process.exit(1);

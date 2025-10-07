@@ -1,5 +1,5 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
-import { isObjectLike, type IssueUser } from '@gitany/gitcode';
+import { isObjectLike, parseGitUrl, type IssueUser } from '@gitany/gitcode';
 import { createLogger } from '@gitany/shared';
 
 const logger = createLogger('@xbghc/gitcode-cli');
@@ -17,15 +17,28 @@ export const colors = {
 export async function resolveIssueContext(
   issueNumberArg: string,
   urlArg: string | undefined,
-) {
+): Promise<{ issueNumber: number; repoUrl: string; owner: string; repo: string }> {
   const issueNumber = Number(issueNumberArg);
   if (!Number.isFinite(issueNumber) || issueNumber <= 0) {
     logger.error('Invalid issue number');
     process.exit(1);
   }
 
-  const repoUrl = await resolveRepoUrl(urlArg);
-  return { issueNumber, repoUrl };
+  const resolved = await resolveRepoUrl(urlArg);
+  let owner = resolved.owner;
+  let repo = resolved.repo;
+
+  if (!owner || !repo) {
+    const parsed = parseGitUrl(resolved.repoUrl);
+    if (!parsed) {
+      logger.error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
+      process.exit(1);
+    }
+    owner = parsed.owner;
+    repo = parsed.repo;
+  }
+
+  return { issueNumber, repoUrl: resolved.repoUrl, owner, repo };
 }
 
 export function formatUserName(user: unknown): string {

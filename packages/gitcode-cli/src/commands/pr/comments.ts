@@ -25,7 +25,8 @@ export async function prCommentsCommand(
 
   await withClient(
     async (client) => {
-      const repoUrl = await resolveRepoUrl(url);
+      const resolved = await resolveRepoUrl(url);
+      const repoUrl = resolved.repoUrl;
       const comments: PRComment[] = await client.pr.comments(repoUrl, n, {
         page: options.page ? Number(options.page) : undefined,
         per_page: options.perPage ? Number(options.perPage) : undefined,

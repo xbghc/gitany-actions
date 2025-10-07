@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { resolveRepoUrl } from '@gitany/git-lib';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
 
@@ -14,32 +15,17 @@ export async function createCommentAction(
   options: CreateCommentOptions = {},
 ) {
   await withClient(async (client) => {
-    // 解析 issue 参数
-    let owner: string;
-    let repo: string;
-    let issueNumber: number;
-
-    const urlMatch = issueArg.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)\/issues\/(\d+)$/);
-    if (urlMatch) {
-      owner = urlMatch[1];
-      repo = urlMatch[2];
-      issueNumber = parseInt(urlMatch[3], 10);
-    } else {
-      const parts = issueArg.split('/');
-      if (parts.length === 3) {
-        owner = parts[0];
-        repo = parts[1];
-        issueNumber = parseInt(parts[2], 10);
-      } else {
-        throw new Error(
-          'Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER',
-        );
-      }
+    const resolved = await resolveRepoUrl(issueArg);
+    const issueResource = resolved.resource;
+    if (!resolved.owner || !resolved.repo || issueResource?.type !== 'issue') {
+      throw new Error(
+        'Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER',
+      );
     }
 
-    if (isNaN(issueNumber)) {
-      throw new Error('Invalid issue number');
-    }
+    const owner = resolved.owner;
+    const repo = resolved.repo;
+    const issueNumber = issueResource.number;
 
     let finalBody = bodyArg || options.body || '';
 

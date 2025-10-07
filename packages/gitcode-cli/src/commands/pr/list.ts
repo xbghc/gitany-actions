@@ -8,7 +8,8 @@ export async function listCommand(
 ): Promise<void> {
   await withClient(
     async (client) => {
-      const repoUrl = await resolveRepoUrl(url);
+      const resolved = await resolveRepoUrl(url);
+      const repoUrl = resolved.repoUrl;
       const pulls: PullRequest[] = await client.pr.list(repoUrl, {
         state: options.state,
         head: options.head,

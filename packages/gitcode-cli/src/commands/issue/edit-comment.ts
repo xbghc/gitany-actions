@@ -19,14 +19,20 @@ export async function editCommentAction(
   options: EditCommentOptions = {},
 ) {
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(urlArg);
-    const parsedRepo = parseGitUrl(repoUrl);
-    if (!parsedRepo) {
-      throw new Error(
-        'Unrecognized repository URL. Provide OWNER/REPO or a full git URL.',
-      );
+    const resolved = await resolveRepoUrl(urlArg);
+    let owner = resolved.owner;
+    let repo = resolved.repo;
+
+    if (!owner || !repo) {
+      const parsedRepo = parseGitUrl(resolved.repoUrl);
+      if (!parsedRepo) {
+        throw new Error(
+          'Unrecognized repository URL. Provide OWNER/REPO or a full git URL.',
+        );
+      }
+      owner = parsedRepo.owner;
+      repo = parsedRepo.repo;
     }
-    const { owner, repo } = parsedRepo;
 
     const comment_id = parseInt(commentIdArg, 10);
     if (isNaN(comment_id)) {
