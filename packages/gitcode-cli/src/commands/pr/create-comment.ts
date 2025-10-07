@@ -6,11 +6,10 @@ import { execSync } from 'child_process';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
-import { type RepoOption } from '../issue/helpers';
 
 const logger = createLogger('@xbghc/gitcode-cli');
 
-interface CreatePrCommentOptions extends RepoOption {
+interface CreatePrCommentOptions {
   body?: string;
   bodyFile?: string;
   editor?: boolean;
@@ -44,13 +43,14 @@ async function openEditor(content: string): Promise<string> {
 
 export async function createPrCommentAction(
   prNumber: string,
+  repoUrlArg: string | undefined,
   body: string,
   options: CreatePrCommentOptions = {},
 ) {
   let repoUrl = '';
   await withClient(
     async (client) => {
-      repoUrl = await resolveRepoUrl(options.repo);
+      repoUrl = await resolveRepoUrl(repoUrlArg);
 
       // 解析仓库URL获取 owner/repo（复用通用解析器）
       const parsed = parseGitUrl(repoUrl);
@@ -106,37 +106,23 @@ export function createPrCommentCommand(): Command {
     )
     .option('-e, --editor', 'Open text editor to write the comment')
     .option('--json', 'Output raw JSON instead of formatted output')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(
-      async (prNumber: string, repoUrlArg: string | undefined, options: CreatePrCommentOptions) => {
-        const repoArg = repoUrlArg?.trim() || undefined;
-        const repoOption = options.repo?.trim() || undefined;
-
-        if (repoArg && repoOption && repoArg !== repoOption) {
-          throw new Error('Repository specified twice. Use either positional [url] or --repo.');
-        }
-
-        const resolvedOptions: CreatePrCommentOptions = {
-          ...options,
-          repo: repoArg ?? repoOption,
-        };
+      async (prNumber: string, repoUrlArg: string | undefined, options: CreatePrCommentOptions = {}) => {
+        const trimmedRepoArg = repoUrlArg?.trim() || undefined;
 
         // 获取评论内容
-        let finalBody = resolvedOptions.body || '';
+        let finalBody = options.body || '';
 
-        if (resolvedOptions.bodyFile) {
-          if (resolvedOptions.bodyFile === '-') {
+        if (options.bodyFile) {
+          if (options.bodyFile === '-') {
             finalBody = fs.readFileSync(0, 'utf-8').trim();
           } else {
-            if (!fs.existsSync(resolvedOptions.bodyFile)) {
-              throw new Error(`File not found: ${resolvedOptions.bodyFile}`);
+            if (!fs.existsSync(options.bodyFile)) {
+              throw new Error(`File not found: ${options.bodyFile}`);
             }
-            finalBody = fs.readFileSync(resolvedOptions.bodyFile, 'utf-8').trim();
+            finalBody = fs.readFileSync(options.bodyFile, 'utf-8').trim();
           }
-        } else if (resolvedOptions.editor) {
+        } else if (options.editor) {
           const template = `# Comment on Pull Request #${prNumber}
 
 <!-- Write your comment below -->`;
@@ -151,7 +137,7 @@ export function createPrCommentCommand(): Command {
           throw new Error('Comment body is required');
         }
 
-        await createPrCommentAction(prNumber, finalBody, resolvedOptions);
+        await createPrCommentAction(prNumber, trimmedRepoArg, finalBody, options);
       },
     );
 }

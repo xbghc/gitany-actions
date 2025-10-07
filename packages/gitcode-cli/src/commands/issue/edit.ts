@@ -2,15 +2,9 @@ import type { UpdateIssueBody, UpdatedIssue } from '@gitany/gitcode';
 import { Command } from 'commander';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
-import {
-  colorizeState,
-  colors,
-  formatAssignees,
-  resolveIssueContext,
-  type RepoOption,
-} from './helpers';
+import { colorizeState, colors, formatAssignees, resolveIssueContext } from './helpers';
 
-interface EditOptions extends RepoOption {
+interface EditOptions {
   title?: string;
   body?: string;
   bodyFile?: string;
@@ -38,7 +32,7 @@ export async function editAction(
 ) {
   await withClient(
     async (client) => {
-      const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
+      const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg);
 
       let finalBody = options.body;
       if (options.bodyFile) {
@@ -148,9 +142,5 @@ export function editCommand(): Command {
     )
     .option('--state <state>', 'Update issue state: open | closed')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(editAction);
 }

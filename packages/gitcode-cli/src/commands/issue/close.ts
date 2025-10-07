@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
-import { colorizeState, colors, resolveIssueContext, type RepoOption } from './helpers';
+import { colorizeState, colors, resolveIssueContext } from './helpers';
 
-interface CloseOptions extends RepoOption {
+interface CloseOptions {
   json?: boolean;
 }
 
@@ -13,7 +13,7 @@ export async function closeAction(
 ) {
   await withClient(
     async (client) => {
-      const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
+      const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg);
 
       const issue = await client.issue.update(repoUrl, issueNumber, { state: 'closed' });
 
@@ -48,9 +48,5 @@ export function closeCommand(): Command {
     .argument('<number>', 'Issue number')
     .argument('[url]', 'Repository URL')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(closeAction);
 }

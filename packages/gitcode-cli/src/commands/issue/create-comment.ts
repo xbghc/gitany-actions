@@ -1,10 +1,8 @@
 import { Command } from 'commander';
-import { parseGitUrl } from '@gitany/gitcode';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
-import { type RepoOption } from './helpers';
 
-interface CreateCommentOptions extends RepoOption {
+interface CreateCommentOptions {
   body?: string;
   bodyFile?: string;
   json?: boolean;
@@ -16,47 +14,26 @@ export async function createCommentAction(
   options: CreateCommentOptions = {},
 ) {
   await withClient(async (client) => {
-    // 处理 --repo 标志和解析 issue 参数
+    // 解析 issue 参数
     let owner: string;
     let repo: string;
     let issueNumber: number;
 
-    if (options.repo) {
-      const parsed = parseGitUrl(options.repo);
-      if (parsed) {
-        owner = parsed.owner;
-        repo = parsed.repo;
-      } else {
-        const parts = options.repo.split('/');
-        if (parts.length === 3) {
-          owner = parts[1];
-          repo = parts[2];
-        } else if (parts.length === 2) {
-          owner = parts[0];
-          repo = parts[1];
-        } else {
-          throw new Error(`Invalid repository format: "${options.repo}". Use [HOST/]OWNER/REPO`);
-        }
-      }
-
-      issueNumber = parseInt(issueArg, 10);
+    const urlMatch = issueArg.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)\/issues\/(\d+)$/);
+    if (urlMatch) {
+      owner = urlMatch[1];
+      repo = urlMatch[2];
+      issueNumber = parseInt(urlMatch[3], 10);
     } else {
-      const urlMatch = issueArg.match(/^(?:https?:\/\/)?([^/]+)\/([^/]+)\/issues\/(\d+)$/);
-      if (urlMatch) {
-        owner = urlMatch[1];
-        repo = urlMatch[2];
-        issueNumber = parseInt(urlMatch[3], 10);
+      const parts = issueArg.split('/');
+      if (parts.length === 3) {
+        owner = parts[0];
+        repo = parts[1];
+        issueNumber = parseInt(parts[2], 10);
       } else {
-        const parts = issueArg.split('/');
-        if (parts.length === 3) {
-          owner = parts[0];
-          repo = parts[1];
-          issueNumber = parseInt(parts[2], 10);
-        } else {
-          throw new Error(
-            'Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER',
-          );
-        }
+        throw new Error(
+          'Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER',
+        );
       }
     }
 
@@ -122,9 +99,5 @@ export function createCommentCommand(): Command {
     .option('-b, --body <string>', 'Supply a comment body')
     .option('-F, --body-file <file>', 'Read body text from a file')
     .option('--json', 'Output raw JSON instead of formatted output')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(createCommentAction);
 }

@@ -1,13 +1,14 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import type { CreateIssueBody, CreatedIssue } from '@gitany/gitcode';
+import { resolveRepoUrl } from '@gitany/git-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client';
-import { formatAssignees, type RepoOption } from './helpers';
+import { formatAssignees } from './helpers';
 
-export interface CreateOptions extends RepoOption {
+export interface CreateOptions {
   title?: string;
   body?: string;
   assignee?: string;
@@ -58,14 +59,21 @@ async function openEditor(content: string): Promise<string> {
 }
 
 export async function createAction(
-  owner: string,
-  repo: string,
-  title?: string,
+  repoUrlArg: string | undefined,
+  titleArg: string | undefined,
   options: CreateOptions = {},
 ) {
   await withClient(async (client) => {
+    const repoUrl = await resolveRepoUrl(repoUrlArg);
+    const parsedRepo = parseGitUrl(repoUrl);
+    if (!parsedRepo) {
+      throw new Error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
+    }
+
+    const { owner, repo } = parsedRepo;
+
     // 获取 title（交互式提示）
-    let finalTitle = title || options.title;
+    let finalTitle = titleArg ?? options.title;
     if (!finalTitle) {
       finalTitle = await promptForInput('Title');
       if (!finalTitle) {
@@ -181,11 +189,7 @@ function getStateColor(state: string): string {
 export function createCommand(): Command {
   return new Command('create')
     .description('Create a new issue')
-    .argument(
-      '[owner]',
-      'Repository owner (user or organization) - can be omitted if --repo is used',
-    )
-    .argument('[repo]', 'Repository name - can be omitted if --repo is used')
+    .argument('[url]', 'Repository URL or OWNER/REPO (defaults to current git remote)')
     .argument('[title]', 'Issue title - will prompt if not provided')
     .option('-t, --title <string>', 'Supply a title. Will prompt for one otherwise')
     .option('-b, --body <string>', 'Supply a body. Will prompt for one otherwise')
@@ -206,41 +210,19 @@ export function createCommand(): Command {
     .option('--security-hole <security-hole>', 'Security hole level')
     .option('--template-path <template-path>', 'Template path')
     .option('--json', 'Output raw JSON instead of formatted output')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(
-      async (ownerArg?: string, repoArg?: string, titleArg?: string, options?: CreateOptions) => {
+      async (repoArg?: string, titleArg?: string, options?: CreateOptions) => {
         const optionsToUse = options || {};
 
-        // 处理 --repo 标志
-        if (optionsToUse.repo) {
-          const parsed = parseGitUrl(optionsToUse.repo);
-          if (parsed) {
-            ownerArg = parsed.owner;
-            repoArg = parsed.repo;
-          } else {
-            const parts = optionsToUse.repo.split('/');
-            if (parts.length === 3) {
-              ownerArg = parts[1];
-              repoArg = parts[2];
-            } else if (parts.length === 2) {
-              ownerArg = parts[0];
-              repoArg = parts[1];
-            } else {
-              throw new Error('Invalid repository format. Use [HOST/]OWNER/REPO');
-            }
-          }
+        let repoInput = repoArg?.trim() || undefined;
+        let titleInput = titleArg;
+
+        if (repoInput && !/^(?:https?:\/\/|git@)/i.test(repoInput) && !repoInput.includes('/')) {
+          titleInput = titleInput ?? repoInput;
+          repoInput = undefined;
         }
 
-        if (!ownerArg || !repoArg) {
-          throw new Error(
-            'Repository owner and name are required. Use --repo OWNER/REPO or provide as arguments',
-          );
-        }
-
-        await createAction(ownerArg, repoArg, titleArg || optionsToUse.title, optionsToUse);
+        await createAction(repoInput, titleInput, optionsToUse);
       },
     );
 }

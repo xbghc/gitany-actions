@@ -14,14 +14,9 @@ export const colors = {
   bright: '\x1b[1m',
 };
 
-export interface RepoOption {
-  repo?: string;
-}
-
 export async function resolveIssueContext(
   issueNumberArg: string,
   urlArg: string | undefined,
-  options: RepoOption = {},
 ) {
   const issueNumber = Number(issueNumberArg);
   if (!Number.isFinite(issueNumber) || issueNumber <= 0) {
@@ -29,8 +24,7 @@ export async function resolveIssueContext(
     process.exit(1);
   }
 
-  const repoInput = options.repo ?? urlArg;
-  const repoUrl = await resolveRepoUrl(repoInput);
+  const repoUrl = await resolveRepoUrl(urlArg);
   return { issueNumber, repoUrl };
 }
 

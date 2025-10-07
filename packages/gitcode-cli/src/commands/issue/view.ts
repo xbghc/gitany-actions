@@ -3,15 +3,9 @@ import { withClient } from '../../utils/with-client';
 import { formatAssignees } from './helpers';
 import type { IssueComment, IssueDetail } from '@gitany/gitcode';
 import { isObjectLike } from '@gitany/gitcode';
-import {
-  colors,
-  colorizeState,
-  formatUserName,
-  resolveIssueContext,
-  type RepoOption,
-} from './helpers';
+import { colors, colorizeState, formatUserName, resolveIssueContext } from './helpers';
 
-interface ViewOptions extends RepoOption {
+interface ViewOptions {
   comments?: boolean;
   page?: string;
   perPage?: string;
@@ -25,7 +19,7 @@ export async function viewAction(
 ) {
   await withClient(
     async (client) => {
-      const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
+      const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg);
 
       const issue: IssueDetail = await client.issue.get(repoUrl, issueNumber);
       let comments: IssueComment[] | undefined;
@@ -148,9 +142,5 @@ export function viewCommand(): Command {
     .option('--page <n>', 'Page number when fetching comments')
     .option('--per-page <n>', 'Items per page when fetching comments')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(viewAction);
 }

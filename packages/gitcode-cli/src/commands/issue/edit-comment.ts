@@ -1,28 +1,29 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
+import { resolveRepoUrl } from '@gitany/git-lib';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
-import { type RepoOption } from './helpers';
 
 const logger = createLogger('cli:issue:edit-comment');
 
-interface EditCommentOptions extends RepoOption {
+interface EditCommentOptions {
   body?: string;
   bodyFile?: string;
   json?: boolean;
 }
 
-export async function editCommentAction(commentIdArg: string, options: EditCommentOptions = {}) {
+export async function editCommentAction(
+  commentIdArg: string,
+  urlArg?: string,
+  options: EditCommentOptions = {},
+) {
   await withClient(async (client) => {
-    if (!options.repo) {
-      throw new Error('The --repo flag is required when editing a comment.');
-    }
-
-    const parsedRepo = parseGitUrl(options.repo);
+    const repoUrl = await resolveRepoUrl(urlArg);
+    const parsedRepo = parseGitUrl(repoUrl);
     if (!parsedRepo) {
       throw new Error(
-        `Invalid repository format: "${options.repo}". Use OWNER/REPO or a full URL.`,
+        'Unrecognized repository URL. Provide OWNER/REPO or a full git URL.',
       );
     }
     const { owner, repo } = parsedRepo;
@@ -65,9 +66,9 @@ export function editCommentCommand(): Command {
   return new Command('edit-comment')
     .description('Edit a comment on an issue')
     .argument('<comment-id>', 'The ID of the comment to edit')
+    .argument('[url]', 'Repository URL or OWNER/REPO')
     .option('-b, --body <string>', 'New comment body')
     .option('-F, --body-file <file>', 'Read new body text from a file')
-    .option('-R, --repo <OWNER/REPO>', 'Specify the repository (required)')
     .option('--json', 'Output raw JSON')
     .action(editCommentAction);
 }

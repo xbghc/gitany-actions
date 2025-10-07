@@ -2,53 +2,20 @@ import { Command } from 'commander';
 import { parseGitUrl } from '@gitany/gitcode';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
-import { type RepoOption } from './helpers';
 
-interface StatusOptions extends RepoOption {
+interface StatusOptions {
   json?: boolean;
 }
 
 export async function statusAction(urlArg?: string, options: StatusOptions = {}) {
   await withClient(async (client) => {
-    // 解析 repository URL
-    let owner: string;
-    let repo: string;
-
-    if (options.repo) {
-      const parsed = parseGitUrl(options.repo);
-      if (parsed) {
-        owner = parsed.owner;
-        repo = parsed.repo;
-      } else {
-        const parts = options.repo.split('/');
-        if (parts.length === 2) {
-          owner = parts[0];
-          repo = parts[1];
-        } else if (parts.length === 3) {
-          owner = parts[1];
-          repo = parts[2];
-        } else {
-          throw new Error('Invalid repository format. Use [HOST/]OWNER/REPO');
-        }
-      }
-    } else {
-      const url = await resolveRepoUrl(urlArg);
-      const parsed = parseGitUrl(url);
-      if (parsed) {
-        owner = parsed.owner;
-        repo = parsed.repo;
-      } else {
-        const parts = url.split('/');
-        if (parts.length === 2) {
-          owner = parts[0];
-          repo = parts[1];
-        } else {
-          throw new Error(
-            'Invalid repository format. Use OWNER/REPO or https://gitcode.com/OWNER/REPO',
-          );
-        }
-      }
+    const url = await resolveRepoUrl(urlArg);
+    const parsed = parseGitUrl(url);
+    if (!parsed) {
+      throw new Error('Unrecognized repository URL. Provide OWNER/REPO or a full git URL.');
     }
+
+    const { owner, repo } = parsed;
 
     // 获取 issues 统计信息
     const repoUrl = `${owner}/${repo}`;
@@ -118,7 +85,7 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
       }
 
       console.log(`\n💡 Quick Actions:`);
-      console.log(`   • Create new issue:  gitcode issue create ${owner} ${repo} "Title"`);
+      console.log(`   • Create new issue:  gitcode issue create ${owner}/${repo} "Title"`);
       console.log(`   • List all issues:   gitcode issue list ${owner}/${repo}`);
       console.log(
         `   • View repository:   ${colors.blue}https://gitcode.com/${owner}/${repo}${colors.reset}`,
@@ -133,9 +100,5 @@ export function statusCommand(): Command {
     .description('Show issue status and statistics for a repository')
     .argument('[url]', 'Repository URL or OWNER/REPO')
     .option('--json', 'Output raw JSON instead of formatted status')
-    .option(
-      '-R, --repo <[HOST/]OWNER/REPO>',
-      'Select another repository using the [HOST/]OWNER/REPO format',
-    )
     .action(statusAction);
 }
