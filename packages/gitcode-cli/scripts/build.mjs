@@ -19,8 +19,8 @@ async function build() {
   const outdir = path.resolve('dist');
   await fs.rm(outdir, { recursive: true, force: true });
 
-  // Generate type declarations only
-  await runCmd('tsc', ['-p', 'tsconfig.json', '--emitDeclarationOnly']);
+  // Build with project references so dependencies are compiled first
+  await runCmd('tsc', ['-b', 'tsconfig.json']);
 
   const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
   const externalDeps = [

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { build as esbuild } from 'esbuild';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 
 async function runCmd(cmd, args = []) {
   await new Promise((resolve, reject) => {
@@ -16,8 +16,8 @@ async function build() {
   const outdir = path.resolve('dist');
   await fs.rm(outdir, { recursive: true, force: true });
 
-  // Declarations only
-  await runCmd('tsc', ['-p', 'tsconfig.json', '--emitDeclarationOnly']);
+  // Build with project references to ensure dependent packages are compiled in order
+  await runCmd('tsc', ['-b', 'tsconfig.json']);
 
   // Bundle runtime
   await esbuild({

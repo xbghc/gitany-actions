@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { build as esbuild } from 'esbuild';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
 
 async function runCmd(cmd, args = []) {
   await new Promise((resolve, reject) => {
@@ -19,7 +19,8 @@ async function main() {
   const outDir = path.resolve('dist');
   await fs.rm(outDir, { recursive: true, force: true });
 
-  await runCmd('tsc', ['-p', 'tsconfig.json', '--emitDeclarationOnly']);
+  // Build with project references to compile dependencies first
+  await runCmd('tsc', ['-b', 'tsconfig.json']);
 
   const pkg = JSON.parse(await fs.readFile('package.json', 'utf8'));
   const externalDeps = [
