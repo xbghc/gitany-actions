@@ -9,16 +9,21 @@ import { issueDetailSchema } from './get';
 
 /**
  * Request body for updating an issue.
+ *
+ * ⚠️ Note: GitCode API has asymmetric design:
+ * - Request uses 'assignee' (singular, comma-separated string)
+ * - Response returns 'assignees' (plural, array of user objects)
  */
 export interface UpdateIssueBody {
   /** New issue title. */
   title?: string;
   /** New issue body/description. */
   body?: string;
-  /** Assign a single user. */
+  /**
+   * Replace assignees with the provided username(s).
+   * Can be a single username or multiple usernames separated by commas (e.g., "user1,user2,user3").
+   */
   assignee?: string;
-  /** Replace assignees with the provided list. */
-  assignees?: string[];
   /** Update milestone by number. */
   milestone?: number;
   /** Replace labels with the provided list. */

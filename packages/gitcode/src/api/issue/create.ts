@@ -9,6 +9,10 @@ import { userSummarySchema } from '../user/summary';
 
 /**
  * Request body for creating an issue.
+ *
+ * ⚠️ Note: GitCode API has asymmetric design:
+ * - Request uses 'assignee' (singular, comma-separated string)
+ * - Response returns 'assignees' (plural, array of user objects)
  */
 export interface CreateIssueBody {
   /** Repository name (without .git). */
@@ -17,7 +21,10 @@ export interface CreateIssueBody {
   title: string;
   /** Issue body/description. */
   body: string;
-  /** Assignee username (optional). */
+  /**
+   * Assignee username(s) (optional).
+   * Can be a single username or multiple usernames separated by commas (e.g., "user1,user2,user3").
+   */
   assignee?: string;
   /** Milestone number (optional). */
   milestone?: number;

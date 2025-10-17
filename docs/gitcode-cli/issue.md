@@ -92,7 +92,7 @@ gitcode issue edit <number> [url] [options]
 - `-b, --body <string>`: Update the issue body
 - `-F, --body-file <file>`: Read the issue body from a file (use `-` for stdin)
 - `-l, --label <name>`: Replace labels (can be used multiple times)
-- `-a, --assignee <login>`: Set the assignee
+- `-a, --assignee <login>`: Set assignees (can be used multiple times, or use comma-separated values)
 - `-m, --milestone <number>`: Set the milestone number
 - `--state <state>`: Update issue state: open | closed
 - `--json`: Output raw JSON instead of formatted text
@@ -106,6 +106,12 @@ gitcode issue edit 42 owner/repo --title "New title" --body "Updated description
 
 # Replace labels and assign a user
 gitcode issue edit 42 --repo owner/repo --label bug --label critical --assignee developer
+
+# Assign multiple users (method 1: multiple flags)
+gitcode issue edit 42 --repo owner/repo --assignee user1 --assignee user2 --assignee user3
+
+# Assign multiple users (method 2: comma-separated)
+gitcode issue edit 42 --repo owner/repo --assignee user1,user2,user3
 
 # Close an issue directly
 gitcode issue edit 42 owner/repo --state closed
@@ -171,7 +177,7 @@ gitcode issue create [owner] [repo] [title] [options]
 - `-b, --body <string>`: Supply a body. Will prompt for one otherwise
 - `-F, --body-file <file>`: Read body text from file (use "-" to read from standard input)
 - `-e, --editor`: Skip prompts and open the text editor to write the title and body
-- `-a, --assignee <login>`: Assign people by their login. Use "@me" to self-assign
+- `-a, --assignee <login>`: Assign people by their login (can be used multiple times, or use comma-separated values). Use "@me" to self-assign
 - `-l, --label <name>`: Add labels by name (can be used multiple times)
 - `-m, --milestone <number>`: Add the issue to a milestone by number
 - `--security-hole <security-hole>`: Security hole level
@@ -196,6 +202,16 @@ gitcode issue create myusername my-repo "Critical bug" \
   --label bug \
   --label critical \
   --milestone 1
+
+# Create issue with multiple assignees (method 1: multiple flags)
+gitcode issue create myusername my-repo "Team task" \
+  --body "This requires multiple people" \
+  --assignee user1 --assignee user2 --assignee user3
+
+# Create issue with multiple assignees (method 2: comma-separated)
+gitcode issue create myusername my-repo "Team task" \
+  --body "This requires multiple people" \
+  --assignee user1,user2,user3
 
 # Create issue using editor
 gitcode issue create myusername my-repo -e

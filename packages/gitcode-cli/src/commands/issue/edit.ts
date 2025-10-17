@@ -15,7 +15,7 @@ interface EditOptions extends IssueTargetOptions {
   body?: string;
   bodyFile?: string;
   label?: string[];
-  assignee?: string;
+  assignee?: string | string[];
   milestone?: number;
   state?: string;
   json?: boolean;
@@ -62,7 +62,9 @@ export async function editAction(
         updateBody.labels = options.label;
       }
       if (options.assignee !== undefined) {
-        updateBody.assignee = options.assignee;
+        // 支持字符串或数组，合并为逗号分隔的字符串
+        const assignees = Array.isArray(options.assignee) ? options.assignee : [options.assignee];
+        updateBody.assignee = assignees.join(',');
       }
       if (options.milestone !== undefined) {
         updateBody.milestone = options.milestone;
@@ -142,7 +144,11 @@ export function editCommand(): Command {
       'Replace labels (can be used multiple times)',
       (value: string, previous: string[] = []) => previous.concat(value),
     )
-    .option('-a, --assignee <login>', 'Set the assignee login')
+    .option(
+      '-a, --assignee <login>',
+      'Set assignees (can be used multiple times, or use comma-separated values)',
+      (value: string, previous: string[] = []) => previous.concat(value),
+    )
     .option('-m, --milestone <number>', 'Set milestone by number', (value: string) =>
       parseInt(value, 10),
     )

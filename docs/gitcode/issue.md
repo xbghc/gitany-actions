@@ -102,13 +102,26 @@ const issue = await client.issue.create({
     repo: 'my-repo',
     title: '发现一个 Bug',
     body: '详细描述 bug 的复现步骤...',
-    assignee: 'developer-username', // 可选
+    assignee: 'developer-username', // 可选，单个用户名或逗号分隔的多个用户名
     milestone: 1, // 可选
     labels: 'bug,critical', // 可选
   },
 });
 
 console.log(`Issue 创建成功: ${issue.html_url}`);
+
+// 1b) 创建 Issue（多个 assignees）
+const issueMultiple = await client.issue.create({
+  owner: 'username',
+  body: {
+    repo: 'my-repo',
+    title: '需要多人协作的任务',
+    body: '这个任务需要多个开发者共同完成...',
+    assignee: 'user1,user2,user3', // 多个用户名用逗号分隔
+  },
+});
+
+console.log(`分配给: ${issueMultiple.assignees.map(a => a.login).join(', ')}`);
 
 // 2) 创建 Issue 评论
 const comment = await client.issue.createComment({
@@ -138,3 +151,31 @@ console.log(`评论 ${updatedComment.id} 已更新。`);
 
 - 网络请求层统一由内部的 `utils/http.ts` 中的 `httpRequest` 处理，自 2025-09-17 起使用 `got` 并支持 `searchParams`/`json` 等标准化选项，同时通过 ETag 自动缓存未变更的响应。
 - 字段与返回值与 GitCode 文档保持一致的最小子集，返回结果会通过 Zod 进行结构校验。
+
+### ⚠️ GitCode API 文档勘误
+
+**关于 `assignee` vs `assignees` 的不对称设计**：
+
+GitCode API 在请求参数和响应数据中使用了不同的字段格式：
+
+**请求参数**（创建/更新 Issue）：
+- 字段名：`assignee`（单数）
+- 类型：字符串
+- 格式：单个用户名或逗号分隔的多个用户名
+- 示例：`"user1"` 或 `"user1,user2,user3"`
+
+**响应数据**（所有 Issue 接口）：
+- 字段名：`assignees`（复数）
+- 类型：对象数组
+- 格式：每个对象包含完整的用户信息
+
+`assignees` 数组中的每个对象包含以下必需字段：
+- `avatar_url`: 头像 URL
+- `html_url`: 用户主页 URL
+- `id`: 用户 ID
+- `login`: 用户登录名
+- `name`: 用户显示名称
+
+本库已根据实际 API 行为实现：
+- `CreateIssueBody` 和 `UpdateIssueBody` 使用 `assignee: string`（请求格式）
+- 响应 schema 使用 `assignees: UserSummary[]`（响应格式）

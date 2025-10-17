@@ -10,7 +10,7 @@ import { formatAssignees } from './helpers';
 export interface CreateOptions {
   title?: string;
   body?: string;
-  assignee?: string;
+  assignee?: string | string[];
   milestone?: number;
   labels?: string[];
   security_hole?: string;
@@ -99,12 +99,24 @@ export async function createAction(
       finalBody = await promptForInput('Body', '(leave empty to skip)');
     }
 
-    // 处理 @me 特殊值
-    let finalAssignee = options.assignee;
-    if (finalAssignee === '@me') {
-      // 在真实环境中，这里应该获取当前用户信息
-      console.log('Note: @me assignment will be implemented in future versions');
-      finalAssignee = undefined;
+    // 处理 assignee: 支持字符串或数组
+    let finalAssignee: string | undefined;
+    if (options.assignee) {
+      const assignees = Array.isArray(options.assignee) ? options.assignee : [options.assignee];
+      // 处理 @me 特殊值
+      const processedAssignees = assignees.map((a) => {
+        if (a === '@me') {
+          // 在真实环境中，这里应该获取当前用户信息
+          console.log('Note: @me assignment will be implemented in future versions');
+          return null;
+        }
+        return a;
+      }).filter((a): a is string => a !== null);
+
+      if (processedAssignees.length > 0) {
+        // 将数组合并为逗号分隔的字符串
+        finalAssignee = processedAssignees.join(',');
+      }
     }
 
     const body: CreateIssueBody = {
@@ -195,7 +207,11 @@ export function createCommand(): Command {
       'Read body text from file (use "-" to read from standard input)',
     )
     .option('-e, --editor', 'Skip prompts and open the text editor to write the title and body')
-    .option('-a, --assignee <login>', 'Assign people by their login. Use "@me" to self-assign')
+    .option(
+      '-a, --assignee <login>',
+      'Assign people by their login (can be used multiple times, or use comma-separated values). Use "@me" to self-assign',
+      (value: string, previous: string[] = []) => previous.concat(value),
+    )
     .option(
       '-l, --label <name>',
       'Add labels by name (can be used multiple times)',
