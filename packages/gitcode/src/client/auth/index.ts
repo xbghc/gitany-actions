@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import { dirname, join } from 'path';
 import { homedir } from 'os';
-import type { GitcodeClient } from '../core';
+import type { GitcodeClient } from '../core.js';
 
 export type AuthConfig = {
   token?: string;

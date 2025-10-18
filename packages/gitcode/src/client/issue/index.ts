@@ -1,11 +1,11 @@
-import type { GitcodeClient } from '../core';
-import { listIssues } from './list';
-import { listIssueComments } from './comments';
-import { createIssue } from './create';
-import { createIssueComment } from './create-comment';
-import { getIssue } from './get';
-import { updateIssue } from './update';
-import { updateIssueComment } from './update-comment';
+import type { GitcodeClient } from '../core.js';
+import { listIssues } from './list.js';
+import { listIssueComments } from './comments.js';
+import { createIssue } from './create.js';
+import { createIssueComment } from './create-comment.js';
+import { getIssue } from './get.js';
+import { updateIssue } from './update.js';
+import { updateIssueComment } from './update-comment.js';
 import type {
   ListIssuesQuery,
   IssueCommentsQuery,
@@ -13,7 +13,7 @@ import type {
   CreateIssueCommentParams,
   UpdateIssueBody,
   UpdateIssueCommentParams,
-} from '../../api/issue';
+} from '../../api/issue/index.js';
 
 export class GitcodeClientIssue {
   constructor(private client: GitcodeClient) {}

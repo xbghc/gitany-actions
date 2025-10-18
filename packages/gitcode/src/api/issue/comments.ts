@@ -4,8 +4,8 @@
  */
 
 import { z } from 'zod';
-import { API_BASE } from '../constants';
-import { userSummarySchema } from '../user/summary';
+import { API_BASE } from '../constants.js';
+import { userSummarySchema } from '../user/summary.js';
 
 /** Query parameters for listing issue comments. */
 export interface IssueCommentsQuery {

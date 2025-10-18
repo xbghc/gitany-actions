@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 export const pullRequestSettingsSchema = z.object({
   allow_merge_commits: z.boolean(),

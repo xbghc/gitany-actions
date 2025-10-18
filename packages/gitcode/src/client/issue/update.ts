@@ -1,6 +1,6 @@
-import { parseGitUrl } from '../../utils';
-import { updateIssueUrl, updatedIssueSchema, type UpdateIssueBody } from '../../api/issue/update';
-import type { GitcodeClient } from '../core';
+import { parseGitUrl } from '../../utils/index.js';
+import { updateIssueUrl, updatedIssueSchema, type UpdateIssueBody } from '../../api/issue/update.js';
+import type { GitcodeClient } from '../core.js';
 
 export async function updateIssue(
   client: GitcodeClient,

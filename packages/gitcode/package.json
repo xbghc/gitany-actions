@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "node ./scripts/build.mjs",
+    "build": "tsc -b",
     "clean": "rm -rf dist",
     "lint": "eslint ."
   },
@@ -19,9 +19,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
-  },
-  "devDependencies": {
-    "esbuild": "^0.21.5"
   },
   "engines": {
     "node": ">=22.0.0"

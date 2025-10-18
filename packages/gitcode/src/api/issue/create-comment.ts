@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod';
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 /**
  * Request body for creating an issue comment.

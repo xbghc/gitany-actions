@@ -3,9 +3,9 @@ import {
   type ListPullsQuery,
   type ListPullsResponse,
   listPullsResponseSchema,
-} from '../../api/pr';
-import type { GitcodeClient } from '../core';
-import { parseGitUrl } from '../../utils';
+} from '../../api/pr/index.js';
+import type { GitcodeClient } from '../core.js';
+import { parseGitUrl } from '../../utils/index.js';
 
 export async function listPullRequests(
   client: GitcodeClient,

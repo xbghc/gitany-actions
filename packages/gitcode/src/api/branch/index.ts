@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { repoSchema } from '../repo';
+import { repoSchema } from '../repo/index.js';
 
 export const branchSchema = z.object({
   label: z.string(),

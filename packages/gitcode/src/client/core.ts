@@ -1,9 +1,9 @@
-import { httpRequest, type HttpRequestOptions } from '../utils/http';
-import { GitcodeClientUser } from './user';
-import { GitcodeClientPr } from './pr';
-import { GitcodeClientRepo } from './repo';
-import { GitcodeClientIssue } from './issue';
-import { GitcodeClientAuth } from './auth';
+import { httpRequest, type HttpRequestOptions } from '../utils/http.js';
+import { GitcodeClientUser } from './user/index.js';
+import { GitcodeClientPr } from './pr/index.js';
+import { GitcodeClientRepo } from './repo/index.js';
+import { GitcodeClientIssue } from './issue/index.js';
+import { GitcodeClientAuth } from './auth/index.js';
 
 export class GitcodeClient {
   pr = new GitcodeClientPr(this);

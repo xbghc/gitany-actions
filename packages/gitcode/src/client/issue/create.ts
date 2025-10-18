@@ -2,9 +2,9 @@
  * Create Issue - Client Implementation
  */
 
-import type { GitcodeClient } from '../core';
-import type { CreateIssueParams, CreatedIssue } from '../../api/issue/create';
-import { createIssueUrl, createdIssueSchema } from '../../api/issue/create';
+import type { GitcodeClient } from '../core.js';
+import type { CreateIssueParams, CreatedIssue } from '../../api/issue/create.js';
+import { createIssueUrl, createdIssueSchema } from '../../api/issue/create.js';
 
 /**
  * Creates a new issue in a repository.

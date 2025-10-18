@@ -1,25 +1,25 @@
 export const version = '0.1.0';
 
-export { GitcodeClient } from './client';
-export { GitcodeClientAuth } from './client/auth';
-export { FileAuthStorage, defaultConfigPath } from './auth';
+export { GitcodeClient } from './client/index.js';
+export { GitcodeClientAuth } from './client/auth/index.js';
+export { FileAuthStorage, defaultConfigPath } from './auth.js';
 export type {
   SelfPermissionParams,
   RoleInfo,
   PermissionPoint,
   ResourceNode,
   SelfPermissionResponse,
-} from './api/repo/self-permission';
-export { selfPermissionUrl, selfPermissionResponseSchema } from './api/repo/self-permission';
-export { repoSchema, type Repo } from './api/repo';
-export { branchSchema, type Branch } from './api/branch';
+} from './api/repo/self-permission.js';
+export { selfPermissionUrl, selfPermissionResponseSchema } from './api/repo/self-permission.js';
+export { repoSchema, type Repo } from './api/repo/index.js';
+export { branchSchema, type Branch } from './api/branch/index.js';
 export type {
   ListPullsQuery,
   ListPullsParams,
   PullRequest,
   ListPullsResponse,
   CreatePullBody,
-} from './api/pr';
+} from './api/pr/index.js';
 export {
   listPullsUrl,
   createPullUrl,
@@ -27,8 +27,8 @@ export {
   listPullsResponseSchema,
   prCommentSchema,
   prCommentsUrl,
-} from './api/pr';
-export type { PRComment, PRCommentQueryOptions, CreatedPrComment } from './api/pr';
+} from './api/pr/index.js';
+export type { PRComment, PRCommentQueryOptions, CreatedPrComment } from './api/pr/index.js';
 export type {
   ListIssuesQuery,
   ListIssuesParams,
@@ -49,7 +49,7 @@ export type {
   UpdateIssueParams,
   UpdatedIssue,
   UpdatedIssueComment,
-} from './api/issue';
+} from './api/issue/index.js';
 export {
   listIssuesUrl,
   issueSchema,
@@ -65,18 +65,18 @@ export {
   getIssueUrl,
   updateIssueUrl,
   updatedIssueSchema,
-} from './api/issue';
+} from './api/issue/index.js';
 export {
   userProfileSchema,
   userProfileUrl,
   type UserProfile,
   type UserProfileResponse,
-} from './api/user';
-export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './api/user';
-export { userSummarySchema, type UserSummary } from './api/user';
-export type { RepoRole } from './types/repo-role';
-export * from './utils';
-export { API_BASE } from './api/constants';
+} from './api/user/index.js';
+export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './api/user/index.js';
+export { userSummarySchema, type UserSummary } from './api/user/index.js';
+export type { RepoRole } from './types/repo-role.js';
+export * from './utils/index.js';
+export { API_BASE } from './api/constants.js';
 
 // 新的仓库相关类型导出
 export type {
@@ -93,4 +93,4 @@ export type {
   Branches,
   Commit,
   Commits,
-} from './api/repo';
+} from './api/repo/index.js';

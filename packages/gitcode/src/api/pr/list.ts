@@ -40,7 +40,7 @@ export type ListPullsParams = {
  * Minimal Pull Request representation with common fields.
  */
 import { z } from 'zod';
-import { branchSchema } from '../branch';
+import { branchSchema } from '../branch/index.js';
 
 export const pullRequestSchema = z.object({
   id: z.number(),
@@ -61,7 +61,7 @@ export type PullRequest = z.infer<typeof pullRequestSchema>;
 export const listPullsResponseSchema = pullRequestSchema.array();
 
 export type ListPullsResponse = PullRequest[];
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 /**
  * Builds the request path for listing pull requests.

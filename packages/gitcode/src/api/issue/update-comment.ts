@@ -15,7 +15,7 @@ export interface UpdateIssueCommentParams {
   };
 }
 
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 export function updateIssueCommentUrl(owner: string, repo: string, commentId: number): string {
   return `${API_BASE}/repos/${owner}/${repo}/issues/comments/${commentId}`;

@@ -2,9 +2,9 @@
  * Update Issue Comment - Client Implementation
  */
 
-import type { GitcodeClient } from '../core';
-import type { UpdateIssueCommentParams, UpdatedIssueComment } from '../../api/issue/update-comment';
-import { updateIssueCommentUrl, updatedIssueCommentSchema } from '../../api/issue/update-comment';
+import type { GitcodeClient } from '../core.js';
+import type { UpdateIssueCommentParams, UpdatedIssueComment } from '../../api/issue/update-comment.js';
+import { updateIssueCommentUrl, updatedIssueCommentSchema } from '../../api/issue/update-comment.js';
 
 /**
  * Updates an existing comment on an issue.

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 export interface PRCommentQueryOptions {
   comment_type?: 'diff_comment' | 'pr_comment';

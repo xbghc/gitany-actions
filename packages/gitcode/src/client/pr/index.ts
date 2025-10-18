@@ -1,16 +1,16 @@
-import type { GitcodeClient } from '../core';
-import { listPullRequests } from './list';
-import { listPullRequestComments } from './comments';
-import { createPullRequest } from './create';
-import { getPullRequestSettings } from './settings';
-import { createPrComment } from './create-comment';
+import type { GitcodeClient } from '../core.js';
+import { listPullRequests } from './list.js';
+import { listPullRequestComments } from './comments.js';
+import { createPullRequest } from './create.js';
+import { getPullRequestSettings } from './settings.js';
+import { createPrComment } from './create-comment.js';
 import type {
   ListPullsQuery,
   CreatePullBody,
   PRCommentQueryOptions,
   PullRequestSettings,
   CreatedPrComment,
-} from '../../api/pr';
+} from '../../api/pr/index.js';
 
 export class GitcodeClientPr {
   constructor(private client: GitcodeClient) {}

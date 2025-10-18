@@ -2,8 +2,8 @@ import {
   pullRequestSettingsSchema,
   pullRequestSettingsUrl,
   type PullRequestSettings,
-} from '../../api/pr';
-import type { GitcodeClient } from '../core';
+} from '../../api/pr/index.js';
+import type { GitcodeClient } from '../core.js';
 
 export async function getPullRequestSettings(
   client: GitcodeClient,

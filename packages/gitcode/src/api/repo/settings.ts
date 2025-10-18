@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 export const repoSettingsSchema = z.object({
   // 仓库设置相关字段，根据API文档定义

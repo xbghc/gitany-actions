@@ -3,9 +3,9 @@ import {
   issueCommentSchema,
   type IssueCommentsQuery,
   type IssueComment,
-} from '../../api/issue';
-import type { GitcodeClient } from '../core';
-import { parseGitUrl } from '../../utils';
+} from '../../api/issue/index.js';
+import type { GitcodeClient } from '../core.js';
+import { parseGitUrl } from '../../utils/index.js';
 
 export async function listIssueComments(
   client: GitcodeClient,

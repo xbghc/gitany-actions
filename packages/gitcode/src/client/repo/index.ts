@@ -1,7 +1,7 @@
-import { type SelfPermissionResponse } from '../../api/repo/self-permission';
-import type { RepoRole } from '../../types/repo-role';
-import type { GitcodeClient } from '../core';
-import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission';
+import { type SelfPermissionResponse } from '../../api/repo/self-permission.js';
+import type { RepoRole } from '../../types/repo-role.js';
+import type { GitcodeClient } from '../core.js';
+import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 import {
   repoSettingsSchema,
   repoSettingsUrl,
@@ -31,7 +31,7 @@ import {
   type Compare,
   type Webhook,
   type Webhooks,
-} from '../../api/repo';
+} from '../../api/repo/index.js';
 
 export async function getRepoSettings(
   client: GitcodeClient,

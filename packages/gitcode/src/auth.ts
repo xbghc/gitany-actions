@@ -1,1 +1,1 @@
-export { FileAuthStorage, defaultConfigPath } from './client/auth';
+export { FileAuthStorage, defaultConfigPath } from './client/auth/index.js';

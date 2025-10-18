@@ -4,8 +4,8 @@
  */
 
 import { z } from 'zod';
-import { API_BASE } from '../constants';
-import { issueDetailSchema } from './get';
+import { API_BASE } from '../constants.js';
+import { issueDetailSchema } from './get.js';
 
 /**
  * Request body for updating an issue.

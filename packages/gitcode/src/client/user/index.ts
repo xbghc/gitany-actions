@@ -5,8 +5,8 @@ import {
   userNamespaceUrl,
   type UserProfile,
   type UserNamespace,
-} from '../../api/user';
-import type { GitcodeClient } from '../core';
+} from '../../api/user/index.js';
+import type { GitcodeClient } from '../core.js';
 
 export async function getUserProfile(client: GitcodeClient): Promise<UserProfile> {
   const url = userProfileUrl();

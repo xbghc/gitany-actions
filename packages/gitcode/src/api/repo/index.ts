@@ -13,7 +13,7 @@ export const repoSchema = z.object({
 
 export type Repo = z.infer<typeof repoSchema>;
 
-export * from './settings';
-export * from './files';
-export * from './commits';
-export * from './webhooks';
+export * from './settings.js';
+export * from './files.js';
+export * from './commits.js';
+export * from './webhooks.js';

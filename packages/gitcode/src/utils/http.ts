@@ -8,7 +8,7 @@ import got, {
 } from 'got';
 
 import { createLogger } from '@gitany/shared';
-import { isObjectLike } from './types';
+import { isObjectLike } from './types.js';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH';
 

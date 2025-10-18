@@ -1,6 +1,6 @@
-import { createPullUrl, type CreatePullBody, type PullRequest } from '../../api/pr';
-import { parseGitUrl } from '../../utils';
-import type { GitcodeClient } from '../core';
+import { createPullUrl, type CreatePullBody, type PullRequest } from '../../api/pr/index.js';
+import { parseGitUrl } from '../../utils/index.js';
+import type { GitcodeClient } from '../core.js';
 
 export async function createPullRequest(
   client: GitcodeClient,

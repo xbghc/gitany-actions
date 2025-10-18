@@ -3,9 +3,9 @@ import {
   type ListIssuesQuery,
   type ListIssuesResponse,
   listIssuesResponseSchema,
-} from '../../api/issue';
-import type { GitcodeClient } from '../core';
-import { parseGitUrl } from '../../utils';
+} from '../../api/issue/index.js';
+import type { GitcodeClient } from '../core.js';
+import { parseGitUrl } from '../../utils/index.js';
 
 export async function listIssues(
   client: GitcodeClient,

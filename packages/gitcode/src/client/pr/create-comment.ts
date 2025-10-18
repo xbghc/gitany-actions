@@ -2,10 +2,10 @@
  * Create PR Comment - Client Implementation
  */
 
-import type { GitcodeClient } from '../core';
-import type { CreatePrCommentParams, CreatedPrComment } from '../../api/pr/create-comment';
-import { createPrCommentUrl, createdPrCommentSchema } from '../../api/pr/create-comment';
-import { parseGitUrl } from '../../utils';
+import type { GitcodeClient } from '../core.js';
+import type { CreatePrCommentParams, CreatedPrComment } from '../../api/pr/create-comment.js';
+import { createPrCommentUrl, createdPrCommentSchema } from '../../api/pr/create-comment.js';
+import { parseGitUrl } from '../../utils/index.js';
 
 /**
  * Creates a new comment on a pull request.

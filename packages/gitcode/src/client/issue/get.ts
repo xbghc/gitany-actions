@@ -1,7 +1,7 @@
-import { getIssueUrl } from '../../api/issue/get';
-import type { GitcodeClient } from '../core';
-import { parseGitUrl } from '../../utils';
-import { issueDetailSchema } from '../../api/issue/get';
+import { getIssueUrl } from '../../api/issue/get.js';
+import type { GitcodeClient } from '../core.js';
+import { parseGitUrl } from '../../utils/index.js';
+import { issueDetailSchema } from '../../api/issue/get.js';
 
 export async function getIssue(client: GitcodeClient, url: string, issueNumber: number) {
   const parsed = parseGitUrl(url);

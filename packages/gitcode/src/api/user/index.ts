@@ -3,8 +3,8 @@ export {
   userProfileUrl,
   type UserProfile,
   type UserProfileResponse,
-} from './profile';
+} from './profile.js';
 
-export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './namespace';
+export { userNamespaceSchema, userNamespaceUrl, type UserNamespace } from './namespace.js';
 
-export { userSummarySchema, type UserSummary } from './summary';
+export { userSummarySchema, type UserSummary } from './summary.js';

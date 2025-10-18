@@ -2,11 +2,11 @@ import {
   type SelfPermissionResponse,
   selfPermissionUrl,
   selfPermissionResponseSchema,
-} from '../../api/repo/self-permission';
-import type { RepoRole } from '../../types/repo-role';
-import { isObjectLike } from '../../utils';
-import { parseGitUrl } from '../../utils';
-import type { GitcodeClient } from '../core';
+} from '../../api/repo/self-permission.js';
+import type { RepoRole } from '../../types/repo-role.js';
+import { isObjectLike } from '../../utils/index.js';
+import { parseGitUrl } from '../../utils/index.js';
+import type { GitcodeClient } from '../core.js';
 
 /**
  * 获取全量的用户权限资料

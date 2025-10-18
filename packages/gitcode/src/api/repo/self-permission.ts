@@ -87,7 +87,7 @@ export const selfPermissionResponseSchema = z.object({
 
 export type SelfPermissionResponse = z.infer<typeof selfPermissionResponseSchema>;
 
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 /**
  * Builds the request path for the Self Permission endpoint.

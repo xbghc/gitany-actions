@@ -4,8 +4,8 @@
  */
 
 import { z } from 'zod';
-import { issueSchema } from './list';
-import { API_BASE } from '../constants';
+import { issueSchema } from './list.js';
+import { API_BASE } from '../constants.js';
 
 export const issueDetailSchema = issueSchema;
 

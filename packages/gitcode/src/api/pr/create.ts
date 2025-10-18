@@ -23,7 +23,7 @@ export type CreatePullBody = {
 /**
  * Absolute URL for creating pull requests.
  */
-import { API_BASE } from '../constants';
+import { API_BASE } from '../constants.js';
 
 export function createPullUrl(owner: string, repo: string): string {
   return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;

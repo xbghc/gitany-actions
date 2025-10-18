@@ -2,9 +2,9 @@
  * Create Issue Comment - Client Implementation
  */
 
-import type { GitcodeClient } from '../core';
-import type { CreateIssueCommentParams, CreatedIssueComment } from '../../api/issue/create-comment';
-import { createIssueCommentUrl, createdIssueCommentSchema } from '../../api/issue/create-comment';
+import type { GitcodeClient } from '../core.js';
+import type { CreateIssueCommentParams, CreatedIssueComment } from '../../api/issue/create-comment.js';
+import { createIssueCommentUrl, createdIssueCommentSchema } from '../../api/issue/create-comment.js';
 
 /**
  * Creates a new comment on an issue.
