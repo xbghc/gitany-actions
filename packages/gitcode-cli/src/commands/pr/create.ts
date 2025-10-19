@@ -1,5 +1,5 @@
 import { type CreatePullBody } from '@xbghc/gitcode-api';
-import { resolveRepoUrl } from '@gitany/git-lib';
+import { resolveRepoUrl } from '@xbghc/git-lib';
 import { withClient } from '../../utils/with-client';
 
 export async function createCommand(

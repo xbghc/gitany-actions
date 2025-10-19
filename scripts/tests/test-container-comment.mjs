@@ -6,8 +6,8 @@ import {
   createPrContainer,
   removeContainer,
   getContainer,
-} from '../../packages/core/dist/index.js';
-import { GitcodeClient, parseGitUrl, toGitUrl } from '../../packages/gitcode/dist/index.js';
+} from '../../packages/gitcode-actions/dist/index.js';
+import { GitcodeClient, parseGitUrl, toGitUrl } from '../../packages/gitcode-api/dist/index.js';
 
 config({ path: new URL('.env', import.meta.url) });
 

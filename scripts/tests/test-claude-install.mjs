@@ -6,9 +6,9 @@
 // - TEST_VERBOSE: 可选，设置为 "true" 时输出详细安装日志。
 // - TEST_KEEP_CONTAINER: 可选，设置为 "true" 时在测试结束后保留容器。
 
-import Docker from '../../packages/core/node_modules/dockerode/lib/docker.js';
+import Docker from '../../packages/gitcode-actions/node_modules/dockerode/lib/docker.js';
 import { createLogger } from '../../packages/shared/dist/index.js';
-import { createWorkspaceContainer, installClaudeCli } from '../../packages/core/dist/index.js';
+import { createWorkspaceContainer, installClaudeCli } from '../../packages/gitcode-actions/dist/index.js';
 
 function envBoolean(name, defaultValue) {
   const raw = process.env[name];

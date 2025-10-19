@@ -8,7 +8,7 @@
 // - TEST_VERBOSE: 可选，设置为 "true" 时输出详细日志。
 // - TEST_KEEP_CONTAINER: 可选，设置为 "true" 时保留构建容器用于调试。
 
-import { testShaBuild } from '../../packages/core/dist/index.js';
+import { testShaBuild } from '../../packages/gitcode-actions/dist/index.js';
 import { config } from 'dotenv';
 
 // 加载环境变量

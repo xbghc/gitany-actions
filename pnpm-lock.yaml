@@ -42,11 +42,24 @@ importers:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.37.0)(@types/node@22.18.1)(axios@1.11.0)(postcss@8.5.6)(search-insights@2.17.3)(typescript@5.9.2)
 
-  packages/core:
+  packages/git-lib:
+    dependencies:
+      cross-spawn:
+        specifier: ^7.0.3
+        version: 7.0.6
+    devDependencies:
+      '@types/cross-spawn':
+        specifier: ^6.0.0
+        version: 6.0.6
+      esbuild:
+        specifier: ^0.21.5
+        version: 0.21.5
+
+  packages/gitcode-actions:
     dependencies:
       '@xbghc/gitcode-api':
         specifier: workspace:*
-        version: link:../gitcode
+        version: link:../gitcode-api
       '@xbghc/gitcode-cli':
         specifier: workspace:*
         version: link:../gitcode-cli
@@ -70,20 +83,7 @@ importers:
         specifier: ^0.21.5
         version: 0.21.5
 
-  packages/git-lib:
-    dependencies:
-      cross-spawn:
-        specifier: ^7.0.3
-        version: 7.0.6
-    devDependencies:
-      '@types/cross-spawn':
-        specifier: ^6.0.0
-        version: 6.0.6
-      esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
-
-  packages/gitcode:
+  packages/gitcode-api:
     dependencies:
       got:
         specifier: ^14.4.9
@@ -94,12 +94,12 @@ importers:
 
   packages/gitcode-cli:
     dependencies:
-      '@gitany/git-lib':
+      '@xbghc/git-lib':
         specifier: workspace:*
         version: link:../git-lib
       '@xbghc/gitcode-api':
         specifier: workspace:*
-        version: link:../gitcode
+        version: link:../gitcode-api
       commander:
         specifier: ^14.0.0
         version: 14.0.0

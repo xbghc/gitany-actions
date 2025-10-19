@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '@gitany/git-lib';
+import { resolveRepoUrl } from '@xbghc/git-lib';
 import { withClient } from '../../utils/with-client';
 import type { Issue } from '@xbghc/gitcode-api';
 

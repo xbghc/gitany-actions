@@ -1,10 +1,10 @@
 {
-  "name": "@gitany/git-lib",
+  "name": "@xbghc/git-lib",
   "version": "0.1.0",
   "description": "Minimal git command wrappers for gitany.",
   "type": "module",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist"
   ],
@@ -16,7 +16,7 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "import": "./dist/index.js"
     }
   },

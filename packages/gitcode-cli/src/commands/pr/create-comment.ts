@@ -3,7 +3,7 @@ import { parseGitUrl } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { resolveRepoUrl } from '@gitany/git-lib';
+import { resolveRepoUrl } from '@xbghc/git-lib';
 import { withClient } from '../../utils/with-client';
 
 interface CreatePrCommentOptions {

@@ -19,8 +19,8 @@
 // - SHOW_PROMPT: 可选，设置为 "true" 时输出生成的提示词。
 
 import { config } from 'dotenv';
-import { chat, defaultPromptBuilder, runAiMentionsOnce } from '../packages/core/dist/index.js';
-import { GitcodeClient } from '../packages/gitcode/dist/index.js';
+import { chat, defaultPromptBuilder, runAiMentionsOnce } from '../packages/gitcode-actions/dist/index.js';
+import { GitcodeClient } from '../packages/gitcode-api/dist/index.js';
 import { createLogger } from '../packages/shared/dist/index.js';
 const logger = createLogger('script:ai-mentions');
 

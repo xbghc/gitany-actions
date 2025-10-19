@@ -9,7 +9,7 @@
 // - TEST_VERBOSE: 可选，设置为 "true" 时输出详细日志。
 // - TEST_KEEP_CONTAINER: 可选，设置为 "true" 时保留执行容器。
 
-import { chat } from '../../packages/core/dist/index.js';
+import { chat } from '../../packages/gitcode-actions/dist/index.js';
 import { config } from 'dotenv';
 
 // 加载环境变量 (.env 文件可选)

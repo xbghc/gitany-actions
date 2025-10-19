@@ -1,7 +1,7 @@
 // Manual playground for Gitcode client and PR watcher workflows.
-import { GitcodeClient } from '../packages/gitcode/dist/index.js';
+import { GitcodeClient } from '../packages/gitcode-api/dist/index.js';
 
-import { watchPullRequest } from '../packages/core/dist/index.js';
+import { watchPullRequest } from '../packages/gitcode-actions/dist/index.js';
 
 const client = new GitcodeClient();
 

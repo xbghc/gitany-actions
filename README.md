@@ -8,7 +8,7 @@ GitAny Actions 是一个 TypeScript 项目，提供以下核心功能：
 
 - **@xbghc/gitcode-cli**: 命令行界面工具，提供 `gitcode` 命令行接口
 - **@xbghc/gitcode-api**: GitCode API 客户端库，提供完整的 GitCode 平台集成
-- **@gitany/git-lib**: Git 命令包装器，提供跨平台的 Git 操作支持
+- **@xbghc/git-lib**: Git 命令包装器，提供跨平台的 Git 操作支持
 - **@xbghc/gitcode-actions**: GitCode Actions - 自动化工作流和操作库
 
 ## 快速开始
@@ -92,38 +92,33 @@ const issues = await client.issue.list('https://gitcode.com/owner/repo');
 
 ```
 packages/
-├── cli/           # 命令行界面工具
+├── gitcode-cli/      # 命令行界面工具
 │   ├── src/
 │   │   ├── commands/    # CLI 命令实现
 │   │   └── index.ts     # CLI 入口
 │   └── README.md
-├── gitcode/       # GitCode API 客户端
+├── gitcode-api/      # GitCode API 客户端
 │   ├── src/
 │   │   ├── api/         # API 类型定义和 URL 构建
 │   │   ├── client/      # 客户端实现
 │   │   └── index.ts     # 包入口
 │   └── README.md
-├── git-lib/       # Git 命令包装器
+├── git-lib/          # Git 命令包装器
 │   ├── src/
 │   │   ├── git.ts       # Git 操作函数
 │   │   └── index.ts     # 包入口
 │   └── README.md
-├── core/          # 核心共享工具
-│   ├── src/
-│   │   ├── logger.ts    # 日志工具
-│   │   └── index.ts     # 包入口
-│   └── README.md
-└── shared/        # 共享配置和工具
+└── gitcode-actions/  # GitCode Actions - 自动化工作流
     ├── src/
-    │   ├── logger.ts    # 日志配置
+    │   ├── logger.ts    # 日志工具
     │   └── index.ts     # 包入口
     └── README.md
 
-docs/                    # 项目文档
-├── gitcode/              # GitCode API 文档
-├── cli/                  # CLI 使用文档
-├── git-lib/              # Git 库文档
-└── core/                 # 核心库文档
+docs/                      # 项目文档
+├── gitcode-api/            # GitCode API 文档
+├── gitcode-cli/            # CLI 使用文档
+├── git-lib/                # Git 库文档
+└── gitcode-actions/        # GitCode Actions 文档
 ```
 
 ## 开发
@@ -168,7 +163,7 @@ pnpm docs:preview  # 预览构建的文档
 pnpm --filter @xbghc/gitcode-cli dev
 pnpm --filter @xbghc/gitcode-api build
 pnpm --filter @xbghc/gitcode-actions dev
-pnpm --filter @gitany/git-lib build
+pnpm --filter @xbghc/git-lib build
 ```
 
 ## 认证配置
@@ -275,9 +270,9 @@ pnpm --filter @xbghc/gitcode-actions cleanup
 
 项目强制要求文档与代码同步更新：
 
-- 任何对 `packages/gitcode/src/*` 的更改都需要更新 `docs/gitcode/*`
+- 任何对 `packages/gitcode-api/src/*` 的更改都需要更新 `docs/gitcode-api/*`
 - 任何对 `packages/gitcode-cli/src/*` 的更改都需要更新 `docs/gitcode-cli/*`
-- 通过 Git hooks 在 `.husky/pre-commit` 中强制执行
+- 通过 GitHub Actions 强制执行
 
 **绕过机制** (不推荐):
 

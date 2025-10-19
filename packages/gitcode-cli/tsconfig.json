@@ -7,8 +7,7 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../gitcode" },
-    { "path": "../git-lib" },
-    { "path": "../core" }
+    { "path": "../gitcode-api" },
+    { "path": "../git-lib" }
   ]
 }
