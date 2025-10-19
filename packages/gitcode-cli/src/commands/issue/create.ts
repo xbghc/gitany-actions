@@ -42,7 +42,7 @@ function getDefaultEditor(): string {
 // 在编辑器中打开内容
 async function openEditor(content: string): Promise<string> {
   const editor = getDefaultEditor();
-  const tempFile = path.join(process.cwd(), '.gitany-issue-temp.md');
+  const tempFile = path.join(process.cwd(), '.gitcode-issue-temp.md');
 
   try {
     fs.writeFileSync(tempFile, content);

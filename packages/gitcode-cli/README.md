@@ -21,7 +21,6 @@ pnpm gitcode --help
 
 ```bash
 # 通过环境变量
-export GITANY_TOKEN=your-token
 export GITCODE_TOKEN=your-token
 
 # 或使用认证命令
@@ -181,7 +180,6 @@ $ gitcode pr list https://gitcode.com/myorg/myrepo --json
 
 ### 环境变量
 
-- `GITANY_TOKEN` - GitAny 认证令牌
 - `GITCODE_TOKEN` - GitCode 认证令牌
 - `GITCODE_API_BASE` - GitCode API 基础 URL（默认: https://gitcode.com/api/v5）
 - `GITCODE_AUTH_STYLE` - 认证风格
@@ -189,7 +187,7 @@ $ gitcode pr list https://gitcode.com/myorg/myrepo --json
 
 ### 配置文件
 
-配置文件存储在 `~/.gitany/gitcode/config.json`：
+配置文件存储在 `~/.gitcode/config.json`：
 
 ```json
 {
@@ -214,8 +212,8 @@ Error: 获取用户信息失败: Unauthorized
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-org/gitany-actions.git
-cd gitany-actions
+git clone https://github.com/your-org/gitcode-actions.git
+cd gitcode-actions
 
 # 安装依赖
 pnpm install

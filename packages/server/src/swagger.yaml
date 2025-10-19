@@ -1,0 +1,356 @@
+openapi: 3.0.0
+info:
+  title: GitCode Actions Server API
+  description: |
+    Express 后端服务，用于获取 GitCode 仓库的 PR 和 Issue 列表
+
+    ## 认证说明
+
+    所有仓库相关的 API 都需要提供 GitCode Token 进行认证。
+
+    **生产环境**：必须在请求头中提供有效的 GitCode Token
+
+    **开发环境**：如果未提供 Token，将使用服务器配置的默认 Token（如果有）
+
+    ### 如何提供 Token
+
+    支持以下三种方式之一：
+    1. `X-GitCode-Token` 请求头
+    2. `Authorization: Bearer <token>` 请求头
+    3. `X-Auth-Token` 请求头
+  version: 0.1.0
+  contact:
+    name: GitCode Actions
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: 本地开发服务器
+  - url: /
+    description: 相对路径
+
+tags:
+  - name: Health
+    description: 健康检查相关接口
+  - name: Repository
+    description: 仓库数据查询接口（需要认证）
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: 健康检查
+      description: 检查服务器是否正常运行
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 服务器运行正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: '2025-10-19T12:00:00.000Z'
+
+  /api/pulls:
+    post:
+      tags:
+        - Repository
+      summary: 获取仓库的 PR 列表
+      description: 获取指定 GitCode 仓库的 Pull Request 列表，支持多种过滤和排序选项
+      operationId: listPullRequests
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - owner
+                - repo
+              properties:
+                owner:
+                  type: string
+                  description: 仓库所有者（用户名或组织名）
+                  example: username
+                repo:
+                  type: string
+                  description: 仓库名称
+                  example: repository-name
+                state:
+                  type: string
+                  enum: [open, closed, all]
+                  description: PR 状态过滤
+                  default: open
+                  example: open
+                page:
+                  type: integer
+                  description: 页码（从 1 开始）
+                  default: 1
+                  example: 1
+                per_page:
+                  type: integer
+                  description: 每页数量
+                  default: 20
+                  example: 20
+                sort:
+                  type: string
+                  description: 排序字段
+                  example: created
+                direction:
+                  type: string
+                  enum: [asc, desc]
+                  description: 排序方向
+                  example: desc
+                head:
+                  type: string
+                  description: 按 head 分支过滤
+                  example: feature-branch
+                base:
+                  type: string
+                  description: 按 base 分支过滤
+                  example: main
+      responses:
+        '200':
+          description: 成功获取 PR 列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PullRequestListResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 未授权 - 缺少或无效的 GitCode Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/issues:
+    post:
+      tags:
+        - Repository
+      summary: 获取仓库的 Issue 列表
+      description: 获取指定 GitCode 仓库的 Issue 列表，支持多种过滤和排序选项
+      operationId: listIssues
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - owner
+                - repo
+              properties:
+                owner:
+                  type: string
+                  description: 仓库所有者（用户名或组织名）
+                  example: username
+                repo:
+                  type: string
+                  description: 仓库名称
+                  example: repository-name
+                state:
+                  type: string
+                  enum: [open, closed, all]
+                  description: Issue 状态过滤
+                  default: open
+                  example: open
+                page:
+                  type: integer
+                  description: 页码（从 1 开始）
+                  default: 1
+                  example: 1
+                per_page:
+                  type: integer
+                  description: 每页数量
+                  default: 20
+                  example: 20
+                sort:
+                  type: string
+                  enum: [created, updated, comments]
+                  description: 排序字段
+                  default: updated
+                  example: created
+                labels:
+                  type: string
+                  description: 标签过滤（逗号分隔）
+                  example: 'bug,feature'
+      responses:
+        '200':
+          description: 成功获取 Issue 列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueListResponse'
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: 未授权 - 缺少或无效的 GitCode Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: 服务器内部错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    GitCodeToken:
+      type: apiKey
+      in: header
+      name: X-GitCode-Token
+      description: GitCode API Token
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: GitCode API Token (使用 Bearer 格式)
+
+  schemas:
+    PullRequestListResponse:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 仓库所有者
+          example: username
+        repo:
+          type: string
+          description: 仓库名称
+          example: repository-name
+        total:
+          type: integer
+          description: 返回的 PR 数量
+          example: 15
+        data:
+          type: array
+          description: PR 列表数据
+          items:
+            $ref: '#/components/schemas/PullRequest'
+
+    PullRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: PR ID
+          example: 123456
+        number:
+          type: integer
+          description: PR 编号
+          example: 42
+        title:
+          type: string
+          description: PR 标题
+          example: 'Add new feature'
+        state:
+          type: string
+          description: PR 状态
+          example: open
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间
+          example: '2025-10-19T12:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新时间
+          example: '2025-10-19T14:30:00Z'
+
+    IssueListResponse:
+      type: object
+      properties:
+        owner:
+          type: string
+          description: 仓库所有者
+          example: username
+        repo:
+          type: string
+          description: 仓库名称
+          example: repository-name
+        total:
+          type: integer
+          description: 返回的 Issue 数量
+          example: 25
+        data:
+          type: array
+          description: Issue 列表数据
+          items:
+            $ref: '#/components/schemas/Issue'
+
+    Issue:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Issue ID
+          example: 789012
+        number:
+          type: string
+          description: Issue 编号
+          example: '15'
+        title:
+          type: string
+          description: Issue 标题
+          example: 'Bug: Login failed'
+        state:
+          type: string
+          description: Issue 状态
+          example: open
+        created_at:
+          type: string
+          format: date-time
+          description: 创建时间
+          example: '2025-10-19T10:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新时间
+          example: '2025-10-19T15:00:00Z'
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: 错误类型
+          example: Failed to fetch pull requests
+        message:
+          type: string
+          description: 错误详细信息
+          example: Repository not found

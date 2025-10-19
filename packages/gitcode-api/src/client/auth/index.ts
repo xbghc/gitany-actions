@@ -45,7 +45,7 @@ export class FileAuthStorage implements AuthStorage {
 }
 
 export function defaultConfigPath(): string {
-  const dir = join(homedir(), '.gitany', 'gitcode');
+  const dir = join(homedir(), '.gitcode');
   return join(dir, 'config.json');
 }
 

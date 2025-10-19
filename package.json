@@ -1,5 +1,5 @@
 {
-  "name": "@gitany/workspace",
+  "name": "@xbghc/workspace",
   "private": true,
   "packageManager": "pnpm@10.15.0",
   "workspaces": [
@@ -15,6 +15,7 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "dev:core": "pnpm --filter @xbghc/gitcode-actions dev",
+    "dev:server": "pnpm --filter @xbghc/gitcode-actions-server dev",
     "d": "pnpm build && node ./scripts/dev-gitcode.mjs",
     "d:git": "pnpm build && node ./scripts/dev-git.mjs",
     "d:docker": "pnpm build && node ./scripts/dev-docker.mjs"

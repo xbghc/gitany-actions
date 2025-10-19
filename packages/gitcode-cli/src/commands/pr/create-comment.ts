@@ -23,7 +23,7 @@ function getDefaultEditor(): string {
 // TODO 移除编辑评论内容的功能和调用编辑器的功能
 async function openEditor(content: string): Promise<string> {
   const editor = getDefaultEditor();
-  const tempFile = path.join(process.cwd(), '.gitany-pr-comment-temp.md');
+  const tempFile = path.join(process.cwd(), '.gitcode-pr-comment-temp.md');
 
   try {
     fs.writeFileSync(tempFile, content);
