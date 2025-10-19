@@ -7,7 +7,6 @@
   },
   "include": ["src"],
   "references": [
-    { "path": "../shared" },
     { "path": "../gitcode" },
     { "path": "../git-lib" },
     { "path": "../core" }

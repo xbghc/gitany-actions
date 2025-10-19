@@ -25,9 +25,10 @@
   "dependencies": {
     "@xbghc/gitcode-cli": "workspace:*",
     "@xbghc/gitcode-api": "workspace:*",
-    "@gitany/shared": "workspace:*",
     "dockerode": "^4.0.8",
-    "tar": "^7.4.3"
+    "tar": "^7.4.3",
+    "pino": "^9.0.0",
+    "pino-pretty": "^11.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.21.5",

@@ -1,5 +1,5 @@
 import Docker from 'dockerode';
-import { createLogger } from '@gitany/shared';
+import { createLogger } from '../utils/logger.js';
 
 const dockerode = new Docker();
 

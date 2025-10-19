@@ -1,8 +1,5 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { isObjectLike, type IssueUser } from '@xbghc/gitcode-api';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('@xbghc/gitcode-cli');
 
 export const colors = {
   reset: '\x1b[0m',
@@ -25,7 +22,7 @@ export async function resolveIssueContext(
 ) {
   const issueNumber = Number(issueNumberArg);
   if (!Number.isFinite(issueNumber) || issueNumber <= 0) {
-    logger.error('Invalid issue number');
+    console.error('Invalid issue number');
     process.exit(1);
   }
 

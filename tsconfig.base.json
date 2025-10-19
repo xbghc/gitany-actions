@@ -21,7 +21,6 @@
     }
   },
   "references": [
-    { "path": "./packages/shared" },
     { "path": "./packages/gitcode" },
     { "path": "./packages/git-lib" },
     { "path": "./packages/core" },

@@ -6,7 +6,7 @@ import {
   type IssueCommentsQuery,
   isNotModified,
 } from '@xbghc/gitcode-api';
-import { createLogger } from '@gitany/shared';
+import { createLogger } from '../utils/logger.js';
 import { BaseWatcher, type WatcherOptions } from './common';
 
 const logger = createLogger('@xbghc/gitcode-actions');

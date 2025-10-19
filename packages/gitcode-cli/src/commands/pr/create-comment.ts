@@ -5,9 +5,6 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('@xbghc/gitcode-cli');
 
 interface CreatePrCommentOptions {
   body?: string;
@@ -88,7 +85,7 @@ export async function createPrCommentAction(
         options,
         error,
       };
-      logger.error({ error, context: debugInfo }, 'Failed to create PR comment');
+      console.error('Failed to create PR comment:', error, debugInfo);
       return 'Failed to create PR comment';
     },
   );

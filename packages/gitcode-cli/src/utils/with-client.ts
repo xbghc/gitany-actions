@@ -1,7 +1,4 @@
 import { GitcodeClient } from '@xbghc/gitcode-api';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('@xbghc/gitcode-cli');
 
 type WithClientErrorHandler = string | ((error: unknown) => void | string | Promise<void | string>);
 
@@ -41,11 +38,11 @@ export async function withClient(
           message = result;
         }
       } catch (handlerError) {
-        logger.error({ error: handlerError }, 'withClient error handler threw');
+        console.error('withClient error handler threw:', handlerError);
       }
     }
 
-    logger.error({ error }, message);
+    console.error(message, error);
     process.exit(1);
   }
 }

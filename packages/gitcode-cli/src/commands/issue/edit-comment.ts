@@ -2,9 +2,6 @@ import { Command } from 'commander';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('cli:issue:edit-comment');
 
 interface EditCommentOptions {
   body?: string;
@@ -43,8 +40,6 @@ export async function editCommentAction(commentIdArg: string, options: EditComme
     if (!finalBody) {
       throw new Error('Comment body is required. Use --body or --body-file.');
     }
-
-    logger.debug({ owner, repo, comment_id }, 'Updating comment');
 
     const comment = await client.issue.updateComment({
       owner,

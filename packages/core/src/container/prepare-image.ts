@@ -1,5 +1,5 @@
 import type Docker from 'dockerode';
-import type { Logger } from '@gitany/shared';
+import type { Logger } from '../utils/logger.js';
 
 export interface PrepareImageOptions {
   docker: Docker;

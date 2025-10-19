@@ -7,7 +7,6 @@ import got, {
   type Response,
 } from 'got';
 
-import { createLogger } from '@gitany/shared';
 import { isObjectLike } from './types.js';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH';
@@ -48,11 +47,9 @@ const httpDebugShowSensitive = ['1', 'true', 'yes', 'on'].includes(
   httpDebugShowSensitiveFlag.trim().toLowerCase(),
 );
 
-const httpLogger = createLogger('@xbghc/gitcode-api:http');
-
 function logHttp(event: string, detail: Record<string, unknown>) {
   if (!httpDebugEnabled) return;
-  httpLogger.info({ event, detail }, 'gitcode http debug');
+  console.debug('[gitcode-api:http]', event, detail);
 }
 
 function redactHeaders(headers: Record<string, string>) {
@@ -294,7 +291,7 @@ function stringifyBody(body: unknown): string {
   try {
     return JSON.stringify(body);
   } catch (error) {
-    httpLogger.warn({ error }, 'Failed to stringify body, falling back to String()');
+    console.warn('[gitcode-api:http] Failed to stringify body, falling back to String()', error);
     return String(body);
   }
 }

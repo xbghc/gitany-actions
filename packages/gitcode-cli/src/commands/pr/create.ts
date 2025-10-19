@@ -1,9 +1,6 @@
 import { type CreatePullBody } from '@xbghc/gitcode-api';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
-import { createLogger } from '@gitany/shared';
-
-const logger = createLogger('@xbghc/gitcode-cli');
 
 export async function createCommand(
   url?: string,
@@ -19,7 +16,7 @@ export async function createCommand(
   if (options.issue) {
     const n = Number(options.issue);
     if (!Number.isFinite(n) || n <= 0) {
-      logger.error('Invalid --issue number');
+      console.error('Invalid --issue number');
       process.exit(1);
       return;
     }

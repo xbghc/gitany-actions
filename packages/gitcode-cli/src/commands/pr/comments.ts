@@ -1,9 +1,6 @@
 import type { PRComment, PRCommentQueryOptions } from '@xbghc/gitcode-api';
-import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
-
-const logger = createLogger('@xbghc/gitcode-cli');
 
 function isPrCommentType(
   val: string | undefined,
@@ -18,7 +15,7 @@ export async function prCommentsCommand(
 ): Promise<void> {
   const n = Number(prNumber);
   if (!Number.isFinite(n) || n <= 0) {
-    logger.error('Invalid PR number');
+    console.error('Invalid PR number');
     process.exit(1);
     return;
   }

@@ -22,7 +22,6 @@
   "dependencies": {
     "@xbghc/gitcode-api": "workspace:*",
     "@gitany/git-lib": "workspace:*",
-    "@gitany/shared": "workspace:*",
     "commander": "^14.0.0"
   },
   "engines": {
