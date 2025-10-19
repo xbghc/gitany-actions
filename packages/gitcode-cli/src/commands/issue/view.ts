@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { withClient } from '../../utils/with-client';
-import { formatAssignees } from './helpers';
+import { withClient } from '../../utils/with-client.js';
+import { formatAssignees } from './helpers.js';
 import type { IssueComment, IssueDetail } from '@xbghc/gitcode-api';
 import { isObjectLike } from '@xbghc/gitcode-api';
 import {
@@ -9,7 +9,7 @@ import {
   formatUserName,
   resolveIssueContext,
   type IssueTargetOptions,
-} from './helpers';
+} from './helpers.js';
 
 interface ViewOptions extends IssueTargetOptions {
   comments?: boolean;

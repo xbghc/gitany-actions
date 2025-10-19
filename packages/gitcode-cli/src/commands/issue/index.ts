@@ -1,13 +1,13 @@
 import { Command } from 'commander';
-import { listCommand } from './list';
-import { createCommand } from './create';
-import { createCommentCommand } from './create-comment';
-import { statusCommand } from './status';
-import { viewCommand } from './view';
-import { editCommand } from './edit';
-import { closeCommand } from './close';
-import { reopenCommand } from './reopen';
-import { editCommentCommand } from './edit-comment';
+import { listCommand } from './list.js';
+import { createCommand } from './create.js';
+import { createCommentCommand } from './create-comment.js';
+import { statusCommand } from './status.js';
+import { viewCommand } from './view.js';
+import { editCommand } from './edit.js';
+import { closeCommand } from './close.js';
+import { reopenCommand } from './reopen.js';
+import { editCommentCommand } from './edit-comment.js';
 
 export function issueCommand(): Command {
   const issueProgram = new Command('issue').description('Manage GitCode issues');

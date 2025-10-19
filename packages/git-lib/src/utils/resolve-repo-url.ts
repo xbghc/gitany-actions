@@ -1,5 +1,5 @@
-import { createGitClient } from '../client';
-import { GitNotFoundError } from '../errors';
+import { createGitClient } from '../client/index.js';
+import { GitNotFoundError } from '../errors.js';
 
 function normalizeRepoUrlInput(raw: string): string {
   const url = raw.trim();

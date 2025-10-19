@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { withClient } from '../../utils/with-client';
-import { colorizeState, colors, resolveIssueContext, type IssueTargetOptions } from './helpers';
+import { withClient } from '../../utils/with-client.js';
+import { colorizeState, colors, resolveIssueContext, type IssueTargetOptions } from './helpers.js';
 
 interface CloseOptions extends IssueTargetOptions {
   json?: boolean;

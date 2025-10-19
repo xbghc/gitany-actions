@@ -1,5 +1,5 @@
 import { resolveRepoUrl } from '@xbghc/git-lib';
-import { withClient } from '../../utils/with-client';
+import { withClient } from '../../utils/with-client.js';
 import type { Issue } from '@xbghc/gitcode-api';
 
 export async function listCommand(

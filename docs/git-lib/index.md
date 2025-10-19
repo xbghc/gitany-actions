@@ -2,7 +2,7 @@
 title: git-lib 工具库
 ---
 
-# @gitany/git-lib（Git 命令封装库）
+# @xbghc/git-lib（Git 命令封装库）
 
 基于系统 `git` 命令的轻量封装，若运行环境缺少 `git`，所有函数将抛出 `GitNotFoundError`。
 
@@ -13,7 +13,7 @@ title: git-lib 工具库
 ## 安装
 
 ```bash
-pnpm add @gitany/git-lib
+pnpm add @xbghc/git-lib
 ```
 
 ## API
@@ -23,7 +23,7 @@ pnpm add @gitany/git-lib
 `createGitClient` 返回一个包含常用 Git 命令方法的轻量对象：
 
 ```ts
-import { createGitClient } from '@gitany/git-lib';
+import { createGitClient } from '@xbghc/git-lib';
 
 const client = createGitClient('/path/to/repo');
 const status = await client.status();
@@ -64,7 +64,7 @@ const diff = await client.diffCommits('HEAD', 'HEAD~1', { nameOnly: true });
 也可以直接导入单个命令函数，并配合 `createGitRunner` 或 `createGitClient().run` 使用：
 
 ```ts
-import { createGitRunner, gitAdd, gitCommit, gitPush } from '@gitany/git-lib';
+import { createGitRunner, gitAdd, gitCommit, gitPush } from '@xbghc/git-lib';
 
 const run = createGitRunner('/path/to/repo');
 
@@ -90,7 +90,7 @@ interface GitResult {
 ## 错误处理
 
 ```ts
-import { createGitClient, GitNotFoundError } from '@gitany/git-lib';
+import { createGitClient, GitNotFoundError } from '@xbghc/git-lib';
 
 try {
   const client = createGitClient();

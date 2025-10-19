@@ -1,5 +1,5 @@
 import { resolveRepoUrl } from '@xbghc/git-lib';
-import { withClient } from '../../utils/with-client';
+import { withClient } from '../../utils/with-client.js';
 
 export async function permissionCommand(url?: string): Promise<void> {
   await withClient(async (client) => {

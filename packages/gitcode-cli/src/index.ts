@@ -2,11 +2,11 @@
 import { resolveRepoUrl } from '@xbghc/git-lib';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import { Command } from 'commander';
-import { authCommand } from './commands/auth';
-import { issueCommand } from './commands/issue';
-import { prCommand } from './commands/pr';
-import { repoCommand } from './commands/repo';
-import { userCommand } from './commands/user';
+import { authCommand } from './commands/auth.js';
+import { issueCommand } from './commands/issue/index.js';
+import { prCommand } from './commands/pr/index.js';
+import { repoCommand } from './commands/repo/index.js';
+import { userCommand } from './commands/user/index.js';
 
 const program = new Command();
 

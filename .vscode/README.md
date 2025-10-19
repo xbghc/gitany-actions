@@ -10,7 +10,6 @@
 - ✅ 启用 `declarationMap` 生成声明映射
 - ✅ 启用 `inlineSources` 将源代码嵌入到映射中
 - ✅ 配置项目引用支持 monorepo 结构
-- ✅ 路径映射 `@gitany/*` -> `packages/*/src`
 
 ### 2. esbuild 构建优化
 
@@ -76,17 +75,9 @@
 - **外联映射**: `.js.map` 文件，便于调试工具使用
 - **内联映射**: 嵌入在 JavaScript 文件中的 Data URL，便于分发
 
-### 路径映射
+### 项目引用
 
-配置了以下路径映射规则：
-
-```json
-{
-  "paths": {
-    "@gitany/*": ["packages/*/src"]
-  }
-}
-```
+配置了 TypeScript 项目引用支持 monorepo 结构，包之间通过 workspace 协议引用。
 
 ### 构建优化
 

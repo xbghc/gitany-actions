@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { permissionCommand } from './permission';
-import { repoSubCommand } from './info';
+import { permissionCommand } from './permission.js';
+import { repoSubCommand } from './info.js';
 
 export function repoCommand(): Command {
   const repoProgram = new Command('repo').description('Repository commands');

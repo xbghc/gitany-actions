@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { resolveRepoUrl } from '@xbghc/git-lib';
-import { withClient } from '../../utils/with-client';
+import { withClient } from '../../utils/with-client.js';
 
 interface CreatePrCommentOptions {
   body?: string;

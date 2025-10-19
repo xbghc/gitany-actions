@@ -1,17 +1,17 @@
-import { runGit } from './run';
-import { GitNotFoundError } from '../errors';
-import { gitStatus } from '../commands/status';
-import { gitShowFile } from '../commands/show';
-import { gitBranch } from '../commands/branch';
-import { gitCheckout } from '../commands/checkout';
-import { gitFetch } from '../commands/fetch';
-import { gitPush } from '../commands/push';
-import { gitCommit } from '../commands/commit';
-import { gitSetRemote } from '../commands/remote';
-import { gitDiffCommits, DiffOptions } from '../commands/diff';
-import { gitClone } from '../commands/clone';
-import { GitAddOptions, gitAdd } from '../commands/add';
-import type { GitResult } from '../types';
+import { runGit } from './run.js';
+import { GitNotFoundError } from '../errors.js';
+import { gitStatus } from '../commands/status.js';
+import { gitShowFile } from '../commands/show.js';
+import { gitBranch } from '../commands/branch.js';
+import { gitCheckout } from '../commands/checkout.js';
+import { gitFetch } from '../commands/fetch.js';
+import { gitPush } from '../commands/push.js';
+import { gitCommit } from '../commands/commit.js';
+import { gitSetRemote } from '../commands/remote.js';
+import { gitDiffCommits, DiffOptions } from '../commands/diff.js';
+import { gitClone } from '../commands/clone.js';
+import { GitAddOptions, gitAdd } from '../commands/add.js';
+import type { GitResult } from '../types.js';
 
 export type GitRunner = (args: string[]) => Promise<GitResult>;
 

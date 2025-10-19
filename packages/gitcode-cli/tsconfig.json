@@ -3,11 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "declaration": true,
-    "emitDeclarationOnly": false
+    "emitDeclarationOnly": true
   },
   "include": ["src"],
-  "references": [
-    { "path": "../gitcode-api" },
-    { "path": "../git-lib" }
-  ]
+  "references": [{ "path": "../gitcode-api" }, { "path": "../git-lib" }]
 }

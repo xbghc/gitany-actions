@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { listCommand } from './list';
-import { createCommand } from './create';
-import { prSubCommand } from './settings';
-import { createPrCommentCommand } from './create-comment';
-import { prCommentsCommand } from './comments';
+import { listCommand } from './list.js';
+import { createCommand } from './create.js';
+import { prSubCommand } from './settings.js';
+import { createPrCommentCommand } from './create-comment.js';
+import { prCommentsCommand } from './comments.js';
 
 export function prCommand(): Command {
   const prProgram = new Command('pr').description('Pull request commands');

@@ -11,10 +11,10 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -b",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "lint": "eslint .",
     "cleanup": "node ./scripts/cleanup.mjs",
-    "test": "pnpm --filter @gitany/shared build && pnpm --filter @xbghc/gitcode-api build && tsx tests/watch-issues-detect-new-comments.test.ts"
+    "test": "pnpm --filter @xbghc/gitcode-api build && tsx tests/watch-issues-detect-new-comments.test.ts"
   },
   "exports": {
     ".": {

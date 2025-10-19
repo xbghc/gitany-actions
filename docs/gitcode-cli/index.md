@@ -28,13 +28,13 @@ pnpm --filter @xbghc/gitcode-cli start -- --help
 
 说明：
 
-- 日志统一通过 `@gitany/shared` 的 logger 输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
+- 日志统一输出到 stderr，命令结果仍通过 stdout 输出（例如 `--json`）。
 - 也可使用环境变量 `GITANY_LOG_LEVEL` 控制默认日志级别；命令行选项优先级更高。
 - 日志默认以易读格式输出；若需要 JSON 结构化日志，可设置环境变量 `GITANY_LOG_FORMAT=json`。
 
 ## 命令
 
-> 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过 `@gitany/git-lib` 的 `resolveRepoUrl` 自动使用 `git remote get-url origin` 获取仓库地址。
+> 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过 `@xbghc/git-lib` 的 `resolveRepoUrl` 自动使用 `git remote get-url origin` 获取仓库地址。
 
 ### gitcode parse [git-url]
 

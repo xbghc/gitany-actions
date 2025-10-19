@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { withClient } from '../../utils/with-client';
+import { withClient } from '../../utils/with-client.js';
 
 export async function prSettingsCommand(owner: string, repo: string): Promise<void> {
   await withClient(async (client) => {

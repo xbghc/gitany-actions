@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
-import { withClient } from '../../utils/with-client';
+import { withClient } from '../../utils/with-client.js';
 
 interface EditCommentOptions {
   body?: string;

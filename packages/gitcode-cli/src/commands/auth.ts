@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { withClient } from '../utils/with-client';
+import { withClient } from '../utils/with-client.js';
 
 export function authCommand(): Command {
   const authProgram = new Command('auth').description('Authentication commands');

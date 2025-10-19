@@ -1,14 +1,14 @@
 import type { UpdateIssueBody, UpdatedIssue } from '@xbghc/gitcode-api';
 import { Command } from 'commander';
 import * as fs from 'fs';
-import { withClient } from '../../utils/with-client';
+import { withClient } from '../../utils/with-client.js';
 import {
   colorizeState,
   colors,
   formatAssignees,
   resolveIssueContext,
   type IssueTargetOptions,
-} from './helpers';
+} from './helpers.js';
 
 interface EditOptions extends IssueTargetOptions {
   title?: string;

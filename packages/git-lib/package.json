@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "node ./scripts/build.mjs",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "lint": "eslint ."
   },
   "exports": {

@@ -4,8 +4,8 @@ import type { CreateIssueBody, CreatedIssue } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { withClient } from '../../utils/with-client';
-import { formatAssignees } from './helpers';
+import { withClient } from '../../utils/with-client.js';
+import { formatAssignees } from './helpers.js';
 
 export interface CreateOptions {
   title?: string;

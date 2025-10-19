@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import spawn from 'cross-spawn';
-import { expandCwd } from '../utils';
-import type { GitExecOptions, GitResult } from '../types';
-import { GitNotFoundError } from '../errors';
+import { expandCwd } from '../utils/index.js';
+import type { GitExecOptions, GitResult } from '../types.js';
+import { GitNotFoundError } from '../errors.js';
 
 export async function runGit(args: string[], opts: GitExecOptions = {}): Promise<GitResult> {
   const cwd = expandCwd(opts.cwd);

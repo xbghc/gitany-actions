@@ -1,4 +1,4 @@
-import type { GitRunner } from '../client';
+import type { GitRunner } from '../client/index.js';
 
 /**
  * 新建分支，不支持直接切换
