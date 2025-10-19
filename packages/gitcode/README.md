@@ -1,11 +1,11 @@
-# @gitany/gitcode
+# @xbghc/gitcode-api
 
 GitCode API 客户端库，提供与 GitCode 平台的完整集成。
 
 ## 安装
 
 ```bash
-pnpm add @gitany/gitcode
+pnpm add @xbghc/gitcode-api
 ```
 
 ## 快速开始
@@ -13,7 +13,7 @@ pnpm add @gitany/gitcode
 ### 初始化客户端
 
 ```typescript
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 ```

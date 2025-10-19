@@ -38,14 +38,14 @@ title: Issues API
 - `createIssueUrl(owner)`：构建创建 Issue 接口绝对 URL。
 - `createIssueCommentUrl(owner, repo, number)`：构建创建 Issue 评论接口绝对 URL。
 
-以上均从包入口 `@gitany/gitcode` 导出。
+以上均从包入口 `@xbghc/gitcode-api` 导出。
 
 ## 使用示例
 
 ### 列表操作
 
 ```ts
-import { GitcodeClient, listIssuesUrl } from '@gitany/gitcode';
+import { GitcodeClient, listIssuesUrl } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient({ token: process.env.GITCODE_TOKEN ?? null });
 
@@ -71,7 +71,7 @@ const comments = await client.issue.comments('https://gitcode.com/owner/repo.git
 ### 读取与更新操作
 
 ```ts
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 
@@ -91,7 +91,7 @@ console.log(`Issue #${updatedIssue.number} 已更新并关闭。`);
 ### 创建操作
 
 ```ts
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 

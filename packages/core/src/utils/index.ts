@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
-import { defaultConfigPath } from '@gitany/gitcode';
+import { defaultConfigPath } from '@xbghc/gitcode-api';
 
 /** Returns ~/.gitany/gitcode */
 export function gitcodeBaseDir() {

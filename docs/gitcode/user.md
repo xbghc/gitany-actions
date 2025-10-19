@@ -90,7 +90,7 @@ interface UserNamespace {
 ### 获取用户信息
 
 ```typescript
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient({
   token: process.env.GITCODE_TOKEN,
@@ -117,7 +117,7 @@ try {
 ### 结合认证使用
 
 ```typescript
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 const profile = await client.getUserProfile();

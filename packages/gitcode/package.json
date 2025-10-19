@@ -1,5 +1,5 @@
 {
-  "name": "@gitany/gitcode",
+  "name": "@xbghc/gitcode-api",
   "version": "0.1.0",
   "description": "Git utilities for the gitany monorepo.",
   "type": "module",

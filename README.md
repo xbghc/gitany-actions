@@ -7,7 +7,7 @@
 GitAny Actions 是一个 TypeScript 项目，提供以下核心功能：
 
 - **@xbghc/gitcode-cli**: 命令行界面工具，提供 `gitcode` 命令行接口
-- **@gitany/gitcode**: GitCode API 客户端库，提供完整的 GitCode 平台集成
+- **@xbghc/gitcode-api**: GitCode API 客户端库，提供完整的 GitCode 平台集成
 - **@gitany/git-lib**: Git 命令包装器，提供跨平台的 Git 操作支持
 - **@gitany/core**: 核心共享工具和功能库
 
@@ -66,7 +66,7 @@ gitcode issue reopen 42 --repo owner/repo
 ### 使用 API 库
 
 ```typescript
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 
@@ -166,7 +166,7 @@ pnpm docs:preview  # 预览构建的文档
 ```bash
 # 工作特定包
 pnpm --filter @xbghc/gitcode-cli dev
-pnpm --filter @gitany/gitcode build
+pnpm --filter @xbghc/gitcode-api build
 pnpm --filter @gitany/core dev
 pnpm --filter @gitany/git-lib build
 ```
@@ -232,7 +232,7 @@ export GITCODE_API_BASE=https://gitcode.com/api/v5
 所有 API 响应都有完整的 TypeScript 类型定义，使用 Zod 进行运行时验证：
 
 ```typescript
-import { GitcodeClient, type UserProfile, type RepoSettings } from '@gitany/gitcode';
+import { GitcodeClient, type UserProfile, type RepoSettings } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';
 

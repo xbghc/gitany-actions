@@ -1,4 +1,4 @@
-import type { PRComment, PRCommentQueryOptions } from '@gitany/gitcode';
+import type { PRComment, PRCommentQueryOptions } from '@xbghc/gitcode-api';
 import { createLogger } from '@gitany/shared';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';

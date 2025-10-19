@@ -16,7 +16,7 @@ title: Core 工具库
 
 ```ts
 import { watchPullRequest } from '@gitany/core';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 
@@ -76,7 +76,7 @@ prWatcher.start();
 
 ```ts
 import { watchIssues } from '@gitany/core';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 
@@ -106,7 +106,7 @@ issueWatcher.start();
 
 ```ts
 import { watchAiMentions } from '@gitany/core';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 
@@ -163,7 +163,7 @@ import {
   getContainer,
   getContainerStatus,
 } from '@gitany/core';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 // 获取打开的 PR 列表并选择第一个
@@ -198,7 +198,7 @@ await removeContainer(pr.id);
 
 ```ts
 import { watchPullRequest } from '@gitany/core';
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 

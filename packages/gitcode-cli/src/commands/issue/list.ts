@@ -1,6 +1,6 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
-import type { Issue } from '@gitany/gitcode';
+import type { Issue } from '@xbghc/gitcode-api';
 
 export async function listCommand(
   url?: string,

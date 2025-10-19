@@ -1,4 +1,4 @@
-import type { UpdateIssueBody, UpdatedIssue } from '@gitany/gitcode';
+import type { UpdateIssueBody, UpdatedIssue } from '@xbghc/gitcode-api';
 import { Command } from 'commander';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client';

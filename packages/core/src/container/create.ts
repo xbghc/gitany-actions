@@ -1,5 +1,5 @@
-import type { PullRequest } from '@gitany/gitcode';
-import { toGitUrl } from '@gitany/gitcode';
+import type { PullRequest } from '@xbghc/gitcode-api';
+import { toGitUrl } from '@xbghc/gitcode-api';
 
 import { collectForwardEnv, docker } from './shared';
 import type { ContainerOptions } from './types';

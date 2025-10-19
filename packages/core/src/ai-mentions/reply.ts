@@ -4,7 +4,7 @@ import {
   type CreatedPrComment,
   type GitcodeClient,
   type UpdatedIssueComment,
-} from '@gitany/gitcode';
+} from '@xbghc/gitcode-api';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';

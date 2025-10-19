@@ -48,7 +48,7 @@ const httpDebugShowSensitive = ['1', 'true', 'yes', 'on'].includes(
   httpDebugShowSensitiveFlag.trim().toLowerCase(),
 );
 
-const httpLogger = createLogger('@gitany/gitcode:http');
+const httpLogger = createLogger('@xbghc/gitcode-api:http');
 
 function logHttp(event: string, detail: Record<string, unknown>) {
   if (!httpDebugEnabled) return;

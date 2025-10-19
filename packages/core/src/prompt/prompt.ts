@@ -1,4 +1,4 @@
-import type { PRComment, PullRequest } from '@gitany/gitcode';
+import type { PRComment, PullRequest } from '@xbghc/gitcode-api';
 import type { AiMentionContext, IssueContext, PrContext } from './types';
 
 /**

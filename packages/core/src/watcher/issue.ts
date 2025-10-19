@@ -5,7 +5,7 @@ import {
   type ListIssuesQuery,
   type IssueCommentsQuery,
   isNotModified,
-} from '@gitany/gitcode';
+} from '@xbghc/gitcode-api';
 import { createLogger } from '@gitany/shared';
 import { BaseWatcher, type WatcherOptions } from './common';
 

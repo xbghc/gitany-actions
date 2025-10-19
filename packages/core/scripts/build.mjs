@@ -32,7 +32,7 @@ async function build() {
     // Do not bundle certain deps to avoid CJS-in-ESM dynamic require issues
     external: [
       '@gitany/shared',
-      '@gitany/gitcode',
+      '@xbghc/gitcode-api',
       'dockerode', // keep as external so Node ESM loads CJS properly
       'ssh2',
       'cpu-features',

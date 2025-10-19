@@ -380,7 +380,7 @@ interface Webhook {
 ### 获取仓库基本信息
 
 ```typescript
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 

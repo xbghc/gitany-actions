@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import { withClient } from '../../utils/with-client';
 import { formatAssignees } from './helpers';
-import type { IssueComment, IssueDetail } from '@gitany/gitcode';
-import { isObjectLike } from '@gitany/gitcode';
+import type { IssueComment, IssueDetail } from '@xbghc/gitcode-api';
+import { isObjectLike } from '@xbghc/gitcode-api';
 import {
   colors,
   colorizeState,

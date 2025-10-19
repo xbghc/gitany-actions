@@ -1,4 +1,4 @@
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 import { createLogger } from '@gitany/shared';
 
 const logger = createLogger('@xbghc/gitcode-cli');

@@ -6,7 +6,7 @@ This monorepo uses `pnpm` workspaces. Core logic lives in `packages/gitcode`, th
 
 ## Build, Test, and Development Commands
 
-Install dependencies with `pnpm i`. Run `pnpm build` to compile every package, or target a single package (e.g., `pnpm --filter @gitany/gitcode build`). Use `pnpm dev` for watch mode across packages. Docs tooling ships with `pnpm docs:dev`, `pnpm docs:build`, and `pnpm docs:preview`. `pnpm lint` and `pnpm format` enforce style.
+Install dependencies with `pnpm i`. Run `pnpm build` to compile every package, or target a single package (e.g., `pnpm --filter @xbghc/gitcode-api build`). Use `pnpm dev` for watch mode across packages. Docs tooling ships with `pnpm docs:dev`, `pnpm docs:build`, and `pnpm docs:preview`. `pnpm lint` and `pnpm format` enforce style.
 
 ## Coding Style & Naming Conventions
 

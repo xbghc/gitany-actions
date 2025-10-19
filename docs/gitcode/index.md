@@ -2,7 +2,7 @@
 title: gitcode 工具库
 ---
 
-# @gitany/gitcode（工具库）
+# @xbghc/gitcode-api（工具库）
 
 提供 [GitCode API](https://docs.gitcode.com/docs/apis/) 访问与认证封装，以及 Git 远程地址解析工具。
 
@@ -71,7 +71,7 @@ title: gitcode 工具库
 ### 认证使用示例
 
 ```ts
-import { GitCodeClient } from '@gitany/gitcode';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 await client.auth.setToken('your_token', 'bearer');
@@ -87,7 +87,7 @@ const me = await client.request('/user', 'GET');
 ### GitcodeClient 用法
 
 ```ts
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient({
   token: process.env.GITCODE_TOKEN ?? null,
@@ -128,7 +128,7 @@ const issues = await client.issue.list('https://gitcode.com/owner/repo.git', { s
 ## Git URL 解析
 
 ```ts
-import { parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@xbghc/gitcode-api';
 
 parseGitUrl('https://gitcode.com/owner/repo.git');
 // => { host: 'gitcode.com', owner: 'owner', repo: 'repo' }

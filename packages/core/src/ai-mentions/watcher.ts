@@ -4,7 +4,7 @@ import {
   type IssueComment,
   type PRComment,
   type PullRequest,
-} from '@gitany/gitcode';
+} from '@xbghc/gitcode-api';
 import { createLogger } from '@gitany/shared';
 import { chat } from '../container';
 import { watchIssues, type IssueWatcher } from '../watcher/issue';

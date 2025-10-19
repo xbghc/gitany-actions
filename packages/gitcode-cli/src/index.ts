@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { resolveRepoUrl } from '@gitany/git-lib';
-import { parseGitUrl } from '@gitany/gitcode';
+import { parseGitUrl } from '@xbghc/gitcode-api';
 import { createLogger, setGlobalLogLevel, type LogLevel } from '@gitany/shared';
 import { Command } from 'commander';
 import { authCommand } from './commands/auth';

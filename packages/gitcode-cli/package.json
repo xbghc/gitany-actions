@@ -20,7 +20,7 @@
     "esbuild": "^0.21.5"
   },
   "dependencies": {
-    "@gitany/gitcode": "workspace:*",
+    "@xbghc/gitcode-api": "workspace:*",
     "@gitany/git-lib": "workspace:*",
     "@gitany/shared": "workspace:*",
     "commander": "^14.0.0"

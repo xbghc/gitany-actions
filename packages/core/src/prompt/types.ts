@@ -7,7 +7,7 @@ import type {
   ListIssuesQuery,
   PRComment,
   PullRequest,
-} from '@gitany/gitcode';
+} from '@xbghc/gitcode-api';
 import type { ChatOptions, ChatResult } from '../container';
 
 export type AiMentionSource = 'issue_comment' | 'pr_review_comment';

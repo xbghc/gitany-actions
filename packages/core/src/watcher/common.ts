@@ -1,4 +1,4 @@
-import { GitcodeClient } from '@gitany/gitcode';
+import { GitcodeClient } from '@xbghc/gitcode-api';
 import { createLogger } from '@gitany/shared';
 import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';

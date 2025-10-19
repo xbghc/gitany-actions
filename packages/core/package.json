@@ -14,7 +14,7 @@
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "cleanup": "node ./scripts/cleanup.mjs",
-    "test": "pnpm --filter @gitany/shared build && pnpm --filter @gitany/gitcode build && tsx tests/watch-issues-detect-new-comments.test.ts"
+    "test": "pnpm --filter @gitany/shared build && pnpm --filter @xbghc/gitcode-api build && tsx tests/watch-issues-detect-new-comments.test.ts"
   },
   "exports": {
     ".": {
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@xbghc/gitcode-cli": "workspace:*",
-    "@gitany/gitcode": "workspace:*",
+    "@xbghc/gitcode-api": "workspace:*",
     "@gitany/shared": "workspace:*",
     "dockerode": "^4.0.8",
     "tar": "^7.4.3"

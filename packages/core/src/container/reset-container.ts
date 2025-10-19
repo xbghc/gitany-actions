@@ -1,4 +1,4 @@
-import type { PullRequest } from '@gitany/gitcode';
+import type { PullRequest } from '@xbghc/gitcode-api';
 
 import { createPrContainer } from './create';
 import { removeContainer } from './remove-container';

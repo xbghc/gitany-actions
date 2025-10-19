@@ -4,7 +4,7 @@ import {
   type PRCommentQueryOptions,
   type PullRequest,
   isNotModified,
-} from '@gitany/gitcode';
+} from '@xbghc/gitcode-api';
 import type Docker from 'dockerode';
 import { createPrContainer, removeContainer } from '../container';
 import type { ContainerOptions } from '../container/types';

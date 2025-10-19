@@ -44,12 +44,12 @@ importers:
 
   packages/core:
     dependencies:
-      '@gitany/gitcode':
-        specifier: workspace:*
-        version: link:../gitcode
       '@gitany/shared':
         specifier: workspace:*
         version: link:../shared
+      '@xbghc/gitcode-api':
+        specifier: workspace:*
+        version: link:../gitcode
       '@xbghc/gitcode-cli':
         specifier: workspace:*
         version: link:../gitcode-cli
@@ -91,22 +91,18 @@ importers:
       zod:
         specifier: ^4.1.7
         version: 4.1.8
-    devDependencies:
-      esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
 
   packages/gitcode-cli:
     dependencies:
       '@gitany/git-lib':
         specifier: workspace:*
         version: link:../git-lib
-      '@gitany/gitcode':
-        specifier: workspace:*
-        version: link:../gitcode
       '@gitany/shared':
         specifier: workspace:*
         version: link:../shared
+      '@xbghc/gitcode-api':
+        specifier: workspace:*
+        version: link:../gitcode
       commander:
         specifier: ^14.0.0
         version: 14.0.0
@@ -123,10 +119,6 @@ importers:
       pino-pretty:
         specifier: ^11.0.0
         version: 11.3.0
-    devDependencies:
-      esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
 
 packages:
 

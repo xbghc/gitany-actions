@@ -34,12 +34,12 @@ title: Pull Requests API
 - `prCommentsUrl(owner, repo, number)`：构建评论接口 URL。
 - `createPrCommentUrl(owner, repo, prNumber)`：构建创建评论接口 URL。
 
-以上均从包入口 `@gitany/gitcode` 导出。其中 `createPullUrl` 使用默认常量 `API_BASE`（`https://gitcode.com/api/v5`）构建绝对 URL。
+以上均从包入口 `@xbghc/gitcode-api` 导出。其中 `createPullUrl` 使用默认常量 `API_BASE`（`https://gitcode.com/api/v5`）构建绝对 URL。
 
 ## 使用示例
 
 ```ts
-import { GitcodeClient, listPullsUrl, createPullUrl, type CreatePullBody } from '@gitany/gitcode';
+import { GitcodeClient, listPullsUrl, createPullUrl, type CreatePullBody } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
 

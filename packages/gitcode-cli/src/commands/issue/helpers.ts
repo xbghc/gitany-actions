@@ -1,5 +1,5 @@
 import { resolveRepoUrl } from '@gitany/git-lib';
-import { isObjectLike, type IssueUser } from '@gitany/gitcode';
+import { isObjectLike, type IssueUser } from '@xbghc/gitcode-api';
 import { createLogger } from '@gitany/shared';
 
 const logger = createLogger('@xbghc/gitcode-cli');

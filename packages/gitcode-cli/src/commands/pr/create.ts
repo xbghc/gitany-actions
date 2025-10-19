@@ -1,4 +1,4 @@
-import { type CreatePullBody } from '@gitany/gitcode';
+import { type CreatePullBody } from '@xbghc/gitcode-api';
 import { resolveRepoUrl } from '@gitany/git-lib';
 import { withClient } from '../../utils/with-client';
 import { createLogger } from '@gitany/shared';
