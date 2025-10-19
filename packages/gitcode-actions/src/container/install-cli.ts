@@ -1,4 +1,4 @@
-import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step';
+import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step.js';
 
 export type InstallCliOptions = Omit<ExecuteStepOptions, 'name' | 'script'> & {
   name: string;

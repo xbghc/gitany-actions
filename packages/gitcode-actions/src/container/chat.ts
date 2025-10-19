@@ -1,15 +1,15 @@
 import type Docker from 'dockerode';
-import { collectForwardEnv, docker, logger } from './shared';
-import { prepareImage } from './prepare-image';
-import { getDevContainer } from './get-dev-container';
-import { createWorkspaceContainer } from './create-workspace-container';
-import { cloneRepo } from './clone-repo';
-import { verifySha } from './verify-sha';
-import { checkoutSha } from './checkout-sha';
-import { installDependencies } from './install-dependencies';
-import { installClaudeCli } from './install-claude-cli';
-import { installGitcodeCli } from './install-gitcode-cli';
-import { executeStep } from './execute-step';
+import { collectForwardEnv, docker, logger } from './shared.js';
+import { prepareImage } from './prepare-image.js';
+import { getDevContainer } from './get-dev-container.js';
+import { createWorkspaceContainer } from './create-workspace-container.js';
+import { cloneRepo } from './clone-repo.js';
+import { verifySha } from './verify-sha.js';
+import { checkoutSha } from './checkout-sha.js';
+import { installDependencies } from './install-dependencies.js';
+import { installClaudeCli } from './install-claude-cli.js';
+import { installGitcodeCli } from './install-gitcode-cli.js';
+import { executeStep } from './execute-step.js';
 
 export interface ChatOptions {
   /** Optional existing container to use. */

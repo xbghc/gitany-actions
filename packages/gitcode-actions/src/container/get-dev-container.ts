@@ -1,5 +1,5 @@
 import type Docker from 'dockerode';
-import { docker } from './shared';
+import { docker } from './shared.js';
 
 export async function getDevContainer(): Promise<Docker.Container | undefined> {
   const filters = { label: [`gitany.branch=dev`] };

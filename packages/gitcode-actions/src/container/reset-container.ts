@@ -1,8 +1,8 @@
 import type { PullRequest } from '@xbghc/gitcode-api';
 
-import { createPrContainer } from './create';
-import { removeContainer } from './remove-container';
-import type { ContainerOptions } from './types';
+import { createPrContainer } from './create.js';
+import { removeContainer } from './remove-container.js';
+import type { ContainerOptions } from './types.js';
 
 export async function resetContainer(
   repoUrl: string,

@@ -3,7 +3,7 @@ import { createLogger } from '../utils/logger.js';
 import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
+import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils/index.js';
 
 const logger = createLogger('@xbghc/gitcode-actions');
 const DEFAULT_INTERVAL_SEC = 5;

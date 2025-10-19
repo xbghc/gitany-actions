@@ -1,4 +1,4 @@
-import { getContainer } from './get';
+import { getContainer } from './get.js';
 
 export async function removeContainer(prId: number) {
   const container = await getContainer({ pr: prId });

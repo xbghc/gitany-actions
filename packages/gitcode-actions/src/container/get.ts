@@ -1,6 +1,6 @@
 import type Docker from 'dockerode';
 
-import { docker } from './shared';
+import { docker } from './shared.js';
 
 export async function getContainer({
   pr,

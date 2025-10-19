@@ -1,5 +1,5 @@
-export { runAiMentionsOnce, watchAiMentions } from './watcher';
-export { defaultPromptBuilder } from '../prompt/prompt';
+export { runAiMentionsOnce, watchAiMentions } from './watcher.js';
+export { defaultPromptBuilder } from '../prompt/prompt.js';
 export type {
   AiMentionContext,
   AiMentionReply,
@@ -8,4 +8,4 @@ export type {
   BuildAiMentionPrompt,
   BuildAiMentionReplyBody,
   WatchAiMentionsOptions,
-} from './types';
+} from './types.js';

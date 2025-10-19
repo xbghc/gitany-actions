@@ -1,15 +1,15 @@
 import type Docker from 'dockerode';
 
-import { checkProjectFiles } from './check-project-files';
-import { checkoutSha } from './checkout-sha';
-import { cloneRepo } from './clone-repo';
-import { DiagnosticsCollectionError } from './collect-diagnostics';
-import { createWorkspaceContainer } from './create-workspace-container';
-import { installDependencies } from './install-dependencies';
-import { ImagePullError, prepareImage, type ImagePullStatus } from './prepare-image';
-import { docker, logger } from './shared';
-import type { TestShaBuildOptions, TestShaBuildResult } from './types';
-import { verifySha } from './verify-sha';
+import { checkProjectFiles } from './check-project-files.js';
+import { checkoutSha } from './checkout-sha.js';
+import { cloneRepo } from './clone-repo.js';
+import { DiagnosticsCollectionError } from './collect-diagnostics.js';
+import { createWorkspaceContainer } from './create-workspace-container.js';
+import { installDependencies } from './install-dependencies.js';
+import { ImagePullError, prepareImage, type ImagePullStatus } from './prepare-image.js';
+import { docker, logger } from './shared.js';
+import type { TestShaBuildOptions, TestShaBuildResult } from './types.js';
+import { verifySha } from './verify-sha.js';
 
 /**
  * Run a sequence of build verification steps inside a disposable container.

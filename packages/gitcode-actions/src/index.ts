@@ -3,12 +3,12 @@
  *
  */
 
-export { IssueWatcher, watchIssues } from './watcher/issue';
-export type { WatchIssueOptions } from './watcher/issue';
-export { PullRequestWatcher, watchPullRequest } from './watcher/pr';
-export type { WatchPullRequestOptions } from './watcher/pr';
+export { IssueWatcher, watchIssues } from './watcher/issue.js';
+export type { WatchIssueOptions } from './watcher/issue.js';
+export { PullRequestWatcher, watchPullRequest } from './watcher/pr.js';
+export type { WatchPullRequestOptions } from './watcher/pr.js';
 
-export { defaultPromptBuilder, runAiMentionsOnce, watchAiMentions } from './ai-mentions';
+export { defaultPromptBuilder, runAiMentionsOnce, watchAiMentions } from './ai-mentions/index.js';
 export type {
   AiMentionContext,
   AiMentionReply,
@@ -17,7 +17,7 @@ export type {
   BuildAiMentionPrompt,
   BuildAiMentionReplyBody,
   WatchAiMentionsOptions,
-} from './ai-mentions';
+} from './ai-mentions/index.js';
 export {
   chat,
   checkoutSha,
@@ -45,10 +45,10 @@ export {
   StepExecutionError,
   testShaBuild,
   verifySha,
-} from './container';
+} from './container/index.js';
 export type {
   ChatOptions,
   ChatResult,
   CopyToContainerOptions,
   ProjectCheckResult,
-} from './container';
+} from './container/index.js';

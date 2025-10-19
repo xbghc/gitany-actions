@@ -1,5 +1,5 @@
-import { installCli } from './install-cli';
-import type { ExecuteStepOptions, StepResult } from './execute-step';
+import { installCli } from './install-cli.js';
+import type { ExecuteStepOptions, StepResult } from './execute-step.js';
 
 export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
 

@@ -7,7 +7,7 @@ import {
   isNotModified,
 } from '@xbghc/gitcode-api';
 import { createLogger } from '../utils/logger.js';
-import { BaseWatcher, type WatcherOptions } from './common';
+import { BaseWatcher, type WatcherOptions } from './common.js';
 
 const logger = createLogger('@xbghc/gitcode-actions');
 

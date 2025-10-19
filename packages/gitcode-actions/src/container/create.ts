@@ -1,9 +1,9 @@
 import type { PullRequest } from '@xbghc/gitcode-api';
 import { toGitUrl } from '@xbghc/gitcode-api';
 
-import { collectForwardEnv, docker } from './shared';
-import type { ContainerOptions } from './types';
-import { getContainer } from './get';
+import { collectForwardEnv, docker } from './shared.js';
+import type { ContainerOptions } from './types.js';
+import { getContainer } from './get.js';
 
 export async function createPrContainer(
   repoUrl: string,

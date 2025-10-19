@@ -11,8 +11,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import type { ChatResult } from '../container';
-import type { AiMentionContext, AiMentionReply } from './types';
+import type { ChatResult } from '../container/index.js';
+import type { AiMentionContext, AiMentionReply } from './types.js';
 
 const require = createRequire(import.meta.url);
 let cachedGitcodeCliEntry: string | null = null;

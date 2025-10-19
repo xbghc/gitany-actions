@@ -1,5 +1,5 @@
-import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step';
-import { collectDiagnostics, type ProjectDiagnostics } from './collect-diagnostics';
+import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step.js';
+import { collectDiagnostics, type ProjectDiagnostics } from './collect-diagnostics.js';
 
 export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
 

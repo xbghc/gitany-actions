@@ -1,4 +1,4 @@
-import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step';
+import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step.js';
 
 export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
 

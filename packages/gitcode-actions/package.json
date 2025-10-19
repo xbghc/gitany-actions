@@ -9,8 +9,8 @@
     "dist"
   ],
   "scripts": {
-    "dev": "pnpm build && node dist/index.js",
-    "build": "node ./scripts/build.mjs",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -b",
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "cleanup": "node ./scripts/cleanup.mjs",
@@ -31,7 +31,6 @@
     "pino-pretty": "^11.0.0"
   },
   "devDependencies": {
-    "esbuild": "^0.21.5",
     "@types/dockerode": "^3.3.43"
   },
   "engines": {

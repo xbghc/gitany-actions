@@ -8,7 +8,7 @@ import type {
   PRComment,
   PullRequest,
 } from '@xbghc/gitcode-api';
-import type { ChatOptions, ChatResult } from '../container';
+import type { ChatOptions, ChatResult } from '../container/index.js';
 
 export type AiMentionSource = 'issue_comment' | 'pr_review_comment';
 

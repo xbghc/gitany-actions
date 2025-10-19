@@ -1,7 +1,7 @@
 import type Docker from 'dockerode';
 import type { Logger } from '../utils/logger.js';
-import { getContainerByRepo } from './get';
-import { executeStep } from './execute-step';
+import { getContainerByRepo } from './get.js';
+import { executeStep } from './execute-step.js';
 
 export interface CreateWorkspaceContainerOptions {
   docker: Docker;

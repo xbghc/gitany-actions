@@ -4,9 +4,9 @@ import { rm } from 'node:fs/promises';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import { copyToContainer } from './copy-files';
-import { installCli } from './install-cli';
-import type { ExecuteStepOptions, StepResult } from './execute-step';
+import { copyToContainer } from './copy-files.js';
+import { installCli } from './install-cli.js';
+import type { ExecuteStepOptions, StepResult } from './execute-step.js';
 
 const require = createRequire(import.meta.url);
 const execAsync = promisify(exec);

@@ -6,11 +6,11 @@ import {
   type PullRequest,
 } from '@xbghc/gitcode-api';
 import { createLogger } from '../utils/logger.js';
-import { chat } from '../container';
-import { watchIssues, type IssueWatcher } from '../watcher/issue';
-import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr';
-import { defaultPromptBuilder } from '../prompt/prompt';
-import { createAiReplyComment, defaultReplyBodyBuilder, editAiReplyComment } from './reply';
+import { chat } from '../container/index.js';
+import { watchIssues, type IssueWatcher } from '../watcher/issue.js';
+import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr.js';
+import { defaultPromptBuilder } from '../prompt/prompt.js';
+import { createAiReplyComment, defaultReplyBodyBuilder, editAiReplyComment } from './reply.js';
 import {
   type AiMentionContext,
   type AiMentionSource,
@@ -18,7 +18,7 @@ import {
   type WatchAiMentionsOptions,
   type IssueContext,
   type PrContext,
-} from './types';
+} from './types.js';
 
 const logger = createLogger('@xbghc/gitcode-actions');
 

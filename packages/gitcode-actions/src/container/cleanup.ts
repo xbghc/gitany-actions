@@ -1,7 +1,7 @@
 import readline from 'node:readline';
 import type { ContainerInfo } from 'dockerode';
 
-import { docker, logger } from './shared';
+import { docker, logger } from './shared.js';
 
 async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo[]) {
   const rl = readline.createInterface({

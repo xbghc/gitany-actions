@@ -1,5 +1,5 @@
 import type { PRComment, PullRequest } from '@xbghc/gitcode-api';
-import type { AiMentionContext, IssueContext, PrContext } from './types';
+import type { AiMentionContext, IssueContext, PrContext } from './types.js';
 
 /**
  * Builds a prompt for an AI mention in an issue.

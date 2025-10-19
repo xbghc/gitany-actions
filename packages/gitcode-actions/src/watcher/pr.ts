@@ -6,9 +6,9 @@ import {
   isNotModified,
 } from '@xbghc/gitcode-api';
 import type Docker from 'dockerode';
-import { createPrContainer, removeContainer } from '../container';
-import type { ContainerOptions } from '../container/types';
-import { BaseWatcher, type WatcherOptions } from './common';
+import { createPrContainer, removeContainer } from '../container/index.js';
+import type { ContainerOptions } from '../container/types.js';
+import { BaseWatcher, type WatcherOptions } from './common.js';
 
 export interface WatchPullRequestOptions extends WatcherOptions {
   onClosed?: (pr: PullRequest) => void;
