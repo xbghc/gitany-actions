@@ -9,7 +9,7 @@ title: 贡献指南
 - `@xbghc/gitcode-api`：工具库（packages/gitcode）
 - `@gitany/git-lib`：Git 命令封装库（packages/git-lib）
 - `@xbghc/gitcode-cli`：命令行工具（packages/gitcode-cli）
-- `@gitany/core`：核心工具库（packages/core）
+- `@xbghc/gitcode-actions`：GitCode Actions 自动化工作流库（packages/core）
 - 文档：VitePress（docs）
 
 ## 开发约定

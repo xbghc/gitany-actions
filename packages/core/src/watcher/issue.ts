@@ -9,7 +9,7 @@ import {
 import { createLogger } from '@gitany/shared';
 import { BaseWatcher, type WatcherOptions } from './common';
 
-const logger = createLogger('@gitany/core');
+const logger = createLogger('@xbghc/gitcode-actions');
 
 export interface WatchIssueOptions extends WatcherOptions {
   issueQuery?: ListIssuesQuery;

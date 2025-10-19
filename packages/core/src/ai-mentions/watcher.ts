@@ -20,7 +20,7 @@ import {
   type PrContext,
 } from './types';
 
-const logger = createLogger('@gitany/core');
+const logger = createLogger('@xbghc/gitcode-actions');
 
 type MentionHandler = (payload: {
   source: AiMentionSource;

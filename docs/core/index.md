@@ -1,10 +1,10 @@
 ---
-title: Core 工具库
+title: GitCode Actions 工具库
 ---
 
-# @gitany/core（核心工具库）
+# @xbghc/gitcode-actions（GitCode Actions 工具库）
 
-提供 GitAny 生态系统的核心功能和共享工具。
+提供 GitCode 平台的自动化工作流和 GitHub Actions 集成功能。
 
 包路径：`packages/core`
 
@@ -15,7 +15,7 @@ title: Core 工具库
 提供 PR 状态和评论监控功能，可以实时监听 PR 的状态变化和评论。
 
 ```ts
-import { watchPullRequest } from '@gitany/core';
+import { watchPullRequest } from '@xbghc/gitcode-actions';
 import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
@@ -75,7 +75,7 @@ prWatcher.start();
 `watchIssues` 可用于轮询仓库的 Issue 评论。当监听到新的评论时会触发回调，默认每 5 秒检测一次。
 
 ```ts
-import { watchIssues } from '@gitany/core';
+import { watchIssues } from '@xbghc/gitcode-actions';
 import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
@@ -105,7 +105,7 @@ issueWatcher.start();
 `watchAiMentions` 会同时监听 Issue 评论与 PR 评论。当新增评论中包含指定标记（默认为 `@AI`）时，会收集 Issue 标题、描述、历史评论等上下文，并将拼装后的提示语传入 `chat`。当 AI 调用成功且生成了内容时，会自动在对应的 Issue 或 PR 下创建回复评论。
 
 ```ts
-import { watchAiMentions } from '@gitany/core';
+import { watchAiMentions } from '@xbghc/gitcode-actions';
 import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
@@ -162,7 +162,7 @@ import {
   removeContainer,
   getContainer,
   getContainerStatus,
-} from '@gitany/core';
+} from '@xbghc/gitcode-actions';
 import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
@@ -197,7 +197,7 @@ await removeContainer(pr.id);
 当需要自动响应 PR 的打开和关闭事件时，可在 watcher 中直接启用容器管理：
 
 ```ts
-import { watchPullRequest } from '@gitany/core';
+import { watchPullRequest } from '@xbghc/gitcode-actions';
 import { GitcodeClient } from '@xbghc/gitcode-api';
 
 const client = new GitcodeClient();
@@ -237,7 +237,7 @@ if (container) {
 若手动运行过程中出现异常容器（例如状态为 `exited`），可执行以下命令进行清理：
 
 ```bash
-pnpm --filter @gitany/core cleanup
+pnpm --filter @xbghc/gitcode-actions cleanup
 ```
 
 ### 将宿主机文件复制到容器
@@ -245,7 +245,7 @@ pnpm --filter @gitany/core cleanup
 `copyToContainer` 可将本地文件或目录打包后复制到指定容器目录中，并返回最终在容器内的路径。
 
 ```ts
-import { copyToContainer } from '@gitany/core';
+import { copyToContainer } from '@xbghc/gitcode-actions';
 
 const targetPath = await copyToContainer({
   container,
@@ -269,7 +269,7 @@ console.log('文件已复制到容器内:', targetPath);
 并以无头模式向 Claude Code 提问。
 
 ```ts
-import { chat } from '@gitany/core';
+import { chat } from '@xbghc/gitcode-actions';
 
 const result = await chat('https://gitcode.com/owner/repo.git', 'Explain the project structure');
 console.log(result.output);

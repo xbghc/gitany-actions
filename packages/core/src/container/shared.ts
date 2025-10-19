@@ -25,7 +25,7 @@ export const docker = new Proxy(dockerode, {
   },
 });
 
-export const logger = createLogger('@gitany/core');
+export const logger = createLogger('@xbghc/gitcode-actions');
 
 /** Forwarded Claude related env vars */
 const anthropicEnvVars = Object.keys(process.env).filter((key) =>

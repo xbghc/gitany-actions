@@ -5,7 +5,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils';
 
-const logger = createLogger('@gitany/core');
+const logger = createLogger('@xbghc/gitcode-actions');
 const DEFAULT_INTERVAL_SEC = 5;
 
 export interface WatcherOptions {

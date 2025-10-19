@@ -9,7 +9,7 @@ GitAny Actions 是一个 TypeScript 项目，提供以下核心功能：
 - **@xbghc/gitcode-cli**: 命令行界面工具，提供 `gitcode` 命令行接口
 - **@xbghc/gitcode-api**: GitCode API 客户端库，提供完整的 GitCode 平台集成
 - **@gitany/git-lib**: Git 命令包装器，提供跨平台的 Git 操作支持
-- **@gitany/core**: 核心共享工具和功能库
+- **@xbghc/gitcode-actions**: GitCode Actions - 自动化工作流和操作库
 
 ## 快速开始
 
@@ -167,7 +167,7 @@ pnpm docs:preview  # 预览构建的文档
 # 工作特定包
 pnpm --filter @xbghc/gitcode-cli dev
 pnpm --filter @xbghc/gitcode-api build
-pnpm --filter @gitany/core dev
+pnpm --filter @xbghc/gitcode-actions dev
 pnpm --filter @gitany/git-lib build
 ```
 
@@ -268,7 +268,7 @@ const settings: RepoSettings = await client.repo.getSettings('owner', 'repo');
 若在手动运行过程中需要清理残留或异常状态的 PR 容器，可执行：
 
 ```bash
-pnpm --filter @gitany/core cleanup
+pnpm --filter @xbghc/gitcode-actions cleanup
 ```
 
 ## 文档同步
