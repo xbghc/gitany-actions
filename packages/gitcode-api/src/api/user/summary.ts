@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /** Minimal user object commonly embedded in issue/pull payloads */
 export const userSummarySchema = z.object({
-  avatar_url: z.string(),
+  avatar_url: z.string().optional(),
   html_url: z.string(),
   id: z.string(),
   login: z.string(),

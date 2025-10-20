@@ -41,6 +41,7 @@ export type ListPullsParams = {
  */
 import { z } from 'zod';
 import { branchSchema } from '../branch/index.js';
+import { userSummarySchema } from '../user/summary.js';
 
 export const pullRequestSchema = z.object({
   id: z.number(),
@@ -49,7 +50,8 @@ export const pullRequestSchema = z.object({
   state: z.string(),
   head: branchSchema,
   base: branchSchema,
-  user: z.unknown().optional(),
+  user: userSummarySchema,
+  body: z.string().optional(),
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
   merged_at: z.string().nullable().optional(),

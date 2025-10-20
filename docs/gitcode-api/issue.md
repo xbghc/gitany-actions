@@ -169,8 +169,8 @@ GitCode API 在请求参数和响应数据中使用了不同的字段格式：
 - 类型：对象数组
 - 格式：每个对象包含完整的用户信息
 
-`assignees` 数组中的每个对象包含以下必需字段：
-- `avatar_url`: 头像 URL
+`assignees` 数组中的每个对象包含以下字段：
+- `avatar_url?`: 头像 URL（可选）
 - `html_url`: 用户主页 URL
 - `id`: 用户 ID
 - `login`: 用户登录名

@@ -19,6 +19,7 @@ export type {
   PullRequest,
   ListPullsResponse,
   CreatePullBody,
+  PrCount,
 } from './api/pr/index.js';
 export {
   listPullsUrl,

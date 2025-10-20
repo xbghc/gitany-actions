@@ -20,9 +20,9 @@ export const issueCommentSchema = z.object({
   id: z.number(),
   comment_id: z.number().optional(),
   body: z.string(),
-  user: userSummarySchema.optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
+  user: userSummarySchema,
+  created_at: z.string(),
+  updated_at: z.string(),
 });
 
 export type IssueComment = z.infer<typeof issueCommentSchema>;

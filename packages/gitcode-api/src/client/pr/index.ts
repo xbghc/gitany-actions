@@ -4,12 +4,14 @@ import { listPullRequestComments } from './comments.js';
 import { createPullRequest } from './create.js';
 import { getPullRequestSettings } from './settings.js';
 import { createPrComment } from './create-comment.js';
+import { getPullRequestCount } from './count.js';
 import type {
   ListPullsQuery,
   CreatePullBody,
   PRCommentQueryOptions,
   PullRequestSettings,
   CreatedPrComment,
+  PrCount,
 } from '../../api/pr/index.js';
 
 export class GitcodeClientPr {
@@ -37,5 +39,9 @@ export class GitcodeClientPr {
       number: prNumber,
       body: { body },
     });
+  }
+
+  async count(url: string): Promise<PrCount> {
+    return await getPullRequestCount(this.client, url);
   }
 }

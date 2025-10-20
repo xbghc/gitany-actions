@@ -120,7 +120,7 @@ interface PRComment {
   id: number;
   user: {
     login: string;
-    avatar_url: string;
+    avatar_url?: string;
   };
   body: string;
   created_at: string;

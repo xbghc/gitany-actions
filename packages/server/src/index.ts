@@ -6,6 +6,8 @@ import YAML from 'yamljs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { repoRouter } from './routes/repo.js';
+import { prRouter } from './routes/pr.js';
+import { issueRouter } from './routes/issue.js';
 import { errorHandler } from './middleware/error-handler.js';
 
 dotenv.config();
@@ -41,6 +43,8 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // Routes
 app.use('/api', repoRouter);
+app.use('/api', prRouter);
+app.use('/api', issueRouter);
 
 // Error handling
 app.use(errorHandler);

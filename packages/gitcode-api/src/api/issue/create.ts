@@ -15,8 +15,8 @@ import { userSummarySchema } from '../user/summary.js';
  * - Response returns 'assignees' (plural, array of user objects)
  */
 export interface CreateIssueBody {
-  /** Repository name (without .git). */
-  repo: string;
+  /** Repository name (without .git). Optional when repo is specified in URL path. */
+  repo?: string;
   /** Issue title. */
   title: string;
   /** Issue body/description. */

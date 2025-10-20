@@ -63,6 +63,7 @@ export const issueSchema = z.object({
   labels: z.array(issueLabelSchema).default([]),
   created_at: z.string(),
   updated_at: z.string(),
+  closed_at: z.string().optional(),
 });
 
 export type Issue = z.infer<typeof issueSchema>;

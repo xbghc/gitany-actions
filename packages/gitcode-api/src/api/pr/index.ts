@@ -11,3 +11,4 @@ export {
   pullRequestSettingsUrl,
   type PullRequestSettings,
 } from './settings.js';
+export { prCountSchema, prCountUrl, type PrCount } from './count.js';
