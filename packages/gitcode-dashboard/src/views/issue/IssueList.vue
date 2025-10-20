@@ -74,7 +74,7 @@
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
-          :total="100"
+          :total="totalCount"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleFilterChange"
@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useIssueStore, useRepoStore } from '@/store';
@@ -128,7 +128,7 @@ const issueStore = useIssueStore();
 const repoStore = useRepoStore();
 
 // 使用 storeToRefs 解构响应式状态
-const { issueList, loading, filters } = storeToRefs(issueStore);
+const { issueList, loading, filters, issueCount } = storeToRefs(issueStore);
 // 方法可以直接解构
 const { fetchIssueList } = issueStore;
 
@@ -146,6 +146,21 @@ const createForm = reactive({
 const currentOwner = computed(() => repoStore.currentOwner);
 const currentRepo = computed(() => repoStore.currentRepo);
 
+// 计算当前筛选状态下的 Issue 总数
+const totalCount = computed(() => {
+  if (!issueCount.value) return 0;
+
+  switch (filters.value.state) {
+    case 'open':
+      return issueCount.value.opened || 0;
+    case 'closed':
+      return issueCount.value.closed || 0;
+    case 'all':
+    default:
+      return issueCount.value.all || 0;
+  }
+});
+
 const fetchData = () => {
   fetchIssueList();
 };
@@ -153,6 +168,17 @@ const fetchData = () => {
 const handleFilterChange = () => {
   fetchData();
 };
+
+// 监听数据变化，处理分页超出范围的情况
+watch([issueList, () => filters.value.page], () => {
+  // 如果返回数据为空，且不是第1页，说明可能超出了范围
+  const currentPage = filters.value.page || 1;
+  if (issueList.value.length === 0 && currentPage > 1 && totalCount.value > 0 && !loading.value) {
+    // 自动跳转到第一页
+    filters.value.page = 1;
+    fetchData();
+  }
+});
 
 const handleCreateIssue = async () => {
   if (!createForm.title.trim()) return;

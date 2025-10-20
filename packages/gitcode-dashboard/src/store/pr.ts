@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
-import type { PullRequest, PRFilterParams } from '@/types';
-import { getPRList } from '@/api';
+import type { PullRequest, PRFilterParams, PrCount } from '@/types';
+import { getPRList, getPRCount } from '@/api';
 import { useRepoStore } from './repo';
 
 export const usePRStore = defineStore('pr', () => {
@@ -10,6 +10,10 @@ export const usePRStore = defineStore('pr', () => {
   // PR 列表
   const prList = ref<PullRequest[]>([]);
   const loading = ref(false);
+
+  // PR 数量统计
+  const prCount = ref<PrCount | null>(null);
+  const countLoading = ref(false);
 
   // 筛选参数
   const filters = ref<PRFilterParams>({
@@ -44,6 +48,30 @@ export const usePRStore = defineStore('pr', () => {
     }
   };
 
+  // 获取 PR 数量统计
+  const fetchPRCount = async () => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) {
+      prCount.value = null;
+      return;
+    }
+
+    countLoading.value = true;
+    try {
+      const response = await getPRCount(
+        repoStore.currentOwner,
+        repoStore.currentRepo
+      );
+      if (response.data) {
+        prCount.value = response.data;
+      }
+    } catch (error) {
+      console.error('获取 PR 数量失败:', error);
+      prCount.value = null;
+    } finally {
+      countLoading.value = false;
+    }
+  };
+
   // 更新筛选条件
   const updateFilters = (newFilters: Partial<PRFilterParams>) => {
     filters.value = { ...filters.value, ...newFilters };
@@ -66,11 +94,13 @@ export const usePRStore = defineStore('pr', () => {
       if (newRepoId) {
         // 重置筛选条件
         resetFilters();
-        // 重新加载列表
+        // 重新加载列表和数量
         fetchPRList();
+        fetchPRCount();
       } else {
         // 清空列表并重置 loading 状态
         prList.value = [];
+        prCount.value = null;
         loading.value = false;
       }
     },
@@ -81,7 +111,10 @@ export const usePRStore = defineStore('pr', () => {
     prList,
     loading,
     filters,
+    prCount,
+    countLoading,
     fetchPRList,
+    fetchPRCount,
     updateFilters,
     resetFilters,
   };

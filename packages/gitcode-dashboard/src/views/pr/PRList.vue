@@ -72,7 +72,7 @@
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
-          :total="100"
+          :total="totalCount"
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleFilterChange"
@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RefreshRight } from '@element-plus/icons-vue';
 import { usePRStore } from '@/store';
@@ -94,9 +95,26 @@ import EmptyState from '@/components/EmptyState.vue';
 const prStore = usePRStore();
 
 // 使用 storeToRefs 解构响应式状态
-const { prList, loading, filters } = storeToRefs(prStore);
+const { prList, loading, filters, prCount } = storeToRefs(prStore);
 // 方法可以直接解构
 const { fetchPRList } = prStore;
+
+// 计算当前筛选状态下的 PR 总数
+const totalCount = computed(() => {
+  if (!prCount.value) return 0;
+
+  switch (filters.value.state) {
+    case 'open':
+      return prCount.value.opened || 0;
+    case 'closed':
+      return prCount.value.closed || 0;
+    case 'merged':
+      return prCount.value.merged || 0;
+    case 'all':
+    default:
+      return prCount.value.all || 0;
+  }
+});
 
 // 由于 store 中已经监听了 selectedRepoId 的变化，会自动加载数据
 // 这里只需要提供手动刷新的功能
@@ -108,6 +126,17 @@ const fetchData = () => {
 const handleFilterChange = () => {
   fetchData();
 };
+
+// 监听数据变化，处理分页超出范围的情况
+watch([prList, () => filters.value.page], () => {
+  // 如果返回数据为空，且不是第1页，说明可能超出了范围
+  const currentPage = filters.value.page || 1;
+  if (prList.value.length === 0 && currentPage > 1 && totalCount.value > 0 && !loading.value) {
+    // 自动跳转到第一页
+    filters.value.page = 1;
+    fetchData();
+  }
+});
 
 const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN');

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
-import type { Issue, IssueFilterParams } from '@/types';
-import { getIssueList } from '@/api';
+import type { Issue, IssueFilterParams, IssueCount } from '@/types';
+import { getIssueList, getIssueCount } from '@/api';
 import { useRepoStore } from './repo';
 
 export const useIssueStore = defineStore('issue', () => {
@@ -10,6 +10,10 @@ export const useIssueStore = defineStore('issue', () => {
   // Issue 列表
   const issueList = ref<Issue[]>([]);
   const loading = ref(false);
+
+  // Issue 数量统计
+  const issueCount = ref<IssueCount | null>(null);
+  const countLoading = ref(false);
 
   // 筛选参数
   const filters = ref<IssueFilterParams>({
@@ -44,6 +48,30 @@ export const useIssueStore = defineStore('issue', () => {
     }
   };
 
+  // 获取 Issue 数量统计
+  const fetchIssueCount = async () => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) {
+      issueCount.value = null;
+      return;
+    }
+
+    countLoading.value = true;
+    try {
+      const response = await getIssueCount(
+        repoStore.currentOwner,
+        repoStore.currentRepo
+      );
+      if (response.data) {
+        issueCount.value = response.data;
+      }
+    } catch (error) {
+      console.error('获取 Issue 数量失败:', error);
+      issueCount.value = null;
+    } finally {
+      countLoading.value = false;
+    }
+  };
+
   // 更新筛选条件
   const updateFilters = (newFilters: Partial<IssueFilterParams>) => {
     filters.value = { ...filters.value, ...newFilters };
@@ -66,11 +94,13 @@ export const useIssueStore = defineStore('issue', () => {
       if (newRepoId) {
         // 重置筛选条件
         resetFilters();
-        // 重新加载列表
+        // 重新加载列表和数量
         fetchIssueList();
+        fetchIssueCount();
       } else {
         // 清空列表并重置 loading 状态
         issueList.value = [];
+        issueCount.value = null;
         loading.value = false;
       }
     },
@@ -81,7 +111,10 @@ export const useIssueStore = defineStore('issue', () => {
     issueList,
     loading,
     filters,
+    issueCount,
+    countLoading,
     fetchIssueList,
+    fetchIssueCount,
     updateFilters,
     resetFilters,
   };

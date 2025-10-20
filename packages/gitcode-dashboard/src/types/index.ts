@@ -76,6 +76,13 @@ export interface IssueFilterParams extends ListIssuesQuery {
   direction?: 'asc' | 'desc';
 }
 
+/** Issue 数量统计 */
+export interface IssueCount {
+  all: number;
+  opened: number;
+  closed: number;
+}
+
 /** 统计数据 */
 export interface Statistics {
   open_prs: number;

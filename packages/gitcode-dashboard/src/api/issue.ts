@@ -6,6 +6,7 @@ import type {
   CreateIssueParams,
   UpdateIssueParams,
   ApiResponse,
+  IssueCount,
 } from '@/types';
 
 /**
@@ -60,4 +61,11 @@ export const createIssueComment = (owner: string, repo: string, number: number, 
     `/api/repo/${owner}/${repo}/issues/${number}/comments`,
     { body }
   );
+};
+
+/**
+ * 获取 Issue 数量统计
+ */
+export const getIssueCount = (owner: string, repo: string) => {
+  return http.get<ApiResponse<IssueCount>>(`/api/repo/${owner}/${repo}/issues/count`);
 };

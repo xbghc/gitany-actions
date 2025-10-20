@@ -44,6 +44,135 @@ issueRouter.get('/repo/:owner/:repo/issues', async (req: Request, res: Response)
 });
 
 /**
+ * 探测 Issue 数量
+ * GET /api/repo/:owner/:repo/issues/count
+ *
+ * 注意：由于 GitCode Issue API 不支持 only_count 参数，
+ * 此端点通过多次请求来探测Issue数量
+ */
+issueRouter.get('/repo/:owner/:repo/issues/count', async (req: Request, res: Response) => {
+  try {
+    const { owner, repo } = req.params;
+
+    const client = createGitcodeClient(req.gitcodeToken!);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
+    // 探测各个状态的Issue数量
+    const countResult = {
+      all: 0,
+      opened: 0,
+      closed: 0,
+    };
+
+    // 三阶段探测：指数搜索 → 二分查找 → 直接获取最后一页
+    const probeCount = async (state: 'all' | 'open' | 'closed'): Promise<number> => {
+      // 第一阶段：指数级探测，快速确定范围（100, 1000, 10000）
+      // 从 100 开始，因为 per_page 最大支持 100
+      let lower = 0;
+      let upper = 100;
+
+      while (upper <= 10000) {
+        try {
+          const issues = await client.issue.list(repoUrl, {
+            state,
+            page: upper,
+            per_page: 1,
+          });
+
+          if (issues.length === 0) {
+            // 该页无数据，范围确定在 [lower, upper) 之间
+            break;
+          } else {
+            // 该页有数据，继续探测更大范围
+            lower = upper;
+            upper *= 10; // 100 → 1000 → 10000
+          }
+        } catch (error) {
+          break;
+        }
+      }
+
+      // 限制上限
+      if (upper > 10000) {
+        upper = 10000;
+      }
+
+      // 第二阶段：如果区间小于100，直接获取最后一页确定准确数量
+      if (upper - lower < 100) {
+        // 计算这个区间所在的页码（假设 per_page=100）
+        const pageNum = Math.floor(lower / 100) + 1;
+        const baseCount = (pageNum - 1) * 100;
+
+        try {
+          const issues = await client.issue.list(repoUrl, {
+            state,
+            page: pageNum,
+            per_page: 100,
+          });
+
+          // 返回基数 + 这一页的数量
+          return baseCount + issues.length;
+        } catch (error) {
+          // 如果请求失败，回退到二分查找
+        }
+      }
+
+      // 第三阶段：区间较大时使用二分查找
+      let left = lower;
+      let right = upper;
+      let count = lower;
+
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+
+        try {
+          const issues = await client.issue.list(repoUrl, {
+            state,
+            page: mid,
+            per_page: 1,
+          });
+
+          if (issues.length > 0) {
+            count = mid;
+            left = mid + 1;
+          } else {
+            right = mid - 1;
+          }
+        } catch (error) {
+          break;
+        }
+      }
+
+      return count;
+    };
+
+    // 并行探测所有状态
+    const [allCount, openCount, closedCount] = await Promise.all([
+      probeCount('all'),
+      probeCount('open'),
+      probeCount('closed'),
+    ]);
+
+    countResult.all = allCount;
+    countResult.opened = openCount;
+    countResult.closed = closedCount;
+
+    res.json({
+      success: true,
+      data: countResult,
+      note: 'Accurate count via exponential + binary search (通过指数探测和二分查找获取的准确数量，最多支持10000个)',
+    });
+  } catch (error) {
+    console.error('Failed to probe issue count:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to probe issue count',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
  * 获取 Issue 详情
  * GET /api/repo/:owner/:repo/issues/:number
  */
