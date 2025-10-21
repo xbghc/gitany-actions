@@ -29,17 +29,12 @@
   "debug.allowBreakpointsEverywhere": true,
   "debug.openDebug": "openOnDebugBreak",
 
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
 
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit",
       "source.organizeImports": "explicit"
     }
   },
@@ -47,7 +42,6 @@
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit",
       "source.organizeImports": "explicit"
     }
   }
