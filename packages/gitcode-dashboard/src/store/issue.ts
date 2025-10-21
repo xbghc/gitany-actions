@@ -1,15 +1,22 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import type { Issue, IssueFilterParams, IssueCount } from '@/types';
-import { getIssueList, getIssueCount } from '@/api';
+import { getIssueList, getIssueCount, getIssueDetail } from '@/api';
 import { useRepoStore } from './repo';
 
 export const useIssueStore = defineStore('issue', () => {
   const repoStore = useRepoStore();
 
-  // Issue 列表
-  const issueList = ref<Issue[]>([]);
-  const loading = ref(false);
+  // Data cache: Map<issueNumber, Issue>
+  const issueCache = ref(new Map<number, Issue>());
+
+  // State for issue list view
+  const issueListIds = ref<number[]>([]);
+  const loadingList = ref(false);
+
+  // State for issue detail view
+  const currentIssueNumber = ref<number | null>(null);
+  const loadingDetail = ref(false);
 
   // Issue 数量统计
   const issueCount = ref<IssueCount | null>(null);
@@ -22,29 +29,75 @@ export const useIssueStore = defineStore('issue', () => {
     per_page: 20,
   });
 
+  // Computed property for the list of issues from cache
+  const issueList = computed(() => {
+    return issueListIds.value.map(id => issueCache.value.get(id)).filter(Boolean) as Issue[];
+  });
+
+  // Computed property for the currently viewed issue detail from cache
+  const issueDetail = computed(() => {
+    return currentIssueNumber.value ? issueCache.value.get(currentIssueNumber.value) : null;
+  });
+
+  // Unified loading state
+  const loading = computed(() => loadingList.value || loadingDetail.value);
+
+  // Helper to update cache
+  const updateCache = (issues: Issue[]) => {
+    issues.forEach(issue => {
+      issueCache.value.set(issue.number, issue);
+    });
+  };
+
   // 获取 Issue 列表
-  const fetchIssueList = async () => {
+  const fetchIssueList = async (fetchFilters = filters.value) => {
     if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      loading.value = false;
-      issueList.value = [];
+      loadingList.value = false;
+      issueListIds.value = [];
       return;
     }
 
-    loading.value = true;
+    loadingList.value = true;
     try {
       const response = await getIssueList(
         repoStore.currentOwner,
         repoStore.currentRepo,
-        filters.value
+        fetchFilters
       );
       if (response.data) {
-        issueList.value = response.data;
+        updateCache(response.data);
+        // Only update the main list if the filters match the current ones
+        if (fetchFilters === filters.value) {
+          issueListIds.value = response.data.map(issue => issue.number);
+        }
       }
     } catch (error) {
       console.error('获取 Issue 列表失败:', error);
-      issueList.value = [];
+      issueListIds.value = [];
     } finally {
-      loading.value = false;
+      loadingList.value = false;
+    }
+  };
+
+  // 获取 Issue 详情
+  const fetchIssueDetail = async (issueNumber: number) => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return;
+
+    currentIssueNumber.value = issueNumber;
+    loadingDetail.value = true;
+    try {
+      const response = await getIssueDetail(
+        repoStore.currentOwner,
+        repoStore.currentRepo,
+        issueNumber
+      );
+      if (response.data) {
+        updateCache([response.data]);
+      }
+    } catch (error) {
+      console.error(`获取 Issue #${issueNumber} 详情失败:`, error);
+    } finally {
+      loadingDetail.value = false;
     }
   };
 
@@ -92,28 +145,39 @@ export const useIssueStore = defineStore('issue', () => {
     () => repoStore.selectedRepoId,
     (newRepoId) => {
       if (newRepoId) {
+        // 清空缓存和状态
+        issueCache.value.clear();
+        issueListIds.value = [];
+        currentIssueNumber.value = null;
         // 重置筛选条件
         resetFilters();
         // 重新加载列表和数量
         fetchIssueList();
         fetchIssueCount();
       } else {
-        // 清空列表并重置 loading 状态
-        issueList.value = [];
+        // 清空所有内容
+        issueCache.value.clear();
+        issueListIds.value = [];
+        currentIssueNumber.value = null;
         issueCount.value = null;
-        loading.value = false;
+        loadingList.value = false;
+        loadingDetail.value = false;
       }
     },
     { immediate: true }
   );
 
   return {
+    // State & Computed
     issueList,
+    issueDetail,
     loading,
     filters,
     issueCount,
     countLoading,
+    // Actions
     fetchIssueList,
+    fetchIssueDetail,
     fetchIssueCount,
     updateFilters,
     resetFilters,

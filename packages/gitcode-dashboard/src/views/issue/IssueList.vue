@@ -36,7 +36,13 @@
         <el-table-column label="标题" min-width="300">
           <template #default="{ row }">
             <div class="issue-title">
-              <span>{{ row.title }}</span>
+              <span
+                class="issue-title-text"
+                @click="goToDetail(row.number)"
+                v-prefetch="() => prefetchDetail(row.number)"
+              >
+                {{ row.title }}
+              </span>
               <div class="issue-labels">
                 <el-tag
                   v-for="label in row.labels"
@@ -115,10 +121,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useIssueStore, useRepoStore } from '@/store';
 import { createIssue } from '@/api';
+import { prefetchService } from '@/services/prefetch';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -126,6 +134,7 @@ import { ElMessage } from 'element-plus';
 
 const issueStore = useIssueStore();
 const repoStore = useRepoStore();
+const router = useRouter();
 
 // 使用 storeToRefs 解构响应式状态
 const { issueList, loading, filters, issueCount } = storeToRefs(issueStore);
@@ -178,6 +187,25 @@ watch([issueList, () => filters.value.page], () => {
     filters.value.page = 1;
     fetchData();
   }
+
+  // ** Idle Fetching: Prefetch next page **
+  // If we have data, we are not loading, and there's a next page
+  if (issueList.value.length > 0 && !loading.value) {
+    const currentPage = filters.value.page || 1;
+    const itemsPerPage = filters.value.per_page || 10;
+    const hasMorePages = totalCount.value > (currentPage * itemsPerPage);
+
+    if (hasMorePages) {
+      const nextPage = currentPage + 1;
+      const prefetchFn = () => {
+        console.log(`Prefetching issues page #${nextPage}`);
+        return issueStore.fetchIssueList({ ...filters.value, page: nextPage });
+      };
+      // Use a unique ID for the task
+      const taskId = `issue-list-page-${nextPage}`;
+      prefetchService.addTask(taskId, prefetchFn, false); // false for low priority
+    }
+  }
 });
 
 const handleCreateIssue = async () => {
@@ -206,9 +234,29 @@ const handleCreateIssue = async () => {
 const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN');
 };
+
+const goToDetail = (issueNumber: number) => {
+  router.push({ name: 'IssueDetail', params: { issueNumber } });
+};
+
+const prefetchDetail = (issueNumber: number) => {
+  console.log(`Prefetching issue #${issueNumber}`);
+  // 实际的预取逻辑
+  return issueStore.fetchIssueDetail(issueNumber);
+};
 </script>
 
 <style scoped>
+.issue-title-text {
+  cursor: pointer;
+  color: #409eff;
+  transition: color 0.2s;
+}
+
+.issue-title-text:hover {
+  color: #79bbff;
+  text-decoration: underline;
+}
 .card-header {
   display: flex;
   justify-content: space-between;

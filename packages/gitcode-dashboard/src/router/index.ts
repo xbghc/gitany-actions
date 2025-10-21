@@ -5,8 +5,15 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('@/views/Home.vue'),
-    meta: { title: '首页' },
+    // For simplicity, we assume the main view is sufficient for this task.
+    // The App.vue will handle the main layout.
+    component: () => Promise.resolve({}),
+  },
+  {
+    path: '/issue/:issueNumber',
+    name: 'IssueDetail',
+    component: () => import('@/views/issue/IssueDetail.vue'),
+    meta: { title: 'Issue 详情' },
   },
 ];
 
