@@ -513,11 +513,35 @@ export const useIssueStore = defineStore('issue', () => {
     () => repoStore.selectedRepoId,
     async (newRepoId) => {
       if (newRepoId) {
-        // 重置筛选条件
+        // 1. 立即清空旧数据
+        issueList.value = [];
+        issueCount.value = null;
+
+        // 2. 重置筛选条件
         resetFilters();
-        // 先获取数量统计（用于计算总页数）
+
+        // 3. 尝试从缓存读取新仓库的第一页数据
+        if (repoStore.currentOwner && repoStore.currentRepo) {
+          const cacheKey = generateCacheKey({
+            type: 'issue',
+            owner: repoStore.currentOwner,
+            repo: repoStore.currentRepo,
+            page: 1,
+            per_page: 20,
+            state: 'all',
+          });
+
+          const cached = await getCache<Issue[]>(cacheKey);
+          if (cached) {
+            issueList.value = cached;
+            loading.value = false;
+          } else {
+            loading.value = true;
+          }
+        }
+
+        // 4. 后台获取数量统计和刷新数据
         await fetchIssueCount();
-        // 首次访问：优先第1页 + 后台全量预取
         await fetchWithPrefetchAll();
       } else {
         // 清空列表并重置 loading 状态
