@@ -68,7 +68,7 @@
       <EmptyState v-if="!loading && prList.length === 0" description="暂无 PR" />
 
       <!-- 分页 -->
-      <div class="pagination">
+      <div class="pagination" @mouseenter="handlePaginationHover">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -88,6 +88,7 @@ import { computed, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RefreshRight } from '@element-plus/icons-vue';
 import { usePRStore } from '@/store';
+import { useIdlePrefetch } from '@/composables/useIdlePrefetch';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -97,7 +98,10 @@ const prStore = usePRStore();
 // 使用 storeToRefs 解构响应式状态
 const { prList, loading, filters, prCount } = storeToRefs(prStore);
 // 方法可以直接解构
-const { fetchPRList } = prStore;
+const { fetchPRList, prefetchNextPage } = prStore;
+
+// Idle Prefetch
+const { scheduleIdlePrefetch } = useIdlePrefetch();
 
 // 计算当前筛选状态下的 PR 总数
 const totalCount = computed(() => {
@@ -137,6 +141,21 @@ watch([prList, () => filters.value.page], () => {
     fetchData();
   }
 });
+
+// 监听加载状态，当数据加载完成后，使用 idle callback 预取下一页
+watch(loading, (isLoading) => {
+  if (!isLoading && prList.value.length > 0) {
+    scheduleIdlePrefetch(() => {
+      prefetchNextPage();
+    });
+  }
+});
+
+// 分页器 hover 时预取下一页
+const handlePaginationHover = () => {
+  // 立即预取下一页，如果已缓存则不会重复请求
+  prefetchNextPage();
+};
 
 const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN');
