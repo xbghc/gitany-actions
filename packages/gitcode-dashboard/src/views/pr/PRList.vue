@@ -68,7 +68,7 @@
       <EmptyState v-if="!loading && prList.length === 0" description="暂无 PR" />
 
       <!-- 分页 -->
-      <div class="pagination" @mouseenter="handlePaginationHover">
+      <div class="pagination">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -84,11 +84,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RefreshRight } from '@element-plus/icons-vue';
 import { usePRStore } from '@/store';
-import { useIdlePrefetch } from '@/composables/useIdlePrefetch';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -98,10 +97,7 @@ const prStore = usePRStore();
 // 使用 storeToRefs 解构响应式状态
 const { prList, loading, filters, prCount } = storeToRefs(prStore);
 // 方法可以直接解构
-const { fetchPRList, prefetchNextPage, refreshWithIncremental, refreshFullData } = prStore;
-
-// Idle Prefetch
-const { scheduleIdlePrefetch } = useIdlePrefetch();
+const { fetchPRList, clearCache } = prStore;
 
 // 计算当前筛选状态下的 PR 总数
 const totalCount = computed(() => {
@@ -124,57 +120,27 @@ const totalCount = computed(() => {
 // 这里只需要提供手动刷新的功能
 
 /**
- * 换页处理：先显示缓存，再静默增量更新
+ * 换页处理
  */
-const handlePageChange = async () => {
-  // 1. 先从缓存读取并显示
-  await fetchPRList();
-  // 2. 静默增量更新（不显示 loading）
-  await refreshWithIncremental(true);
+const handlePageChange = () => {
+  // fetchPRList 会自动从缓存读取并显示，无需额外处理
+  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 筛选变化：先显示缓存，再增量更新
+ * 筛选变化
  */
-const handleFilterChange = async () => {
+const handleFilterChange = () => {
   filters.value.page = 1;
-  // 1. 先从缓存读取并显示
-  await fetchPRList();
-  // 2. 再增量更新
-  await refreshWithIncremental();
+  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 刷新按钮：全量刷新
+ * 刷新按钮：清空缓存并重新获取
  */
 const handleRefresh = async () => {
-  await refreshFullData();
-};
-
-// 监听数据变化，处理分页超出范围的情况
-watch([prList, () => filters.value.page], () => {
-  // 如果返回数据为空，且不是第1页，说明可能超出了范围
-  const currentPage = filters.value.page || 1;
-  if (prList.value.length === 0 && currentPage > 1 && totalCount.value > 0 && !loading.value) {
-    // 自动跳转到第一页
-    filters.value.page = 1;
-    handlePageChange();
-  }
-});
-
-// 监听加载状态，当数据加载完成后，使用 idle callback 预取下一页
-watch(loading, (isLoading) => {
-  if (!isLoading && prList.value.length > 0) {
-    scheduleIdlePrefetch(() => {
-      prefetchNextPage();
-    });
-  }
-});
-
-// 分页器 hover 时预取下一页
-const handlePaginationHover = () => {
-  // 立即预取下一页，如果已缓存则不会重复请求
-  prefetchNextPage();
+  await clearCache();
+  await fetchPRList();
 };
 
 const formatTime = (time: string) => {

@@ -4,34 +4,113 @@ import type { Issue, IssueFilterParams, IssueCount } from '@/types';
 import { getIssueList, getIssueCount } from '@/api';
 import { useRepoStore } from './repo';
 import {
-  generateCacheKey,
+  generateSimpleCacheKey,
   getCache,
   setCache,
-  getCacheItem,
-  getMergedCache,
-  clearCacheByType,
+  deleteCache,
+  type RepoCache,
 } from '@/utils/swrCache';
 
 export const useIssueStore = defineStore('issue', () => {
   const repoStore = useRepoStore();
 
-  // Issue 列表
+  // Issue 列表（当前显示）
   const issueList = ref<Issue[]>([]);
   const loading = ref(false);
+
+  // 完整 Issue 列表（缓存）
+  const allIssues = ref<Issue[]>([]);
+
+  // 缓存进度
+  const cacheProgress = ref({
+    lastFetchedPage: 0,
+    isComplete: false,
+  });
 
   // Issue 数量统计
   const issueCount = ref<IssueCount | null>(null);
   const countLoading = ref(false);
 
-  // 筛选参数
+  // 筛选参数（默认 open 状态，降序）
   const filters = ref<IssueFilterParams>({
-    state: 'all',
+    state: 'open',
     page: 1,
     per_page: 20,
+    sort: 'updated',
+    direction: 'desc',
   });
 
   /**
-   * 获取 Issue 列表（仅读缓存模式）
+   * 加载仓库缓存
+   */
+  const loadCache = async (): Promise<boolean> => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return false;
+
+    const cacheKey = generateSimpleCacheKey({
+      type: 'issue',
+      owner: repoStore.currentOwner,
+      repo: repoStore.currentRepo,
+    });
+
+    const cached = await getCache<RepoCache<Issue>>(cacheKey);
+    if (cached) {
+      allIssues.value = cached.items;
+      cacheProgress.value = {
+        lastFetchedPage: cached.lastFetchedPage,
+        isComplete: cached.isComplete,
+      };
+      return true;
+    }
+    return false;
+  };
+
+  /**
+   * 保存缓存
+   */
+  const saveCache = async () => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return;
+
+    const cacheKey = generateSimpleCacheKey({
+      type: 'issue',
+      owner: repoStore.currentOwner,
+      repo: repoStore.currentRepo,
+    });
+
+    const cacheData: RepoCache<Issue> = {
+      items: allIssues.value,
+      lastFetchedPage: cacheProgress.value.lastFetchedPage,
+      isComplete: cacheProgress.value.isComplete,
+      timestamp: Date.now(),
+    };
+
+    await setCache(cacheKey, cacheData);
+  };
+
+  /**
+   * 从缓存显示数据（降序）
+   */
+  const displayFromCache = () => {
+    // 1. 筛选状态
+    let filtered = allIssues.value;
+    if (filters.value.state !== 'all') {
+      filtered = allIssues.value.filter(issue => issue.state === filters.value.state);
+    }
+
+    // 2. 降序排序（最新的在前）
+    const sorted = [...filtered].sort((a, b) =>
+      new Date(b.updated_at || 0).getTime() -
+      new Date(a.updated_at || 0).getTime()
+    );
+
+    // 3. 分页
+    const page = filters.value.page || 1;
+    const perPage = filters.value.per_page || 20;
+    const start = (page - 1) * perPage;
+    issueList.value = sorted.slice(start, start + perPage);
+  };
+
+  /**
+   * 获取 Issue 列表
    * 优先从缓存读取，无缓存才发起网络请求
    */
   const fetchIssueList = async () => {
@@ -41,38 +120,39 @@ export const useIssueStore = defineStore('issue', () => {
       return;
     }
 
-    // 1. 生成缓存键
-    const cacheKey = generateCacheKey({
-      type: 'issue',
-      owner: repoStore.currentOwner,
-      repo: repoStore.currentRepo,
-      page: filters.value.page || 1,
-      per_page: filters.value.per_page || 20,
-      state: filters.value.state || 'all',
-    });
+    // 1. 加载缓存
+    const hasCache = await loadCache();
 
-    // 2. 尝试从缓存读取
-    const cached = await getCache<Issue[]>(cacheKey);
-    if (cached) {
-      // 有缓存：立即显示，不发起网络请求
-      issueList.value = cached;
+    if (hasCache && allIssues.value.length > 0) {
+      // 2. 从缓存显示（降序）
+      displayFromCache();
       loading.value = false;
+
+      // 3. 后台继续/补全缓存
+      if (!cacheProgress.value.isComplete) {
+        continueFetchingCache(); // 不 await，后台执行
+      } else {
+        checkForUpdates(); // 不 await，后台执行
+      }
       return;
     }
 
-    // 3. 无缓存：发起网络请求
+    // 无缓存：先获取第一页给用户看（降序）
     loading.value = true;
     try {
       const response = await getIssueList(
         repoStore.currentOwner,
         repoStore.currentRepo,
-        filters.value
+        {
+          page: 1,
+          per_page: 20,
+          sort: 'updated',
+          direction: 'desc',
+        }
       );
+
       if (response.data) {
         issueList.value = response.data;
-        // 更新缓存（不等待完成），记录最新的 updated_at
-        const latestUpdatedAt = response.data[0]?.updated_at;
-        setCache(cacheKey, response.data, latestUpdatedAt);
       }
     } catch (error) {
       if (import.meta.env.DEV) {
@@ -82,306 +162,147 @@ export const useIssueStore = defineStore('issue', () => {
     } finally {
       loading.value = false;
     }
+
+    // 启动后台缓存（升序）
+    startBackgroundCaching();
   };
 
   /**
-   * 增量更新 Issue 列表
-   * 按 updated_at 排序获取数据，直到遇到已缓存的 updated_at
-   * @param silent 静默模式，不显示 loading 状态
+   * 后台继续缓存（从上次页码继续，升序）
    */
-  const refreshWithIncremental = async (silent = false): Promise<boolean> => {
-    if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      return false;
-    }
+  const continueFetchingCache = async () => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return;
 
-    // 获取当前第一页的缓存项（包含 lastUpdatedAt）
-    const firstPageKey = generateCacheKey({
-      type: 'issue',
-      owner: repoStore.currentOwner,
-      repo: repoStore.currentRepo,
-      page: 1,
-      per_page: filters.value.per_page || 20,
-      state: filters.value.state || 'all',
-    });
+    const perPage = 100;
+    let currentPage = cacheProgress.value.lastFetchedPage + 1;
 
-    const firstPageCache = await getCacheItem<Issue[]>(firstPageKey);
-
-    // 3. 如果没有缓存，执行完整加载
-    if (!firstPageCache || !firstPageCache.data || firstPageCache.data.length === 0) {
-      await fetchIssueList();
-      return true;
-    }
-
-    const lastUpdatedAt = firstPageCache.lastUpdatedAt;
-
-    // 4. 按 updated_at 排序获取新数据
-    const updatedItems: Issue[] = [];
-    let page = 1;
-    let shouldContinue = true;
-
-    if (!silent) {
-      loading.value = true;
-    }
-
-    try {
-      while (shouldContinue) {
-        const response = await getIssueList(
-          repoStore.currentOwner,
-          repoStore.currentRepo,
-          {
-            ...filters.value,
-            page,
-            sort: 'updated', // 强制按 updated_at 排序
-          }
-        );
-
-        if (!response.data || response.data.length === 0) {
-          break;
-        }
-
-        // 检查每一项
-        for (const item of response.data) {
-          // 如果遇到相同的 updated_at，停止获取
-          if (lastUpdatedAt && item.updated_at === lastUpdatedAt) {
-            shouldContinue = false;
-            break;
-          }
-          updatedItems.push(item);
-        }
-
-        page++;
-
-        // 安全限制：最多获取 10 页
-        if (page > 10) {
-          break;
-        }
-      }
-
-      // 5. 如果没有更新，从缓存读取当前页
-      if (updatedItems.length === 0) {
-        const currentPageKey = generateCacheKey({
-          type: 'issue',
-          owner: repoStore.currentOwner,
-          repo: repoStore.currentRepo,
-          page: filters.value.page || 1,
-          per_page: filters.value.per_page || 20,
-          state: filters.value.state || 'all',
-        });
-        const currentPageCache = await getCache<Issue[]>(currentPageKey);
-        if (currentPageCache) {
-          issueList.value = currentPageCache;
-        }
-        return false;
-      }
-
-      // 6. 合并数据
-      const mergedData = await mergeAndRepaginate(updatedItems);
-
-      // 7. 更新当前页显示
-      const currentPage = filters.value.page || 1;
-      const perPage = filters.value.per_page || 20;
-      const startIndex = (currentPage - 1) * perPage;
-      issueList.value = mergedData.slice(startIndex, startIndex + perPage);
-
-      return true;
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('增量更新失败:', error);
-      }
-      // 失败时回退到完整加载
-      await fetchIssueList();
-      return false;
-    } finally {
-      if (!silent) {
-        loading.value = false;
-      }
-    }
-  };
-
-  /**
-   * 合并更新的数据并重新分页存储
-   */
-  const mergeAndRepaginate = async (updatedItems: Issue[]): Promise<Issue[]> => {
-    if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      return [];
-    }
-
-    const baseCachePrefix = `swr_issue_${repoStore.currentOwner}_${repoStore.currentRepo}_${filters.value.state || 'all'}`;
-
-    // 1. 获取所有已缓存的数据
-    const cachedData = await getMergedCache<Issue>(baseCachePrefix);
-
-    // 2. 创建 ID -> Issue 的映射
-    const itemMap = new Map<number, Issue>();
-
-    // 先添加缓存的数据
-    cachedData.forEach(item => {
-      itemMap.set(item.id, item);
-    });
-
-    // 用新数据覆盖（更新或新增）
-    updatedItems.forEach(item => {
-      itemMap.set(item.id, item);
-    });
-
-    // 3. 转换为数组并按 updated_at 降序排序
-    const allItems = Array.from(itemMap.values()).sort((a, b) => {
-      const timeA = new Date(a.updated_at || 0).getTime();
-      const timeB = new Date(b.updated_at || 0).getTime();
-      return timeB - timeA;
-    });
-
-    // 4. 筛选符合当前状态的数据
-    const filteredItems = allItems.filter(item => {
-      if (filters.value.state === 'all') return true;
-      return item.state === filters.value.state;
-    });
-
-    // 5. 按页重新存储到缓存
-    const perPage = filters.value.per_page || 20;
-    const totalPages = Math.ceil(filteredItems.length / perPage);
-
-    for (let page = 1; page <= totalPages; page++) {
-      const startIndex = (page - 1) * perPage;
-      const pageData = filteredItems.slice(startIndex, startIndex + perPage);
-
-      const cacheKey = generateCacheKey({
-        type: 'issue',
-        owner: repoStore.currentOwner,
-        repo: repoStore.currentRepo,
-        page,
-        per_page: perPage,
-        state: filters.value.state || 'all',
-      });
-
-      // 记录该页最新的 updated_at
-      const latestUpdatedAt = pageData[0]?.updated_at;
-      await setCache(cacheKey, pageData, latestUpdatedAt);
-    }
-
-    return filteredItems;
-  };
-
-  /**
-   * 首次访问：优先显示第1页，后台全量预取所有页
-   */
-  const fetchWithPrefetchAll = async () => {
-    if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      return;
-    }
-
-    // 1. 优先获取并显示第1页
-    filters.value.page = 1;
-    await fetchIssueList();
-
-    // 2. 后台全量预取所有页
-    prefetchAllPages();
-  };
-
-  /**
-   * 后台预取所有页面
-   */
-  const prefetchAllPages = async () => {
-    if (!repoStore.currentOwner || !repoStore.currentRepo || !issueCount.value) {
-      return;
-    }
-
-    const perPage = filters.value.per_page || 20;
-
-    // 根据当前筛选状态获取总数
-    let total = 0;
-    switch (filters.value.state) {
-      case 'open':
-        total = issueCount.value.opened || 0;
-        break;
-      case 'closed':
-        total = issueCount.value.closed || 0;
-        break;
-      case 'all':
-      default:
-        total = issueCount.value.all || 0;
-    }
-
-    const totalPages = Math.ceil(total / perPage);
-
-    // 从第2页开始预取（第1页已经获取并显示）
-    for (let page = 2; page <= totalPages; page++) {
+    while (!cacheProgress.value.isComplete) {
       try {
         const response = await getIssueList(
           repoStore.currentOwner,
           repoStore.currentRepo,
           {
-            ...filters.value,
-            page,
+            page: currentPage,
+            per_page: perPage,
+            sort: 'updated',
+            direction: 'asc', // 升序：从旧到新
           }
         );
-        if (response.data) {
-          const cacheKey = generateCacheKey({
-            type: 'issue',
-            owner: repoStore.currentOwner,
-            repo: repoStore.currentRepo,
-            page,
-            per_page: perPage,
-            state: filters.value.state || 'all',
-          });
-          const latestUpdatedAt = response.data[0]?.updated_at;
-          await setCache(cacheKey, response.data, latestUpdatedAt);
+
+        if (!response.data || response.data.length === 0) {
+          cacheProgress.value.isComplete = true;
+          await saveCache();
+          break;
         }
+
+        // 合并到缓存（使用 Map 去重）
+        const itemMap = new Map(allIssues.value.map(issue => [issue.id, issue]));
+        response.data.forEach(issue => itemMap.set(issue.id, issue));
+        allIssues.value = Array.from(itemMap.values());
+
+        // 更新进度
+        cacheProgress.value.lastFetchedPage = currentPage;
+        await saveCache();
+
+        // 更新显示
+        displayFromCache();
+
+        // 如果返回的数据少于请求的数量，说明已经到底了
+        if (response.data.length < perPage) {
+          cacheProgress.value.isComplete = true;
+          await saveCache();
+          break;
+        }
+
+        currentPage++;
       } catch (error) {
         if (import.meta.env.DEV) {
-          console.debug(`预取第 ${page} 页失败:`, error);
+          console.error(`缓存第 ${currentPage} 页失败:`, error);
         }
+        break;
       }
     }
   };
 
   /**
-   * 刷新按钮：先显示当前页，后台全量重新获取
+   * 启动后台缓存（从第1页开始，升序）
    */
-  const refreshFullData = async () => {
-    if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      return;
-    }
+  const startBackgroundCaching = () => {
+    cacheProgress.value = {
+      lastFetchedPage: 0,
+      isComplete: false,
+    };
+    continueFetchingCache();
+  };
 
-    const currentPage = filters.value.page || 1;
+  /**
+   * 检查更新（缓存已完成时）
+   */
+  const checkForUpdates = async () => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return;
 
-    // 1. 优先获取并显示当前页
-    loading.value = true;
     try {
       const response = await getIssueList(
         repoStore.currentOwner,
         repoStore.currentRepo,
-        filters.value
+        {
+          page: 1,
+          per_page: 100,
+          sort: 'updated',
+          direction: 'desc',
+        }
       );
-      if (response.data) {
-        issueList.value = response.data;
-        const latestUpdatedAt = response.data[0]?.updated_at;
-        const cacheKey = generateCacheKey({
-          type: 'issue',
-          owner: repoStore.currentOwner,
-          repo: repoStore.currentRepo,
-          page: currentPage,
-          per_page: filters.value.per_page || 20,
-          state: filters.value.state || 'all',
-        });
-        await setCache(cacheKey, response.data, latestUpdatedAt);
+
+      if (!response.data || response.data.length === 0) return;
+
+      // 找到缓存中最新的 updated_at
+      const cachedLatest = allIssues.value.reduce((latest, issue) => {
+        const issueTime = new Date(issue.updated_at || 0).getTime();
+        return issueTime > latest ? issueTime : latest;
+      }, 0);
+
+      // 找出比缓存更新的数据
+      const newItems = response.data.filter(issue =>
+        new Date(issue.updated_at || 0).getTime() > cachedLatest
+      );
+
+      if (newItems.length > 0) {
+        // 合并到缓存
+        const itemMap = new Map(allIssues.value.map(issue => [issue.id, issue]));
+        newItems.forEach(issue => itemMap.set(issue.id, issue));
+        allIssues.value = Array.from(itemMap.values());
+
+        await saveCache();
+        displayFromCache();
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('刷新当前页失败:', error);
+        console.error('检查更新失败:', error);
       }
-    } finally {
-      loading.value = false;
     }
+  };
 
-    // 2. 清除当前状态的所有缓存
-    await clearCacheByType('issue', repoStore.currentOwner, repoStore.currentRepo);
+  /**
+   * 清空当前仓库的缓存
+   */
+  const clearCache = async () => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return;
 
-    // 3. 后台全量重新获取所有页
-    prefetchAllPages();
+    const cacheKey = generateSimpleCacheKey({
+      type: 'issue',
+      owner: repoStore.currentOwner,
+      repo: repoStore.currentRepo,
+    });
 
-    // 4. 重新获取数量统计
-    fetchIssueCount();
+    // 删除缓存
+    await deleteCache(cacheKey);
+
+    // 重置状态
+    allIssues.value = [];
+    cacheProgress.value = {
+      lastFetchedPage: 0,
+      isComplete: false,
+    };
   };
 
   // 获取 Issue 数量统计
@@ -410,101 +331,30 @@ export const useIssueStore = defineStore('issue', () => {
     }
   };
 
-  /**
-   * 预取指定页面的数据
-   * @param page 要预取的页码
-   */
-  const prefetchPage = async (page: number) => {
-    if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      return;
-    }
-
-    const perPage = filters.value.per_page || 20;
-    const cacheKey = generateCacheKey({
-      type: 'issue',
-      owner: repoStore.currentOwner,
-      repo: repoStore.currentRepo,
-      page,
-      per_page: perPage,
-      state: filters.value.state || 'all',
-    });
-
-    // 如果已经有缓存，不重复请求
-    const cached = await getCache<Issue[]>(cacheKey);
-    if (cached) {
-      return;
-    }
-
-    // 静默请求指定页数据
-    try {
-      const response = await getIssueList(
-        repoStore.currentOwner,
-        repoStore.currentRepo,
-        {
-          ...filters.value,
-          page,
-        }
-      );
-      if (response.data) {
-        const latestUpdatedAt = response.data[0]?.updated_at;
-        setCache(cacheKey, response.data, latestUpdatedAt);
-      }
-    } catch (error) {
-      // 预取失败不影响用户体验，静默处理
-      if (import.meta.env.DEV) {
-        console.debug(`预取第 ${page} 页失败:`, error);
-      }
-    }
-  };
-
-  /**
-   * 预取下一页数据
-   */
-  const prefetchNextPage = async () => {
-    if (!issueCount.value) {
-      return;
-    }
-
-    const currentPage = filters.value.page || 1;
-    const perPage = filters.value.per_page || 20;
-
-    // 根据当前筛选状态获取总数
-    let total = 0;
-    switch (filters.value.state) {
-      case 'open':
-        total = issueCount.value.opened || 0;
-        break;
-      case 'closed':
-        total = issueCount.value.closed || 0;
-        break;
-      case 'all':
-      default:
-        total = issueCount.value.all || 0;
-    }
-
-    // 计算总页数
-    const totalPages = Math.ceil(total / perPage);
-
-    // 如果没有下一页，不预取
-    if (currentPage >= totalPages) {
-      return;
-    }
-
-    await prefetchPage(currentPage + 1);
-  };
-
-  // 更新筛选条件
+  // 更新筛选条件（只需重新显示，数据已在内存中）
   const updateFilters = (newFilters: Partial<IssueFilterParams>) => {
     filters.value = { ...filters.value, ...newFilters };
-    fetchIssueList();
+    displayFromCache();
   };
+
+  // 监听 filters 变化，自动重新显示
+  watch(
+    () => [filters.value.state, filters.value.page, filters.value.per_page],
+    () => {
+      if (allIssues.value.length > 0) {
+        displayFromCache();
+      }
+    }
+  );
 
   // 重置筛选条件
   const resetFilters = () => {
     filters.value = {
-      state: 'all',
+      state: 'open',
       page: 1,
       per_page: 20,
+      sort: 'updated',
+      direction: 'desc',
     };
   };
 
@@ -515,36 +365,29 @@ export const useIssueStore = defineStore('issue', () => {
       if (newRepoId) {
         // 1. 立即清空旧数据
         issueList.value = [];
+        allIssues.value = [];
         issueCount.value = null;
+        cacheProgress.value = {
+          lastFetchedPage: 0,
+          isComplete: false,
+        };
 
-        // 2. 重置筛选条件
+        // 2. 重置筛选条件为 open
         resetFilters();
 
-        // 3. 尝试从缓存读取新仓库的第一页数据
-        if (repoStore.currentOwner && repoStore.currentRepo) {
-          const cacheKey = generateCacheKey({
-            type: 'issue',
-            owner: repoStore.currentOwner,
-            repo: repoStore.currentRepo,
-            page: 1,
-            per_page: 20,
-            state: 'all',
-          });
-
-          const cached = await getCache<Issue[]>(cacheKey);
-          if (cached) {
-            issueList.value = cached;
-            loading.value = false;
-          } else {
-            loading.value = true;
-          }
+        // 3. 尝试从缓存读取新仓库数据
+        const hasCache = await loadCache();
+        if (hasCache && allIssues.value.length > 0) {
+          displayFromCache();
+          loading.value = false;
+        } else {
+          loading.value = true;
         }
 
         // 4. 后台获取数量统计和刷新数据
         await fetchIssueCount();
-        await fetchWithPrefetchAll();
+        await fetchIssueList();
       } else {
-        // 清空列表并重置 loading 状态
         issueList.value = [];
         issueCount.value = null;
         loading.value = false;
@@ -561,12 +404,8 @@ export const useIssueStore = defineStore('issue', () => {
     countLoading,
     fetchIssueList,
     fetchIssueCount,
+    clearCache,
     updateFilters,
     resetFilters,
-    prefetchNextPage,
-    prefetchPage,
-    refreshWithIncremental,
-    fetchWithPrefetchAll,
-    refreshFullData,
   };
 });

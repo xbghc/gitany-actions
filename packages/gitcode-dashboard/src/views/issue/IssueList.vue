@@ -70,7 +70,7 @@
       <EmptyState v-if="!loading && issueList.length === 0" description="暂无 Issue" />
 
       <!-- 分页 -->
-      <div class="pagination" @mouseenter="handlePaginationHover">
+      <div class="pagination">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -114,11 +114,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { storeToRefs } from 'pinia';
 import { Plus, RefreshRight } from '@element-plus/icons-vue';
 import { useIssueStore, useRepoStore } from '@/store';
-import { useIdlePrefetch } from '@/composables/useIdlePrefetch';
 import { createIssue } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
@@ -131,10 +130,7 @@ const repoStore = useRepoStore();
 // 使用 storeToRefs 解构响应式状态
 const { issueList, loading, filters, issueCount } = storeToRefs(issueStore);
 // 方法可以直接解构
-const { fetchIssueList, prefetchNextPage, refreshWithIncremental, refreshFullData } = issueStore;
-
-// Idle Prefetch
-const { scheduleIdlePrefetch } = useIdlePrefetch();
+const { fetchIssueList, clearCache } = issueStore;
 
 // 由于 store 中已经监听了 selectedRepoId 的变化，会自动加载数据
 // 这里只需要提供手动刷新的功能
@@ -166,57 +162,27 @@ const totalCount = computed(() => {
 });
 
 /**
- * 换页处理：先显示缓存，再静默增量更新
+ * 换页处理
  */
-const handlePageChange = async () => {
-  // 1. 先从缓存读取并显示
-  await fetchIssueList();
-  // 2. 静默增量更新（不显示 loading）
-  await refreshWithIncremental(true);
+const handlePageChange = () => {
+  // fetchIssueList 会自动从缓存读取并显示，无需额外处理
+  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 筛选变化：先显示缓存，再增量更新
+ * 筛选变化
  */
-const handleFilterChange = async () => {
+const handleFilterChange = () => {
   filters.value.page = 1;
-  // 1. 先从缓存读取并显示
-  await fetchIssueList();
-  // 2. 再增量更新
-  await refreshWithIncremental();
+  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 刷新按钮：全量刷新
+ * 刷新按钮：清空缓存并重新获取
  */
 const handleRefresh = async () => {
-  await refreshFullData();
-};
-
-// 监听数据变化，处理分页超出范围的情况
-watch([issueList, () => filters.value.page], () => {
-  // 如果返回数据为空，且不是第1页，说明可能超出了范围
-  const currentPage = filters.value.page || 1;
-  if (issueList.value.length === 0 && currentPage > 1 && totalCount.value > 0 && !loading.value) {
-    // 自动跳转到第一页
-    filters.value.page = 1;
-    handlePageChange();
-  }
-});
-
-// 监听加载状态，当数据加载完成后，使用 idle callback 预取下一页
-watch(loading, (isLoading) => {
-  if (!isLoading && issueList.value.length > 0) {
-    scheduleIdlePrefetch(() => {
-      prefetchNextPage();
-    });
-  }
-});
-
-// 分页器 hover 时预取下一页
-const handlePaginationHover = () => {
-  // 立即预取下一页，如果已缓存则不会重复请求
-  prefetchNextPage();
+  await clearCache();
+  await fetchIssueList();
 };
 
 const handleCreateIssue = async () => {
@@ -235,10 +201,10 @@ const handleCreateIssue = async () => {
     createForm.title = '';
     createForm.body = '';
 
-    // 创建后：先显示缓存，再增量更新
+    // 创建后：清空缓存并重新获取
     filters.value.page = 1;
+    await clearCache();
     await fetchIssueList();
-    await refreshWithIncremental();
   } catch (error) {
     ElMessage.error('创建 Issue 失败');
   } finally {

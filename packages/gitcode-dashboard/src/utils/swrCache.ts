@@ -29,6 +29,25 @@ interface CacheParams {
   type: 'pr' | 'issue';
 }
 
+/**
+ * 简化的缓存键参数（用于仓库级别的缓存）
+ */
+export interface SimpleCacheParams {
+  type: 'pr' | 'issue';
+  owner: string;
+  repo: string;
+}
+
+/**
+ * 仓库缓存数据结构（渐进式缓存）
+ */
+export interface RepoCache<T> {
+  items: T[];              // 已缓存的所有项目
+  lastFetchedPage: number; // 已缓存到第几页（升序缓存的页码）
+  isComplete: boolean;     // 是否已获取所有数据
+  timestamp: number;       // 缓存创建时间
+}
+
 const DB_NAME = 'swr_cache_db';
 const DB_VERSION = 1;
 const STORE_NAME = 'cache_store';
@@ -55,11 +74,19 @@ function initDB(): Promise<IDBDatabase> {
 }
 
 /**
- * 生成缓存键
+ * 生成缓存键（分页模式）
  */
 export function generateCacheKey(params: CacheParams): string {
   const { type, owner, repo, page, per_page, state } = params;
   return `${CACHE_PREFIX}${type}_${owner}_${repo}_${state}_p${page}_s${per_page}`;
+}
+
+/**
+ * 生成简化的缓存键（仓库级别）
+ */
+export function generateSimpleCacheKey(params: SimpleCacheParams): string {
+  const { type, owner, repo } = params;
+  return `${CACHE_PREFIX}${type}_${owner}_${repo}`;
 }
 
 /**
@@ -110,6 +137,27 @@ export async function setCache<T>(key: string, data: T, lastUpdatedAt?: string):
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('Failed to write cache:', error);
+    }
+  }
+}
+
+/**
+ * 删除单个缓存项
+ */
+export async function deleteCache(key: string): Promise<void> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], 'readwrite');
+      const objectStore = transaction.objectStore(STORE_NAME);
+      const request = objectStore.delete(key);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Failed to delete cache:', error);
     }
   }
 }
