@@ -80,8 +80,6 @@ prRouter.get('/repo/:owner/:repo/pulls', async (req: Request, res: Response) => 
  */
 prRouter.get('/repo/:owner/:repo/pulls/:number', async (req: Request, res: Response) => {
   try {
-    const { owner, repo } = req.params;
-
     res.status(501).json({
       success: false,
       error: 'Not implemented',

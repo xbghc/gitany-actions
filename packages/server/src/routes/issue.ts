@@ -87,7 +87,7 @@ issueRouter.get('/repo/:owner/:repo/issues/count', async (req: Request, res: Res
             lower = upper;
             upper *= 10; // 100 → 1000 → 10000
           }
-        } catch (error) {
+        } catch {
           break;
         }
       }
@@ -112,7 +112,7 @@ issueRouter.get('/repo/:owner/:repo/issues/count', async (req: Request, res: Res
 
           // 返回基数 + 这一页的数量
           return baseCount + issues.length;
-        } catch (error) {
+        } catch {
           // 如果请求失败，回退到二分查找
         }
       }
@@ -138,7 +138,7 @@ issueRouter.get('/repo/:owner/:repo/issues/count', async (req: Request, res: Res
           } else {
             right = mid - 1;
           }
-        } catch (error) {
+        } catch {
           break;
         }
       }

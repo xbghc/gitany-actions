@@ -1,15 +1,15 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
-import { defaultConfigPath } from '@xbghc/gitcode-api';
+import { homedir } from 'node:os';
 
-/** Returns ~/.gitany/gitcode */
+/** Returns ~/.gitcode */
 export function gitcodeBaseDir() {
-  // Keep single source of truth with gitcode's default config location
-  return path.dirname(defaultConfigPath());
+  // This was previously derived from defaultConfigPath in @xbghc/gitcode-api
+  return path.join(homedir(), '.gitcode');
 }
 
-/** Resolves a sub-directory under ~/.gitany/gitcode */
+/** Resolves a sub-directory under ~/.gitcode */
 export function resolveGitcodeSubdir(subdir: string) {
   return path.join(gitcodeBaseDir(), subdir);
 }

@@ -10,9 +10,11 @@ export class GitcodeClient {
   repo = new GitcodeClientRepo(this);
   issue = new GitcodeClientIssue(this);
   user = new GitcodeClientUser(this);
-  auth = new GitcodeClientAuth(this);
+  auth: GitcodeClientAuth;
 
-  constructor() {}
+  constructor(token?: string) {
+    this.auth = new GitcodeClientAuth(this, token);
+  }
 
   async request<T = unknown>(
     url: string,
@@ -22,7 +24,7 @@ export class GitcodeClient {
     return await httpRequest<T>({
       method,
       url,
-      token: (await this.auth.token()) ?? undefined,
+      token: this.auth.token() ?? undefined,
       options,
     });
   }

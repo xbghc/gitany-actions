@@ -2,7 +2,6 @@ export const version = '0.1.0';
 
 export { GitcodeClient } from './client/index.js';
 export { GitcodeClientAuth } from './client/auth/index.js';
-export { FileAuthStorage, defaultConfigPath } from './auth.js';
 export type {
   SelfPermissionParams,
   RoleInfo,
