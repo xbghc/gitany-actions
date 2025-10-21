@@ -23,6 +23,12 @@ export async function createPrContainer(
     for (const [k, v] of Object.entries(options.env)) env.push(`${k}=${v}`);
   }
 
+  if (!pr.head.repo) {
+    throw new Error(
+      `无法创建 PR #${pr.id} 的容器: 源仓库已被删除或不可访问`,
+    );
+  }
+
   const headRepoUrl = toGitUrl(pr.head.repo.html_url);
 
   env.push(

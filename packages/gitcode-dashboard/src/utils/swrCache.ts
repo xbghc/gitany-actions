@@ -16,6 +16,8 @@ interface CacheItem<T> {
   key: string;
   data: T;
   timestamp: number;
+  /** 记录数据中最新的 updated_at（用于增量更新判断） */
+  lastUpdatedAt?: string;
 }
 
 interface CacheParams {
@@ -88,7 +90,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
 /**
  * 写入缓存
  */
-export async function setCache<T>(key: string, data: T): Promise<void> {
+export async function setCache<T>(key: string, data: T, lastUpdatedAt?: string): Promise<void> {
   try {
     const db = await initDB();
     return new Promise((resolve, reject) => {
@@ -98,6 +100,7 @@ export async function setCache<T>(key: string, data: T): Promise<void> {
         key,
         data,
         timestamp: Date.now(),
+        lastUpdatedAt,
       };
       const request = objectStore.put(cacheItem);
 
@@ -168,5 +171,104 @@ export async function clearAllCache(): Promise<void> {
     if (import.meta.env.DEV) {
       console.warn('Failed to clear all cache:', error);
     }
+  }
+}
+
+/**
+ * 获取完整的缓存项（包含元数据）
+ */
+export async function getCacheItem<T>(key: string): Promise<CacheItem<T> | null> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], 'readonly');
+      const objectStore = transaction.objectStore(STORE_NAME);
+      const request = objectStore.get(key);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result as CacheItem<T> | undefined;
+        resolve(result || null);
+      };
+    });
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Failed to read cache item:', error);
+    }
+    return null;
+  }
+}
+
+/**
+ * 获取匹配特定前缀的所有缓存键
+ */
+export async function getCacheKeysByPrefix(prefix: string): Promise<string[]> {
+  try {
+    const db = await initDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], 'readonly');
+      const objectStore = transaction.objectStore(STORE_NAME);
+      const request = objectStore.openCursor();
+      const keys: string[] = [];
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+        if (cursor) {
+          const key = cursor.key.toString();
+          if (key.startsWith(prefix)) {
+            keys.push(key);
+          }
+          cursor.continue();
+        } else {
+          resolve(keys);
+        }
+      };
+    });
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Failed to get cache keys:', error);
+    }
+    return [];
+  }
+}
+
+/**
+ * 获取合并后的所有已缓存数据（跨页合并）
+ * @param cachePrefix 缓存键前缀（不包含页码部分）
+ * @returns 合并后的数据数组
+ */
+export async function getMergedCache<T extends { id: number }>(
+  cachePrefix: string
+): Promise<T[]> {
+  try {
+    // 获取所有匹配的缓存键
+    const keys = await getCacheKeysByPrefix(cachePrefix);
+
+    if (keys.length === 0) {
+      return [];
+    }
+
+    // 读取所有缓存数据
+    const allData: T[] = [];
+
+    for (const key of keys) {
+      const cached = await getCache<T[]>(key);
+      if (cached && Array.isArray(cached)) {
+        allData.push(...cached);
+      }
+    }
+
+    // 去重（使用 ID 作为唯一标识）
+    const uniqueData = Array.from(
+      new Map(allData.map(item => [item.id, item])).values()
+    );
+
+    return uniqueData;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Failed to merge cache:', error);
+    }
+    return [];
   }
 }

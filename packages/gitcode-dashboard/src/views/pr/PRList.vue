@@ -19,7 +19,7 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button :icon="RefreshRight" @click="fetchData">刷新</el-button>
+            <el-button :icon="RefreshRight" @click="handleRefresh">刷新</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -76,7 +76,7 @@
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleFilterChange"
-          @current-change="handleFilterChange"
+          @current-change="handlePageChange"
         />
       </div>
     </el-card>
@@ -98,7 +98,7 @@ const prStore = usePRStore();
 // 使用 storeToRefs 解构响应式状态
 const { prList, loading, filters, prCount } = storeToRefs(prStore);
 // 方法可以直接解构
-const { fetchPRList, prefetchNextPage } = prStore;
+const { fetchPRList, prefetchNextPage, refreshWithIncremental, refreshFullData } = prStore;
 
 // Idle Prefetch
 const { scheduleIdlePrefetch } = useIdlePrefetch();
@@ -123,12 +123,32 @@ const totalCount = computed(() => {
 // 由于 store 中已经监听了 selectedRepoId 的变化，会自动加载数据
 // 这里只需要提供手动刷新的功能
 
-const fetchData = () => {
-  fetchPRList();
+/**
+ * 换页处理：先显示缓存，再静默增量更新
+ */
+const handlePageChange = async () => {
+  // 1. 先从缓存读取并显示
+  await fetchPRList();
+  // 2. 静默增量更新（不显示 loading）
+  await refreshWithIncremental(true);
 };
 
-const handleFilterChange = () => {
-  fetchData();
+/**
+ * 筛选变化：先显示缓存，再增量更新
+ */
+const handleFilterChange = async () => {
+  filters.value.page = 1;
+  // 1. 先从缓存读取并显示
+  await fetchPRList();
+  // 2. 再增量更新
+  await refreshWithIncremental();
+};
+
+/**
+ * 刷新按钮：全量刷新
+ */
+const handleRefresh = async () => {
+  await refreshFullData();
 };
 
 // 监听数据变化，处理分页超出范围的情况
@@ -138,7 +158,7 @@ watch([prList, () => filters.value.page], () => {
   if (prList.value.length === 0 && currentPage > 1 && totalCount.value > 0 && !loading.value) {
     // 自动跳转到第一页
     filters.value.page = 1;
-    fetchData();
+    handlePageChange();
   }
 });
 

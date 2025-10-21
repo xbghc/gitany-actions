@@ -5,7 +5,7 @@ export const branchSchema = z.object({
   label: z.string(),
   ref: z.string(),
   sha: z.string(),
-  repo: repoSchema,
+  repo: repoSchema.optional(),
   user: z.unknown(),
   // 省略部分内容
 });
