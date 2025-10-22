@@ -4,164 +4,98 @@ title: 用户 API
 
 # 用户 API
 
-## 概述
+`@xbghc/gitcode-api` 的用户模块提供获取当前认证用户资料与命名空间的封装，所有响应都会通过 Zod 进行结构校验。
 
-用户 API 提供获取当前认证用户信息和命名空间的功能。
+## 快速开始
 
-## 更新说明
+```ts
+import { GitcodeClient } from '@xbghc/gitcode-api';
 
-**2025-09-10 更新**: `getUserProfile()` 方法现在返回完整的 `UserProfile` 类型，直接包含所有用户信息字段，无需通过 `raw` 字段访问原始数据。这提供了更丰富的用户信息和更好的类型安全。
-**2025-09-11 更新**: `getUserProfile()` 现在使用 Zod 对返回数据进行结构校验，提升类型安全。
-**2025-09-13 更新**: 新增 `getUserNamespace()` 方法，支持获取用户命名空间信息。
+const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const profile = await client.user.getProfile();
+const namespace = await client.user.getNamespace();
+
+console.log('当前登录用户:', profile.login, '命名空间:', namespace.path);
+```
+
+- 若未在构造函数中提供 Token，可调用 `client.auth.setToken('token')`。
+- 用户端点默认使用 `Bearer` 鉴权。
 
 ## API 方法
 
-### `getUserProfile()`
+### `client.user.getProfile()`
 
-获取当前认证用户的个人资料信息。
+- **端点**：`GET /api/v5/user`
+- **返回值**：`UserProfile`
+- **说明**：返回完整的用户资料（包含 `login`、`name`、`email?`、`company?`、`top_languages` 等字段）。
 
-**API 端点**: `GET /api/v5/user`
-
-**返回类型**: `UserProfile` - 完整的用户信息接口，包含丰富的用户资料字段
-
-```typescript
-const client = new GitcodeClient();
+```ts
 const profile = await client.user.getProfile();
-console.log(profile);
+console.log(profile.name, profile.followers);
 ```
 
-### `getUserNamespace()`
+### `client.user.getNamespace()`
 
-获取当前用户的命名空间信息。
+- **端点**：`GET /api/v5/user/namespace`
+- **返回值**：`UserNamespace`
+- **说明**：返回当前用户命名空间的路径、名称、类型等信息，常用于组织 Git 仓库路径。
 
-**API 端点**: `GET /api/v5/user/namespace`
-
-**返回类型**: `UserNamespace` - 用户命名空间信息
-
-```typescript
-const client = new GitcodeClient();
+```ts
 const namespace = await client.user.getNamespace();
-console.log(namespace);
+console.log(namespace.id, namespace.path);
 ```
 
 ## 类型定义
 
 ### `UserProfile`
 
-完整的用户信息接口，包含以下字段：
-
-```typescript
+```ts
 interface UserProfile {
-  id: string; // 用户 ID
-  login: string; // 登录名
-  name: string; // 用户名
-  email?: string; // 邮箱（可选）
-  avatar_url: string; // 头像 URL
-  html_url: string; // 个人主页 URL
-  type: string; // 用户类型
-  url: string; // API URL
-  bio?: string; // 个人简介（可选）
-  blog?: string; // 个人博客（可选）
-  company?: string; // 公司（可选）
-  followers: number; // 关注者数量
-  following: number; // 关注中数量
-  top_languages: string[]; // 常用编程语言
+  id: string;
+  login: string;
+  name: string;
+  email?: string;
+  avatar_url: string;
+  html_url: string;
+  type: string;
+  url: string;
+  bio?: string;
+  blog?: string;
+  company?: string;
+  followers: number;
+  following: number;
+  top_languages: string[];
 }
 ```
 
 ### `UserNamespace`
 
-用户命名空间信息接口：
-
-```typescript
+```ts
 interface UserNamespace {
-  id: number; // 命名空间 ID
-  path: string; // 命名空间路径
-  name: string; // 命名空间名称
-  html_url: string; // 命名空间主页 URL
-  type: string; // 命名空间类型
-}
-```
-
-现在直接返回完整的用户信息，无需通过 `raw` 字段访问原始数据。
-
-## 使用示例
-
-### 获取用户信息
-
-```typescript
-import { GitcodeClient } from '@xbghc/gitcode-api';
-
-const client = new GitcodeClient({
-  token: process.env.GITCODE_TOKEN,
-});
-
-try {
-  const profile = await client.getUserProfile();
-  console.log('用户信息:', {
-    ID: profile.id,
-    登录名: profile.login,
-    用户名: profile.name,
-    邮箱: profile.email,
-    头像: profile.avatar_url,
-    公司: profile.company,
-    关注者: profile.followers,
-    关注中: profile.following,
-    常用语言: profile.top_languages,
-  });
-} catch (error) {
-  console.error('获取用户信息失败:', error);
-}
-```
-
-### 结合认证使用
-
-```typescript
-import { GitcodeClient } from '@xbghc/gitcode-api';
-
-const client = new GitcodeClient();
-const profile = await client.getUserProfile();
-console.log('当前用户:', profile.name);
-```
-
-## 响应示例
-
-```json
-{
-  "avatar_url": "https://gitcode.com/u/123/avatar",
-  "followers_url": "https://gitcode.com/api/v5/users/123/followers",
-  "html_url": "https://gitcode.com/u/123",
-  "id": "123",
-  "login": "username",
-  "name": "用户名",
-  "type": "User",
-  "url": "https://gitcode.com/api/v5/users/123",
-  "bio": "开发者",
-  "blog": "https://example.com",
-  "company": "公司名称",
-  "email": "user@example.com",
-  "followers": 42,
-  "following": 15,
-  "top_languages": ["TypeScript", "JavaScript", "Python"]
+  id: number;
+  path: string;
+  name: string;
+  html_url: string;
+  type: string;
 }
 ```
 
 ## 错误处理
 
-当请求失败时，会抛出错误。常见的错误情况包括：
+- 未提供或提供错误的 Token 时将得到 `401 Unauthorized`。
+- 网络异常会被归一化，例如连接/响应超时分别提示 “连接 GitCode 服务器超时” 与 “等待 GitCode 响应超时”。
+- 其他 HTTP 错误会保留原始状态码与响应正文，便于排查。
 
-- **401 Unauthorized**: Token 无效或过期
-- **403 Forbidden**: 权限不足
-- **网络错误**: 连接失败或超时
-
-```typescript
+```ts
 try {
-  const profile = await client.getUserProfile();
+  const profile = await client.user.getProfile();
+  console.log(profile.login);
 } catch (error) {
-  if (error.message.includes('401')) {
-    console.error('认证失败，请检查 Token');
-  } else {
-    console.error('请求失败:', error.message);
-  }
+  console.error('获取用户信息失败:', (error as Error).message);
 }
 ```
+
+## 更新记录
+
+- **2025-09-13**：新增 `client.user.getNamespace()` 并为所有响应引入 Zod 校验。
+- **2025-09-10**：`client.user.getProfile()` 返回完整字段集合而非嵌套原始响应。
