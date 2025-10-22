@@ -1,6 +1,6 @@
-# GitAny Actions
+# GitCode Actions
 
-GitAny Actions 是一个基于 pnpm 的 TypeScript monorepo，围绕 GitCode 平台提供 API 客户端、命令行工具、自动化工作流、容器工具链以及配套服务。代码与文档通过 VitePress 维护，默认使用 Node.js 22 运行时。
+GitCode Actions 是一个基于 pnpm 的 TypeScript monorepo，围绕 GitCode 平台提供 API 客户端、命令行工具、自动化工作流、容器工具链以及配套服务。代码与文档通过 VitePress 维护，默认使用 Node.js 22 运行时。
 
 ## 核心包
 

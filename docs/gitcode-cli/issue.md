@@ -4,7 +4,7 @@ title: Issue Commands
 
 # GitCode Issue Commands
 
-GitAny CLI provides comprehensive GitCode issue management functionality with GitHub CLI-style commands and options.
+GitCode CLI provides comprehensive GitCode issue management functionality with GitHub CLI-style commands and options.
 
 ## Available Commands
 

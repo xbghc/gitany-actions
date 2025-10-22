@@ -2,7 +2,7 @@
 title: 首页
 ---
 
-# GitAny Monorepo 文档
+# GitCode Actions Monorepo 文档
 
 本仓库包含两个包：
 
