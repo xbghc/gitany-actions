@@ -1,11 +1,9 @@
 import type { Request, Response, NextFunction } from 'express';
 
 // 扩展 Express Request 类型以包含 gitcodeToken
-declare global {
-  namespace Express {
-    interface Request {
-      gitcodeToken?: string;
-    }
+declare module 'express-serve-static-core' {
+  interface Request {
+    gitcodeToken?: string;
   }
 }
 
