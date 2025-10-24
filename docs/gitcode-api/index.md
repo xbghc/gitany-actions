@@ -1,173 +1,89 @@
 ---
-title: gitcode 工具库
+title: GitCode API 工具库
 ---
 
-# @xbghc/gitcode-api（工具库）
+# @xbghc/gitcode-api（GitCode API 工具库）
 
-提供 [GitCode API](https://docs.gitcode.com/docs/apis/) 访问与认证封装，以及 Git 远程地址解析工具。
+封装了访问 [GitCode REST API](https://docs.gitcode.com/docs/apis/) 所需的客户端、类型定义与 URL 构建工具，并附带常用的仓库地址解析与查询参数处理函数。
 
-包路径：`packages/gitcode`
+- **包路径**：`packages/gitcode-api`
+- **导出形式**：ESM（`import { GitcodeClient } from '@xbghc/gitcode-api'`）
 
-## 导出内容
-
-- `parseGitUrl(url: string): Remote | null`
-  - 解析 `https://gitcode.com/owner/repo(.git)` 或 `git@gitcode.com:owner/repo(.git)` 这类 URL。
-- `GitcodeClient`
-  - 轻量 HTTP 客户端，内置鉴权处理。
-  - `getUserProfile()`：获取当前认证用户的个人资料信息。
-  - `getSelfRepoPermissionRole(owner, repo)`：获取权限并归一化为 `admin | write | read | none`。
-  - `listPullRequests(owner, repo, query?)`：获取仓库的 Pull Request 列表。
-  - `createPullRequest(owner, repo, body)`：创建 Pull Request（支持字段：`title`、`head`、`base`、`body`、`issue`）。
-  - `listPullRequestComments(url, prNumber, queryOptions?)`：获取指定 PR 的评论列表。
-  - `listIssues(url, query?)`：获取仓库的 Issue 列表。
-  - 也可通过模块方式调用：`client.repo.getSelfRepoPermissionRole()`、`client.pr.list()`、`client.pr.create()`、`client.pr.comments()`、`client.issue.list()` 等。
-- `GitcodeClientAuth`
-  - 通过 `client.auth` 提供本地令牌存储与加载。
-- `FileAuthStorage`、`defaultConfigPath()`
-
-更多 API：
-
-- 用户 API：见《[用户 API](./user.md)》。
-- Pull Requests：见《[Pull Requests API](./pr.md)》。
-- Issues：见《[Issues API](./issue.md)》。
-
-## 公共类型
-
-- `Remote`: 解析 Git 远程地址后的结果（`owner`、`repo`、`host?`）。
-- `RepoRole`: 仓库权限归一化结果，`'admin' | 'write' | 'read' | 'none'`。
-- `UserProfile`: 用户完整资料信息，包含 `id`、`login`、`name`、`email`、`avatar_url`、`followers`、`following`、`top_languages` 等字段。
-- `SelfPermissionResponse`: 当前用户在仓库的权限树响应；相关类型：`RoleInfo`、`PermissionPoint`、`ResourceNode`。
-- `ListPullsQuery`: PR 列表查询参数（常用：`state`、`page`、`per_page`、`head`、`base`、`sort`、`direction`）。
-- `ListPullsParams`: PR 列表路径参数（`owner`、`repo`、`query?`）。
-- `PullRequest`: PR 的完整字段表示（`id`、`number`、`title`、`state`、`user`、`head`、`base`、`created_at`、`updated_at`、`merged_at` 等）。
-- `ListPullsResponse`: `PullRequest[]`。
-- `CreatePullBody`: 创建 PR 的字段（`title?`、`head?`、`base?`、`body?`、`issue?`）。
-- `PRComment`: PR 评论的类型定义，包含 `id`、`body`、`user` 等字段。
-- `PRCommentQueryOptions`: PR 评论查询选项，支持 `comment_type`（`diff_comment` | `pr_comment`）。
-- `ListIssuesQuery`: Issue 列表查询参数（`state`、`labels`、`page`、`per_page`、`sort`）。
-- `ListIssuesParams`: Issue 列表路径参数（`owner`、`repo`、`query?`）。
-- `Issue`: Issue 的字段表示（`id`、`html_url`、`number`、`state`、`title`、`body`、`user`）。
-- `ListIssuesResponse`: `Issue[]`。
-
-## 认证与请求
-
-默认 API 基址：`https://gitcode.com/api/v5`，客户端固定使用请求头鉴权：
-
-- `Authorization: Bearer <token>`
-
-请求在网络连接失败时会自动重试 3 次，可通过 `retries` 选项自定义。
-
-环境变量：
-
-- `GITCODE_TOKEN`：令牌（优先级高于磁盘存储）
-- `GITCODE_HTTP_DEBUG`：开启 HTTP 调试日志，接受 `1`、`true`、`yes`、`on`、`debug` 等值
-- `GITCODE_HTTP_DEBUG_SHOW_SECRETS`：在调试日志中展示敏感头部（默认隐藏）
-
-**Token 读取优先级**：
-
-1. 环境变量 `GITCODE_TOKEN`
-2. 本地配置文件 `~/.gitany/gitcode/config.json`
-
-### 认证使用示例
-
-```ts
-import { GitCodeClient } from '@xbghc/gitcode-api';
-
-const client = new GitcodeClient();
-await client.auth.setToken('your_token', 'bearer');
-
-const token = await client.auth.token(); // 获取 token（环境变量优先）
-console.log(token);
-
-const me = await client.request('/user', 'GET');
-```
-
-默认本地存储路径：`~/.gitany/gitcode/config.json`
-
-### GitcodeClient 用法
+## 快速开始
 
 ```ts
 import { GitcodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient({
-  token: process.env.GITCODE_TOKEN ?? null,
-});
+// 构造函数可直接接收 token（默认会读取 GITCODE_TOKEN 环境变量）
+const client = new GitcodeClient(process.env.GITCODE_TOKEN);
 
-// 获取当前用户信息（GET /api/v5/user）
-const profile = await client.getUserProfile();
+// 也可以稍后通过 auth 模块设置
+client.auth.setToken('your-token');
 
-// 获取当前用户在某仓库的权限（GET /repos/{owner}/{repo}/collaborators/self-permission）
-const perm = await client.getSelfRepoPermission('owner', 'repo');
-
-// 获取 PR 列表（GET /repos/{owner}/{repo}/pulls）
-const pulls = await client.listPullRequests('owner', 'repo', {
-  state: 'open',
-  page: 1,
-  per_page: 20,
-});
-
-// 创建 PR（POST /repos/{owner}/{repo}/pulls）
-const pr = await client.createPullRequest('owner', 'repo', {
-  title: '修复登录异常',
-  head: 'feat/login-fix',
-  base: 'main',
-  body: '补充说明：修复 Token 过期报错',
-  // 可选：关联 issue
-  issue: 123,
-});
-
-// 获取 PR 评论（GET /repos/{owner}/{repo}/pulls/{number}/comments）
-const comments = await client.listPullRequestComments('https://gitcode.com/owner/repo.git', 123, {
-  comment_type: 'pr_comment',
-});
-
-// 获取 Issue 列表（GET /repos/{owner}/{repo}/issues）
-const issues = await client.issue.list('https://gitcode.com/owner/repo.git', { state: 'open' });
+// 通过模块化分组访问不同资源
+const pulls = await client.pr.list('https://gitcode.com/owner/repo.git', { state: 'open' });
+const issues = await client.issue.list('https://gitcode.com/owner/repo.git', { per_page: 50 });
+const profile = await client.user.getProfile();
 ```
 
-## Git URL 解析
+### 请求总览
 
-```ts
-import { parseGitUrl } from '@xbghc/gitcode-api';
+- 所有请求最终调用 `client.request(url, method, options)`。
+- `options.searchParams`：用于 GET 查询参数，自动序列化基础类型。
+- `options.json`：发送 JSON 请求体；如需原始体，可使用 `options.body`。
+- `options.retry`：控制 `got` 的重试策略（默认继承全局配置并追加 `POST`/`PUT` 重试支持）。
+- 内置 ETag 缓存，会在返回 `304` 时复用上次结果；可通过 `isNotModified(result)` 判断复用命中。
+- 设置环境变量 `GITCODE_HTTP_DEBUG=1` 可打印请求/响应日志，`GITCODE_HTTP_DEBUG_SHOW_SECRETS=1` 会取消 Header 脱敏。
 
-parseGitUrl('https://gitcode.com/owner/repo.git');
-// => { host: 'gitcode.com', owner: 'owner', repo: 'repo' }
+## 主要导出
 
-parseGitUrl('git@gitcode.com:owner/repo.git');
-// => { host: 'gitcode.com', owner: 'owner', repo: 'repo' }
-```
+### 客户端
 
-## 变更说明
+- `GitcodeClient`：带 `pr`、`issue`、`repo`、`user` 子模块以及 `auth` 管理器的核心客户端。
+- `GitcodeClientAuth`：轻量认证容器，提供 `setToken()` 与 `token()`，默认读取 `GITCODE_TOKEN`。
 
-### 2025-09-10 更新
+### 工具函数
 
-- **移除 shared 包**：项目结构简化，移除了 `@gitany/shared` 包依赖
-- **改进类型系统**：
-  - `getUserProfile()` 现在返回完整的 `UserProfile` 类型，包含丰富的用户信息字段
-  - `PullRequest` 类型现在包含完整的 API 响应字段
-  - `RepoRole` 类型直接在 gitcode 包中定义，不再依赖 shared 包
-- **功能增强**：客户端现在返回更完整的 API 响应数据，提供更多有用信息
+- `parseGitUrl(url)`：解析 HTTPS/SSH 仓库地址，返回 `{ owner, repo, host? }`，无法解析时返回 `null`。
+- `toGitUrl(url)`：确保仓库地址带 `.git` 后缀（幂等）。
+- `toQuery(object)`：剔除 `undefined` 字段后输出可直接传给 `searchParams` 的对象。
+- `isNotModified(value)`：判断返回数据是否由 ETag 缓存复用。
+- `isObjectLike(value)`：判定对象-like 值（工具方法，在 HTTP 错误处理等场景使用）。
 
-### 2025-09-11 更新
+### API URL & Schema 构建器
 
-- PR 列表、PR 评论和仓库权限接口的返回数据均通过 Zod 进行结构校验。
-- 自身权限接口在角色信息中保留 `cn_name` 字段以确保权限检测。
+包入口导出全部 URL 构建函数与 Zod Schema，覆盖 PR、Issue、Repo、User 四大类资源。例如：
 
-### 2025-09-12 更新
+- PR：`listPullsUrl`、`createPullUrl`、`prCommentsUrl`、`pullRequestSettingsUrl`、`createPrCommentUrl`、`prCountUrl` 等。
+- Issue：`listIssuesUrl`、`issueCommentsUrl`、`createIssueUrl`、`createIssueCommentUrl`、`getIssueUrl`、`updateIssueUrl` 等。
+- Repo：`repoSettingsUrl`、`repoEventsUrl`、`contributorsUrl`、`branchesUrl`、`commitsUrl`、`fileBlobUrl`、`compareUrl`、`webhooksUrl` 等。
+- User：`userProfileUrl`、`userNamespaceUrl`。
 
-- 新增 Issue 列表 API 封装。
+### 类型定义（节选）
 
-### 2025-09-13 更新
+- PR：`PullRequest`、`PullRequestSettings`、`PRComment`、`CreatedPrComment`、`PrCount`。
+- Issue：`Issue`、`IssueComment`、`CreatedIssue`、`CreatedIssueComment`、`IssueDetail`、`UpdatedIssue`、`UpdatedIssueComment`。
+- Repo：`RepoSettings`、`RepoEvents`、`Contributors`、`Branch`、`Branches`、`Commits`、`FileBlob`、`Compare`、`Webhook`、`Webhooks`。
+- User：`UserProfile`、`UserNamespace`、`UserSummary`。
+- 权限：`SelfPermissionResponse`、`RoleInfo`、`PermissionPoint`、`ResourceNode`、`RepoRole`。
 
-- 网络请求在连接失败时会自动重试 3 次，提高稳定性。
+## 模块概览
 
-### 2025-09-17 更新
+- `client.pr`：拉取/创建 PR、读取评论、创建评论、读取 PR 设置、统计 PR 数量等。详见《[Pull Requests API](./pr.md)》。
+- `client.issue`：列出、读取、创建、更新 Issue 以及管理 Issue 评论。详见《[Issues API](./issue.md)》。
+- `client.repo`：仓库权限、设置、事件流、贡献者、分支、提交、文件内容与 Webhook。详见《[仓库 API](./repo.md)》。
+- `client.user`：获取当前登录用户资料与命名空间信息。详见《[用户 API](./user.md)》。
 
-- `utils/http.ts` 迁移至 `got`，并将 `HttpRequestOptions` 的字段与其约定对齐：
-  - `query` 更名为 `searchParams`
-  - 推荐使用 `json` 传递 JSON 负载，仍可通过 `body` 发送原始数据
-- 由于字段名称调整，调用方需要同步更新对应参数。
+## 认证与环境变量
 
-### 历史变更
+- `GITCODE_TOKEN`：默认读取的访问令牌，可通过 `client.auth.setToken()` 动态覆盖。
+- `GITCODE_HTTP_DEBUG`：值为 `1/true/on/debug` 时输出调试日志。
+- `GITCODE_HTTP_DEBUG_SHOW_SECRETS`：调试日志中保留授权头。
 
-- 内部统一使用 `utils/http.ts` 的 `httpRequest` 进行网络请求，实现 URL 构建、头部合并、鉴权与错误处理的集中管理，并在 2025-09-17 起交由 `got` 处理重试与解析逻辑，同时保留基于 ETag 的缓存。
+客户端使用 `Bearer` 头部发送 Token；未提供 Token 时，将以匿名方式访问公开资源。
+
+## 变更记录
+
+- **2025-09-17**：HTTP 层迁移至 `got`，新增 ETag 缓存、重试与调试日志；请求选项重命名为 `searchParams`/`json`。
+- **2025-09-13**：补全仓库、PR、Issue 相关 API，并以 Zod 校验响应；新增 `client.issue.update()`、`client.pr.createComment()`、`client.pr.count()` 等封装。
+- **2025-09-12**：新增 Issue 读写接口与命名空间 API，`parseGitUrl`/`toGitUrl` 暴露给外部使用。

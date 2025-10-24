@@ -60,7 +60,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs';
+import zhCn from 'element-plus/es/locale/lang/zh-cn';
 import { Folder, FolderOpened } from '@element-plus/icons-vue';
 import TokenBar from '@/components/TokenBar.vue';
 import RepoList from '@/components/RepoList.vue';

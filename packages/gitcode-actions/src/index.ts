@@ -1,5 +1,5 @@
 /**
- * GitAny Core Package
+ * GitCode Actions Core Package
  *
  */
 
