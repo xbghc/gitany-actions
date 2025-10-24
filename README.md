@@ -51,12 +51,14 @@ pnpm build
 # 解析仓库 URL，输出结构化信息
 gitcode parse https://gitcode.com/owner/repo.git
 
-# 使用环境变量令牌执行用户操作
+# 授权管理
+gitcode auth set-token <token>    # 保存令牌到 ~/.gitcode/config.json
+gitcode auth status                # 查看认证状态
+gitcode auth remove-token          # 删除已保存的令牌
+
+# 使用环境变量令牌（临时方式）
 GITCODE_TOKEN=your-token gitcode user show
 GITCODE_TOKEN=your-token gitcode user namespace
-
-# 授权（设置当前进程的令牌）
-gitcode auth set-token <token>
 
 # 仓库权限与信息
 gitcode repo permission https://gitcode.com/owner/repo.git
@@ -134,16 +136,23 @@ await createPrContainer('https://gitcode.com/owner/repo', { id: 1, number: 12 } 
 
 ## 环境与认证
 
-可参考 `.env.example` 配置访问令牌与 API 基础地址：
-
+**CLI 认证**（推荐）：
 ```bash
-GITCODE_TOKEN=your-token
-GITCODE_API_BASE=https://gitcode.com/api/v5
-GITCODE_AUTH_STYLE=bearer
-GITCODE_HTTP_DEBUG=1        # 可选：输出请求调试信息
+gitcode auth set-token <token>  # 保存到 ~/.gitcode/config.json
+gitcode auth status             # 查看认证状态
 ```
 
-自动化与 CLI 默认使用 `~/.gitcode` 目录存储本地状态（容器标签亦以 `gitany.*` 前缀标识）。
+**环境变量配置**（临时或 CI/CD 环境）：
+```bash
+GITCODE_TOKEN=your-token        # 认证令牌（优先级高于配置文件）
+GITCODE_API_BASE=https://gitcode.com/api/v5
+GITCODE_AUTH_STYLE=bearer
+GITCODE_HTTP_DEBUG=1            # 可选：输出请求调试信息
+```
+
+**令牌读取优先级**：环境变量 > 配置文件（`~/.gitcode/config.json`）
+
+自动化与 CLI 默认使用 `~/.gitcode` 目录存储本地状态（watcher 状态、配置文件等，容器标签以 `gitany.*` 前缀标识）。
 
 ## 文档与规范
 

@@ -50,10 +50,62 @@ gitcode parse
 
 ### gitcode auth &lt;subcommand&gt;
 
-子命令：`set-token`
+认证管理命令，用于管理 GitCode 访问令牌。
 
-- `set-token <token>`
-  - 行为：保存令牌到本地配置文件。
+#### 子命令
+
+##### gitcode auth set-token &lt;token&gt;
+
+保存认证令牌到本地配置文件（`~/.gitcode/config.json`）。
+
+```bash
+gitcode auth set-token your_gitcode_token_here
+```
+
+输出示例：
+```
+Token saved successfully
+Config file: /home/user/.gitcode/config.json
+```
+
+##### gitcode auth status
+
+查看当前认证状态，显示令牌来源（环境变量或配置文件）和掩码后的令牌值。
+
+```bash
+gitcode auth status
+```
+
+输出示例（使用配置文件）：
+```
+Authenticated: your...here
+Source: Config file (/home/user/.gitcode/config.json)
+```
+
+输出示例（使用环境变量）：
+```
+Authenticated: env_...oken
+Source: Environment variable (GITCODE_TOKEN)
+```
+
+未认证时的输出：
+```
+Not authenticated
+Run "gitcode auth set-token <token>" to authenticate
+```
+
+##### gitcode auth remove-token
+
+删除已保存的认证令牌。
+
+```bash
+gitcode auth remove-token
+```
+
+输出示例：
+```
+Token removed successfully
+```
 
 ### gitcode repo
 
@@ -494,7 +546,13 @@ gitcode user namespace
 
 ## 环境变量
 
-- `GITCODE_TOKEN`：令牌（高优先级覆盖本地存储）
+- `GITCODE_TOKEN`：GitCode 访问令牌
+
+**令牌读取优先级：**
+1. 环境变量 `GITCODE_TOKEN`（最高优先级）
+2. 配置文件 `~/.gitcode/config.json`
+
+推荐使用 `gitcode auth set-token` 命令保存令牌到配置文件，仅在临时使用或 CI/CD 环境中使用环境变量。
 
 ### 加载 .env（使用 NODE_OPTIONS）
 
@@ -524,7 +582,25 @@ NODE_OPTIONS="--env-file=.env" gitcode pr list
 
 ## 本地存储路径
 
-CLI 将认证信息保存到：`~/.gitany/gitcode/config.json`
+CLI 将认证信息保存到：`~/.gitcode/config.json`
+
+配置文件格式：
+```json
+{
+  "token": "your-access-token",
+  "authStyle": "bearer",
+  "customAuthHeader": ""
+}
+```
+
+**配置项说明：**
+- `token`: GitCode 访问令牌（通过 `gitcode auth set-token` 设置）
+- `authStyle`: 认证风格，可选值：`query`、`bearer`、`token`、`header`（可选）
+- `customAuthHeader`: 自定义认证头部（可选）
+
+**推荐做法：**
+- 使用 `gitcode auth set-token` 命令管理令牌，而不是手动编辑配置文件
+- 配置目录和文件会在首次保存令牌时自动创建
 
 ## 开发辅助
 

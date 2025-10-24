@@ -1,4 +1,5 @@
 import { GitcodeClient } from '@xbghc/gitcode-api';
+import { getToken } from './config.js';
 
 type WithClientErrorHandler = string | ((error: unknown) => void | string | Promise<void | string>);
 
@@ -12,7 +13,9 @@ export async function withClient(
   options: WithClientOptions = {},
 ): Promise<void> {
   try {
-    const client = new GitcodeClient();
+    // 从配置文件或环境变量获取 token
+    const token = getToken();
+    const client = new GitcodeClient(token);
     await fn(client);
   } catch (error) {
     if (error instanceof Error && /\b404\b/.test(error.message)) {

@@ -20,14 +20,35 @@ pnpm gitcode --help
 首先需要配置认证：
 
 ```bash
-# 通过环境变量
+# 通过环境变量（临时方式）
 export GITCODE_TOKEN=your-token
 
-# 或使用认证命令
-gitcode auth login
+# 或保存到配置文件（推荐）
+gitcode auth set-token your-token
+
+# 查看认证状态
+gitcode auth status
+
+# 删除已保存的 token
+gitcode auth remove-token
 ```
 
+Token 读取优先级：**环境变量 > 配置文件**
+
 ## 命令概览
+
+### 认证命令
+
+```bash
+# 保存认证 token
+gitcode auth set-token <token>
+
+# 查看认证状态
+gitcode auth status
+
+# 删除已保存的 token
+gitcode auth remove-token
+```
 
 ### 用户命令
 
@@ -105,6 +126,29 @@ gitcode parse https://gitcode.com/owner/repo
 ```
 
 ## 详细用法
+
+### 认证管理
+
+```bash
+# 设置 token（保存到配置文件）
+$ gitcode auth set-token your_gitcode_token_here
+Token saved successfully
+Config file: /home/user/.gitcode/config.json
+
+# 查看认证状态
+$ gitcode auth status
+Authenticated: your...here
+Source: Config file (/home/user/.gitcode/config.json)
+
+# 使用环境变量时的状态显示
+$ GITCODE_TOKEN=env_token gitcode auth status
+Authenticated: env_...oken
+Source: Environment variable (GITCODE_TOKEN)
+
+# 删除保存的 token
+$ gitcode auth remove-token
+Token removed successfully
+```
 
 ### 用户信息
 
@@ -192,9 +236,19 @@ $ gitcode pr list https://gitcode.com/myorg/myrepo --json
 ```json
 {
   "token": "your-access-token",
-  "apiBase": "https://gitcode.com/api/v5"
+  "authStyle": "bearer",
+  "customAuthHeader": ""
 }
 ```
+
+**配置项说明：**
+- `token`: GitCode 认证令牌（通过 `gitcode auth set-token` 设置）
+- `authStyle`: 认证风格，可选值：`query`、`bearer`、`token`、`header`
+- `customAuthHeader`: 自定义认证头部（可选）
+
+**推荐使用 CLI 命令管理配置：**
+- 使用 `gitcode auth set-token` 而不是手动编辑配置文件
+- 配置文件会在首次保存 token 时自动创建
 
 ## 错误处理
 
