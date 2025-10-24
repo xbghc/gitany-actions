@@ -1,23 +1,20 @@
 import { Router, type Request, type Response } from 'express';
 import type { ListPullsQuery } from '@xbghc/gitcode-api';
-import { authMiddleware } from '../middleware/auth.js';
+import { withAuth } from '../middleware/auth.js';
 import { createGitcodeClient } from '../utils/gitcode-client.js';
 
 export const prRouter: Router = Router();
-
-// 应用认证中间件到所有路由
-prRouter.use(authMiddleware);
 
 /**
  * 获取 PR 数量统计
  * GET /api/repo/:owner/:repo/pulls/count
  * 注意：此路由必须在 /repo/:owner/:repo/pulls/:number 之前定义
  */
-prRouter.get('/repo/:owner/:repo/pulls/count', async (req: Request, res: Response) => {
+prRouter.get('/repo/:owner/:repo/pulls/count', withAuth(async (req, res, token) => {
   try {
     const { owner, repo } = req.params;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const count = await client.pr.count(repoUrl);
@@ -34,18 +31,18 @@ prRouter.get('/repo/:owner/:repo/pulls/count', async (req: Request, res: Respons
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 获取 PR 列表
  * GET /api/repo/:owner/:repo/pulls
  */
-prRouter.get('/repo/:owner/:repo/pulls', async (req: Request, res: Response) => {
+prRouter.get('/repo/:owner/:repo/pulls', withAuth(async (req, res, token) => {
   try {
     const { owner, repo } = req.params;
     const { state, page, per_page, sort, direction, head, base } = req.query;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const query: ListPullsQuery = {};
@@ -71,7 +68,7 @@ prRouter.get('/repo/:owner/:repo/pulls', async (req: Request, res: Response) => 
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 获取 PR 详情
@@ -99,11 +96,11 @@ prRouter.get('/repo/:owner/:repo/pulls/:number', async (req: Request, res: Respo
  * 获取 PR 评论列表
  * GET /api/repo/:owner/:repo/pulls/:number/comments
  */
-prRouter.get('/repo/:owner/:repo/pulls/:number/comments', async (req: Request, res: Response) => {
+prRouter.get('/repo/:owner/:repo/pulls/:number/comments', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, number } = req.params;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const comments = await client.pr.comments(repoUrl, Number(number));
@@ -120,13 +117,13 @@ prRouter.get('/repo/:owner/:repo/pulls/:number/comments', async (req: Request, r
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 添加 PR 评论
  * POST /api/repo/:owner/:repo/pulls/:number/comments
  */
-prRouter.post('/repo/:owner/:repo/pulls/:number/comments', async (req: Request, res: Response) => {
+prRouter.post('/repo/:owner/:repo/pulls/:number/comments', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, number } = req.params;
     const { body } = req.body;
@@ -139,7 +136,7 @@ prRouter.post('/repo/:owner/:repo/pulls/:number/comments', async (req: Request, 
       return;
     }
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const comment = await client.pr.createComment(repoUrl, Number(number), body);
@@ -156,7 +153,7 @@ prRouter.post('/repo/:owner/:repo/pulls/:number/comments', async (req: Request, 
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 更新 PR 状态

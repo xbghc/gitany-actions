@@ -1,23 +1,20 @@
-import { Router, type Request, type Response } from 'express';
+import { Router } from 'express';
 import type { ListIssuesQuery } from '@xbghc/gitcode-api';
-import { authMiddleware } from '../middleware/auth.js';
+import { withAuth } from '../middleware/auth.js';
 import { createGitcodeClient } from '../utils/gitcode-client.js';
 
 export const issueRouter: Router = Router();
-
-// 应用认证中间件到所有路由
-issueRouter.use(authMiddleware);
 
 /**
  * 获取 Issue 列表
  * GET /api/repo/:owner/:repo/issues
  */
-issueRouter.get('/repo/:owner/:repo/issues', async (req: Request, res: Response) => {
+issueRouter.get('/repo/:owner/:repo/issues', withAuth(async (req, res, token) => {
   try {
     const { owner, repo } = req.params;
     const { state, page, per_page, sort, labels } = req.query;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const query: ListIssuesQuery = {};
@@ -41,7 +38,7 @@ issueRouter.get('/repo/:owner/:repo/issues', async (req: Request, res: Response)
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 探测 Issue 数量
@@ -50,11 +47,11 @@ issueRouter.get('/repo/:owner/:repo/issues', async (req: Request, res: Response)
  * 注意：由于 GitCode Issue API 不支持 only_count 参数，
  * 此端点通过多次请求来探测Issue数量
  */
-issueRouter.get('/repo/:owner/:repo/issues/count', async (req: Request, res: Response) => {
+issueRouter.get('/repo/:owner/:repo/issues/count', withAuth(async (req, res, token) => {
   try {
     const { owner, repo } = req.params;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     // 探测各个状态的Issue数量
@@ -170,17 +167,17 @@ issueRouter.get('/repo/:owner/:repo/issues/count', async (req: Request, res: Res
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 获取 Issue 详情
  * GET /api/repo/:owner/:repo/issues/:number
  */
-issueRouter.get('/repo/:owner/:repo/issues/:number', async (req: Request, res: Response) => {
+issueRouter.get('/repo/:owner/:repo/issues/:number', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, number } = req.params;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const issue = await client.issue.get(repoUrl, Number(number));
@@ -197,13 +194,13 @@ issueRouter.get('/repo/:owner/:repo/issues/:number', async (req: Request, res: R
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 创建 Issue
  * POST /api/repo/:owner/:repo/issues
  */
-issueRouter.post('/repo/:owner/:repo/issues', async (req: Request, res: Response) => {
+issueRouter.post('/repo/:owner/:repo/issues', withAuth(async (req, res, token) => {
   try {
     const { owner, repo } = req.params;
     const { title, body, labels, assignees } = req.body;
@@ -216,7 +213,7 @@ issueRouter.post('/repo/:owner/:repo/issues', async (req: Request, res: Response
       return;
     }
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
 
     const issue = await client.issue.create({
       owner,
@@ -241,18 +238,18 @@ issueRouter.post('/repo/:owner/:repo/issues', async (req: Request, res: Response
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 更新 Issue
  * PATCH /api/repo/:owner/:repo/issues/:number
  */
-issueRouter.patch('/repo/:owner/:repo/issues/:number', async (req: Request, res: Response) => {
+issueRouter.patch('/repo/:owner/:repo/issues/:number', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, number } = req.params;
     const { title, body, state, labels, assignees } = req.body;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const issue = await client.issue.update(repoUrl, Number(number), {
@@ -275,17 +272,17 @@ issueRouter.patch('/repo/:owner/:repo/issues/:number', async (req: Request, res:
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 获取 Issue 评论列表
  * GET /api/repo/:owner/:repo/issues/:number/comments
  */
-issueRouter.get('/repo/:owner/:repo/issues/:number/comments', async (req: Request, res: Response) => {
+issueRouter.get('/repo/:owner/:repo/issues/:number/comments', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, number } = req.params;
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
     const comments = await client.issue.comments(repoUrl, Number(number));
@@ -302,13 +299,13 @@ issueRouter.get('/repo/:owner/:repo/issues/:number/comments', async (req: Reques
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 添加 Issue 评论
  * POST /api/repo/:owner/:repo/issues/:number/comments
  */
-issueRouter.post('/repo/:owner/:repo/issues/:number/comments', async (req: Request, res: Response) => {
+issueRouter.post('/repo/:owner/:repo/issues/:number/comments', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, number } = req.params;
     const { body } = req.body;
@@ -321,7 +318,7 @@ issueRouter.post('/repo/:owner/:repo/issues/:number/comments', async (req: Reque
       return;
     }
 
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
 
     const comment = await client.issue.createComment({
       owner,
@@ -342,4 +339,4 @@ issueRouter.post('/repo/:owner/:repo/issues/:number/comments', async (req: Reque
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));

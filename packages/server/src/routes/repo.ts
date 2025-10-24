@@ -1,18 +1,15 @@
-import { Router, type Request, type Response } from 'express';
+import { Router } from 'express';
 import type { ListPullsQuery, ListIssuesQuery } from '@xbghc/gitcode-api';
-import { authMiddleware } from '../middleware/auth.js';
+import { withAuth } from '../middleware/auth.js';
 import { createGitcodeClient } from '../utils/gitcode-client.js';
 
 export const repoRouter: Router = Router();
-
-// 应用认证中间件到所有路由
-repoRouter.use(authMiddleware);
 
 /**
  * 获取仓库的 PR 列表
  * POST /api/pulls
  */
-repoRouter.post('/pulls', async (req: Request, res: Response) => {
+repoRouter.post('/pulls', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, state, page, per_page, sort, direction, head, base } = req.body;
 
@@ -23,7 +20,7 @@ repoRouter.post('/pulls', async (req: Request, res: Response) => {
     }
 
     // 使用用户提供的 token 创建客户端
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
 
     // 构造仓库 URL
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
@@ -54,13 +51,13 @@ repoRouter.post('/pulls', async (req: Request, res: Response) => {
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
 
 /**
  * 获取仓库的 Issue 列表
  * POST /api/issues
  */
-repoRouter.post('/issues', async (req: Request, res: Response) => {
+repoRouter.post('/issues', withAuth(async (req, res, token) => {
   try {
     const { owner, repo, state, page, per_page, sort, labels } = req.body;
 
@@ -71,7 +68,7 @@ repoRouter.post('/issues', async (req: Request, res: Response) => {
     }
 
     // 使用用户提供的 token 创建客户端
-    const client = createGitcodeClient(req.gitcodeToken!);
+    const client = createGitcodeClient(token);
 
     // 构造仓库 URL
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
@@ -100,4 +97,4 @@ repoRouter.post('/issues', async (req: Request, res: Response) => {
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
-});
+}));
