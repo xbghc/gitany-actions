@@ -18,9 +18,7 @@
     "dev:core": "pnpm --filter @xbghc/gitcode-actions dev",
     "dev:server": "pnpm --filter @xbghc/gitcode-actions-server dev",
     "dev:dashboard": "pnpm --filter @xbghc/gitcode-dashboard dev",
-    "d": "pnpm build && node ./scripts/dev-gitcode.mjs",
-    "d:git": "pnpm build && node ./scripts/dev-git.mjs",
-    "d:docker": "pnpm build && node ./scripts/dev-docker.mjs"
+    "verify": "node ./scripts/verify-env.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.18.1",
