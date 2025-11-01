@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '@xbghc/git-lib';
+import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
 import { isObjectLike, type IssueUser } from '@xbghc/gitcode-api';
 
 export const colors = {

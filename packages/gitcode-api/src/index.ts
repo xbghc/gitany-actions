@@ -10,6 +10,7 @@ export type {
   SelfPermissionResponse,
 } from './api/repo/self-permission.js';
 export { selfPermissionUrl, selfPermissionResponseSchema } from './api/repo/self-permission.js';
+export { extractRepoRoleFromSelfPermission } from './client/repo/permission.js';
 export { repoSchema, type Repo } from './api/repo/index.js';
 export { branchSchema, type Branch } from './api/branch/index.js';
 export type {
