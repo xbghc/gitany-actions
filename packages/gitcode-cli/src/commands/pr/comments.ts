@@ -1,5 +1,5 @@
 import type { PRComment, PRCommentQueryOptions } from '@xbghc/gitcode-api';
-import { resolveRepoUrl } from '@xbghc/git-lib';
+import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 function isPrCommentType(

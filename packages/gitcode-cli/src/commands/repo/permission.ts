@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '@xbghc/git-lib';
+import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 export async function permissionCommand(url?: string): Promise<void> {

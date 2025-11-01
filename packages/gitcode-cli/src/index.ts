@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { resolveRepoUrl } from '@xbghc/git-lib';
+import { resolveRepoUrl } from './utils/resolve-repo-url.js';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import { Command } from 'commander';
 import { authCommand } from './commands/auth.js';

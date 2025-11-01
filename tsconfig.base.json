@@ -18,7 +18,6 @@
   },
   "references": [
     { "path": "./packages/gitcode-api" },
-    { "path": "./packages/git-lib" },
     { "path": "./packages/gitcode-actions" },
     { "path": "./packages/gitcode-cli" },
     { "path": "./packages/server" }

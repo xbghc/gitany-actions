@@ -143,7 +143,6 @@ function suggestNextVersion(currentVersion) {
 // 待发布的包配置（按依赖顺序）
 const packages = [
   { name: '@xbghc/gitcode-api', path: 'packages/gitcode-api' },
-  { name: '@xbghc/git-lib', path: 'packages/git-lib' },
   { name: '@xbghc/gitcode-cli', path: 'packages/gitcode-cli' },
 ];
 

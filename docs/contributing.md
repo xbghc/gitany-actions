@@ -7,7 +7,6 @@ title: 贡献指南
 本仓库使用 pnpm 管理的 TypeScript Monorepo，包含：
 
 - `@xbghc/gitcode-api`：工具库（packages/gitcode-api）
-- `@xbghc/git-lib`：Git 命令封装库（packages/git-lib）
 - `@xbghc/gitcode-cli`：命令行工具（packages/gitcode-cli）
 - `@xbghc/gitcode-actions`：GitCode Actions 自动化工作流库（packages/gitcode-actions）
 - 文档：VitePress（docs）
