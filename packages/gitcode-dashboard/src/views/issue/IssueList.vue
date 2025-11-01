@@ -60,9 +60,9 @@
             <UserAvatar :user="row.user" :show-name="true" />
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="180">
+        <el-table-column label="更新时间" width="180">
           <template #default="{ row }">
-            {{ formatTime(row.created_at) }}
+            {{ formatTime(row.updated_at) }}
           </template>
         </el-table-column>
       </el-table>
