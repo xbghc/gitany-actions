@@ -2,18 +2,110 @@
 
 GitCode 命令行工具，提供与 GitCode 平台的交互式命令行界面。
 
+## 前置要求
+
+在安装 `gitcode-cli` 之前，请确保您的系统满足以下要求：
+
+- **Node.js** >= 22.0.0
+- **pnpm** >= 10.0.0（推荐 10.15.0）
+
+### 安装 Node.js
+
+推荐使用 [nvm](https://github.com/nvm-sh/nvm)（Node Version Manager）来安装和管理 Node.js 版本：
+
+```bash
+# 安装 nvm（Linux/macOS）
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# 安装 Node.js 22
+nvm install 22
+nvm use 22
+
+# 验证安装
+node -v  # 应该显示 v22.x.x
+```
+
+> **Windows 用户**：可以使用 [nvm-windows](https://github.com/coreybutler/nvm-windows) 或直接从 [Node.js 官网](https://nodejs.org/) 下载安装。
+
+### 安装 pnpm
+
+```bash
+# 使用 npm 全局安装 pnpm
+npm install -g pnpm
+
+# 验证安装
+pnpm -v  # 应该显示 10.x.x 或更高版本
+```
+
 ## 安装
 
+### 方式一：从 npm 安装（推荐）
+
+适合**最终用户**，直接使用 CLI 工具：
+
 ```bash
+# 全局安装
 pnpm add -g @xbghc/gitcode-cli
+
+# 验证安装
+gitcode --version
+gitcode --help
 ```
 
-或使用项目本地安装：
+### 方式二：从源码安装
+
+适合**开发者**，需要修改或调试 CLI 源码：
 
 ```bash
-pnpm add @xbghc/gitcode-cli
-pnpm gitcode --help
+# 克隆仓库
+git clone https://github.com/xbghc/gitany-actions.git
+cd gitany-actions
+
+# 安装依赖
+pnpm install
+
+# 构建所有包
+pnpm build
+
+# 链接 CLI 到全局（可选）
+cd packages/gitcode-cli
+pnpm link --global
+
+# 测试运行
+gitcode --help
 ```
+
+### 验证安装
+
+安装完成后，运行以下命令验证：
+
+```bash
+# 查看版本
+gitcode --version
+
+# 查看帮助信息
+gitcode --help
+
+# 检查认证状态（此时应显示未认证）
+gitcode auth status
+```
+
+## 获取 GitCode Token
+
+要使用 `gitcode` CLI，您需要一个 GitCode Personal Access Token：
+
+1. 登录 [GitCode](https://gitcode.com/)
+2. 进入 **个人设置** → **访问令牌**（或直接访问 https://gitcode.com/profile/personal_access_tokens）
+3. 点击 **生成新令牌**
+4. 设置令牌名称和权限范围：
+   - **建议权限**：`api`（完整 API 访问）或根据需要选择 `read_repository`、`write_repository` 等
+5. 点击 **创建令牌** 并复制生成的令牌（只会显示一次）
+6. 保存令牌到 CLI：
+   ```bash
+   gitcode auth set-token YOUR_TOKEN_HERE
+   ```
+
+> **注意**：令牌就像密码一样重要，请妥善保管，不要分享或提交到代码仓库。
 
 ## 认证
 

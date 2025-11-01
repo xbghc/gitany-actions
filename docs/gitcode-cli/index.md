@@ -11,6 +11,35 @@ title: CLI 工具
 - `gh pr list` → `gitcode pr list`
 - 统一采用子命令与选项的风格（如 `--state`、`--page` 等）。
 
+## 安装
+
+### 前置要求
+
+- **Node.js** >= 22.0.0
+- **pnpm** >= 10.0.0
+
+### 快速安装
+
+```bash
+# 从 npm 全局安装
+pnpm add -g @xbghc/gitcode-cli
+
+# 验证安装
+gitcode --version
+gitcode --help
+```
+
+### 获取 GitCode Token
+
+1. 登录 [GitCode](https://gitcode.com/)，进入 **个人设置** → **访问令牌**
+2. 生成新令牌，建议权限：`api`
+3. 保存令牌：
+   ```bash
+   gitcode auth set-token YOUR_TOKEN_HERE
+   ```
+
+> 📖 **详细安装说明**：包括如何安装 Node.js、pnpm，以及从源码安装等，请参考 [`packages/gitcode-cli/README.md`](../../packages/gitcode-cli/README.md)
+
 构建与运行：
 
 ```bash
