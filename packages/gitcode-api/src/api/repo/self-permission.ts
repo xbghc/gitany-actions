@@ -80,8 +80,8 @@ export const resourceNodeSchema: z.ZodType<ResourceNode> = z.lazy(() =>
 export const selfPermissionResponseSchema = z.object({
   /** Current member role information; omitted for read-only users. */
   role_info: roleInfoSchema.optional(),
-  /** Permission resource tree. */
-  resource_tree: z.array(resourceNodeSchema),
+  /** Permission resource tree. May be omitted in some cases (e.g., insufficient permissions). */
+  resource_tree: z.array(resourceNodeSchema).optional(),
   // 省略部分内容
 });
 

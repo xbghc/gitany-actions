@@ -7,6 +7,7 @@ import { issueCommand } from './commands/issue/index.js';
 import { prCommand } from './commands/pr/index.js';
 import { repoCommand } from './commands/repo/index.js';
 import { userCommand } from './commands/user/index.js';
+import { statusCommand } from './commands/status.js';
 
 const program = new Command();
 
@@ -14,6 +15,13 @@ program
   .name('gitcode')
   .description('tools for GitCode')
   .version('0.1.0');
+
+// status command
+program
+  .command('status')
+  .description('Show current user and git repository status')
+  .option('--json', 'Output raw JSON instead of formatted text')
+  .action(statusCommand);
 
 // parse command
 program
