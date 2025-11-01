@@ -91,3 +91,84 @@ export interface Statistics {
   open_issues: number;
   closed_issues: number;
 }
+
+// ============================================
+// Workflow 相关类型
+// ============================================
+
+/** Workflow 执行状态 */
+export type WorkflowStatus = 'pending' | 'running' | 'success' | 'failed';
+
+/** Workflow 步骤 */
+export interface WorkflowStep {
+  name: string;
+  status: WorkflowStatus;
+  output?: string;
+  startTime?: string;
+  endTime?: string;
+}
+
+/** Workflow 执行结果 */
+export interface WorkflowResult {
+  workflowId: string;
+  status: WorkflowStatus;
+  steps: WorkflowStep[];
+  createdAt: string;
+  completedAt?: string;
+  error?: string;
+}
+
+/** Workflow 配置 */
+export interface WorkflowConfig {
+  owner: string;
+  repo: string;
+  packageManager?: 'npm' | 'pnpm' | 'yarn';
+  buildCommand?: string;
+  lintCommand?: string;
+  baseImage?: string;
+  registryMirror?: string;  // Docker 镜像源
+  timeout?: number;
+}
+
+/** SSE 事件类型 */
+export type SSEEventType = 'connected' | 'step' | 'output' | 'error' | 'complete';
+
+/** SSE 步骤消息 */
+export interface SSEStepData {
+  name: string;
+  status: WorkflowStatus;
+}
+
+/** SSE 输出消息 */
+export interface SSEOutputData {
+  step: string;
+  text: string;
+}
+
+/** SSE 错误消息 */
+export interface SSEErrorData {
+  step: string;
+  message: string;
+}
+
+/** SSE 完成消息 */
+export interface SSECompleteData {
+  workflowId: string;
+  status: WorkflowStatus;
+}
+
+/** Docker镜像源测试结果 */
+export interface RegistryMirrorTestResult {
+  /** 是否成功 */
+  success: boolean;
+  /** 镜像源地址（空字符串表示Docker Hub） */
+  mirror: string;
+  /** 镜像源名称（用于显示） */
+  mirrorName: string;
+  /** 耗时（毫秒） */
+  duration: number;
+  /** 下载速度（MB/s） */
+  speed?: number;
+  /** 错误信息 */
+  error?: string;
+}

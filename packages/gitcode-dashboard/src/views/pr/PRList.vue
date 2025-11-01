@@ -63,9 +63,29 @@
             {{ formatTime(row.created_at) }}
           </template>
         </el-table-column>
+        <el-table-column label="操作" width="120" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              :icon="Promotion"
+              size="small"
+              @click="handleRunTest(row)"
+            >
+              运行测试
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
 
       <EmptyState v-if="!loading && prList.length === 0" description="暂无 PR" />
+
+      <!-- Workflow 测试对话框 -->
+      <WorkflowDialog
+        v-model="workflowDialogVisible"
+        :pr-number="selectedPR?.number || 0"
+        :owner="selectedPR?.owner || ''"
+        :repo="selectedPR?.repo || ''"
+        @success="handleWorkflowSuccess"
+      />
 
       <!-- 分页 -->
       <div class="pagination">
@@ -84,20 +104,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { RefreshRight } from '@element-plus/icons-vue';
-import { usePRStore } from '@/store';
+import { RefreshRight, Promotion } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
+import { usePRStore, useRepoStore } from '@/store';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import WorkflowDialog from '@/components/WorkflowDialog.vue';
+import type { PullRequest } from '@/types';
 
 const prStore = usePRStore();
+const repoStore = useRepoStore();
 
 // 使用 storeToRefs 解构响应式状态
 const { prList, loading, filters, prCount } = storeToRefs(prStore);
+const { selectedRepoId } = storeToRefs(repoStore);
 // 方法可以直接解构
 const { fetchPRList, clearCache } = prStore;
+
+// Workflow 对话框
+const workflowDialogVisible = ref(false);
+const selectedPR = ref<PullRequest & { owner?: string; repo?: string }>();
 
 // 计算当前筛选状态下的 PR 总数
 const totalCount = computed(() => {
@@ -145,6 +174,34 @@ const handleRefresh = async () => {
 
 const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN');
+};
+
+/**
+ * 运行测试
+ */
+const handleRunTest = (pr: PullRequest) => {
+  if (!selectedRepoId.value) {
+    ElMessage.warning('请先选择仓库');
+    return;
+  }
+
+  // 从 selectedRepoId 解析 owner 和 repo
+  const [owner, repo] = selectedRepoId.value.split('/');
+
+  selectedPR.value = {
+    ...pr,
+    owner,
+    repo,
+  };
+
+  workflowDialogVisible.value = true;
+};
+
+/**
+ * 测试成功回调
+ */
+const handleWorkflowSuccess = () => {
+  ElMessage.success('测试通过！');
 };
 </script>
 

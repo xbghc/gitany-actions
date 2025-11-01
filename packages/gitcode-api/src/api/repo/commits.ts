@@ -24,22 +24,22 @@ export const branchSchema = z.object({
     parent_ids: z.array(z.string()),
     authored_date: z.string(),
     author_name: z.string(),
-    author_iam_id: z.string().nullable(),
+    author_iam_id: z.string().optional(), // 实际 API 不返回此字段
     author_email: z.string(),
-    author_user_name: z.string().nullable(),
+    author_user_name: z.string().optional(), // 实际 API 不返回此字段
     committed_date: z.string(),
     committer_name: z.string(),
     committer_email: z.string(),
-    committer_user_name: z.string().nullable(),
-    open_gpg_verified: z.any().nullable(),
-    verification_status: z.any().nullable(),
-    gpg_primary_key_id: z.any().nullable(),
+    committer_user_name: z.string().optional(), // 实际 API 不返回此字段
+    open_gpg_verified: z.any().optional(), // 实际 API 不返回此字段
+    verification_status: z.any().optional(), // 实际 API 不返回此字段
+    gpg_primary_key_id: z.any().optional(), // 实际 API 不返回此字段
     short_id: z.string(),
     created_at: z.string(),
     title: z.string(),
-    author_avatar_url: z.string(),
-    committer_avatar_url: z.string(),
-    relate_url: z.string().nullable(),
+    author_avatar_url: z.string().optional(), // 实际 API 不返回此字段
+    committer_avatar_url: z.string().optional(), // 实际 API 不返回此字段
+    relate_url: z.string().optional(), // 实际 API 不返回此字段
   }),
   merged: z.boolean(),
   protected: z.boolean(),
