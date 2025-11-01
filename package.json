@@ -18,9 +18,12 @@
     "dev:core": "pnpm --filter @xbghc/gitcode-actions dev",
     "dev:server": "pnpm --filter @xbghc/gitcode-actions-server dev",
     "dev:dashboard": "pnpm --filter @xbghc/gitcode-dashboard dev",
-    "verify": "node ./scripts/verify-env.mjs"
+    "verify": "node ./scripts/verify-env.mjs",
+    "publish:dry-run": "node ./scripts/publish.mjs --dry-run",
+    "publish:packages": "node ./scripts/publish.mjs"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "@types/node": "^22.18.1",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",
