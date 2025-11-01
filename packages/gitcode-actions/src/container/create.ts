@@ -47,8 +47,8 @@ export async function createPrContainer(
     User: 'node',
     HostConfig: { AutoRemove: options.autoRemove ?? false },
     Labels: {
-      'gitany.prId': String(pr.id),
-      'gitany.repoUrl': baseRepoUrl,
+      'gitcode.prId': String(pr.id),
+      'gitcode.repoUrl': baseRepoUrl,
     },
   });
   await container.start();

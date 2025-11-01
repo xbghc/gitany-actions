@@ -30,13 +30,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xbghc/gitany-actions.git",
+    "url": "https://github.com/xbghc/gitcode-actions.git",
     "directory": "packages/gitcode-cli"
   },
   "bugs": {
-    "url": "https://github.com/xbghc/gitany-actions/issues"
+    "url": "https://github.com/xbghc/gitcode-actions/issues"
   },
-  "homepage": "https://github.com/xbghc/gitany-actions#readme",
+  "homepage": "https://github.com/xbghc/gitcode-actions#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

@@ -75,7 +75,7 @@ export async function chat(
 
       const labels: Record<string, string> = {};
       if (sha === 'dev') {
-        labels['gitany.branch'] = 'dev';
+        labels['gitcode.branch'] = 'dev';
         keepContainer = true;
       }
 

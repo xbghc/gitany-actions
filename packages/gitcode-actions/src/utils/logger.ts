@@ -12,14 +12,14 @@ function isLogLevel(value: string): value is LogLevel {
 }
 
 function resolveLevel(): LogLevel | undefined {
-  const raw = (process.env.GITANY_LOG_LEVEL || '').trim().toLowerCase();
+  const raw = (process.env.GITCODE_LOG_LEVEL || '').trim().toLowerCase();
   if (!raw) return undefined;
   if (!isLogLevel(raw)) return undefined;
   return raw;
 }
 
 function resolveFormat(): LogFormat {
-  const raw = (process.env.GITANY_LOG_FORMAT || '').trim().toLowerCase();
+  const raw = (process.env.GITCODE_LOG_FORMAT || '').trim().toLowerCase();
   if (raw === 'json') return 'json';
   if (raw === 'human') return 'human';
   return 'human';
@@ -56,7 +56,7 @@ export function createLogger(name?: string): Logger {
   return instance;
 }
 
-export const logger: Logger = createLogger('@gitany');
+export const logger: Logger = createLogger('@gitcode');
 
 export function setGlobalLogLevel(level: LogLevel): void {
   for (const l of registry) {

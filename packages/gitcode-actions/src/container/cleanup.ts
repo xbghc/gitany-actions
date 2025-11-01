@@ -11,7 +11,7 @@ async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo
 
   logger.info('Found running PR containers:');
   for (const info of runningContainers) {
-    logger.info(`  - ${info.Names[0]} (ID: ${info.Id}, PR: ${info.Labels['gitany.prId']})`);
+    logger.info(`  - ${info.Names[0]} (ID: ${info.Id}, PR: ${info.Labels['gitcode.prId']})`);
   }
 
   const answer = await new Promise<string>((resolve) => {
@@ -43,14 +43,14 @@ async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo
 
 /**
  * Scan and remove stale PR containers.
- * Containers are identified by the `gitany.prId` label.
+ * Containers are identified by the `gitcode.prId` label.
  * Stoped containers will be removed automatically.
  * For running containers, the user will be prompted for confirmation.
  */
 export async function cleanupPrContainers() {
   const containers = await docker.listContainers({
     all: true,
-    filters: { label: ['gitany.prId'] },
+    filters: { label: ['gitcode.prId'] },
   });
 
   const runningContainers: ContainerInfo[] = [];

@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   lang: 'zh-CN',
-  title: 'GitAny Monorepo 文档',
+  title: 'GitCode Monorepo 文档',
   description: 'gitcode 工具库与 CLI 使用说明',
   themeConfig: {
     nav: [

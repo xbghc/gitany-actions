@@ -2,7 +2,7 @@ import type Docker from 'dockerode';
 import { docker } from './shared.js';
 
 export async function getDevContainer(): Promise<Docker.Container | undefined> {
-  const filters = { label: [`gitany.branch=dev`] };
+  const filters = { label: [`gitcode.branch=dev`] };
 
   const list = await docker.listContainers({ all: true, filters });
   if (list.length > 0) {
