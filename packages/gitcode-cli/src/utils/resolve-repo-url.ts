@@ -4,8 +4,39 @@ import path from 'node:path';
 /**
  * Parse .git/config file and extract remote origin URL
  */
+function resolveGitDir(cwd: string): string {
+  const gitPath = path.join(cwd, '.git');
+
+  if (!fs.existsSync(gitPath)) {
+    throw new Error('Not a git repository (or any of the parent directories)');
+  }
+
+  const stat = fs.lstatSync(gitPath);
+  if (stat.isDirectory()) {
+    return gitPath;
+  }
+
+  if (stat.isSymbolicLink()) {
+    return fs.realpathSync(gitPath);
+  }
+
+  if (stat.isFile()) {
+    const content = fs.readFileSync(gitPath, 'utf-8');
+    const match = content.match(/^gitdir:\s*(.+)$/m);
+    if (!match) {
+      throw new Error('Invalid gitdir reference in .git file');
+    }
+
+    const gitDirPath = match[1].trim();
+    return path.isAbsolute(gitDirPath) ? gitDirPath : path.resolve(cwd, gitDirPath);
+  }
+
+  throw new Error('Unsupported .git entry');
+}
+
 function parseGitConfig(cwd: string = process.cwd()): string {
-  const gitConfigPath = path.join(cwd, '.git', 'config');
+  const gitDir = resolveGitDir(cwd);
+  const gitConfigPath = path.join(gitDir, 'config');
 
   if (!fs.existsSync(gitConfigPath)) {
     throw new Error(
@@ -40,7 +71,7 @@ function parseGitConfig(cwd: string = process.cwd()): string {
     }
   }
 
-  throw new Error('No remote origin URL found in .git/config');
+  throw new Error('No remote origin URL found in git config');
 }
 
 /**
