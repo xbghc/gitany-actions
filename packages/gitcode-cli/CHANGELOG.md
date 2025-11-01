@@ -28,5 +28,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration with `@xbghc/git-lib` for Git operations
 - Support for Node.js 22+
 
-[unreleased]: https://github.com/xbghc/gitany-actions/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/xbghc/gitany-actions/releases/tag/v0.0.1
+[unreleased]: https://github.com/xbghc/gitcode-actions/compare/v0.0.1...HEAD
+[0.0.1]: https://github.com/xbghc/gitcode-actions/releases/tag/v0.0.1

@@ -48,9 +48,9 @@ export async function createWorkspaceContainer({
   try {
     const labels: Record<string, string> = { ...customLabels };
     if (reusable && repoUrl && branch) {
-      labels['gitany.repoUrl'] = repoUrl;
-      labels['gitany.branch'] = branch;
-      labels['gitany.reusable'] = 'true';
+      labels['gitcode.repoUrl'] = repoUrl;
+      labels['gitcode.branch'] = branch;
+      labels['gitcode.reusable'] = 'true';
     }
 
     const container = await docker.createContainer({

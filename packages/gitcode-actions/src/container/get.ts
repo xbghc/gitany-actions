@@ -9,8 +9,8 @@ export async function getContainer({
   pr: number;
   repoUrl?: string;
 }): Promise<Docker.Container | undefined> {
-  const filters: Record<string, string[]> = { label: [`gitany.prId=${pr}`] };
-  if (repoUrl) filters.label.push(`gitany.repoUrl=${repoUrl}`);
+  const filters: Record<string, string[]> = { label: [`gitcode.prId=${pr}`] };
+  if (repoUrl) filters.label.push(`gitcode.repoUrl=${repoUrl}`);
 
   const list = await docker.listContainers({ all: true, filters });
   if (list.length) return docker.getContainer(list[0].Id);
@@ -32,7 +32,7 @@ export async function getContainerByRepo({
   branch: string;
 }): Promise<Docker.Container | undefined> {
   const filters: Record<string, string[]> = {
-    label: [`gitany.repoUrl=${repoUrl}`, `gitany.branch=${branch}`, `gitany.reusable=true`],
+    label: [`gitcode.repoUrl=${repoUrl}`, `gitcode.branch=${branch}`, `gitcode.reusable=true`],
   };
 
   const list = await docker.listContainers({ all: true, filters });

@@ -58,8 +58,8 @@ gitcode --help
 
 ```bash
 # 克隆仓库
-git clone https://github.com/xbghc/gitany-actions.git
-cd gitany-actions
+git clone https://github.com/xbghc/gitcode-actions.git
+cd gitcode-actions
 
 # 安装依赖
 pnpm install

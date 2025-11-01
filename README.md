@@ -151,7 +151,7 @@ GITCODE_HTTP_DEBUG=1            # 可选：输出请求调试信息
 
 **令牌读取优先级**：环境变量 > 配置文件（`~/.gitcode/config.json`）
 
-自动化与 CLI 默认使用 `~/.gitcode` 目录存储本地状态（watcher 状态、配置文件等，容器标签以 `gitany.*` 前缀标识）。
+自动化与 CLI 默认使用 `~/.gitcode` 目录存储本地状态（watcher 状态、配置文件等，容器标签以 `gitcode.*` 前缀标识）。
 
 ## 文档与规范
 

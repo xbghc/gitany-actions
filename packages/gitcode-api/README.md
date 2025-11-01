@@ -108,11 +108,9 @@ const comments = await client.issue.comments('https://gitcode.com/owner/repo', 1
 
 ```typescript
 // 环境变量
-process.env.GITANY_TOKEN = 'your-token';
-// 或
 process.env.GITCODE_TOKEN = 'your-token';
 
-// 配置文件存储在 ~/.gitany/gitcode/config.json
+// 配置文件存储在 ~/.gitcode/config.json
 ```
 
 ## API 参考
