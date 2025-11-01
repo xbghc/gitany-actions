@@ -190,14 +190,9 @@ export async function checkDockerAvailable(): Promise<{ available: boolean; erro
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    let output = '';
     let errorOutput = '';
 
-    if (dockerProcess.stdout) {
-      dockerProcess.stdout.on('data', (data: Buffer) => {
-        output += data.toString();
-      });
-    }
+    // stdout 不需要收集，只需要检查退出码
 
     if (dockerProcess.stderr) {
       dockerProcess.stderr.on('data', (data: Buffer) => {
@@ -304,7 +299,7 @@ export async function pullDockerImage(
   registryMirror?: string,
   onOutput?: (text: string) => void,
 ): Promise<{ success: boolean; error?: string }> {
-  return new Promise(async (resolve) => {
+  return new Promise((resolve) => {
     // 确定要拉取的镜像地址
     const pullImage = registryMirror ? transformImageWithMirror(image, registryMirror) : image;
     const useMirror = pullImage !== image;
@@ -323,13 +318,11 @@ export async function pullDockerImage(
       stdio: ['ignore', 'pipe', 'pipe'],
     });
 
-    let stdout = '';
     let stderr = '';
 
     if (dockerProcess.stdout) {
       dockerProcess.stdout.on('data', (data: Buffer) => {
         const text = data.toString();
-        stdout += text;
         if (onOutput) {
           onOutput(text);
         }
@@ -346,7 +339,7 @@ export async function pullDockerImage(
       });
     }
 
-    dockerProcess.on('close', async (exitCode) => {
+    const handleClose = async (exitCode: number | null) => {
       if (exitCode === 0) {
         // 拉取成功
         if (onOutput) {
@@ -401,6 +394,15 @@ export async function pullDockerImage(
 
         resolve({ success: false, error: errorMsg });
       }
+    };
+
+    dockerProcess.on('close', (exitCode) => {
+      handleClose(exitCode).catch((error) => {
+        resolve({
+          success: false,
+          error: `处理镜像失败: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        });
+      });
     });
 
     dockerProcess.on('error', (error) => {

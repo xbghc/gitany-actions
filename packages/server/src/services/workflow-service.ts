@@ -2,7 +2,6 @@ import { EventEmitter } from 'events';
 import type {
   WorkflowResult,
   WorkflowStatus,
-  WorkflowStep,
   WorkflowConfig,
   SSEOutputMessage,
   SSEStepMessage,
@@ -10,8 +9,6 @@ import type {
   SSECompleteMessage,
 } from '../types/workflow.js';
 import {
-  runInDocker,
-  buildPrTestCommand,
   buildInitCommand,
   buildBuildCommand,
   buildLintCommand,
@@ -254,6 +251,9 @@ export class WorkflowService {
         this.updateStep(workflowId, 'verify-branch', 'success');
       } catch (error) {
         // 输出详细错误信息
+        const errorWithResponse = error as unknown as {
+          response?: { status?: number; statusText?: string; data?: unknown };
+        };
         console.error('[Branch Verification Failed]', {
           workflowId,
           owner,
@@ -263,9 +263,9 @@ export class WorkflowService {
           errorMessage: error instanceof Error ? error.message : String(error),
           errorStack: error instanceof Error ? error.stack : undefined,
           // 如果有 HTTP 响应信息也输出
-          httpStatus: (error as any)?.response?.status,
-          httpStatusText: (error as any)?.response?.statusText,
-          httpData: (error as any)?.response?.data,
+          httpStatus: errorWithResponse?.response?.status,
+          httpStatusText: errorWithResponse?.response?.statusText,
+          httpData: errorWithResponse?.response?.data,
         });
 
         this.emitOutput(
@@ -279,11 +279,11 @@ export class WorkflowService {
           `[调试] 错误消息: ${error instanceof Error ? error.message : String(error)}\n`,
         );
 
-        if ((error as any)?.response?.status) {
+        if (errorWithResponse?.response?.status) {
           this.emitOutput(
             workflowId,
             'verify-branch',
-            `[调试] HTTP 状态码: ${(error as any).response.status}\n`,
+            `[调试] HTTP 状态码: ${errorWithResponse.response.status}\n`,
           );
         }
 
