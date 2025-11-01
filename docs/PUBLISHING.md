@@ -7,7 +7,6 @@
 以下包会发布到 npm：
 
 - `@xbghc/gitcode-api` - GitCode API 客户端库
-- `@xbghc/git-lib` - Git 命令包装器
 - `@xbghc/gitcode-cli` - GitCode 命令行工具
 
 ## 发布前准备
@@ -99,8 +98,7 @@ pnpm run publish:packages
 2. 询问确认
 3. 按依赖顺序发布包：
    - @xbghc/gitcode-api（无依赖）
-   - @xbghc/git-lib（无依赖）
-   - @xbghc/gitcode-cli（依赖前两者）
+   - @xbghc/gitcode-cli（依赖 gitcode-api）
 4. 询问是否创建 git tags
 5. 询问是否推送 tags
 
@@ -112,10 +110,7 @@ pnpm run publish:packages
 # 发布 API 包
 pnpm --filter @xbghc/gitcode-api publish --access public
 
-# 发布 Git 库
-pnpm --filter @xbghc/git-lib publish --access public
-
-# 发布 CLI（必须在前两者发布后）
+# 发布 CLI（必须在 API 包发布后）
 pnpm --filter @xbghc/gitcode-cli publish --access public
 ```
 
@@ -127,7 +122,6 @@ pnpm --filter @xbghc/gitcode-cli publish --access public
 
 ```bash
 git tag @xbghc/gitcode-api@0.2.0
-git tag @xbghc/git-lib@0.2.0
 git tag @xbghc/gitcode-cli@0.2.0
 ```
 
@@ -142,7 +136,6 @@ git push --tags
 
 访问 npm 查看发布的包：
 - https://www.npmjs.com/package/@xbghc/gitcode-api
-- https://www.npmjs.com/package/@xbghc/git-lib
 - https://www.npmjs.com/package/@xbghc/gitcode-cli
 
 ## 版本管理规范

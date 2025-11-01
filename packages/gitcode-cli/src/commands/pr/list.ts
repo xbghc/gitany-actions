@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '@xbghc/git-lib';
+import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 import type { PullRequest } from '@xbghc/gitcode-api';
 

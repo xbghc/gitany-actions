@@ -8,6 +8,7 @@ export function repoCommand(): Command {
   repoProgram
     .command('permission [url]')
     .description("Show current user's role on a repo")
+    .option('--json', 'Output raw JSON instead of formatted text')
     .action(permissionCommand);
 
   // 添加子命令组

@@ -5,7 +5,6 @@
 Monorepo managed with `pnpm` workspaces. Code lives in `packages/*`:
 - `packages/gitcode-api` — core API client.
 - `packages/gitcode-cli` — CLI (`gitcode`).
-- `packages/git-lib` — Git helpers.
 - `packages/gitcode-actions` — automation/workflows.
 - `packages/server` — backend server.
 - `packages/gitcode-dashboard` — web UI.

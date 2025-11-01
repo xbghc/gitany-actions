@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@xbghc/gitcode-api';
-import { resolveRepoUrl } from '@xbghc/git-lib';
+import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 interface StatusOptions {

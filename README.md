@@ -11,7 +11,6 @@ GitCode Actions 是一个基于 pnpm 的 TypeScript monorepo，围绕 GitCode �
 | `@xbghc/gitcode-actions` | 事件监听、容器编排与 AI 评论助手工具集，可用于构建自动化工作流。 |
 | `@xbghc/gitcode-actions-server` | 基于 Express 的后端服务，对外暴露 GitCode API 转发与自动化能力。 |
 | `@xbghc/gitcode-dashboard` | Vue 3 管理面板，封装 GitCode 仓库与 Issue 的可视化操作界面。 |
-| `@xbghc/git-lib` | 轻量级 Git 命令包装器，提供仓库 URL 解析与跨平台子进程调用。 |
 
 ## 环境要求
 

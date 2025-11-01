@@ -34,7 +34,7 @@ pnpm --filter @xbghc/gitcode-cli start -- --help
 
 ## 命令
 
-> 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过 `@xbghc/git-lib` 的 `resolveRepoUrl` 自动使用 `git remote get-url origin` 获取仓库地址。
+> 在 Git 仓库目录中执行命令且不传入 URL 参数时，CLI 会通过内部的 `resolveRepoUrl` 工具函数自动读取 `.git/config` 文件来获取 remote origin 仓库地址。
 
 ### gitcode parse [git-url]
 
