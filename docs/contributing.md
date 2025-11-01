@@ -6,10 +6,10 @@ title: 贡献指南
 
 本仓库使用 pnpm 管理的 TypeScript Monorepo，包含：
 
-- `@gitany/gitcode`：工具库（packages/gitcode）
-- `@gitany/git-lib`：Git 命令封装库（packages/git-lib）
-- `@gitany/cli`：命令行工具（packages/cli）
-- `@gitany/core`：核心工具库（packages/core）
+- `@xbghc/gitcode-api`：工具库（packages/gitcode-api）
+- `@xbghc/git-lib`：Git 命令封装库（packages/git-lib）
+- `@xbghc/gitcode-cli`：命令行工具（packages/gitcode-cli）
+- `@xbghc/gitcode-actions`：GitCode Actions 自动化工作流库（packages/gitcode-actions）
 - 文档：VitePress（docs）
 
 ## 开发约定
@@ -24,8 +24,8 @@ title: 贡献指南
 
 当修改代码时，必须同步更新相应文档：
 
-- 变更 `packages/gitcode` → 更新 `docs/gitcode/*`
-- 变更 `packages/cli` → 更新 `docs/cli/*`
+- 变更 `packages/gitcode-api` → 更新 `docs/gitcode-api/*`
+- 变更 `packages/gitcode-cli` → 更新 `docs/gitcode-cli/*`
 
 仓库提供本地 Git hook 与 CI 检查来提醒未同步文档的变更。
 
@@ -58,10 +58,10 @@ SKIP_DOCS_CHECK=1 git commit -m "..."
 
 ## 目录映射参考
 
-- `packages/gitcode/src/*` → `docs/gitcode/`
+- `packages/gitcode-api/src/*` → `docs/gitcode-api/`
 - `packages/git-lib/src/*` → `docs/git-lib/`
-- `packages/cli/src/*` → `docs/cli/`
-- `packages/core/src/*` → `docs/core/`
+- `packages/gitcode-cli/src/*` → `docs/gitcode-cli/`
+- `packages/gitcode-actions/src/*` → `docs/gitcode-actions/`
 
 如遇仅重构/重命名且不影响对外接口的场景，请在 PR 中说明无需变更文档的理由。
 

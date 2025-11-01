@@ -1,0 +1,74 @@
+/**
+ * Pull Requests - List
+ * Endpoint: GET /api/v5/repos/{owner}/{repo}/pulls
+ */
+
+/**
+ * Query parameters for listing pull requests.
+ * Only include fields you need; extra fields are ignored.
+ */
+export interface ListPullsQuery {
+  /** Filter by state, e.g., 'open' | 'closed' | 'all' */
+  state?: string;
+  /** Page index, starting from 1. */
+  page?: number;
+  /** Items per page. */
+  per_page?: number;
+  /** Optional sort field if supported by the API. */
+  sort?: string;
+  /** Optional sort direction, e.g., 'asc' | 'desc'. */
+  direction?: string;
+  /** Filter by head branch or repo:branch. */
+  head?: string;
+  /** Filter by base branch. */
+  base?: string;
+}
+
+/**
+ * Path params for list pulls request.
+ */
+export type ListPullsParams = {
+  /** Repository owner (user or organization). */
+  owner: string;
+  /** Repository name (without .git). */
+  repo: string;
+  /** Optional query parameters. */
+  query?: ListPullsQuery;
+};
+
+/**
+ * Minimal Pull Request representation with common fields.
+ */
+import { z } from 'zod';
+import { branchSchema } from '../branch/index.js';
+import { userSummarySchema } from '../user/summary.js';
+
+export const pullRequestSchema = z.object({
+  id: z.number(),
+  number: z.number(),
+  title: z.string(),
+  state: z.string(),
+  head: branchSchema,
+  base: branchSchema,
+  user: userSummarySchema,
+  body: z.string().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  merged_at: z.string().nullable().optional(),
+  // 省略部分内容
+});
+
+export type PullRequest = z.infer<typeof pullRequestSchema>;
+
+export const listPullsResponseSchema = pullRequestSchema.array();
+
+export type ListPullsResponse = PullRequest[];
+import { API_BASE } from '../constants.js';
+
+/**
+ * Builds the request path for listing pull requests.
+ * Example: /repos/owner/repo/pulls?state=open&page=1&per_page=20
+ */
+export function listPullsUrl(owner: string, repo: string): string {
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls`;
+}

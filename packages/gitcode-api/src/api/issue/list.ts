@@ -1,0 +1,81 @@
+/**
+ * Issues - List
+ * Endpoint: GET /api/v5/repos/{owner}/{repo}/issues
+ */
+
+import { z } from 'zod';
+import { API_BASE } from '../constants.js';
+import { userSummarySchema, type UserSummary } from '../user/summary.js';
+
+/**
+ * Query parameters for listing issues.
+ * Only include fields you need; extra fields are ignored.
+ */
+export interface ListIssuesQuery {
+  /** Filter by state: open | closed | all */
+  state?: 'open' | 'closed' | 'all';
+  /** Filter by labels (comma-separated). */
+  labels?: string;
+  /** Page index, starting from 1. */
+  page?: number;
+  /** Items per page. */
+  per_page?: number;
+  /** Sort field: created | updated | comments. Defaults to updated. */
+  sort?: 'created' | 'updated' | 'comments';
+}
+
+/**
+ * Path params for list issues request.
+ */
+export type ListIssuesParams = {
+  /** Repository owner (user or organization). */
+  owner: string;
+  /** Repository name (without .git). */
+  repo: string;
+  /** Optional query parameters. */
+  query?: ListIssuesQuery;
+};
+
+/**
+ * Minimal Issue representation with common fields.
+ */
+export type IssueUser = UserSummary;
+
+const issueLabelSchema = z
+  .object({
+    id: z.union([z.number(), z.string()]).optional(),
+    name: z.string().optional(),
+    title: z.string().optional(),
+    color: z.string().optional(),
+    description: z.string().optional(),
+  })
+  .passthrough();
+
+export const issueSchema = z.object({
+  id: z.number(),
+  html_url: z.string(),
+  number: z.string(),
+  state: z.string(),
+  title: z.string(),
+  body: z.string().nullable().optional(),
+  user: userSummarySchema.optional(),
+  assignees: z.array(userSummarySchema).default([]),
+  labels: z.array(issueLabelSchema).default([]),
+  created_at: z.string(),
+  updated_at: z.string(),
+  closed_at: z.string().optional(),
+});
+
+export type Issue = z.infer<typeof issueSchema>;
+
+export const listIssuesResponseSchema = issueSchema.array();
+
+export type ListIssuesResponse = Issue[];
+
+/**
+ * Builds the request path for listing issues.
+ * Example: /repos/owner/repo/issues?state=open&page=1&per_page=20
+ */
+export function listIssuesUrl(owner: string, repo: string): string {
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`;
+}

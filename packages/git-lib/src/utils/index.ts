@@ -1,7 +1,7 @@
 import os from 'node:os';
 import path from 'node:path';
 
-export { resolveRepoUrl } from './resolve-repo-url';
+export { resolveRepoUrl } from './resolve-repo-url.js';
 
 export function expandCwd(cwd?: string) {
   if (!cwd) return cwd;

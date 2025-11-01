@@ -1,5 +1,5 @@
-import { GitClient } from '../client';
-import { GitNotFoundError } from '../errors';
+import { createGitClient } from '../client/index.js';
+import { GitNotFoundError } from '../errors.js';
 
 function normalizeRepoUrlInput(raw: string): string {
   const url = raw.trim();
@@ -34,9 +34,9 @@ export async function resolveRepoUrl(
   options: { cwd?: string } = {},
 ): Promise<string> {
   if (url) return normalizeRepoUrlInput(url);
-  const client = new GitClient(options.cwd);
+  const { run } = createGitClient(options.cwd);
   try {
-    const result = await client.run(['remote', 'get-url', 'origin']);
+    const result = await run(['remote', 'get-url', 'origin']);
     if (result.code !== 0) {
       throw new Error(
         result.stderr.trim() ||

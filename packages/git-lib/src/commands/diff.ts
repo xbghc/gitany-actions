@@ -1,12 +1,17 @@
-import { GitClient } from "../client";
+import type { GitRunner } from '../client/index.js';
 
 export interface DiffOptions {
-  diffFilter?: 'A' | 'M' | 'D',
-  nameOnly?: boolean,
-  patterns?: string[],
+  diffFilter?: 'A' | 'M' | 'D';
+  nameOnly?: boolean;
+  patterns?: string[];
 }
 
-export async function gitDiffCommits(client: GitClient, commit1: string, commit2: string, options: DiffOptions = {}) {
+export async function gitDiffCommits(
+  run: GitRunner,
+  commit1: string,
+  commit2: string,
+  options: DiffOptions = {},
+) {
   const args = ['diff', commit1, commit2];
   if (options.diffFilter) {
     args.push(`--diff-filter=${options.diffFilter}`);
@@ -18,6 +23,6 @@ export async function gitDiffCommits(client: GitClient, commit1: string, commit2
     args.push('--', ...options.patterns);
   }
 
-  const res = await client.run(args);
+  const res = await run(args);
   return res;
 }

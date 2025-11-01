@@ -1,14 +1,14 @@
-import { GitClient } from '../client';
+import type { GitRunner } from '../client/index.js';
 
 export async function gitCommit(
-  client: GitClient,
+  run: GitRunner,
   message: string,
   options: { addAll?: boolean } = {},
 ) {
   const { addAll = true } = options;
   if (addAll) {
-    const addRes = await client.run(['add', '-A']);
+    const addRes = await run(['add', '-A']);
     if (addRes.code !== 0) return addRes;
   }
-  return client.run(['commit', '-m', message]);
+  return run(['commit', '-m', message]);
 }

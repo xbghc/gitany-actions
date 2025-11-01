@@ -1,5 +1,5 @@
 {
-  "name": "@gitany/workspace",
+  "name": "@xbghc/workspace",
   "private": true,
   "packageManager": "pnpm@10.15.0",
   "workspaces": [
@@ -10,16 +10,20 @@
     "dev": "pnpm -r --parallel dev",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "dev:core": "pnpm --filter @gitany/core dev",
-    "d": "pnpm build && node ./scripts/dev-gitcode.mjs",
-    "d:git": "pnpm build && node ./scripts/dev-git.mjs",
-    "d:docker": "pnpm build && node ./scripts/dev-docker.mjs"
+    "dev:core": "pnpm --filter @xbghc/gitcode-actions dev",
+    "dev:server": "pnpm --filter @xbghc/gitcode-actions-server dev",
+    "dev:dashboard": "pnpm --filter @xbghc/gitcode-dashboard dev",
+    "verify": "node ./scripts/verify-env.mjs",
+    "publish:dry-run": "node ./scripts/publish.mjs --dry-run",
+    "publish:packages": "node ./scripts/publish.mjs"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "@types/node": "^22.18.1",
     "@typescript-eslint/eslint-plugin": "^8.42.0",
     "@typescript-eslint/parser": "^8.42.0",

@@ -1,0 +1,55 @@
+{
+  "name": "@xbghc/gitcode-cli",
+  "version": "0.0.1",
+  "description": "CLI for GitCode.",
+  "type": "module",
+  "bin": {
+    "gitcode": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "node ./scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "start": "node dist/index.js",
+    "prepublishOnly": "pnpm build && pnpm typecheck"
+  },
+  "keywords": [
+    "gitcode",
+    "cli",
+    "git",
+    "command-line",
+    "tool",
+    "gitcode-api"
+  ],
+  "author": "xbghc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xbghc/gitany-actions.git",
+    "directory": "packages/gitcode-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/xbghc/gitany-actions/issues"
+  },
+  "homepage": "https://github.com/xbghc/gitany-actions#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  },
+  "dependencies": {
+    "@xbghc/gitcode-api": "workspace:*",
+    "@xbghc/git-lib": "workspace:*",
+    "commander": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "name": "@xbghc/gitcode-api",
+  "version": "0.0.1",
+  "description": "TypeScript client library for GitCode API with type-safe wrappers for users, repositories, pull requests, and issues.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "prepublishOnly": "pnpm build && pnpm typecheck"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "keywords": [
+    "gitcode",
+    "api",
+    "client",
+    "rest",
+    "git",
+    "typescript",
+    "pull-request",
+    "issues"
+  ],
+  "author": "xbghc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xbghc/gitany-actions.git",
+    "directory": "packages/gitcode-api"
+  },
+  "bugs": {
+    "url": "https://github.com/xbghc/gitany-actions/issues"
+  },
+  "homepage": "https://github.com/xbghc/gitany-actions#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "got": "^14.4.9",
+    "zod": "^4.1.7"
+  }
+}

@@ -1,4 +1,4 @@
-import { GitClient } from "../client";
+import type { GitRunner } from '../client/index.js';
 
 export interface GitAddOptions {
   all?: boolean;
@@ -6,26 +6,26 @@ export interface GitAddOptions {
 }
 
 export async function gitAdd(
-  client: GitClient,
+  run: GitRunner,
   files?: string | string[],
   options: GitAddOptions = {},
 ) {
   const { all = false, update = false } = options;
-  
+
   if (all) {
-    return client.run(['add', '-A']);
+    return run(['add', '-A']);
   }
-  
+
   if (update) {
-    return client.run(['add', '-u']);
+    return run(['add', '-u']);
   }
-  
+
   if (!files) {
-    return client.run(['add', '.']);
+    return run(['add', '.']);
   }
-  
+
   const filesArray = Array.isArray(files) ? files : [files];
   const args = ['add', ...filesArray];
-  
-  return client.run(args);
+
+  return run(args);
 }

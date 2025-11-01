@@ -1,11 +1,11 @@
-import { GitClient } from '../client';
+import type { GitRunner } from '../client/index.js';
 
 export async function gitShowFile(
-  client: GitClient,
+  run: GitRunner,
   ref: string,
   filePath: string,
 ): Promise<string | null> {
-  const res = await client.run(['show', `${ref}:${filePath}`]);
+  const res = await run(['show', `${ref}:${filePath}`]);
   if (res.code !== 0) {
     return null;
   }

@@ -6,12 +6,8 @@ import {
   createPrContainer,
   removeContainer,
   getContainer,
-} from '../../packages/core/dist/index.js';
-import {
-  GitcodeClient,
-  parseGitUrl,
-  toGitUrl,
-} from '../../packages/gitcode/dist/index.js';
+} from '../../packages/gitcode-actions/dist/index.js';
+import { GitcodeClient, parseGitUrl, toGitUrl } from '../../packages/gitcode-api/dist/index.js';
 
 config({ path: new URL('.env', import.meta.url) });
 
@@ -139,9 +135,10 @@ async function main() {
 
   console.log('✅ 评论已成功创建!');
   console.log(`   评论 ID: ${createdComment.id}`);
-  const preview = createdComment.body.length > 80
-    ? `${createdComment.body.slice(0, 77)}...`
-    : createdComment.body;
+  const preview =
+    createdComment.body.length > 80
+      ? `${createdComment.body.slice(0, 77)}...`
+      : createdComment.body;
   console.log(`   内容预览: "${preview}"`);
   console.log('🎉 容器创建与评论功能测试完成');
 }

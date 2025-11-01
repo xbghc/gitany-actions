@@ -1,24 +1,49 @@
 {
-  "name": "@gitany/git-lib",
-  "version": "0.1.0",
-  "description": "Minimal git command wrappers for gitany.",
+  "name": "@xbghc/git-lib",
+  "version": "0.0.1",
+  "description": "Minimal cross-platform git command wrappers with TypeScript support.",
   "type": "module",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "node ./scripts/build.mjs",
-    "clean": "rm -rf dist",
-    "lint": "eslint ."
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "lint": "eslint .",
+    "prepublishOnly": "pnpm build && pnpm typecheck"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/src/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "keywords": [
+    "git",
+    "wrapper",
+    "command",
+    "cross-platform",
+    "typescript",
+    "utilities"
+  ],
+  "author": "xbghc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xbghc/gitany-actions.git",
+    "directory": "packages/git-lib"
+  },
+  "bugs": {
+    "url": "https://github.com/xbghc/gitany-actions/issues"
+  },
+  "homepage": "https://github.com/xbghc/gitany-actions#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
     "cross-spawn": "^7.0.3"
@@ -28,6 +53,6 @@
     "@types/cross-spawn": "^6.0.0"
   },
   "engines": {
-    "node": ">=18.17"
+    "node": ">=22.0.0"
   }
 }

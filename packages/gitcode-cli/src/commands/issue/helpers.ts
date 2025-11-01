@@ -1,0 +1,62 @@
+import { resolveRepoUrl } from '@xbghc/git-lib';
+import { isObjectLike, type IssueUser } from '@xbghc/gitcode-api';
+
+export const colors = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  bright: '\x1b[1m',
+};
+
+export interface IssueTargetOptions {
+  repo?: string;
+}
+
+export async function resolveIssueContext(
+  issueNumberArg: string,
+  urlArg: string | undefined,
+  options: IssueTargetOptions = {},
+) {
+  const issueNumber = Number(issueNumberArg);
+  if (!Number.isFinite(issueNumber) || issueNumber <= 0) {
+    console.error('Invalid issue number');
+    process.exit(1);
+  }
+
+  const repoInput = options.repo ?? urlArg;
+  const repoUrl = await resolveRepoUrl(repoInput);
+  return { issueNumber, repoUrl };
+}
+
+export function formatUserName(user: unknown): string {
+  if (!isObjectLike(user)) {
+    return 'Unknown';
+  }
+  const tryKeys = ['name', 'login', 'username'] as const;
+  for (const key of tryKeys) {
+    const val = Reflect.get(user, key);
+    if (typeof val === 'string' && val.trim()) return val;
+  }
+  return 'Unknown';
+}
+
+export function formatAssignees(users: IssueUser[]): string | undefined {
+  if (users.length === 0) return undefined;
+  const names = users.map((u) => formatUserName(u)).filter(Boolean);
+  if (names.length === 0) return undefined;
+  return names.join(', ');
+}
+
+export function colorizeState(state: string): string {
+  const normalized = state.toLowerCase();
+  if (normalized === 'open') {
+    return `${colors.green}${state}${colors.reset}`;
+  }
+  if (normalized === 'closed') {
+    return `${colors.red}${state}${colors.reset}`;
+  }
+  return `${colors.yellow}${state}${colors.reset}`;
+}

@@ -8,7 +8,7 @@
 // - TEST_VERBOSE: 可选，设置为 "true" 时输出详细日志。
 // - TEST_KEEP_CONTAINER: 可选，设置为 "true" 时保留构建容器用于调试。
 
-import { testShaBuild } from '../../packages/core/dist/index.js';
+import { testShaBuild } from '../../packages/gitcode-actions/dist/index.js';
 import { config } from 'dotenv';
 
 // 加载环境变量
@@ -102,7 +102,11 @@ function showTroubleshootingGuide(result, repoUrl) {
     console.log('');
   }
 
-  if (result.error && !result.diagnostics.steps.clone.error && !result.diagnostics.steps.install.error) {
+  if (
+    result.error &&
+    !result.diagnostics.steps.clone.error &&
+    !result.diagnostics.steps.install.error
+  ) {
     console.log('❌ 其他错误:');
     console.log('   ' + result.error);
     console.log('');
@@ -161,7 +165,9 @@ async function main() {
     console.log('📊 详细诊断信息:');
     console.log(`   Docker 可用: ${result.diagnostics.dockerAvailable ? '✅' : '❌'}`);
     console.log(`   仓库可访问: ${result.diagnostics.repoAccessible ? '✅' : '❌'}`);
-    console.log(`   项目类型: ${result.diagnostics.isPnpmProject ? '🟦 pnpm 项目' : '❌ 非 pnpm 项目'}`);
+    console.log(
+      `   项目类型: ${result.diagnostics.isPnpmProject ? '🟦 pnpm 项目' : '❌ 非 pnpm 项目'}`,
+    );
     console.log(`   package.json: ${result.diagnostics.packageJsonExists ? '✅' : '❌'}`);
     console.log(`   pnpm-lock.yaml: ${result.diagnostics.pnpmLockExists ? '✅' : '❌'}`);
     console.log(`   容器 ID: ${result.diagnostics.containerId || 'N/A'}`);
@@ -206,7 +212,6 @@ async function main() {
     }
 
     process.exit(result.success ? 0 : 1);
-
   } catch (error) {
     console.error('');
     console.error('💥 测试过程中发生错误:');

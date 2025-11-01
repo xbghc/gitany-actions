@@ -1,0 +1,722 @@
+openapi: 3.0.0
+info:
+  title: GitCode Actions Server API
+  description: |
+    Express 后端服务，用于管理 GitCode 仓库的 Pull Requests 和 Issues
+
+    ## 认证说明
+
+    所有仓库相关的 API 都需要提供 GitCode Token 进行认证。
+
+    **生产环境**：必须在请求头中提供有效的 GitCode Token
+
+    **开发环境**：如果未提供 Token，将使用服务器配置的默认 Token（如果有）
+
+    ### 如何提供 Token
+
+    支持以下三种方式之一：
+    1. `X-GitCode-Token` 请求头
+    2. `Authorization: Bearer <token>` 请求头
+    3. `X-Auth-Token` 请求头
+
+    ## API 设计
+
+    本 API 遵循 RESTful 设计规范：
+    - 使用标准 HTTP 方法（GET, POST, PATCH, PUT）
+    - 资源使用名词复数形式
+    - 路径参数表示资源层级关系
+    - 查询参数用于过滤和分页
+  version: 0.1.0
+  contact:
+    name: GitCode Actions
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: 本地开发服务器
+  - url: /
+    description: 相对路径
+
+tags:
+  - name: Health
+    description: 健康检查
+  - name: Pull Requests
+    description: Pull Request 相关操作
+  - name: Issues
+    description: Issue 相关操作
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: 健康检查
+      description: 检查服务器是否正常运行
+      operationId: healthCheck
+      responses:
+        '200':
+          description: 服务器运行正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/repo/{owner}/{repo}/pulls/count:
+    get:
+      tags:
+        - Pull Requests
+      summary: 获取 PR 数量统计
+      description: 获取指定仓库的 Pull Request 数量统计信息
+      operationId: getPRCount
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      responses:
+        '200':
+          description: 成功获取 PR 数量统计
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      all:
+                        type: integer
+                        description: 总数
+                        example: 131
+                      opened:
+                        type: integer
+                        description: 开放状态的 PR 数量
+                        example: 17
+                      closed:
+                        type: integer
+                        description: 关闭状态的 PR 数量
+                        example: 21
+                      merged:
+                        type: integer
+                        description: 已合并的 PR 数量
+                        example: 93
+                      locked:
+                        type: integer
+                        description: 锁定的 PR 数量
+                        example: 0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/pulls:
+    get:
+      tags:
+        - Pull Requests
+      summary: 获取 PR 列表
+      description: 获取指定仓库的 Pull Request 列表，支持过滤和分页
+      operationId: listPRs
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - name: state
+          in: query
+          description: PR 状态过滤
+          schema:
+            type: string
+            enum: [all, open, closed, merged]
+            default: all
+        - name: page
+          in: query
+          description: 页码（从 1 开始）
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+        - name: direction
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: head
+          in: query
+          description: 按 head 分支过滤
+          schema:
+            type: string
+        - name: base
+          in: query
+          description: 按 base 分支过滤
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功获取 PR 列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/pulls/{number}:
+    get:
+      tags:
+        - Pull Requests
+      summary: 获取 PR 详情
+      description: 获取指定 PR 的详细信息（当前未实现，返回 501）
+      operationId: getPR
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      responses:
+        '200':
+          description: 成功获取 PR 详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    patch:
+      tags:
+        - Pull Requests
+      summary: 更新 PR 状态
+      description: 更新 PR 的状态（当前未实现，返回 501）
+      operationId: updatePR
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - state
+              properties:
+                state:
+                  type: string
+                  enum: [open, closed]
+                  description: PR 状态
+      responses:
+        '200':
+          description: 成功更新 PR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/pulls/{number}/comments:
+    get:
+      tags:
+        - Pull Requests
+      summary: 获取 PR 评论列表
+      description: 获取指定 PR 的所有评论
+      operationId: getPRComments
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      responses:
+        '200':
+          description: 成功获取评论列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags:
+        - Pull Requests
+      summary: 添加 PR 评论
+      description: 为指定 PR 添加评论
+      operationId: createPRComment
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+              properties:
+                body:
+                  type: string
+                  description: 评论内容
+                  example: "This looks good to me!"
+      responses:
+        '200':
+          description: 成功添加评论
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/pulls/{number}/merge:
+    put:
+      tags:
+        - Pull Requests
+      summary: 合并 PR
+      description: 合并指定的 Pull Request（当前未实现，返回 501）
+      operationId: mergePR
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      responses:
+        '200':
+          description: 成功合并 PR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '501':
+          $ref: '#/components/responses/NotImplementedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/issues:
+    get:
+      tags:
+        - Issues
+      summary: 获取 Issue 列表
+      description: 获取指定仓库的 Issue 列表，支持过滤和分页
+      operationId: listIssues
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - name: state
+          in: query
+          description: Issue 状态过滤
+          schema:
+            type: string
+            enum: [all, open, closed]
+            default: all
+        - name: page
+          in: query
+          description: 页码（从 1 开始）
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            enum: [created, updated, comments]
+            default: updated
+        - name: labels
+          in: query
+          description: 标签过滤（逗号分隔）
+          schema:
+            type: string
+            example: 'bug,feature'
+      responses:
+        '200':
+          description: 成功获取 Issue 列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags:
+        - Issues
+      summary: 创建 Issue
+      description: 在指定仓库创建新的 Issue
+      operationId: createIssue
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  description: Issue 标题
+                  example: "Bug: Login failed"
+                body:
+                  type: string
+                  description: Issue 描述
+                  example: "When I try to login, I get an error..."
+                labels:
+                  type: string
+                  description: 标签（逗号分隔）
+                  example: "bug,urgent"
+                assignees:
+                  type: string
+                  description: 分配给的用户（逗号分隔）
+                  example: "user1,user2"
+      responses:
+        '200':
+          description: 成功创建 Issue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/issues/{number}:
+    get:
+      tags:
+        - Issues
+      summary: 获取 Issue 详情
+      description: 获取指定 Issue 的详细信息
+      operationId: getIssue
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      responses:
+        '200':
+          description: 成功获取 Issue 详情
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    patch:
+      tags:
+        - Issues
+      summary: 更新 Issue
+      description: 更新 Issue 的信息（标题、描述、状态等）
+      operationId: updateIssue
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Issue 标题
+                body:
+                  type: string
+                  description: Issue 描述
+                state:
+                  type: string
+                  enum: [open, closed]
+                  description: Issue 状态
+                labels:
+                  type: array
+                  items:
+                    type: string
+                  description: 标签列表
+                assignees:
+                  type: string
+                  description: 分配给的用户（逗号分隔）
+      responses:
+        '200':
+          description: 成功更新 Issue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/issues/{number}/comments:
+    get:
+      tags:
+        - Issues
+      summary: 获取 Issue 评论列表
+      description: 获取指定 Issue 的所有评论
+      operationId: getIssueComments
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      responses:
+        '200':
+          description: 成功获取评论列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      tags:
+        - Issues
+      summary: 添加 Issue 评论
+      description: 为指定 Issue 添加评论
+      operationId: createIssueComment
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - $ref: '#/components/parameters/NumberParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - body
+              properties:
+                body:
+                  type: string
+                  description: 评论内容
+                  example: "Thanks for reporting this issue!"
+      responses:
+        '200':
+          description: 成功添加评论
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  securitySchemes:
+    GitCodeToken:
+      type: apiKey
+      in: header
+      name: X-GitCode-Token
+      description: GitCode API Token
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Token
+      description: GitCode API Token (使用 Bearer 格式)
+
+  parameters:
+    OwnerParam:
+      name: owner
+      in: path
+      required: true
+      description: 仓库所有者（用户名或组织名）
+      schema:
+        type: string
+      example: username
+
+    RepoParam:
+      name: repo
+      in: path
+      required: true
+      description: 仓库名称
+      schema:
+        type: string
+      example: my-project
+
+    NumberParam:
+      name: number
+      in: path
+      required: true
+      description: PR 或 Issue 编号
+      schema:
+        type: integer
+      example: 42
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 请求是否成功
+          example: true
+        data:
+          type: object
+          description: 返回的数据
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: 请求是否成功
+          example: false
+        error:
+          type: string
+          description: 错误类型
+          example: Failed to fetch data
+        message:
+          type: string
+          description: 错误详细信息
+          example: Repository not found
+
+  responses:
+    BadRequestError:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Bad Request
+            message: Required field is missing
+
+    UnauthorizedError:
+      description: 未授权 - 缺少或无效的 GitCode Token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Unauthorized
+            message: GitCode token is required
+
+    NotImplementedError:
+      description: 功能未实现
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Not implemented
+            message: This endpoint is not implemented yet
+
+    ServerError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Internal Server Error
+            message: An unexpected error occurred

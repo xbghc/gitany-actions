@@ -1,1 +1,0 @@
-export const API_BASE = 'https://gitcode.com/api/v5';

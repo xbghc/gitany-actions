@@ -1,1 +1,0 @@
-export type RepoRole = 'admin' | 'write' | 'read' | 'none';
