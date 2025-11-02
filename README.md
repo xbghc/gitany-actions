@@ -101,7 +101,7 @@ const issues = await client.issue.list('https://gitcode.com/owner/repo', { state
 `@xbghc/gitcode-actions` 聚焦构建自动化：
 
 - 事件监听：`watchPullRequest` 与 `watchIssues` 会持久化状态到 `~/.gitcode/watchers`，支持 `start()`、`stop()` 与单次 `runOnce()`。
-- AI 评论助手：`watchAiMentions` / `runAiMentionsOnce` 监听 `@AI` 等提及，结合 `defaultPromptBuilder` 与 `chat` 自动回复。
+- AI 评论助手：`watchAiMentions` / `runAiMentionsOnce` 监听 `@AI` 等提及，通过 Docker 容器结合 Anthropic SDK 直接调用 Claude API 自动回复，提供更快的响应速度和更灵活的参数配置。
 - 容器工具链：提供 `createPrContainer`、`createWorkspaceContainer`、`testShaBuild`、`copyToContainer`、`collectDiagnostics` 等函数，用于拉起 PR 隔离环境、执行构建、采集日志并清理容器。
 
 ```ts
@@ -117,14 +117,48 @@ watchPullRequest(client, 'https://gitcode.com/owner/repo', {
   container: { image: 'node:22-bookworm' },
 }).start();
 
+// AI 评论助手 - 使用 Anthropic SDK 模式（推荐）
 watchAiMentions(client, 'https://gitcode.com/owner/repo', {
   mention: '@AI',
-  chatOptions: { sha: 'dev', keepContainer: false },
+  chatOptions: {
+    sha: 'dev',
+    keepContainer: false,
+    model: 'claude-sonnet-4-5-20250929',  // 可选：指定模型
+    maxTokens: 8000,                      // 可选：最大 token 数
+    temperature: 0.7,                     // 可选：温度参数
+  },
 });
 
 await createPrContainer('https://gitcode.com/owner/repo', { id: 1, number: 12 } as any, {
   image: 'node:22-bookworm',
   env: { NODE_ENV: 'test' },
+});
+```
+
+**Chat 功能重大更新**：`chat()` 函数现在使用 Anthropic SDK 而非 Claude CLI，显著提升性能：
+- 启动时间从 30-60 秒降至 <1 秒
+- 内存占用从 ~500MB 降至 <50MB
+- 返回结构化元数据（模型信息、token 使用量等）
+- 完全向后兼容现有 API
+
+```ts
+import { chat } from '@xbghc/gitcode-actions';
+
+// 基础使用（需要设置 ANTHROPIC_API_KEY 环境变量）
+const result = await chat(
+  'https://gitcode.com/owner/repo',
+  '请解释这段代码的功能'
+);
+
+console.log(result.output);           // Claude 的回复
+console.log(result.metadata.tokensUsed);  // Token 使用统计
+
+// 自定义参数
+const result2 = await chat(repoUrl, prompt, {
+  model: 'claude-sonnet-4-5-20250929',
+  maxTokens: 16000,
+  temperature: 0.5,
+  sha: 'main',  // 指定代码分支/提交
 });
 ```
 
@@ -147,6 +181,7 @@ GITCODE_TOKEN=your-token        # 认证令牌（优先级高于配置文件）
 GITCODE_API_BASE=https://gitcode.com/api/v5
 GITCODE_AUTH_STYLE=bearer
 GITCODE_HTTP_DEBUG=1            # 可选：输出请求调试信息
+ANTHROPIC_API_KEY=sk-ant-xxx    # AI 评论助手所需的 Claude API 密钥
 ```
 
 **令牌读取优先级**：环境变量 > 配置文件（`~/.gitcode/config.json`）

@@ -7,7 +7,8 @@ import { cloneRepo } from './clone-repo.js';
 import { verifySha } from './verify-sha.js';
 import { checkoutSha } from './checkout-sha.js';
 import { installDependencies } from './install-dependencies.js';
-import { installClaudeCli } from './install-claude-cli.js';
+import { installAnthropicSdk } from './install-sdk.js';
+import { createApiCallScript } from './call-anthropic.js';
 import { installGitcodeCli } from './install-gitcode-cli.js';
 import { executeStep } from './execute-step.js';
 
@@ -26,6 +27,12 @@ export interface ChatOptions {
   npmRegistry?: string;
   /** Override pnpm registry for installs. Falls back to env then mirror. */
   pnpmRegistry?: string;
+  /** Claude model to use. Defaults to 'claude-sonnet-4-5-20250929'. */
+  model?: string;
+  /** Maximum tokens for the response. Defaults to 8000. */
+  maxTokens?: number;
+  /** Temperature for the response. Optional. */
+  temperature?: number;
 }
 
 export interface ChatResult {
@@ -35,6 +42,13 @@ export interface ChatResult {
   output?: string;
   /** Error output when failed. */
   error?: string;
+  /** Metadata about the API call. */
+  metadata?: {
+    model?: string;
+    tokensUsed?: number;
+    inputTokens?: number;
+    outputTokens?: number;
+  };
 }
 
 export async function chat(
@@ -46,6 +60,9 @@ export async function chat(
   const nodeVersion = options.nodeVersion ?? '18';
   const verbose = options.verbose ?? false;
   let keepContainer = options.keepContainer ?? false;
+  const model = options.model ?? 'claude-sonnet-4-5-20250929';
+  const maxTokens = options.maxTokens ?? 8000;
+  const temperature = options.temperature;
   const log = logger.child({ scope: 'core:container', func: 'chat', sha });
 
   const defaultRegistry = 'https://registry.npmmirror.com';
@@ -101,9 +118,21 @@ export async function chat(
 
     const installDeps = await installDependencies({ container, log, verbose, env: sharedStepEnv });
     if (!installDeps.success) return { success: false, error: installDeps.output };
-    const installClaude = await installClaudeCli({ container, log, verbose, env: sharedStepEnv });
-    if (!installClaude.success) return { success: false, error: installClaude.output };
 
+    // 安装 Anthropic SDK
+    const installSdk = await installAnthropicSdk({ container, log, verbose, env: sharedStepEnv });
+    if (!installSdk.success) return { success: false, error: installSdk.output };
+
+    // 创建 API 调用脚本
+    await createApiCallScript({
+      container,
+      prompt: question,
+      model,
+      maxTokens,
+      temperature,
+    });
+
+    // 收集 ANTHROPIC_ 环境变量
     const anthropicEnv: string[] = [];
     for (const [key, value] of Object.entries(process.env)) {
       if (key.startsWith('ANTHROPIC_') && typeof value === 'string') {
@@ -111,20 +140,38 @@ export async function chat(
       }
     }
 
-    const chatEnv = [...anthropicEnv, ...forwardedEnv, `CLAUDE_QUESTION=${question}`];
+    const chatEnv = [...anthropicEnv, ...forwardedEnv];
 
+    // 执行 API 调用脚本
     const chatStep = await executeStep({
       container,
-      name: 'claude',
-      script: 'cd /tmp/workspace && ~/.npm-global/bin/claude -p "$CLAUDE_QUESTION" 2>&1',
+      name: 'call-anthropic-api',
+      script: 'cd /tmp/workspace && node /tmp/call-anthropic.mjs 2>&1',
       env: chatEnv,
       log,
       verbose,
     });
+
     if (!chatStep.success) {
       return { success: false, error: chatStep.output };
     }
-    return { success: true, output: chatStep.output };
+
+    // 解析 JSON 输出
+    try {
+      const parsed = JSON.parse(chatStep.output);
+      if (parsed.success) {
+        return {
+          success: true,
+          output: parsed.output,
+          metadata: parsed.metadata,
+        };
+      } else {
+        return { success: false, error: parsed.error };
+      }
+    } catch {
+      // 如果解析失败，返回原始输出（向后兼容）
+      return { success: true, output: chatStep.output };
+    }
   } finally {
     if (createdContainer && container && !keepContainer) {
       try {

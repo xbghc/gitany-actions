@@ -1,5 +1,7 @@
 export { chat } from './chat.js';
 export type { ChatOptions, ChatResult } from './chat.js';
+export { createApiCallScript } from './call-anthropic.js';
+export type { CreateApiCallScriptOptions } from './call-anthropic.js';
 export { checkProjectFiles } from './check-project-files.js';
 export type { ProjectCheckResult } from './check-project-files.js';
 export { checkoutSha } from './checkout-sha.js';
@@ -14,7 +16,7 @@ export { executeStep, StepExecutionError } from './execute-step.js';
 export { getContainer, getContainerStatus } from './get.js';
 export { installCli } from './install-cli.js';
 export type { InstallCliOptions } from './install-cli.js';
-export { installClaudeCli } from './install-claude-cli.js';
+export { installAnthropicSdk } from './install-sdk.js';
 export { installDependencies } from './install-dependencies.js';
 export { installGitcodeCli } from './install-gitcode-cli.js';
 export { ImagePullError, prepareImage } from './prepare-image.js';
