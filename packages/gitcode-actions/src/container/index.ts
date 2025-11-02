@@ -18,7 +18,6 @@ export { installCli } from './install-cli.js';
 export type { InstallCliOptions } from './install-cli.js';
 export { installAnthropicSdk } from './install-sdk.js';
 export { installDependencies } from './install-dependencies.js';
-export { installGitcodeCli } from './install-gitcode-cli.js';
 export { ImagePullError, prepareImage } from './prepare-image.js';
 export { removeContainer } from './remove-container.js';
 export { resetContainer } from './reset-container.js';

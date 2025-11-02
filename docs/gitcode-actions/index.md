@@ -350,7 +350,6 @@ if (!result.success) {
 ### 安装 CLI 工具
 
 - `installAnthropicSdk(options)`: 在容器中安装 Anthropic SDK（用于 `chat` 功能）。
-- `installGitcodeCli(options)`: 将本地 `@xbghc/gitcode-cli` 打包后复制进容器并全局安装。
 - `installCli({ name, script, ... })`: 统一的安装入口，可自定义安装脚本与名称。
 
 所有安装工具都会复用 `executeStep`，并支持传入额外环境变量 (`env`) 与 `verbose` 日志输出。

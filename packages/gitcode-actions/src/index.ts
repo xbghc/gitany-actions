@@ -37,7 +37,6 @@ export {
   ImagePullError,
   installCli,
   installDependencies,
-  installGitcodeCli,
   prepareImage,
   removeContainer,
   resetContainer,

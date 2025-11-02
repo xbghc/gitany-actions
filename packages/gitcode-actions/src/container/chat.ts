@@ -9,7 +9,6 @@ import { checkoutSha } from './checkout-sha.js';
 import { installDependencies } from './install-dependencies.js';
 import { installAnthropicSdk } from './install-sdk.js';
 import { createApiCallScript } from './call-anthropic.js';
-import { installGitcodeCli } from './install-gitcode-cli.js';
 import { executeStep } from './execute-step.js';
 
 export interface ChatOptions {
@@ -106,8 +105,6 @@ export async function chat(
         branch: sha,
         reusable: keepContainer,
       });
-      const installCli = await installGitcodeCli({ container, log, verbose, env: sharedStepEnv });
-      if (!installCli.success) return { success: false, error: installCli.output };
       const clone = await cloneRepo({ container, log, verbose });
       if (!clone.success) return { success: false, error: clone.output };
       const verify = await verifySha({ container, log, verbose });
