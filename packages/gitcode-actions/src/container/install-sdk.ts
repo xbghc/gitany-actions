@@ -9,8 +9,6 @@ export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
  */
 export async function installAnthropicSdk({
   container,
-  log,
-  verbose,
   env,
 }: StepOptions): Promise<StepResult> {
   return executeStep({
@@ -18,7 +16,5 @@ export async function installAnthropicSdk({
     name: 'install-anthropic-sdk',
     script: 'cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1',
     env,
-    log,
-    verbose,
   });
 }

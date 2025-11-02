@@ -10,8 +10,6 @@ export interface ContainerOptions {
 export interface TestShaBuildOptions {
   /** Node.js version for the test container. Defaults to `18`. */
   nodeVersion?: string;
-  /** Enable verbose output for debugging. Defaults to `false`. */
-  verbose?: boolean;
   /** Keep container after test for debugging. Defaults to `false`. */
   keepContainer?: boolean;
 }

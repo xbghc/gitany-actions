@@ -3,6 +3,10 @@
  *
  */
 
+// Event types
+export type { EventDataMap, EventName } from './types/events.js';
+
+// Watchers
 export { IssueWatcher, watchIssues } from './watcher/issue.js';
 export type { WatchIssueOptions } from './watcher/issue.js';
 export { PullRequestWatcher, watchPullRequest } from './watcher/pr.js';

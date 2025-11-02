@@ -1,15 +1,12 @@
 import type Docker from 'dockerode';
-import type { Logger } from '../utils/logger.js';
 import { PassThrough } from 'node:stream';
 
 export interface ExecuteStepOptions {
   container: Docker.Container;
   name: string;
   script: string;
-  log: Logger;
   /** Environment variables to provide to the command. */
   env?: string[];
-  verbose?: boolean;
 }
 
 export interface StepResult {
@@ -30,9 +27,7 @@ export async function executeStep({
   container,
   name,
   script,
-  log,
   env,
-  verbose = false,
 }: ExecuteStepOptions): Promise<StepResult> {
   const stepStartTime = Date.now();
   try {
@@ -47,17 +42,10 @@ export async function executeStep({
     const stream = await exec.start({ hijack: true, stdin: false });
     let stepOutput = '';
 
-    const appendOutput = (source: 'stdout' | 'stderr', chunk: Buffer) => {
+    const appendOutput = (_source: 'stdout' | 'stderr', chunk: Buffer) => {
       if (!chunk?.length) return;
       const text = chunk.toString();
       stepOutput += text;
-      if (!verbose) return;
-      try {
-        const scope = source === 'stderr' ? `${name}:stderr` : name;
-        log.debug(`[${scope}] ${text}`);
-      } catch {
-        /* ignore */
-      }
     };
 
     const stdoutStream = new PassThrough();

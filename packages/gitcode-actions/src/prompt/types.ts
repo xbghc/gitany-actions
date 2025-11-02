@@ -8,6 +8,7 @@ import type {
   PRComment,
   PullRequest,
 } from '@xbghc/gitcode-api';
+import type { EventEmitter } from 'node:events';
 import type { ChatOptions, ChatResult } from '../container/index.js';
 
 export type AiMentionSource = 'issue_comment' | 'pr_review_comment';
@@ -65,19 +66,14 @@ export interface WatchAiMentionsOptions {
   chatOptions?: ChatOptions;
   chatExecutor?: (repoUrl: string, prompt: string, options?: ChatOptions) => Promise<ChatResult>;
   buildPrompt?: BuildAiMentionPrompt;
-  onChatResult?: (result: ChatResult, context: AiMentionContext) => void;
   includeIssueComments?: boolean;
   includePullRequestComments?: boolean;
   /** Whether to automatically reply to the mention with the chat output. Defaults to true. */
   replyWithComment?: boolean;
   /** Customizes the body used when posting the AI reply comment. */
   buildReplyBody?: BuildAiMentionReplyBody;
-  /** Invoked after the AI reply comment has been created. */
-  onReplyCreated?: (reply: AiMentionReply, context: AiMentionContext) => void;
-  /** Invoked when posting the AI reply fails. */
-  onReplyError?: (error: unknown, context: AiMentionContext) => void;
 }
 
-export interface AiMentionWatcherHandle {
+export interface AiMentionWatcherHandle extends EventEmitter {
   stop(): void;
 }

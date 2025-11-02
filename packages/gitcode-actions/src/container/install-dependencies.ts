@@ -17,8 +17,6 @@ const INITIAL_DELAY_MS = 2000;
  */
 export async function installDependencies({
   container,
-  log,
-  verbose,
   env,
 }: StepOptions): Promise<StepResult> {
   let lastResult: StepResult | undefined;
@@ -46,8 +44,6 @@ export async function installDependencies({
         corepack pnpm install 2>&1
       `.trim(),
       env,
-      log,
-      verbose,
     });
 
     if (result.success) {
@@ -55,7 +51,6 @@ export async function installDependencies({
     }
 
     lastResult = result;
-    log.warn(`Install dependencies failed on attempt ${attempt}. Retrying in ${delay / 1000}s...`);
 
     if (attempt < MAX_RETRIES) {
       await new Promise((resolve) => setTimeout(resolve, delay));
@@ -63,6 +58,5 @@ export async function installDependencies({
     }
   }
 
-  log.error('Failed to install dependencies after all retries.');
   return lastResult!;
 }

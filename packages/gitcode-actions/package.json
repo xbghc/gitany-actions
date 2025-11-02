@@ -27,9 +27,7 @@
     "@xbghc/gitcode-cli": "workspace:*",
     "@xbghc/gitcode-api": "workspace:*",
     "dockerode": "^4.0.8",
-    "tar": "^7.4.3",
-    "pino": "^9.0.0",
-    "pino-pretty": "^11.0.0"
+    "tar": "^7.4.3"
   },
   "devDependencies": {
     "@types/dockerode": "^3.3.43"

@@ -6,15 +6,11 @@ import {
   type IssueCommentsQuery,
   isNotModified,
 } from '@xbghc/gitcode-api';
-import { createLogger } from '../utils/logger.js';
 import { BaseWatcher, type WatcherOptions } from './common.js';
-
-const logger = createLogger('@xbghc/gitcode-actions');
 
 export interface WatchIssueOptions extends WatcherOptions {
   issueQuery?: ListIssuesQuery;
   commentQuery?: IssueCommentsQuery;
-  onComment?: (issue: Issue, comment: IssueComment) => void;
 }
 
 type LastSeenComment = Set<number>;
@@ -75,11 +71,8 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
   }
 
   private async detectNewComments(issues: Issue[]): Promise<void> {
-    if (!this.options.onComment) {
-      return;
-    }
+    this.emitEvent('issue-watcher:detect:start', { phase: 'start' });
 
-    logger.info('[watchIssues] detecting new comments');
     for (const issue of issues) {
       const issueNumber = Number(issue.number);
       if (!Number.isFinite(issueNumber)) continue;
@@ -88,7 +81,7 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
       try {
         result = await this.fetchIssueComments(issueNumber);
       } catch (err) {
-        logger.error({ err, issueNumber }, '[watchIssues] failed to fetch comments');
+        this.emitEvent('issue-watcher:comments:fetch:failed', { error: err, issueNumber });
         continue;
       }
 
@@ -128,13 +121,14 @@ export class IssueWatcher extends BaseWatcher<WatchIssueOptions, WatcherState, P
         newComments.sort((a, b) => a.id - b.id);
 
         for (const comment of newComments) {
-          this.options.onComment?.(issue, comment);
+          this.emitEvent('issue:comment:created', { issue, comment });
         }
       }
 
       this.state.lastCommentByIssue.set(issueNumber, currentCommentIds);
     }
-    logger.info('[watchIssues] detecting new comments complete');
+
+    this.emitEvent('issue-watcher:detect:complete', { phase: 'complete' });
   }
 
   private async fetchIssues(): Promise<Issue[]> {

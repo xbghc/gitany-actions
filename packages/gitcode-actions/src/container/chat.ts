@@ -1,5 +1,5 @@
 import type Docker from 'dockerode';
-import { collectForwardEnv, docker, logger } from './shared.js';
+import { collectForwardEnv, docker } from './shared.js';
 import { prepareImage } from './prepare-image.js';
 import { getDevContainer } from './get-dev-container.js';
 import { createWorkspaceContainer } from './create-workspace-container.js';
@@ -20,8 +20,6 @@ export interface ChatOptions {
   nodeVersion?: string;
   /** Keep the container after completion when created internally. */
   keepContainer?: boolean;
-  /** Enable verbose logging. */
-  verbose?: boolean;
   /** Override npm registry for installs. Falls back to env then mirror. */
   npmRegistry?: string;
   /** Override pnpm registry for installs. Falls back to env then mirror. */
@@ -57,12 +55,10 @@ export async function chat(
 ): Promise<ChatResult> {
   const sha = options.sha ?? 'dev';
   const nodeVersion = options.nodeVersion ?? '18';
-  const verbose = options.verbose ?? false;
   let keepContainer = options.keepContainer ?? false;
   const model = options.model ?? 'claude-sonnet-4-5-20250929';
   const maxTokens = options.maxTokens ?? 8000;
   const temperature = options.temperature;
-  const log = logger.child({ scope: 'core:container', func: 'chat', sha });
 
   const defaultRegistry = 'https://registry.npmmirror.com';
   const npmRegistry = options.npmRegistry ?? process.env.NPM_CONFIG_REGISTRY ?? defaultRegistry;
@@ -78,16 +74,13 @@ export async function chat(
   let container = options.container;
   if (!container && sha === 'dev') {
     container = await getDevContainer();
-    if (container) {
-      log.debug(' reusing dev container');
-    }
   }
   const createdContainer = !container;
 
   try {
     if (!container) {
       const image = `node:${nodeVersion}`;
-      await prepareImage({ docker, image, verbose, log });
+      await prepareImage({ docker, image });
 
       const labels: Record<string, string> = {};
       if (sha === 'dev') {
@@ -99,25 +92,24 @@ export async function chat(
         docker,
         image,
         env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...sharedStepEnv],
-        log,
         labels,
         repoUrl: repoUrl,
         branch: sha,
         reusable: keepContainer,
       });
-      const clone = await cloneRepo({ container, log, verbose });
+      const clone = await cloneRepo({ container });
       if (!clone.success) return { success: false, error: clone.output };
-      const verify = await verifySha({ container, log, verbose });
+      const verify = await verifySha({ container });
       if (!verify.success) return { success: false, error: verify.output };
-      const checkout = await checkoutSha({ container, log, verbose });
+      const checkout = await checkoutSha({ container });
       if (!checkout.success) return { success: false, error: checkout.output };
     }
 
-    const installDeps = await installDependencies({ container, log, verbose, env: sharedStepEnv });
+    const installDeps = await installDependencies({ container, env: sharedStepEnv });
     if (!installDeps.success) return { success: false, error: installDeps.output };
 
     // 安装 Anthropic SDK
-    const installSdk = await installAnthropicSdk({ container, log, verbose, env: sharedStepEnv });
+    const installSdk = await installAnthropicSdk({ container, env: sharedStepEnv });
     if (!installSdk.success) return { success: false, error: installSdk.output };
 
     // 创建 API 调用脚本
@@ -145,8 +137,6 @@ export async function chat(
       name: 'call-anthropic-api',
       script: 'cd /tmp/workspace && node /tmp/call-anthropic.mjs 2>&1',
       env: chatEnv,
-      log,
-      verbose,
     });
 
     if (!chatStep.success) {

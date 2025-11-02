@@ -7,8 +7,6 @@ export type InstallCliOptions = Omit<ExecuteStepOptions, 'name' | 'script'> & {
 
 export async function installCli({
   container,
-  log,
-  verbose,
   env,
   name,
   script,
@@ -18,7 +16,5 @@ export async function installCli({
     name: `${name}-cli`,
     script,
     env,
-    log,
-    verbose,
   });
 }

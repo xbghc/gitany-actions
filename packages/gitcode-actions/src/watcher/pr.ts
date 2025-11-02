@@ -11,14 +11,8 @@ import type { ContainerOptions } from '../container/types.js';
 import { BaseWatcher, type WatcherOptions } from './common.js';
 
 export interface WatchPullRequestOptions extends WatcherOptions {
-  onClosed?: (pr: PullRequest) => void;
-  onOpen?: (pr: PullRequest) => void;
-  onMerged?: (pr: PullRequest) => void;
-  onComment?: (pr: PullRequest, comment: PRComment) => void;
   commentType?: 'diff_comment' | 'pr_comment';
   container?: ContainerOptions | false;
-  onContainerCreated?: (container: Docker.Container, pr: PullRequest) => void;
-  onContainerRemoved?: (prId: number) => void;
 }
 
 type BaselinePR = Pick<PullRequest, 'id' | 'number' | 'state'>;
@@ -110,8 +104,6 @@ export class PullRequestWatcher extends BaseWatcher<
   }
 
   private async detectNewComments(newList: PullRequest[]): Promise<void> {
-    if (!this.options.onComment) return;
-
     for (const pr of newList) {
       if (pr.state !== 'open') continue;
 
@@ -146,7 +138,7 @@ export class PullRequestWatcher extends BaseWatcher<
           .filter((c) => newCommentIds.has(c.id))
           .sort((a, b) => a.id - b.id);
         for (const comment of newComments) {
-          this.options.onComment?.(pr, comment);
+          this.emitEvent('pr:comment:created', { pr, comment });
         }
       }
       this.state.lastCommentIdsByPr.set(pr.number, currentCommentIds);
@@ -164,25 +156,24 @@ export class PullRequestWatcher extends BaseWatcher<
   }
 
   private async triggerPullRequestEvent(pr: PullRequest): Promise<void> {
-    const { onClosed, onMerged, onOpen, container, onContainerCreated, onContainerRemoved } =
-      this.options;
+    const { container } = this.options;
     const handleContainer = container !== false && container !== undefined;
 
     if (pr.state === 'open') {
       if (handleContainer) {
         const created = await createPrContainer(this.url, pr, container || {});
         this.containerMap.set(pr.id, created);
-        onContainerCreated?.(created, pr);
+        this.emitEvent('container:created', { container: created, pr });
       }
-      onOpen?.(pr);
+      this.emitEvent('pr:opened', { pr });
     } else if (pr.state === 'closed' || pr.state === 'merged') {
       if (handleContainer) {
         await removeContainer(pr.id);
         this.containerMap.delete(pr.id);
-        onContainerRemoved?.(pr.id);
+        this.emitEvent('container:removed', { prId: pr.id });
       }
-      if (pr.state === 'closed') onClosed?.(pr);
-      if (pr.state === 'merged') onMerged?.(pr);
+      if (pr.state === 'closed') this.emitEvent('pr:closed', { pr });
+      if (pr.state === 'merged') this.emitEvent('pr:merged', { pr });
     }
   }
 }

@@ -1,11 +1,11 @@
 import { GitcodeClient } from '@xbghc/gitcode-api';
-import { createLogger } from '../utils/logger.js';
+import { EventEmitter } from 'node:events';
 import * as fsSync from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { ensureDir, resolveGitcodeSubdir, sha1Hex } from '../utils/index.js';
+import type { EventDataMap, EventName } from '../types/events.js';
 
-const logger = createLogger('@xbghc/gitcode-actions');
 const DEFAULT_INTERVAL_SEC = 5;
 
 export interface WatcherOptions {
@@ -24,7 +24,9 @@ export function getWatcherStoreDir(subDir: string): string {
   return path.join(resolveGitcodeSubdir('watchers'), subDir);
 }
 
-export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPersist> {
+export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPersist>
+  extends EventEmitter
+{
   protected readonly client: GitcodeClient;
   protected readonly url: string;
   protected readonly options: TOptions;
@@ -33,6 +35,7 @@ export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPers
   private intervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor(client: GitcodeClient, url: string, options: TOptions) {
+    super();
     this.client = client;
     this.url = url;
     this.options = options;
@@ -40,16 +43,31 @@ export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPers
     this.state = this.loadState();
   }
 
+  /**
+   * 类型安全的事件发射方法
+   */
+  protected emitEvent<K extends EventName>(event: K, data: Omit<EventDataMap[K], 'timestamp'>): void {
+    const eventData = { ...data, timestamp: new Date() } as EventDataMap[K];
+    this.emit(event, eventData);
+  }
+
   public async runOnce(): Promise<void> {
     const startedAt = Date.now();
     const watcherName = this.constructor.name;
-    logger.info(`[${watcherName}] runOnce start`);
+    this.emitEvent('watcher:poll:start', { watcher: watcherName });
     try {
       await this.poll();
       await this.persistState();
-      logger.info({ durationMs: Date.now() - startedAt }, `[${watcherName}] runOnce complete`);
+      this.emitEvent('watcher:poll:complete', {
+        watcher: watcherName,
+        durationMs: Date.now() - startedAt,
+      });
     } catch (err) {
-      logger.error({ err, durationMs: Date.now() - startedAt }, `[${watcherName}] runOnce failed`);
+      this.emitEvent('watcher:poll:failed', {
+        watcher: watcherName,
+        error: err,
+        durationMs: Date.now() - startedAt,
+      });
     }
   }
 
@@ -95,10 +113,11 @@ export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPers
       const data = JSON.parse(raw) as TPersist;
       return this.fromPersisted(data);
     } catch (err) {
-      logger.error(
-        { err },
-        `[BaseWatcher] Failed to read persisted state for ${this.getStoreSubDir()}`,
-      );
+      this.emitEvent('watcher:state:load:failed', {
+        watcher: this.constructor.name,
+        subDir: this.getStoreSubDir(),
+        error: err,
+      });
       return this.getInitialState();
     }
   }
@@ -111,7 +130,11 @@ export abstract class BaseWatcher<TOptions extends WatcherOptions, TState, TPers
       const data = this.toPersisted(this.state);
       await fs.writeFile(file, JSON.stringify(data), 'utf8');
     } catch (err) {
-      logger.error({ err }, `[BaseWatcher] Failed to persist state for ${this.getStoreSubDir()}`);
+      this.emitEvent('watcher:state:persist:failed', {
+        watcher: this.constructor.name,
+        subDir: this.getStoreSubDir(),
+        error: err,
+      });
     }
   }
 }

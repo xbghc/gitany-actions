@@ -5,12 +5,13 @@ import {
   type PRComment,
   type PullRequest,
 } from '@xbghc/gitcode-api';
-import { createLogger } from '../utils/logger.js';
+import { EventEmitter } from 'node:events';
 import { chat } from '../container/index.js';
 import { watchIssues, type IssueWatcher } from '../watcher/issue.js';
 import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr.js';
 import { defaultPromptBuilder } from '../prompt/prompt.js';
 import { createAiReplyComment, defaultReplyBodyBuilder, editAiReplyComment } from './reply.js';
+import type { EventDataMap, EventName } from '../types/events.js';
 import {
   type AiMentionContext,
   type AiMentionSource,
@@ -19,8 +20,6 @@ import {
   type IssueContext,
   type PrContext,
 } from './types.js';
-
-const logger = createLogger('@xbghc/gitcode-actions');
 
 type MentionHandler = (payload: {
   source: AiMentionSource;
@@ -34,29 +33,34 @@ function createMentionHandler(
   client: GitcodeClient,
   repoUrl: string,
   options: WatchAiMentionsOptions,
-  loggerPrefix: string,
+  emitter: EventEmitter,
 ): MentionHandler {
   const chatExecutor = options.chatExecutor ?? chat;
   const replyEnabled = options.replyWithComment !== false;
+
+  const emitEvent = <K extends EventName>(event: K, data: Omit<EventDataMap[K], 'timestamp'>): void => {
+    const eventData = { ...data, timestamp: new Date() } as EventDataMap[K];
+    emitter.emit(event, eventData);
+  };
 
   return async (payload) => {
     const { issueNumber, comment, source } = payload;
     if (!Number.isFinite(issueNumber)) return;
 
-    logger.info({ issueNumber, commentId: comment.id, source }, `[${loggerPrefix}] mention detected`);
+    emitEvent('ai-mention:detected', { issueNumber, commentId: comment.id, source });
 
     let issueDetail: Issue | undefined = payload.issueSnapshot;
     if (!issueDetail) {
       try {
         issueDetail = await client.issue.get(repoUrl, issueNumber);
       } catch (err) {
-        logger.error({ err, issueNumber }, `[${loggerPrefix}] failed to load issue detail`);
+        emitEvent('ai-mention:issue-detail:load:failed', { issueNumber, error: err });
         return;
       }
     }
 
     if (!issueDetail) {
-      logger.error({ issueNumber }, `[${loggerPrefix}] missing issue detail`);
+      emitEvent('ai-mention:issue-detail:missing', { issueNumber });
       return;
     }
 
@@ -68,7 +72,7 @@ function createMentionHandler(
         options.issueCommentQuery ?? {},
       );
     } catch (err) {
-      logger.warn({ err, issueNumber }, `[${loggerPrefix}] failed to load issue comments`);
+      emitEvent('ai-mention:comments:load:warn', { issueNumber, error: err });
     }
 
     let context: AiMentionContext;
@@ -85,7 +89,7 @@ function createMentionHandler(
       } satisfies IssueContext;
     } else if (source === 'pr_review_comment') {
       if (!payload.pullRequest) {
-        logger.error({ issueNumber, commentId: comment.id }, `[${loggerPrefix}] missing pull request detail for PR comment`);
+        emitEvent('ai-mention:pr-detail:missing', { issueNumber, commentId: comment.id });
         return;
       }
       context = {
@@ -104,7 +108,7 @@ function createMentionHandler(
     }
 
     if (!replyEnabled) {
-      logger.info(`[${loggerPrefix}] reply is disabled, running chat without posting comments.`);
+      emitEvent('ai-mention:reply:disabled', {});
       void (async () => {
         try {
           const prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
@@ -112,10 +116,7 @@ function createMentionHandler(
             await chatExecutor(repoUrl, prompt, options.chatOptions);
           }
         } catch (err) {
-          logger.error(
-            { err, issueNumber, commentId: comment.id },
-            `[${loggerPrefix}] background chat invocation failed`,
-          );
+          emitEvent('ai-mention:background-chat:failed', { error: err, issueNumber, commentId: comment.id });
         }
       })();
       return;
@@ -130,16 +131,17 @@ function createMentionHandler(
         '思考中，请稍候... 🤔',
       );
       placeholderCommentId = placeholder.comment.id;
-      logger.info(
-        { issueNumber, originalCommentId: comment.id, placeholderCommentId },
-        `[${loggerPrefix}] created placeholder comment`,
-      );
+      emitEvent('ai-mention:placeholder:created', {
+        issueNumber,
+        originalCommentId: comment.id,
+        placeholderCommentId,
+      });
     } catch (err) {
-      logger.error(
-        { err, issueNumber, commentId: comment.id },
-        `[${loggerPrefix}] failed to create placeholder comment`,
-      );
-      options.onReplyError?.(err, context);
+      emitEvent('ai-mention:placeholder:create:failed', {
+        error: err,
+        issueNumber,
+        commentId: comment.id,
+      });
       return;
     }
 
@@ -148,10 +150,7 @@ function createMentionHandler(
       try {
         prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
         if (!prompt?.trim()) {
-          logger.warn(
-            { issueNumber },
-            `[${loggerPrefix}] empty prompt generated, skipping chat invocation`,
-          );
+          emitEvent('ai-mention:prompt:empty:warn', { issueNumber });
           await editAiReplyComment(
             client,
             repoUrl,
@@ -162,23 +161,19 @@ function createMentionHandler(
         }
 
         const result = await chatExecutor(repoUrl, prompt, options.chatOptions);
-        options.onChatResult?.(result, context);
 
         if (!result.success) {
           throw result.error ?? new Error('Chat execution failed without a specific error.');
         }
 
-        logger.info({ issueNumber, commentId: comment.id }, `[${loggerPrefix}] chat completed`);
+        emitEvent('ai-mention:chat:completed', { issueNumber, commentId: comment.id });
 
         const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
         const replyBody = (await builder(result, context))?.trim();
-        logger.debug({ replyBody }, 'Generated reply body');
+        emitEvent('ai-mention:reply:generated', { replyBody: replyBody || '' });
 
         if (!replyBody) {
-          logger.warn(
-            { issueNumber, commentId: comment.id },
-            `[${loggerPrefix}] empty reply body generated, updating placeholder with notice.`,
-          );
+          emitEvent('ai-mention:reply:empty:warn', { issueNumber, commentId: comment.id });
           await editAiReplyComment(
             client,
             repoUrl,
@@ -194,24 +189,19 @@ function createMentionHandler(
           placeholderCommentId,
           replyBody,
         );
-        logger.info(
-          { issueNumber, originalCommentId: comment.id, finalCommentId: finalComment.id },
-          `[${loggerPrefix}] successfully edited placeholder comment with final answer.`,
-        );
-        options.onReplyCreated?.(
-          {
-            source: context.commentSource,
-            body: replyBody,
-            comment: { id: finalComment.id, body: replyBody },
-          },
-          context,
-        );
+        emitEvent('ai-mention:reply:edited', {
+          issueNumber,
+          originalCommentId: comment.id,
+          finalCommentId: finalComment.id,
+        });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        logger.error(
-          { err, issueNumber, commentId: comment.id, prompt },
-          `[${loggerPrefix}] background task failed`,
-        );
+        emitEvent('ai-mention:background-task:failed', {
+          error: err,
+          issueNumber,
+          commentId: comment.id,
+          prompt,
+        });
         try {
           await editAiReplyComment(
             client,
@@ -219,12 +209,12 @@ function createMentionHandler(
             placeholderCommentId,
             `处理失败: ${errorMessage}`,
           );
-          options.onReplyError?.(err, context);
         } catch (editErr) {
-          logger.error(
-            { err: editErr, issueNumber, commentId: comment.id },
-            `[${loggerPrefix}] failed to update placeholder with error`,
-          );
+          emitEvent('ai-mention:placeholder:update:failed', {
+            error: editErr,
+            issueNumber,
+            commentId: comment.id,
+          });
         }
       }
     })();
@@ -239,24 +229,32 @@ export function watchAiMentions(
   const mentionRegex = createMentionRegex(options.mention ?? '@AI');
   const issueWatchers: IssueWatcher[] = [];
   const prWatchers: PullRequestWatcher[] = [];
-  const handleMention = createMentionHandler(client, repoUrl, options, 'watchAiMentions');
+  const emitter = new EventEmitter();
+  const handleMention = createMentionHandler(client, repoUrl, options, emitter);
+
+  const emitEvent = <K extends EventName>(event: K, data: Omit<EventDataMap[K], 'timestamp'>): void => {
+    const eventData = { ...data, timestamp: new Date() } as EventDataMap[K];
+    emitter.emit(event, eventData);
+  };
 
   if (options.includeIssueComments !== false) {
     const issueWatcher = watchIssues(client, repoUrl, {
       intervalSec: options.issueIntervalSec,
       issueQuery: options.issueQuery,
       commentQuery: options.issueCommentQuery,
-      onComment: (issue, comment) => {
-        if (!mentionRegex.test(comment.body)) return;
-        const issueNumber = Number(issue.number);
-        void handleMention({
-          source: 'issue_comment',
-          comment,
-          issueNumber,
-          issueSnapshot: issue,
-        });
-      },
     });
+
+    issueWatcher.on('issue:comment:created', ({ issue, comment }) => {
+      if (!mentionRegex.test(comment.body)) return;
+      const issueNumber = Number(issue.number);
+      void handleMention({
+        source: 'issue_comment',
+        comment,
+        issueNumber,
+        issueSnapshot: issue,
+      });
+    });
+
     issueWatcher.start();
     issueWatchers.push(issueWatcher);
   }
@@ -265,38 +263,40 @@ export function watchAiMentions(
     const prWatcher = watchPullRequest(client, repoUrl, {
       intervalSec: options.prIntervalSec,
       commentType: options.prCommentType,
-      onComment: (pr, comment) => {
-        if (!mentionRegex.test(comment.body)) return;
-        void handleMention({
-          source: 'pr_review_comment',
-          comment,
-          issueNumber: pr.number,
-          pullRequest: pr,
-        });
-      },
     });
+
+    prWatcher.on('pr:comment:created', ({ pr, comment }) => {
+      if (!mentionRegex.test(comment.body)) return;
+      void handleMention({
+        source: 'pr_review_comment',
+        comment,
+        issueNumber: pr.number,
+        pullRequest: pr,
+      });
+    });
+
     prWatcher.start();
     prWatchers.push(prWatcher);
   }
 
-  return {
+  return Object.assign(emitter, {
     stop() {
       for (const watcher of issueWatchers) {
         try {
           watcher.stop();
         } catch (err) {
-          logger.error({ err }, '[watchAiMentions] failed to stop issue watcher');
+          emitEvent('ai-mention:watcher:stop:failed', { error: err, watcherType: 'issue' });
         }
       }
       for (const watcher of prWatchers) {
         try {
           watcher.stop();
         } catch (err) {
-          logger.error({ err }, '[watchAiMentions] failed to stop PR watcher');
+          emitEvent('ai-mention:watcher:stop:failed', { error: err, watcherType: 'pr' });
         }
       }
     },
-  } satisfies AiMentionWatcherHandle;
+  }) as AiMentionWatcherHandle;
 }
 
 export async function runAiMentionsOnce(
@@ -306,7 +306,8 @@ export async function runAiMentionsOnce(
 ): Promise<void> {
   const mentionRegex = createMentionRegex(options.mention ?? '@AI');
   const mentionHandlerPromises: Promise<void>[] = [];
-  const handleMention = createMentionHandler(client, repoUrl, options, 'runAiMentionsOnce');
+  const emitter = new EventEmitter();
+  const handleMention = createMentionHandler(client, repoUrl, options, emitter);
   const watcherPromises = [];
 
   if (options.includeIssueComments !== false) {
@@ -314,19 +315,21 @@ export async function runAiMentionsOnce(
       intervalSec: options.issueIntervalSec,
       issueQuery: options.issueQuery,
       commentQuery: options.issueCommentQuery,
-      onComment: (issue, comment) => {
-        if (!mentionRegex.test(comment.body)) return;
-        const issueNumber = Number(issue.number);
-        mentionHandlerPromises.push(
-          handleMention({
-            source: 'issue_comment',
-            comment,
-            issueNumber,
-            issueSnapshot: issue,
-          }),
-        );
-      },
     });
+
+    issueWatcher.on('issue:comment:created', ({ issue, comment }) => {
+      if (!mentionRegex.test(comment.body)) return;
+      const issueNumber = Number(issue.number);
+      mentionHandlerPromises.push(
+        handleMention({
+          source: 'issue_comment',
+          comment,
+          issueNumber,
+          issueSnapshot: issue,
+        }),
+      );
+    });
+
     watcherPromises.push(issueWatcher.runOnce());
   }
 
@@ -334,18 +337,20 @@ export async function runAiMentionsOnce(
     const prWatcher = watchPullRequest(client, repoUrl, {
       intervalSec: options.prIntervalSec,
       commentType: options.prCommentType,
-      onComment: (pr, comment) => {
-        if (!mentionRegex.test(comment.body)) return;
-        mentionHandlerPromises.push(
-          handleMention({
-            source: 'pr_review_comment',
-            comment,
-            issueNumber: pr.number,
-            pullRequest: pr,
-          }),
-        );
-      },
     });
+
+    prWatcher.on('pr:comment:created', ({ pr, comment }) => {
+      if (!mentionRegex.test(comment.body)) return;
+      mentionHandlerPromises.push(
+        handleMention({
+          source: 'pr_review_comment',
+          comment,
+          issueNumber: pr.number,
+          pullRequest: pr,
+        }),
+      );
+    });
+
     watcherPromises.push(prWatcher.runOnce());
   }
 

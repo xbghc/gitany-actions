@@ -7,7 +7,7 @@ import { DiagnosticsCollectionError } from './collect-diagnostics.js';
 import { createWorkspaceContainer } from './create-workspace-container.js';
 import { installDependencies } from './install-dependencies.js';
 import { ImagePullError, prepareImage, type ImagePullStatus } from './prepare-image.js';
-import { docker, logger } from './shared.js';
+import { docker } from './shared.js';
 import type { TestShaBuildOptions, TestShaBuildResult } from './types.js';
 import { verifySha } from './verify-sha.js';
 
@@ -20,17 +20,8 @@ export async function testShaBuild(
   options: TestShaBuildOptions = {},
 ): Promise<TestShaBuildResult> {
   const startTime = Date.now();
-  const verbose = options.verbose ?? false;
   const keepContainer = options.keepContainer ?? false;
   const nodeVersion = options.nodeVersion ?? '18';
-  const log = logger.child({ scope: 'core:container', func: 'testShaBuild', sha });
-  if (verbose) {
-    try {
-      log.level = 'debug';
-    } catch (error) {
-      log.debug({ error }, 'Failed to set log level to debug');
-    }
-  }
 
   const result: TestShaBuildResult = {
     success: false,
@@ -71,8 +62,6 @@ export async function testShaBuild(
     const imageStatus: ImagePullStatus = await prepareImage({
       docker,
       image: imageName,
-      verbose,
-      log,
     });
     result.diagnostics.dockerAvailable = true;
     result.diagnostics.imagePullStatus = imageStatus;
@@ -81,11 +70,10 @@ export async function testShaBuild(
       docker,
       image: imageName,
       env,
-      log,
     });
     result.diagnostics.containerId = container.id;
 
-    const cloneResult = await cloneRepo({ container, log, verbose });
+    const cloneResult = await cloneRepo({ container });
     fullOutput += cloneResult.output;
     result.diagnostics.steps.clone = {
       success: cloneResult.success,
@@ -98,7 +86,7 @@ export async function testShaBuild(
       return result;
     }
 
-    const verifyResult = await verifySha({ container, log, verbose });
+    const verifyResult = await verifySha({ container });
     fullOutput += verifyResult.output;
     result.diagnostics.steps.verifySha = {
       success: verifyResult.success,
@@ -111,7 +99,7 @@ export async function testShaBuild(
       return result;
     }
 
-    const checkoutResult = await checkoutSha({ container, log, verbose });
+    const checkoutResult = await checkoutSha({ container });
     fullOutput += checkoutResult.output;
     result.diagnostics.steps.checkout = {
       success: checkoutResult.success,
@@ -126,8 +114,6 @@ export async function testShaBuild(
     try {
       const { step: projectStep, diagnostics: diag } = await checkProjectFiles({
         container,
-        log,
-        verbose,
       });
       fullOutput += projectStep.output;
       result.diagnostics.steps.checkProject = {
@@ -156,8 +142,6 @@ export async function testShaBuild(
 
     const installResult = await installDependencies({
       container,
-      log,
-      verbose,
       env: [`NPM_CONFIG_REGISTRY=${npmRegistry}`, `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`],
     });
     fullOutput += installResult.output;
@@ -185,8 +169,8 @@ export async function testShaBuild(
     if (!keepContainer && container) {
       try {
         await container.remove({ force: true });
-      } catch (error) {
-        log.warn({ error, containerId: container.id }, 'Failed to remove container');
+      } catch {
+        // Container removal failed, but we don't need to log it
       }
     }
   }
