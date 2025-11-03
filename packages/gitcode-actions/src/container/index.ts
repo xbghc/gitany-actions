@@ -10,7 +10,19 @@ export { copyToContainer, CopyToContainerError } from './copy-files.js';
 export type { CopyToContainerOptions } from './copy-files.js';
 export { createPrContainer } from './create.js';
 export { ContainerCreationError, createWorkspaceContainer } from './create-workspace-container.js';
-export { executeStep, StepExecutionError } from './execute-step.js';
+export {
+  execute,
+  executeStep,
+  StepExecutionError,
+} from './execute-step.js';
+export type {
+  ExecuteOptions,
+  ExecuteResult,
+  ExecutionHandle,
+  ExecuteStepOptions,
+  StepResult,
+} from './execute-step.js';
+export type { ContainerWithModem } from './docker-types.js';
 export { getContainer, getContainerStatus } from './get.js';
 export { installDependencies } from './install-dependencies.js';
 export { ImagePullError, prepareImage } from './prepare-image.js';
