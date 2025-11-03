@@ -7,8 +7,7 @@ import {
 } from '@xbghc/gitcode-api';
 import { EventEmitter } from 'node:events';
 import { chat } from './chat.js';
-import { watchIssues, type IssueWatcher } from '../watcher/issue.js';
-import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr.js';
+import { Watcher } from '../watcher/watcher.js';
 import { defaultPromptBuilder } from './mention-prompt.js';
 import { createReplyComment, defaultReplyBodyBuilder, editReplyComment } from './mention-reply.js';
 import type { EventDataMap, EventName } from '../types/events.js';
@@ -221,14 +220,19 @@ function createMentionHandler(
   };
 }
 
+/**
+ * 监听仓库中的提及（Mention）
+ *
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ * 当前版本仍可使用，但不推荐用于新项目
+ */
 export function watchMentions(
   client: GitcodeClient,
   repoUrl: string,
   options: WatchMentionsOptions = {},
 ): MentionWatcherHandle {
   const mentionRegex = createMentionRegex(options.mention ?? '@AI');
-  const issueWatchers: IssueWatcher[] = [];
-  const prWatchers: PullRequestWatcher[] = [];
+  const watchers: Array<{ watcher: Watcher; type: 'issue' | 'pr' }> = [];
   const emitter = new EventEmitter();
   const handleMention = createMentionHandler(client, repoUrl, options, emitter);
 
@@ -238,10 +242,12 @@ export function watchMentions(
   };
 
   if (options.includeIssueComments !== false) {
-    const issueWatcher = watchIssues(client, repoUrl, {
-      intervalSec: options.issueIntervalSec,
-      issueQuery: options.issueQuery,
-      commentQuery: options.issueCommentQuery,
+    const issueWatcher = new Watcher(client, repoUrl, {
+      issue: {
+        intervalSec: options.issueIntervalSec,
+        issueQuery: options.issueQuery,
+        commentQuery: options.issueCommentQuery,
+      },
     });
 
     issueWatcher.on('issue:comment:created', ({ issue, comment }) => {
@@ -256,13 +262,15 @@ export function watchMentions(
     });
 
     issueWatcher.start();
-    issueWatchers.push(issueWatcher);
+    watchers.push({ watcher: issueWatcher, type: 'issue' });
   }
 
   if (options.includePullRequestComments !== false) {
-    const prWatcher = watchPullRequest(client, repoUrl, {
-      intervalSec: options.prIntervalSec,
-      commentType: options.prCommentType,
+    const prWatcher = new Watcher(client, repoUrl, {
+      pr: {
+        intervalSec: options.prIntervalSec,
+        commentType: options.prCommentType,
+      },
     });
 
     prWatcher.on('pr:comment:created', ({ pr, comment }) => {
@@ -276,29 +284,28 @@ export function watchMentions(
     });
 
     prWatcher.start();
-    prWatchers.push(prWatcher);
+    watchers.push({ watcher: prWatcher, type: 'pr' });
   }
 
   return Object.assign(emitter, {
     stop() {
-      for (const watcher of issueWatchers) {
+      for (const { watcher, type } of watchers) {
         try {
           watcher.stop();
         } catch (err) {
-          emitEvent('mention:watcher:stop:failed', { error: err, watcherType: 'issue' });
-        }
-      }
-      for (const watcher of prWatchers) {
-        try {
-          watcher.stop();
-        } catch (err) {
-          emitEvent('mention:watcher:stop:failed', { error: err, watcherType: 'pr' });
+          emitEvent('mention:watcher:stop:failed', { error: err, watcherType: type });
         }
       }
     },
   }) as MentionWatcherHandle;
 }
 
+/**
+ * 手动运行一次 Mention 检测
+ *
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ * 当前版本仍可使用，但不推荐用于新项目
+ */
 export async function runMentionsOnce(
   client: GitcodeClient,
   repoUrl: string,
@@ -311,10 +318,12 @@ export async function runMentionsOnce(
   const watcherPromises = [];
 
   if (options.includeIssueComments !== false) {
-    const issueWatcher = watchIssues(client, repoUrl, {
-      intervalSec: options.issueIntervalSec,
-      issueQuery: options.issueQuery,
-      commentQuery: options.issueCommentQuery,
+    const issueWatcher = new Watcher(client, repoUrl, {
+      issue: {
+        intervalSec: options.issueIntervalSec,
+        issueQuery: options.issueQuery,
+        commentQuery: options.issueCommentQuery,
+      },
     });
 
     issueWatcher.on('issue:comment:created', ({ issue, comment }) => {
@@ -334,9 +343,11 @@ export async function runMentionsOnce(
   }
 
   if (options.includePullRequestComments !== false) {
-    const prWatcher = watchPullRequest(client, repoUrl, {
-      intervalSec: options.prIntervalSec,
-      commentType: options.prCommentType,
+    const prWatcher = new Watcher(client, repoUrl, {
+      pr: {
+        intervalSec: options.prIntervalSec,
+        commentType: options.prCommentType,
+      },
     });
 
     prWatcher.on('pr:comment:created', ({ pr, comment }) => {

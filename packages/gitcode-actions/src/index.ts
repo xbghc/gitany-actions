@@ -6,12 +6,27 @@
 // Event types
 export type { EventDataMap, EventName } from './types/events.js';
 
-// Watchers
-export { IssueWatcher, watchIssues } from './watcher/issue.js';
-export type { WatchIssueOptions } from './watcher/issue.js';
-export { PullRequestWatcher, watchPullRequest } from './watcher/pr.js';
-export type { WatchPullRequestOptions } from './watcher/pr.js';
+// ============ Watchers (New API) ============
+export { watch } from './watcher/index.js';
+export type {
+  Watcher,
+  WatchOptions,
+  PrWatchConfig,
+  IssueWatchConfig,
+  WatcherStatus,
+} from './watcher/types.js';
 
+// Storage interfaces (Advanced usage)
+export type { StateStorage } from './watcher/state-storage.js';
+export type { StateSerializer } from './watcher/state-serializer.js';
+export { createSmartSerializer } from './watcher/state-serializer.js';
+export { FileStateStorage } from './watcher/file-state-storage.js';
+export { MemoryStateStorage } from './watcher/memory-state-storage.js';
+
+// ============ Mention (Deprecated) ============
+/**
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ */
 export {
   defaultPromptBuilder,
   runMentionsOnce,
@@ -20,6 +35,9 @@ export {
   editReplyComment,
   defaultReplyBodyBuilder,
 } from './workflows/index.js';
+/**
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ */
 export type {
   MentionContext,
   MentionReply,
@@ -31,6 +49,10 @@ export type {
   IssueContext,
   PrContext,
 } from './workflows/index.js';
+/**
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ */
+export type { MentionWatchConfig } from './watcher/types.js';
 
 // ===== Container Management =====
 export {
