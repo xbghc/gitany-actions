@@ -1,12 +1,12 @@
 import type Docker from 'dockerode';
-import { collectForwardEnv, docker } from './shared.js';
-import { prepareImage } from './prepare-image.js';
-import { getDevContainer } from './get-dev-container.js';
-import { createWorkspaceContainer } from './create-workspace-container.js';
-import { verifySha } from './verify-sha.js';
-import { installDependencies } from './install-dependencies.js';
+import { collectForwardEnv, docker } from '../container/shared.js';
+import { prepareImage } from '../container/prepare-image.js';
+import { getDevContainer } from '../container/get-dev-container.js';
+import { createWorkspaceContainer } from '../container/create-workspace-container.js';
+import { verifySha } from '../executor/verify-sha.js';
+import { installDependencies } from '../executor/install-dependencies.js';
 import { createApiCallScript } from './call-anthropic.js';
-import { executeStep } from './execute-step.js';
+import { executor, StepExecutionError as ContainerStepExecutionError } from '../executor/container-executor.js';
 
 export interface ChatOptions {
   /** Optional existing container to use. */
@@ -94,33 +94,38 @@ export async function chat(
         branch: sha,
         reusable: keepContainer,
       });
-      const clone = await executeStep({
-        container,
-        name: 'Clone Repository',
-        script: 'rm -rf /tmp/workspace && git clone "$REPO_URL" /tmp/workspace 2>&1',
-      });
-      if (!clone.success) return { success: false, error: clone.output };
+
+      try {
+        await executor(container)
+          .execute('rm -rf /tmp/workspace', { name: '清理工作空间' })
+          .execute('git clone "$REPO_URL" /tmp/workspace 2>&1', { name: '克隆仓库' })
+          .execute('git -C /tmp/workspace checkout "$TARGET_SHA" 2>&1', { name: '检出 SHA' });
+      } catch (error) {
+        if (error instanceof ContainerStepExecutionError) {
+          return { success: false, error: error.output };
+        }
+        throw error;
+      }
+
       const verify = await verifySha({ container });
       if (!verify.success) return { success: false, error: verify.output };
-      const checkout = await executeStep({
-        container,
-        name: 'Checkout SHA',
-        script: 'cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1',
-      });
-      if (!checkout.success) return { success: false, error: checkout.output };
     }
 
     const installDeps = await installDependencies({ container, env: sharedStepEnv });
     if (!installDeps.success) return { success: false, error: installDeps.output };
 
     // 安装 Anthropic SDK
-    const installSdk = await executeStep({
-      container,
-      name: 'Install Anthropic SDK',
-      script: 'cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1',
-      env: sharedStepEnv,
-    });
-    if (!installSdk.success) return { success: false, error: installSdk.output };
+    try {
+      await executor(container, { env: sharedStepEnv })
+        .execute('cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1', {
+          name: 'Install Anthropic SDK',
+        });
+    } catch (error) {
+      if (error instanceof ContainerStepExecutionError) {
+        return { success: false, error: error.output };
+      }
+      throw error;
+    }
 
     // 创建 API 调用脚本
     await createApiCallScript({
@@ -142,20 +147,23 @@ export async function chat(
     const chatEnv = [...anthropicEnv, ...forwardedEnv];
 
     // 执行 API 调用脚本
-    const chatStep = await executeStep({
-      container,
-      name: 'call-anthropic-api',
-      script: 'cd /tmp/workspace && node /tmp/call-anthropic.mjs 2>&1',
-      env: chatEnv,
-    });
-
-    if (!chatStep.success) {
-      return { success: false, error: chatStep.output };
+    let chatOutput: string;
+    try {
+      const chatResult = await executor(container, { env: chatEnv })
+        .execute('cd /tmp/workspace && node /tmp/call-anthropic.mjs 2>&1', {
+          name: 'call-anthropic-api',
+        });
+      chatOutput = chatResult.steps[0].output;
+    } catch (error) {
+      if (error instanceof ContainerStepExecutionError) {
+        return { success: false, error: error.output };
+      }
+      throw error;
     }
 
     // 解析 JSON 输出
     try {
-      const parsed = JSON.parse(chatStep.output);
+      const parsed = JSON.parse(chatOutput);
       if (parsed.success) {
         return {
           success: true,
@@ -167,7 +175,7 @@ export async function chat(
       }
     } catch {
       // 如果解析失败，返回原始输出（向后兼容）
-      return { success: true, output: chatStep.output };
+      return { success: true, output: chatOutput };
     }
   } finally {
     if (createdContainer && container && !keepContainer) {

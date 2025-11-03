@@ -22,32 +22,70 @@ export type {
   BuildAiMentionReplyBody,
   WatchAiMentionsOptions,
 } from './ai-mentions/index.js';
+
+// ===== Container Management =====
 export {
-  chat,
-  checkProjectFiles,
   cleanupPrContainers,
-  collectDiagnostics,
   ContainerCreationError,
   copyToContainer,
   CopyToContainerError,
   createPrContainer,
   createWorkspaceContainer,
-  DiagnosticsCollectionError,
-  executeStep,
   getContainer,
   getContainerStatus,
   ImagePullError,
-  installDependencies,
   prepareImage,
   removeContainer,
   resetContainer,
-  StepExecutionError,
-  testShaBuild,
-  verifySha,
 } from './container/index.js';
+export type {
+  ContainerOptions,
+  CopyToContainerOptions,
+  ImagePullStatus,
+} from './container/index.js';
+
+// ===== Container Command Execution =====
+export {
+  checkProjectFiles,
+  collectDiagnostics,
+  ContainerExecutor,
+  DiagnosticsCollectionError,
+  execCommand,
+  executor,
+  ExecutorChain,
+  installDependencies,
+  verifySha,
+} from './executor/index.js';
+export type {
+  CheckOptions,
+  CheckStepResult,
+  ExecuteOptions,
+  ExecuteResult,
+  ExecutionContext,
+  ExecutionHandle,
+  ExecutionResult,
+  ExecutorOptions,
+  InstallOptions,
+  InstallResult,
+  ProjectCheckResult,
+  ProjectDiagnostics,
+  StepOptions,
+  StepResult as ContainerStepResult,
+  StepExecutionError as ContainerStepExecutionError,
+  VerifyOptions,
+  VerifyResult,
+} from './executor/index.js';
+
+// ===== Workflows =====
+export {
+  chat,
+  createApiCallScript,
+  testShaBuild,
+} from './workflows/index.js';
 export type {
   ChatOptions,
   ChatResult,
-  CopyToContainerOptions,
-  ProjectCheckResult,
-} from './container/index.js';
+  CreateApiCallScriptOptions,
+  TestShaBuildOptions,
+  TestShaBuildResult,
+} from './workflows/index.js';

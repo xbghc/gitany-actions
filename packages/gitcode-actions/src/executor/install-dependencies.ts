@@ -1,6 +1,15 @@
-import { executeStep, type ExecuteStepOptions, type StepResult } from './execute-step.js';
+import type Docker from 'dockerode';
+import { executor, StepExecutionError as ContainerStepExecutionError } from './container-executor.js';
 
-export type StepOptions = Omit<ExecuteStepOptions, 'name' | 'script'>;
+export interface InstallOptions {
+  container: Docker.Container;
+  env?: string[];
+}
+
+export interface InstallResult {
+  success: boolean;
+  output: string;
+}
 
 const MAX_RETRIES = 3;
 const INITIAL_DELAY_MS = 2000;
@@ -18,15 +27,11 @@ const INITIAL_DELAY_MS = 2000;
 export async function installDependencies({
   container,
   env,
-}: StepOptions): Promise<StepResult> {
-  let lastResult: StepResult | undefined;
+}: InstallOptions): Promise<InstallResult> {
+  let lastResult: InstallResult | undefined;
   let delay = INITIAL_DELAY_MS;
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    const result = await executeStep({
-      container,
-      name: `install (attempt ${attempt}/${MAX_RETRIES})`,
-      script: `
+  const installScript = `
         set -e
         cd /tmp/workspace
 
@@ -42,15 +47,32 @@ export async function installDependencies({
 
         echo "Installing dependencies..."
         corepack pnpm install 2>&1
-      `.trim(),
-      env,
-    });
+      `.trim();
 
-    if (result.success) {
-      return result;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await executor(container, { env })
+        .execute(installScript, {
+          name: `install (attempt ${attempt}/${MAX_RETRIES})`,
+        });
+
+      if (result.success) {
+        return {
+          success: true,
+          output: result.steps[0].output,
+        };
+      }
+
+      lastResult = {
+        success: false,
+        output: result.steps[0].output,
+      };
+    } catch (error) {
+      lastResult = {
+        success: false,
+        output: error instanceof ContainerStepExecutionError ? error.output : String(error),
+      };
     }
-
-    lastResult = result;
 
     if (attempt < MAX_RETRIES) {
       await new Promise((resolve) => setTimeout(resolve, delay));

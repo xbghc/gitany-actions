@@ -1,28 +1,13 @@
 import type Docker from 'dockerode';
 import { PassThrough } from 'node:stream';
-import type { ContainerWithModem } from './docker-types.js';
+import type { ContainerWithModem } from '../container/docker-types.js';
 
-export interface ExecuteStepOptions {
-  container: Docker.Container;
-  name: string;
-  script: string;
-  /** Environment variables to provide to the command. */
-  env?: string[];
-}
-
-export interface StepResult {
-  success: boolean;
-  duration: number;
-  output: string;
-}
-
-export class StepExecutionError extends Error {
-  duration: number;
-  constructor(message: string, duration: number) {
-    super(message);
-    this.duration = duration;
-  }
-}
+/**
+ * 容器命令执行的底层实现
+ *
+ * 这个文件提供了 ContainerExecutor 使用的底层 Docker 命令执行功能。
+ * 对于大多数用例，应该使用 ContainerExecutor 类而不是直接使用这些函数。
+ */
 
 export interface ExecuteOptions {
   container: Docker.Container;
@@ -87,7 +72,7 @@ function createWaitPromise(
   });
 }
 
-export async function execute({
+export async function execCommand({
   container,
   command,
   env,
@@ -133,33 +118,3 @@ export async function execute({
   };
 }
 
-export async function executeStep({
-  container,
-  name,
-  script,
-  env,
-}: ExecuteStepOptions): Promise<StepResult> {
-  const stepStartTime = Date.now();
-  try {
-    const execution = await execute({
-      container,
-      command: script,
-      env,
-    });
-
-    const result = await execution.wait();
-    const duration = Date.now() - stepStartTime;
-
-    return {
-      success: result.exitCode === 0,
-      duration,
-      output: result.output,
-    };
-  } catch (error) {
-    const duration = Date.now() - stepStartTime;
-    if (error instanceof Error) {
-      throw new StepExecutionError(`步骤 ${name} 执行异常: ${error.message}`, duration);
-    }
-    throw new StepExecutionError(`步骤 ${name} 执行异常: ${String(error)}`, duration);
-  }
-}

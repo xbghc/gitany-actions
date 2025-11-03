@@ -9,7 +9,7 @@ import type {
   PullRequest,
 } from '@xbghc/gitcode-api';
 import type { EventEmitter } from 'node:events';
-import type { ChatOptions, ChatResult } from '../container/index.js';
+import type { ChatOptions, ChatResult } from '../workflows/index.js';
 
 export type AiMentionSource = 'issue_comment' | 'pr_review_comment';
 

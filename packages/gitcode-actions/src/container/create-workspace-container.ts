@@ -1,6 +1,6 @@
 import type Docker from 'dockerode';
 import { getContainerByRepo } from './get.js';
-import { executeStep } from './execute-step.js';
+import { executor } from '../executor/container-executor.js';
 
 export interface CreateWorkspaceContainerOptions {
   docker: Docker;
@@ -30,11 +30,13 @@ export async function createWorkspaceContainer({
       if (info.State?.Status !== 'running') {
         await existingContainer.start();
       }
-      await executeStep({
-        container: existingContainer,
-        name: 'Update Code',
-        script: `git checkout ${branch} && git pull`,
-      });
+      try {
+        await executor(existingContainer)
+          .execute(`git checkout ${branch}`, { name: '切换分支' })
+          .execute('git pull', { name: '拉取最新代码' });
+      } catch {
+        // 忽略更新失败的错误，继续使用容器
+      }
       return existingContainer;
     }
   }

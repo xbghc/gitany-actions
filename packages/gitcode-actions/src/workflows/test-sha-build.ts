@@ -1,14 +1,14 @@
 import type Docker from 'dockerode';
 
-import { checkProjectFiles } from './check-project-files.js';
-import { DiagnosticsCollectionError } from './collect-diagnostics.js';
-import { createWorkspaceContainer } from './create-workspace-container.js';
-import { executeStep } from './execute-step.js';
-import { installDependencies } from './install-dependencies.js';
-import { ImagePullError, prepareImage, type ImagePullStatus } from './prepare-image.js';
-import { docker } from './shared.js';
-import type { TestShaBuildOptions, TestShaBuildResult } from './types.js';
-import { verifySha } from './verify-sha.js';
+import { checkProjectFiles } from '../executor/check-project-files.js';
+import { DiagnosticsCollectionError } from '../executor/collect-diagnostics.js';
+import { executor, StepExecutionError as ContainerStepExecutionError } from '../executor/container-executor.js';
+import { createWorkspaceContainer } from '../container/create-workspace-container.js';
+import { installDependencies } from '../executor/install-dependencies.js';
+import { ImagePullError, prepareImage, type ImagePullStatus } from '../container/prepare-image.js';
+import { docker } from '../container/shared.js';
+import type { TestShaBuildOptions, TestShaBuildResult } from '../container/types.js';
+import { verifySha } from '../executor/verify-sha.js';
 
 /**
  * Run a sequence of build verification steps inside a disposable container.
@@ -72,28 +72,39 @@ export async function testShaBuild(
     });
     result.diagnostics.containerId = container.id;
 
-    const cloneResult = await executeStep({
-      container,
-      name: 'Clone Repository',
-      script: 'rm -rf /tmp/workspace && git clone "$REPO_URL" /tmp/workspace 2>&1',
-    });
-    fullOutput += cloneResult.output;
-    result.diagnostics.steps.clone = {
-      success: cloneResult.success,
-      duration: cloneResult.duration,
-      error: cloneResult.success ? undefined : cloneResult.output,
-    };
-    result.diagnostics.repoAccessible = cloneResult.success;
-    if (!cloneResult.success) {
-      result.error = `步骤 clone 失败: ${cloneResult.output.trim()}`;
-      return result;
+    try {
+      const cloneExecResult = await executor(container)
+        .execute('rm -rf /tmp/workspace', { name: '清理工作空间' })
+        .execute('git clone "$REPO_URL" /tmp/workspace 2>&1', { name: '克隆仓库' });
+
+      // 聚合所有步骤的输出
+      const combinedOutput = cloneExecResult.steps.map((s) => s.output).join('\n');
+      fullOutput += combinedOutput;
+      result.diagnostics.steps.clone = {
+        success: cloneExecResult.success,
+        duration: 0,
+        error: cloneExecResult.success ? undefined : combinedOutput,
+      };
+      result.diagnostics.repoAccessible = cloneExecResult.success;
+    } catch (error) {
+      if (error instanceof ContainerStepExecutionError) {
+        result.diagnostics.steps.clone = {
+          success: false,
+          duration: 0,
+          error: error.output,
+        };
+        result.diagnostics.repoAccessible = false;
+        result.error = `步骤 ${error.stepName} 失败: ${error.output.trim()}`;
+        return result;
+      }
+      throw error;
     }
 
     const verifyResult = await verifySha({ container });
     fullOutput += verifyResult.output;
     result.diagnostics.steps.verifySha = {
       success: verifyResult.success,
-      duration: verifyResult.duration,
+      duration: 0, // 时间统计已外部化
       error: verifyResult.success ? undefined : verifyResult.output,
     };
     if (!verifyResult.success) {
@@ -102,20 +113,30 @@ export async function testShaBuild(
       return result;
     }
 
-    const checkoutResult = await executeStep({
-      container,
-      name: 'Checkout SHA',
-      script: 'cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1',
-    });
-    fullOutput += checkoutResult.output;
-    result.diagnostics.steps.checkout = {
-      success: checkoutResult.success,
-      duration: checkoutResult.duration,
-      error: checkoutResult.success ? undefined : checkoutResult.output,
-    };
-    if (!checkoutResult.success) {
-      result.error = `步骤 checkout 失败: ${checkoutResult.output.trim()}`;
-      return result;
+    try {
+      const checkoutExecResult = await executor(container)
+        .execute('cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1', {
+          name: 'Checkout SHA',
+        });
+
+      const checkoutStep = checkoutExecResult.steps[0];
+      fullOutput += checkoutStep.output;
+      result.diagnostics.steps.checkout = {
+        success: checkoutStep.success,
+        duration: 0,
+        error: checkoutStep.success ? undefined : checkoutStep.output,
+      };
+    } catch (error) {
+      if (error instanceof ContainerStepExecutionError) {
+        result.diagnostics.steps.checkout = {
+          success: false,
+          duration: 0,
+          error: error.output,
+        };
+        result.error = `步骤 checkout 失败: ${error.output.trim()}`;
+        return result;
+      }
+      throw error;
     }
 
     try {
@@ -125,7 +146,7 @@ export async function testShaBuild(
       fullOutput += projectStep.output;
       result.diagnostics.steps.checkProject = {
         success: projectStep.success,
-        duration: projectStep.duration,
+        duration: 0, // 时间统计已外部化
         error: projectStep.success ? undefined : '项目检查失败',
       };
       result.diagnostics.packageJsonExists = diag.packageJsonExists;
@@ -154,7 +175,7 @@ export async function testShaBuild(
     fullOutput += installResult.output;
     result.diagnostics.steps.install = {
       success: installResult.success,
-      duration: installResult.duration,
+      duration: 0, // 时间统计已外部化
       error: installResult.success ? undefined : installResult.output,
     };
     if (!installResult.success) {

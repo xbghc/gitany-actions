@@ -6,7 +6,7 @@ import {
   type PullRequest,
 } from '@xbghc/gitcode-api';
 import { EventEmitter } from 'node:events';
-import { chat } from '../container/index.js';
+import { chat } from '../workflows/index.js';
 import { watchIssues, type IssueWatcher } from '../watcher/issue.js';
 import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr.js';
 import { defaultPromptBuilder } from '../prompt/prompt.js';
