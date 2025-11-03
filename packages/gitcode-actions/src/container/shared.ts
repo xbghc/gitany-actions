@@ -1,5 +1,4 @@
 import Docker from 'dockerode';
-import { createLogger } from '../utils/logger.js';
 
 const dockerode = new Docker();
 
@@ -24,8 +23,6 @@ export const docker = new Proxy(dockerode, {
     return original;
   },
 });
-
-export const logger = createLogger('@xbghc/gitcode-actions');
 
 /** Forwarded Claude related env vars */
 const anthropicEnvVars = Object.keys(process.env).filter((key) =>

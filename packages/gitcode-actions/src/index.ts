@@ -3,51 +3,120 @@
  *
  */
 
-export { IssueWatcher, watchIssues } from './watcher/issue.js';
-export type { WatchIssueOptions } from './watcher/issue.js';
-export { PullRequestWatcher, watchPullRequest } from './watcher/pr.js';
-export type { WatchPullRequestOptions } from './watcher/pr.js';
+// Event types
+export type { EventDataMap, EventName } from './types/events.js';
 
-export { defaultPromptBuilder, runAiMentionsOnce, watchAiMentions } from './ai-mentions/index.js';
+// ============ Watchers (New API) ============
+export { watch } from './watcher/index.js';
 export type {
-  AiMentionContext,
-  AiMentionReply,
-  AiMentionSource,
-  AiMentionWatcherHandle,
-  BuildAiMentionPrompt,
-  BuildAiMentionReplyBody,
-  WatchAiMentionsOptions,
-} from './ai-mentions/index.js';
+  Watcher,
+  WatchOptions,
+  PrWatchConfig,
+  IssueWatchConfig,
+  WatcherStatus,
+} from './watcher/types.js';
+
+// Storage interfaces (Advanced usage)
+export type { StateStorage } from './watcher/state-storage.js';
+export type { StateSerializer } from './watcher/state-serializer.js';
+export { createSmartSerializer } from './watcher/state-serializer.js';
+export { FileStateStorage } from './watcher/file-state-storage.js';
+export { MemoryStateStorage } from './watcher/memory-state-storage.js';
+
+// ============ Mention (Deprecated) ============
+/**
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ */
 export {
-  chat,
-  checkoutSha,
-  checkProjectFiles,
+  defaultPromptBuilder,
+  runMentionsOnce,
+  watchMentions,
+  createReplyComment,
+  editReplyComment,
+  defaultReplyBodyBuilder,
+} from './workflows/index.js';
+/**
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ */
+export type {
+  MentionContext,
+  MentionReply,
+  MentionSource,
+  MentionWatcherHandle,
+  BuildMentionPrompt,
+  BuildMentionReplyBody,
+  WatchMentionsOptions,
+  IssueContext,
+  PrContext,
+} from './workflows/index.js';
+/**
+ * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
+ */
+export type { MentionWatchConfig } from './watcher/types.js';
+
+// ===== Container Management =====
+export {
   cleanupPrContainers,
-  cloneRepo,
-  collectDiagnostics,
   ContainerCreationError,
   copyToContainer,
   CopyToContainerError,
   createPrContainer,
   createWorkspaceContainer,
-  DiagnosticsCollectionError,
-  executeStep,
   getContainer,
   getContainerStatus,
   ImagePullError,
-  installCli,
-  installDependencies,
-  installGitcodeCli,
   prepareImage,
   removeContainer,
   resetContainer,
-  StepExecutionError,
-  testShaBuild,
-  verifySha,
 } from './container/index.js';
+export type {
+  ContainerOptions,
+  CopyToContainerOptions,
+  ImagePullStatus,
+} from './container/index.js';
+
+// ===== Container Command Execution =====
+export {
+  checkProjectFiles,
+  collectDiagnostics,
+  ContainerExecutor,
+  DiagnosticsCollectionError,
+  execCommand,
+  executor,
+  ExecutorChain,
+  installDependencies,
+  verifySha,
+} from './executor/index.js';
+export type {
+  CheckOptions,
+  CheckStepResult,
+  ExecuteOptions,
+  ExecuteResult,
+  ExecutionContext,
+  ExecutionHandle,
+  ExecutionResult,
+  ExecutorOptions,
+  InstallOptions,
+  InstallResult,
+  ProjectCheckResult,
+  ProjectDiagnostics,
+  StepOptions,
+  StepResult as ContainerStepResult,
+  StepExecutionError as ContainerStepExecutionError,
+  VerifyOptions,
+  VerifyResult,
+} from './executor/index.js';
+
+// ===== Workflows =====
+export {
+  chat,
+  createApiCallScript,
+  testShaBuild,
+} from './workflows/index.js';
 export type {
   ChatOptions,
   ChatResult,
-  CopyToContainerOptions,
-  ProjectCheckResult,
-} from './container/index.js';
+  CreateApiCallScriptOptions,
+  TestShaBuildOptions,
+  TestShaBuildResult,
+} from './workflows/index.js';

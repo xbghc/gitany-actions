@@ -1,7 +1,7 @@
 import readline from 'node:readline';
 import type { ContainerInfo } from 'dockerode';
 
-import { docker, logger } from './shared.js';
+import { docker } from './shared.js';
 
 async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo[]) {
   const rl = readline.createInterface({
@@ -9,15 +9,13 @@ async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo
     output: process.stdout,
   });
 
-  logger.info('Found running PR containers:');
+  console.log('Found running PR containers:');
   for (const info of runningContainers) {
-    logger.info(`  - ${info.Names[0]} (ID: ${info.Id}, PR: ${info.Labels['gitcode.prId']})`);
+    console.log(`  - ${info.Names[0]} (ID: ${info.Id}, PR: ${info.Labels['gitcode.prId']})`);
   }
 
   const answer = await new Promise<string>((resolve) => {
-    // Use process.stdout.write for interactive prompt without logger
-    process.stdout.write('Do you want to remove them? (y/N) ');
-    rl.question('', (answer) => {
+    rl.question('Do you want to remove them? (y/N) ', (answer) => {
       rl.close();
       resolve(answer);
     });
@@ -31,12 +29,8 @@ async function promptAndRemoveRunningContainers(runningContainers: ContainerInfo
     const container = docker.getContainer(info.Id);
     try {
       await container.remove({ force: true });
-      logger.info(
-        { id: info.Id, state: info.State },
-        '[cleanupPrContainers] removed running container',
-      );
     } catch (err) {
-      logger.warn({ err, id: info.Id }, '[cleanupPrContainers] failed to remove container');
+      console.error(`Failed to remove container ${info.Id}:`, err);
     }
   }
 }
@@ -68,12 +62,8 @@ export async function cleanupPrContainers() {
     const container = docker.getContainer(info.Id);
     try {
       await container.remove({ force: true });
-      logger.info(
-        { id: info.Id, state: info.State },
-        '[cleanupPrContainers] removed stale container',
-      );
     } catch (err) {
-      logger.warn({ err, id: info.Id }, '[cleanupPrContainers] failed to remove container');
+      console.error(`Failed to remove container ${info.Id}:`, err);
     }
   }
 

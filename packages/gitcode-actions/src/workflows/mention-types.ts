@@ -8,9 +8,10 @@ import type {
   PRComment,
   PullRequest,
 } from '@xbghc/gitcode-api';
-import type { ChatOptions, ChatResult } from '../container/index.js';
+import type { EventEmitter } from 'node:events';
+import type { ChatOptions, ChatResult } from './chat.js';
 
-export type AiMentionSource = 'issue_comment' | 'pr_review_comment';
+export type MentionSource = 'issue_comment' | 'pr_review_comment';
 
 export interface IssueContext {
   mention: string;
@@ -34,9 +35,9 @@ export interface PrContext {
   pullRequest: PullRequest; // This is now mandatory
 }
 
-export type AiMentionContext = IssueContext | PrContext;
+export type MentionContext = IssueContext | PrContext;
 
-export type AiMentionReply =
+export type MentionReply =
   | {
       source: 'issue_comment';
       body: string;
@@ -48,14 +49,14 @@ export type AiMentionReply =
       comment: CreatedPrComment;
     };
 
-export type BuildAiMentionPrompt = (context: AiMentionContext) => string | Promise<string>;
+export type BuildMentionPrompt = (context: MentionContext) => string | Promise<string>;
 
-export type BuildAiMentionReplyBody = (
+export type BuildMentionReplyBody = (
   result: ChatResult,
-  context: AiMentionContext,
+  context: MentionContext,
 ) => string | Promise<string | null | undefined>;
 
-export interface WatchAiMentionsOptions {
+export interface WatchMentionsOptions {
   mention?: string;
   issueIntervalSec?: number;
   prIntervalSec?: number;
@@ -64,20 +65,15 @@ export interface WatchAiMentionsOptions {
   prCommentType?: 'diff_comment' | 'pr_comment';
   chatOptions?: ChatOptions;
   chatExecutor?: (repoUrl: string, prompt: string, options?: ChatOptions) => Promise<ChatResult>;
-  buildPrompt?: BuildAiMentionPrompt;
-  onChatResult?: (result: ChatResult, context: AiMentionContext) => void;
+  buildPrompt?: BuildMentionPrompt;
   includeIssueComments?: boolean;
   includePullRequestComments?: boolean;
   /** Whether to automatically reply to the mention with the chat output. Defaults to true. */
   replyWithComment?: boolean;
   /** Customizes the body used when posting the AI reply comment. */
-  buildReplyBody?: BuildAiMentionReplyBody;
-  /** Invoked after the AI reply comment has been created. */
-  onReplyCreated?: (reply: AiMentionReply, context: AiMentionContext) => void;
-  /** Invoked when posting the AI reply fails. */
-  onReplyError?: (error: unknown, context: AiMentionContext) => void;
+  buildReplyBody?: BuildMentionReplyBody;
 }
 
-export interface AiMentionWatcherHandle {
+export interface MentionWatcherHandle extends EventEmitter {
   stop(): void;
 }
