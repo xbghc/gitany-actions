@@ -11,8 +11,8 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import type { ChatResult } from '../workflows/index.js';
-import type { AiMentionContext, AiMentionReply } from './types.js';
+import type { ChatResult } from './chat.js';
+import type { MentionContext, MentionReply } from './mention-types.js';
 
 const require = createRequire(import.meta.url);
 let cachedGitcodeCliEntry: string | null = null;
@@ -22,7 +22,7 @@ export function defaultReplyBodyBuilder(result: ChatResult): string | null {
   return text && text.length > 0 ? text : null;
 }
 
-export async function editAiReplyComment(
+export async function editReplyComment(
   client: GitcodeClient,
   repoUrl: string,
   commentId: number,
@@ -66,12 +66,12 @@ export async function editAiReplyComment(
   }
 }
 
-export async function createAiReplyComment(
+export async function createReplyComment(
   client: GitcodeClient,
   repoUrl: string,
-  context: AiMentionContext,
+  context: MentionContext,
   body: string,
-): Promise<AiMentionReply> {
+): Promise<MentionReply> {
   const parsed = parseGitUrl(repoUrl);
   if (!parsed) {
     throw new Error(`Invalid repository URL: ${repoUrl}`);
@@ -107,7 +107,7 @@ export async function createAiReplyComment(
         throw new Error('gitcode CLI returned empty output when creating issue comment');
       }
       const comment = JSON.parse(text) as CreatedIssueComment;
-      return { source: 'issue_comment', body, comment } satisfies AiMentionReply;
+      return { source: 'issue_comment', body, comment } satisfies MentionReply;
     }
 
     // At this point, context is guaranteed to be PrContext
@@ -131,7 +131,7 @@ export async function createAiReplyComment(
       throw new Error('gitcode CLI returned empty output when creating PR comment');
     }
     const comment = JSON.parse(text) as CreatedPrComment;
-    return { source: 'pr_review_comment', body, comment } satisfies AiMentionReply;
+    return { source: 'pr_review_comment', body, comment } satisfies MentionReply;
   } finally {
     await removeTempDir(tempDir);
   }

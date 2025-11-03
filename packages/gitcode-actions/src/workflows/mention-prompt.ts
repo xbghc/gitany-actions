@@ -1,15 +1,15 @@
 import type { PRComment, PullRequest } from '@xbghc/gitcode-api';
-import type { AiMentionContext, IssueContext, PrContext } from './types.js';
+import type { MentionContext, IssueContext, PrContext } from './mention-types.js';
 
 /**
- * Builds a prompt for an AI mention in an issue.
+ * Builds a prompt for a mention in an issue.
  *
  * The prompt includes the following key information:
  * - Repository URL
  * - Issue number and title
  * - Issue description (body)
  * - All previous comments on the issue
- * - The specific comment that contains the AI mention
+ * - The specific comment that contains the mention
  */
 function buildIssuePrompt(context: IssueContext): string {
   const { issue, issueComments, mentionComment, repoUrl, mention } = context;
@@ -48,7 +48,7 @@ function buildIssuePrompt(context: IssueContext): string {
 }
 
 /**
- * Builds a prompt for an AI mention in a pull request.
+ * Builds a prompt for a mention in a pull request.
  *
  * The prompt includes the following key information:
  * - Repository URL
@@ -57,7 +57,7 @@ function buildIssuePrompt(context: IssueContext): string {
  * - Pull request description (body)
  * - All previous comments on the pull request
  * - For review comments, the relevant file path and code diff hunk
- * - The specific comment that contains the AI mention
+ * - The specific comment that contains the mention
  */
 function buildPrPrompt(context: PrContext): string {
   const { issue, issueComments, mentionComment, repoUrl, pullRequest, mention } = context;
@@ -120,7 +120,7 @@ function buildPrPrompt(context: PrContext): string {
   return lines.join('\n\n');
 }
 
-export function defaultPromptBuilder(context: AiMentionContext): string {
+export function defaultPromptBuilder(context: MentionContext): string {
   if (context.commentSource === 'pr_review_comment') {
     return buildPrPrompt(context);
   }

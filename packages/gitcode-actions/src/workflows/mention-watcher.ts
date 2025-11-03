@@ -6,23 +6,23 @@ import {
   type PullRequest,
 } from '@xbghc/gitcode-api';
 import { EventEmitter } from 'node:events';
-import { chat } from '../workflows/index.js';
+import { chat } from './chat.js';
 import { watchIssues, type IssueWatcher } from '../watcher/issue.js';
 import { watchPullRequest, type PullRequestWatcher } from '../watcher/pr.js';
-import { defaultPromptBuilder } from '../prompt/prompt.js';
-import { createAiReplyComment, defaultReplyBodyBuilder, editAiReplyComment } from './reply.js';
+import { defaultPromptBuilder } from './mention-prompt.js';
+import { createReplyComment, defaultReplyBodyBuilder, editReplyComment } from './mention-reply.js';
 import type { EventDataMap, EventName } from '../types/events.js';
 import {
-  type AiMentionContext,
-  type AiMentionSource,
-  type AiMentionWatcherHandle,
-  type WatchAiMentionsOptions,
+  type MentionContext,
+  type MentionSource,
+  type MentionWatcherHandle,
+  type WatchMentionsOptions,
   type IssueContext,
   type PrContext,
-} from './types.js';
+} from './mention-types.js';
 
 type MentionHandler = (payload: {
-  source: AiMentionSource;
+  source: MentionSource;
   comment: IssueComment | PRComment;
   issueNumber: number;
   issueSnapshot?: Issue;
@@ -32,7 +32,7 @@ type MentionHandler = (payload: {
 function createMentionHandler(
   client: GitcodeClient,
   repoUrl: string,
-  options: WatchAiMentionsOptions,
+  options: WatchMentionsOptions,
   emitter: EventEmitter,
 ): MentionHandler {
   const chatExecutor = options.chatExecutor ?? chat;
@@ -47,20 +47,20 @@ function createMentionHandler(
     const { issueNumber, comment, source } = payload;
     if (!Number.isFinite(issueNumber)) return;
 
-    emitEvent('ai-mention:detected', { issueNumber, commentId: comment.id, source });
+    emitEvent('mention:detected', { issueNumber, commentId: comment.id, source });
 
     let issueDetail: Issue | undefined = payload.issueSnapshot;
     if (!issueDetail) {
       try {
         issueDetail = await client.issue.get(repoUrl, issueNumber);
       } catch (err) {
-        emitEvent('ai-mention:issue-detail:load:failed', { issueNumber, error: err });
+        emitEvent('mention:issue-detail:load:failed', { issueNumber, error: err });
         return;
       }
     }
 
     if (!issueDetail) {
-      emitEvent('ai-mention:issue-detail:missing', { issueNumber });
+      emitEvent('mention:issue-detail:missing', { issueNumber });
       return;
     }
 
@@ -72,10 +72,10 @@ function createMentionHandler(
         options.issueCommentQuery ?? {},
       );
     } catch (err) {
-      emitEvent('ai-mention:comments:load:warn', { issueNumber, error: err });
+      emitEvent('mention:comments:load:warn', { issueNumber, error: err });
     }
 
-    let context: AiMentionContext;
+    let context: MentionContext;
     if (source === 'issue_comment') {
       context = {
         mention: options.mention ?? '@AI',
@@ -89,7 +89,7 @@ function createMentionHandler(
       } satisfies IssueContext;
     } else if (source === 'pr_review_comment') {
       if (!payload.pullRequest) {
-        emitEvent('ai-mention:pr-detail:missing', { issueNumber, commentId: comment.id });
+        emitEvent('mention:pr-detail:missing', { issueNumber, commentId: comment.id });
         return;
       }
       context = {
@@ -108,7 +108,7 @@ function createMentionHandler(
     }
 
     if (!replyEnabled) {
-      emitEvent('ai-mention:reply:disabled', {});
+      emitEvent('mention:reply:disabled', {});
       void (async () => {
         try {
           const prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
@@ -116,7 +116,7 @@ function createMentionHandler(
             await chatExecutor(repoUrl, prompt, options.chatOptions);
           }
         } catch (err) {
-          emitEvent('ai-mention:background-chat:failed', { error: err, issueNumber, commentId: comment.id });
+          emitEvent('mention:background-chat:failed', { error: err, issueNumber, commentId: comment.id });
         }
       })();
       return;
@@ -124,20 +124,20 @@ function createMentionHandler(
 
     let placeholderCommentId: number;
     try {
-      const placeholder = await createAiReplyComment(
+      const placeholder = await createReplyComment(
         client,
         repoUrl,
         context,
         '思考中，请稍候... 🤔',
       );
       placeholderCommentId = placeholder.comment.id;
-      emitEvent('ai-mention:placeholder:created', {
+      emitEvent('mention:placeholder:created', {
         issueNumber,
         originalCommentId: comment.id,
         placeholderCommentId,
       });
     } catch (err) {
-      emitEvent('ai-mention:placeholder:create:failed', {
+      emitEvent('mention:placeholder:create:failed', {
         error: err,
         issueNumber,
         commentId: comment.id,
@@ -150,8 +150,8 @@ function createMentionHandler(
       try {
         prompt = await (options.buildPrompt ?? defaultPromptBuilder)(context);
         if (!prompt?.trim()) {
-          emitEvent('ai-mention:prompt:empty:warn', { issueNumber });
-          await editAiReplyComment(
+          emitEvent('mention:prompt:empty:warn', { issueNumber });
+          await editReplyComment(
             client,
             repoUrl,
             placeholderCommentId,
@@ -166,15 +166,15 @@ function createMentionHandler(
           throw result.error ?? new Error('Chat execution failed without a specific error.');
         }
 
-        emitEvent('ai-mention:chat:completed', { issueNumber, commentId: comment.id });
+        emitEvent('mention:chat:completed', { issueNumber, commentId: comment.id });
 
         const builder = options.buildReplyBody ?? defaultReplyBodyBuilder;
         const replyBody = (await builder(result, context))?.trim();
-        emitEvent('ai-mention:reply:generated', { replyBody: replyBody || '' });
+        emitEvent('mention:reply:generated', { replyBody: replyBody || '' });
 
         if (!replyBody) {
-          emitEvent('ai-mention:reply:empty:warn', { issueNumber, commentId: comment.id });
-          await editAiReplyComment(
+          emitEvent('mention:reply:empty:warn', { issueNumber, commentId: comment.id });
+          await editReplyComment(
             client,
             repoUrl,
             placeholderCommentId,
@@ -183,34 +183,34 @@ function createMentionHandler(
           return;
         }
 
-        const finalComment = await editAiReplyComment(
+        const finalComment = await editReplyComment(
           client,
           repoUrl,
           placeholderCommentId,
           replyBody,
         );
-        emitEvent('ai-mention:reply:edited', {
+        emitEvent('mention:reply:edited', {
           issueNumber,
           originalCommentId: comment.id,
           finalCommentId: finalComment.id,
         });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
-        emitEvent('ai-mention:background-task:failed', {
+        emitEvent('mention:background-task:failed', {
           error: err,
           issueNumber,
           commentId: comment.id,
           prompt,
         });
         try {
-          await editAiReplyComment(
+          await editReplyComment(
             client,
             repoUrl,
             placeholderCommentId,
             `处理失败: ${errorMessage}`,
           );
         } catch (editErr) {
-          emitEvent('ai-mention:placeholder:update:failed', {
+          emitEvent('mention:placeholder:update:failed', {
             error: editErr,
             issueNumber,
             commentId: comment.id,
@@ -221,11 +221,11 @@ function createMentionHandler(
   };
 }
 
-export function watchAiMentions(
+export function watchMentions(
   client: GitcodeClient,
   repoUrl: string,
-  options: WatchAiMentionsOptions = {},
-): AiMentionWatcherHandle {
+  options: WatchMentionsOptions = {},
+): MentionWatcherHandle {
   const mentionRegex = createMentionRegex(options.mention ?? '@AI');
   const issueWatchers: IssueWatcher[] = [];
   const prWatchers: PullRequestWatcher[] = [];
@@ -285,24 +285,24 @@ export function watchAiMentions(
         try {
           watcher.stop();
         } catch (err) {
-          emitEvent('ai-mention:watcher:stop:failed', { error: err, watcherType: 'issue' });
+          emitEvent('mention:watcher:stop:failed', { error: err, watcherType: 'issue' });
         }
       }
       for (const watcher of prWatchers) {
         try {
           watcher.stop();
         } catch (err) {
-          emitEvent('ai-mention:watcher:stop:failed', { error: err, watcherType: 'pr' });
+          emitEvent('mention:watcher:stop:failed', { error: err, watcherType: 'pr' });
         }
       }
     },
-  }) as AiMentionWatcherHandle;
+  }) as MentionWatcherHandle;
 }
 
-export async function runAiMentionsOnce(
+export async function runMentionsOnce(
   client: GitcodeClient,
   repoUrl: string,
-  options: WatchAiMentionsOptions = {},
+  options: WatchMentionsOptions = {},
 ): Promise<void> {
   const mentionRegex = createMentionRegex(options.mention ?? '@AI');
   const mentionHandlerPromises: Promise<void>[] = [];

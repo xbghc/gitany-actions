@@ -12,16 +12,25 @@ export type { WatchIssueOptions } from './watcher/issue.js';
 export { PullRequestWatcher, watchPullRequest } from './watcher/pr.js';
 export type { WatchPullRequestOptions } from './watcher/pr.js';
 
-export { defaultPromptBuilder, runAiMentionsOnce, watchAiMentions } from './ai-mentions/index.js';
+export {
+  defaultPromptBuilder,
+  runMentionsOnce,
+  watchMentions,
+  createReplyComment,
+  editReplyComment,
+  defaultReplyBodyBuilder,
+} from './workflows/index.js';
 export type {
-  AiMentionContext,
-  AiMentionReply,
-  AiMentionSource,
-  AiMentionWatcherHandle,
-  BuildAiMentionPrompt,
-  BuildAiMentionReplyBody,
-  WatchAiMentionsOptions,
-} from './ai-mentions/index.js';
+  MentionContext,
+  MentionReply,
+  MentionSource,
+  MentionWatcherHandle,
+  BuildMentionPrompt,
+  BuildMentionReplyBody,
+  WatchMentionsOptions,
+  IssueContext,
+  PrContext,
+} from './workflows/index.js';
 
 // ===== Container Management =====
 export {

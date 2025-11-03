@@ -95,39 +95,39 @@ export interface IssueWatcherFetchFailedEventData extends BaseEventData {
 }
 
 /**
- * AI Mention 相关事件
+ * Mention 相关事件
  */
-export interface AiMentionDetectedEventData extends BaseEventData {
+export interface MentionDetectedEventData extends BaseEventData {
   issueNumber: number;
   commentId: number;
   source: 'issue_comment' | 'pr_review_comment';
 }
 
-export interface AiMentionIssueDetailEventData extends BaseEventData {
+export interface MentionIssueDetailEventData extends BaseEventData {
   issueNumber: number;
   error?: unknown;
 }
 
-export interface AiMentionCommentsLoadEventData extends BaseEventData {
+export interface MentionCommentsLoadEventData extends BaseEventData {
   issueNumber: number;
   error: unknown;
 }
 
-export interface AiMentionPrDetailMissingEventData extends BaseEventData {
+export interface MentionPrDetailMissingEventData extends BaseEventData {
   issueNumber: number;
   commentId: number;
 }
 
 // 回复被禁用事件（无额外数据）
-export type AiMentionReplyDisabledEventData = BaseEventData;
+export type MentionReplyDisabledEventData = BaseEventData;
 
-export interface AiMentionBackgroundChatFailedEventData extends BaseEventData {
+export interface MentionBackgroundChatFailedEventData extends BaseEventData {
   error: unknown;
   issueNumber: number;
   commentId: number;
 }
 
-export interface AiMentionPlaceholderEventData extends BaseEventData {
+export interface MentionPlaceholderEventData extends BaseEventData {
   issueNumber: number;
   originalCommentId?: number;
   placeholderCommentId?: number;
@@ -135,44 +135,44 @@ export interface AiMentionPlaceholderEventData extends BaseEventData {
   commentId?: number;
 }
 
-export interface AiMentionPromptEmptyEventData extends BaseEventData {
+export interface MentionPromptEmptyEventData extends BaseEventData {
   issueNumber: number;
 }
 
-export interface AiMentionChatCompletedEventData extends BaseEventData {
+export interface MentionChatCompletedEventData extends BaseEventData {
   issueNumber: number;
   commentId: number;
 }
 
-export interface AiMentionReplyGeneratedEventData extends BaseEventData {
+export interface MentionReplyGeneratedEventData extends BaseEventData {
   replyBody: string;
 }
 
-export interface AiMentionReplyEmptyEventData extends BaseEventData {
+export interface MentionReplyEmptyEventData extends BaseEventData {
   issueNumber: number;
   commentId: number;
 }
 
-export interface AiMentionReplyEditedEventData extends BaseEventData {
+export interface MentionReplyEditedEventData extends BaseEventData {
   issueNumber: number;
   originalCommentId: number;
   finalCommentId: number;
 }
 
-export interface AiMentionBackgroundTaskFailedEventData extends BaseEventData {
+export interface MentionBackgroundTaskFailedEventData extends BaseEventData {
   error: unknown;
   issueNumber: number;
   commentId: number;
   prompt?: string;
 }
 
-export interface AiMentionPlaceholderUpdateFailedEventData extends BaseEventData {
+export interface MentionPlaceholderUpdateFailedEventData extends BaseEventData {
   error: unknown;
   issueNumber: number;
   commentId: number;
 }
 
-export interface AiMentionWatcherStopFailedEventData extends BaseEventData {
+export interface MentionWatcherStopFailedEventData extends BaseEventData {
   error: unknown;
   watcherType: 'issue' | 'pr';
 }
@@ -220,24 +220,24 @@ export interface EventDataMap {
   'issue-watcher:detect:complete': IssueWatcherDetectEventData;
   'issue-watcher:comments:fetch:failed': IssueWatcherFetchFailedEventData;
 
-  // AI Mention 事件
-  'ai-mention:detected': AiMentionDetectedEventData;
-  'ai-mention:issue-detail:load:failed': AiMentionIssueDetailEventData;
-  'ai-mention:issue-detail:missing': AiMentionIssueDetailEventData;
-  'ai-mention:comments:load:warn': AiMentionCommentsLoadEventData;
-  'ai-mention:pr-detail:missing': AiMentionPrDetailMissingEventData;
-  'ai-mention:reply:disabled': AiMentionReplyDisabledEventData;
-  'ai-mention:background-chat:failed': AiMentionBackgroundChatFailedEventData;
-  'ai-mention:placeholder:created': AiMentionPlaceholderEventData;
-  'ai-mention:placeholder:create:failed': AiMentionPlaceholderEventData;
-  'ai-mention:prompt:empty:warn': AiMentionPromptEmptyEventData;
-  'ai-mention:chat:completed': AiMentionChatCompletedEventData;
-  'ai-mention:reply:generated': AiMentionReplyGeneratedEventData;
-  'ai-mention:reply:empty:warn': AiMentionReplyEmptyEventData;
-  'ai-mention:reply:edited': AiMentionReplyEditedEventData;
-  'ai-mention:background-task:failed': AiMentionBackgroundTaskFailedEventData;
-  'ai-mention:placeholder:update:failed': AiMentionPlaceholderUpdateFailedEventData;
-  'ai-mention:watcher:stop:failed': AiMentionWatcherStopFailedEventData;
+  // Mention 事件
+  'mention:detected': MentionDetectedEventData;
+  'mention:issue-detail:load:failed': MentionIssueDetailEventData;
+  'mention:issue-detail:missing': MentionIssueDetailEventData;
+  'mention:comments:load:warn': MentionCommentsLoadEventData;
+  'mention:pr-detail:missing': MentionPrDetailMissingEventData;
+  'mention:reply:disabled': MentionReplyDisabledEventData;
+  'mention:background-chat:failed': MentionBackgroundChatFailedEventData;
+  'mention:placeholder:created': MentionPlaceholderEventData;
+  'mention:placeholder:create:failed': MentionPlaceholderEventData;
+  'mention:prompt:empty:warn': MentionPromptEmptyEventData;
+  'mention:chat:completed': MentionChatCompletedEventData;
+  'mention:reply:generated': MentionReplyGeneratedEventData;
+  'mention:reply:empty:warn': MentionReplyEmptyEventData;
+  'mention:reply:edited': MentionReplyEditedEventData;
+  'mention:background-task:failed': MentionBackgroundTaskFailedEventData;
+  'mention:placeholder:update:failed': MentionPlaceholderUpdateFailedEventData;
+  'mention:watcher:stop:failed': MentionWatcherStopFailedEventData;
 
   // 容器清理事件
   'container:cleanup:started': ContainerCleanupStartedEventData;
