@@ -1,10 +1,9 @@
 import type Docker from 'dockerode';
 
 import { checkProjectFiles } from './check-project-files.js';
-import { checkoutSha } from './checkout-sha.js';
-import { cloneRepo } from './clone-repo.js';
 import { DiagnosticsCollectionError } from './collect-diagnostics.js';
 import { createWorkspaceContainer } from './create-workspace-container.js';
+import { executeStep } from './execute-step.js';
 import { installDependencies } from './install-dependencies.js';
 import { ImagePullError, prepareImage, type ImagePullStatus } from './prepare-image.js';
 import { docker } from './shared.js';
@@ -73,7 +72,11 @@ export async function testShaBuild(
     });
     result.diagnostics.containerId = container.id;
 
-    const cloneResult = await cloneRepo({ container });
+    const cloneResult = await executeStep({
+      container,
+      name: 'Clone Repository',
+      script: 'rm -rf /tmp/workspace && git clone "$REPO_URL" /tmp/workspace 2>&1',
+    });
     fullOutput += cloneResult.output;
     result.diagnostics.steps.clone = {
       success: cloneResult.success,
@@ -99,7 +102,11 @@ export async function testShaBuild(
       return result;
     }
 
-    const checkoutResult = await checkoutSha({ container });
+    const checkoutResult = await executeStep({
+      container,
+      name: 'Checkout SHA',
+      script: 'cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1',
+    });
     fullOutput += checkoutResult.output;
     result.diagnostics.steps.checkout = {
       success: checkoutResult.success,

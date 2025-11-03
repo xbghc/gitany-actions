@@ -24,10 +24,8 @@ export type {
 } from './ai-mentions/index.js';
 export {
   chat,
-  checkoutSha,
   checkProjectFiles,
   cleanupPrContainers,
-  cloneRepo,
   collectDiagnostics,
   ContainerCreationError,
   copyToContainer,
@@ -39,7 +37,6 @@ export {
   getContainer,
   getContainerStatus,
   ImagePullError,
-  installCli,
   installDependencies,
   prepareImage,
   removeContainer,

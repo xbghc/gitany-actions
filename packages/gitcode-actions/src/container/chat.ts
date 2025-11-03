@@ -3,11 +3,8 @@ import { collectForwardEnv, docker } from './shared.js';
 import { prepareImage } from './prepare-image.js';
 import { getDevContainer } from './get-dev-container.js';
 import { createWorkspaceContainer } from './create-workspace-container.js';
-import { cloneRepo } from './clone-repo.js';
 import { verifySha } from './verify-sha.js';
-import { checkoutSha } from './checkout-sha.js';
 import { installDependencies } from './install-dependencies.js';
-import { installAnthropicSdk } from './install-sdk.js';
 import { createApiCallScript } from './call-anthropic.js';
 import { executeStep } from './execute-step.js';
 
@@ -97,11 +94,19 @@ export async function chat(
         branch: sha,
         reusable: keepContainer,
       });
-      const clone = await cloneRepo({ container });
+      const clone = await executeStep({
+        container,
+        name: 'Clone Repository',
+        script: 'rm -rf /tmp/workspace && git clone "$REPO_URL" /tmp/workspace 2>&1',
+      });
       if (!clone.success) return { success: false, error: clone.output };
       const verify = await verifySha({ container });
       if (!verify.success) return { success: false, error: verify.output };
-      const checkout = await checkoutSha({ container });
+      const checkout = await executeStep({
+        container,
+        name: 'Checkout SHA',
+        script: 'cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1',
+      });
       if (!checkout.success) return { success: false, error: checkout.output };
     }
 
@@ -109,7 +114,12 @@ export async function chat(
     if (!installDeps.success) return { success: false, error: installDeps.output };
 
     // 安装 Anthropic SDK
-    const installSdk = await installAnthropicSdk({ container, env: sharedStepEnv });
+    const installSdk = await executeStep({
+      container,
+      name: 'Install Anthropic SDK',
+      script: 'cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1',
+      env: sharedStepEnv,
+    });
     if (!installSdk.success) return { success: false, error: installSdk.output };
 
     // 创建 API 调用脚本
