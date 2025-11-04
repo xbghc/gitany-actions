@@ -17,8 +17,8 @@ export function repoCommand(): Command {
     .command('notifications [url]')
     .description('Get repository notifications')
     .option('--json', 'Output raw JSON instead of formatted text')
-    .option('--unread', 'Show only unread notifications')
-    .option('--type <type>', 'Filter by type: all, event, or refer')
+    .option('--read', 'Show read notifications (default is unread only)')
+    .option('--type <type>', 'Filter by type: all, event, or referer')
     .option('--since <datetime>', 'Show notifications updated after this time (ISO 8601)')
     .option('--before <datetime>', 'Show notifications updated before this time (ISO 8601)')
     .action(notificationsCommand);

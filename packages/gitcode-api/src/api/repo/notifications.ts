@@ -66,8 +66,8 @@ export type Notifications = Notification[];
  * 通知查询参数
  */
 export interface NotificationQuery {
-  /** 通知类型筛选：all（全部）、event（事件通知）、refer（提及通知） */
-  type?: 'all' | 'event' | 'refer';
+  /** 通知类型筛选：all（全部）、event（事件通知）、referer（提及通知） */
+  type?: 'all' | 'event' | 'referer';
   /** 是否只显示未读通知 */
   unread?: boolean;
   /** 只显示从此时间之后更新的通知（ISO 8601 格式） */

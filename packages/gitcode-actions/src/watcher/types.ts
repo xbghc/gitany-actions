@@ -5,13 +5,7 @@ import type {
   IssueCommentsQuery,
 } from '@xbghc/gitcode-api';
 import type { EventName, EventDataMap } from '../types/events.js';
-import type { StateStorage } from './state-storage.js';
 import type { ContainerOptions } from '../container/types.js';
-import type { ChatOptions } from '../workflows/chat.js';
-import type {
-  BuildMentionPrompt,
-  BuildMentionReplyBody,
-} from '../workflows/mention-types.js';
 
 /**
  * Watcher 接口
@@ -54,10 +48,8 @@ export interface WatchOptions {
   /** Issue 监听配置 */
   issue?: IssueWatchConfig;
 
-  /**
-   * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
-   */
-  mention?: boolean | MentionWatchConfig;
+  /** Notification 监听配置 */
+  notification?: boolean | NotificationWatchConfig;
 }
 
 /**
@@ -85,21 +77,18 @@ export interface IssueWatchConfig {
 }
 
 /**
- * Mention 监听配置
- * @deprecated 将在未来版本通过个人通知 API 实现
+ * Notification 监听配置
  */
-export interface MentionWatchConfig {
+export interface NotificationWatchConfig {
   enabled?: boolean;
-  mention?: string;
-  issueIntervalSec?: number;
-  prIntervalSec?: number;
-  chatOptions?: ChatOptions;
-  buildPrompt?: BuildMentionPrompt;
-  buildReplyBody?: BuildMentionReplyBody;
-  includeIssueComments?: boolean;
-  includePullRequestComments?: boolean;
-  replyWithComment?: boolean;
-  storage?: StateStorage<unknown>;
+  /** 轮询间隔（秒），默认 30 */
+  intervalSec?: number;
+  /** 通知类型筛选 */
+  type?: 'all' | 'event' | 'referer';
+  /** 是否只显示未读通知，默认 true */
+  unread?: boolean;
+  /** 是否使用 since 参数优化查询 */
+  useSinceParam?: boolean;
 }
 
 /**
@@ -110,10 +99,7 @@ export interface WatcherStatus {
   resources: {
     pr?: { enabled: boolean; running: boolean; lastPoll?: Date };
     issue?: { enabled: boolean; running: boolean; lastPoll?: Date };
-    /**
-     * @deprecated Mention 功能已废弃
-     */
-    mention?: { enabled: boolean; running: boolean; lastPoll?: Date };
+    notification?: { enabled: boolean; running: boolean; lastPoll?: Date };
   };
 }
 

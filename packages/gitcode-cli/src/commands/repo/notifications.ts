@@ -4,6 +4,7 @@ import { parseGitUrl, type NotificationQuery } from '@xbghc/gitcode-api';
 
 interface NotificationsOptions extends NotificationQuery {
   json?: boolean;
+  read?: boolean;
 }
 
 export async function notificationsCommand(
@@ -22,7 +23,16 @@ export async function notificationsCommand(
     const { owner, repo } = parsed;
 
     // 提取 NotificationQuery 参数
-    const { json, ...query } = options;
+    const { json, read, ...query } = options;
+
+    // 根据 --read 标志设置 unread 参数
+    if (read) {
+      // --read: 显示已读通知
+      query.unread = false;
+    } else if (query.unread === undefined) {
+      // 默认：只显示未读通知
+      query.unread = true;
+    }
 
     const response = await client.repo.getNotifications(owner, repo, query);
 

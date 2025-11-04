@@ -15,7 +15,7 @@ export class FileStateStorage<TState = unknown> implements StateStorage<TState> 
   private readonly serializer: StateSerializer<TState>;
 
   /**
-   * @param watcherType - Watcher 类型（如 'pr', 'issue', 'mention'）
+   * @param watcherType - Watcher 类型（如 'pr', 'issue'）
    * @param serializer - 状态序列化器（默认使用智能序列化器）
    */
   constructor(watcherType: string, serializer: StateSerializer<TState> = createSmartSerializer()) {

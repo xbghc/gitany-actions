@@ -23,37 +23,6 @@ export { createSmartSerializer } from './watcher/state-serializer.js';
 export { FileStateStorage } from './watcher/file-state-storage.js';
 export { MemoryStateStorage } from './watcher/memory-state-storage.js';
 
-// ============ Mention (Deprecated) ============
-/**
- * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
- */
-export {
-  defaultPromptBuilder,
-  runMentionsOnce,
-  watchMentions,
-  createReplyComment,
-  editReplyComment,
-  defaultReplyBodyBuilder,
-} from './workflows/index.js';
-/**
- * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
- */
-export type {
-  MentionContext,
-  MentionReply,
-  MentionSource,
-  MentionWatcherHandle,
-  BuildMentionPrompt,
-  BuildMentionReplyBody,
-  WatchMentionsOptions,
-  IssueContext,
-  PrContext,
-} from './workflows/index.js';
-/**
- * @deprecated Mention 功能将在未来版本通过个人通知 API 实现
- */
-export type { MentionWatchConfig } from './watcher/types.js';
-
 // ===== Container Management =====
 export {
   cleanupPrContainers,

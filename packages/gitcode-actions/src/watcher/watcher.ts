@@ -18,13 +18,12 @@ import {
   getInitialIssueState,
   type IssueState,
 } from './internal/issue-poller.js';
-import { watchMentions } from '../workflows/mention-watcher.js';
-import type { MentionWatcherHandle } from '../workflows/mention-types.js';
+import { pollNotifications, type NotificationState } from './internal/notification-poller.js';
 
 /**
  * Watcher 主类
  *
- * 统一管理 PR、Issue、Mention 等资源的监听
+ * 统一管理 PR、Issue 等资源的监听
  */
 export class Watcher extends EventEmitter implements IWatcher {
   private readonly client: GitcodeClient;
@@ -36,8 +35,9 @@ export class Watcher extends EventEmitter implements IWatcher {
   // PR 特定：容器管理
   private readonly containerMap = new Map<number, Docker.Container>();
 
-  // Mention 特定：handle
-  private mentionHandle?: MentionWatcherHandle;
+  // Notification 特定：轮询状态和定时器
+  private notificationIntervalId?: NodeJS.Timeout;
+  private notificationState: NotificationState = { lastPollTime: undefined };
 
   constructor(client: GitcodeClient, url: string, options: WatchOptions = {}) {
     super();
@@ -93,31 +93,6 @@ export class Watcher extends EventEmitter implements IWatcher {
 
       this.runners.set('issue', runner);
     }
-
-    // Mention（已废弃）
-    if (this.options.mention && typeof this.options.mention !== 'boolean') {
-      console.warn(
-        '[DEPRECATED] Mention watcher 已废弃。' +
-          '未来版本将通过个人通知 API 实现 mention 功能。',
-      );
-
-      this.mentionHandle = watchMentions(this.client, this.url, {
-        mention: this.options.mention.mention,
-        issueIntervalSec: this.options.mention.issueIntervalSec,
-        prIntervalSec: this.options.mention.prIntervalSec,
-        chatOptions: this.options.mention.chatOptions,
-        buildPrompt: this.options.mention.buildPrompt,
-        buildReplyBody: this.options.mention.buildReplyBody,
-        includeIssueComments: this.options.mention.includeIssueComments,
-        includePullRequestComments: this.options.mention.includePullRequestComments,
-        replyWithComment: this.options.mention.replyWithComment,
-      });
-
-      // 转发 mention 事件
-      this.mentionHandle.on('*', (event: string, data: unknown) => {
-        this.emit(event, data);
-      });
-    }
   }
 
   /**
@@ -149,6 +124,27 @@ export class Watcher extends EventEmitter implements IWatcher {
       runner.start();
     }
 
+    // 启动 notification 监听
+    if (this.options.notification) {
+      const config = typeof this.options.notification === 'boolean'
+        ? { intervalSec: 30, type: 'referer' as const, unread: true }
+        : { intervalSec: 30, type: 'referer' as const, unread: true, ...this.options.notification };
+
+      if (config.enabled !== false) {
+        const pollFn = async () => {
+          this.notificationState = await pollNotifications(
+            this.notificationState,
+            { client: this.client, url: this.url },
+            this.emitEvent.bind(this),
+            { useSinceParam: config.useSinceParam }
+          );
+        };
+
+        void pollFn(); // 立即执行一次
+        this.notificationIntervalId = setInterval(() => void pollFn(), config.intervalSec * 1000);
+      }
+    }
+
     return this;
   }
 
@@ -163,8 +159,9 @@ export class Watcher extends EventEmitter implements IWatcher {
       runner.stop();
     }
 
-    if (this.mentionHandle) {
-      this.mentionHandle.stop();
+    if (this.notificationIntervalId) {
+      clearInterval(this.notificationIntervalId);
+      this.notificationIntervalId = undefined;
     }
   }
 
@@ -195,7 +192,9 @@ export class Watcher extends EventEmitter implements IWatcher {
       resources: {
         pr: this.runners.has('pr') ? { enabled: true, running: this.running } : undefined,
         issue: this.runners.has('issue') ? { enabled: true, running: this.running } : undefined,
-        mention: this.mentionHandle ? { enabled: true, running: this.running } : undefined,
+        notification: this.notificationIntervalId
+          ? { enabled: true, running: this.running, lastPoll: this.notificationState.lastPollTime }
+          : undefined,
       },
     };
   }
@@ -217,11 +216,9 @@ export class Watcher extends EventEmitter implements IWatcher {
         await runner.clearState();
       }
     } else {
-      // 清理所有状态（不包括已废弃的 mention）
-      for (const [name, runner] of this.runners.entries()) {
-        if (name !== 'mention') {
-          await runner.clearState();
-        }
+      // 清理所有资源状态
+      for (const runner of this.runners.values()) {
+        await runner.clearState();
       }
     }
   }

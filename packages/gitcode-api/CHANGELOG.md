@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Notification API support for repositories
+  - `client.repo.getNotifications()` - Get repository notifications with filtering options
+  - `client.repo.markNotificationsRead()` - Mark notifications as read in batch
+  - Complete type definitions: `Notification`, `NotificationsResponse`, `NotificationQuery`, `MarkNotificationsReadParams`
+  - Zod schemas for notification data validation
+
 ## [0.0.1] - 2024-01-15
 
 ### Added
