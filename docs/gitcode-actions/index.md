@@ -12,7 +12,6 @@ title: GitCode Actions 工具库
 
 - **事件监听器**：统一的 `Watcher` 类可持续轮询仓库的 PR 和 Issue 事件并通过 EventEmitter 触发回调。
 - **容器与构建工具**：`createPrContainer`、`testShaBuild`、`chat` 等帮助在隔离环境中执行构建或对话任务。`chat` 现使用 Anthropic SDK 直接调用 Claude API，性能显著提升（<1秒响应，<50MB内存）。
-- **AI 评论助手**：`watchMentions`/`runMentionsOnce` 监听 `@AI` 等提及并自动生成回复（已废弃，建议使用个人通知 API）。
 
 ## 统一 Watcher API
 
@@ -24,7 +23,7 @@ title: GitCode Actions 工具库
 
 **EventEmitter 模式**：使用 `.on(eventName, handler)` 监听事件，而非回调函数。
 
-**配置驱动**：通过 `options` 参数控制监控行为，支持 `pr`、`issue`、`mention` 三种资源类型。
+**配置驱动**：通过 `options` 参数控制监控行为，支持 `pr`、`issue` 两种资源类型。
 
 ### 基本用法
 
@@ -101,7 +100,6 @@ new Watcher(client: GitcodeClient, repoUrl: string, options?: WatchOptions)
     - `intervalSec`: 检查间隔（秒），默认 5
     - `issueQuery`: Issue 查询参数
     - `commentQuery`: 评论查询参数
-  - `mention`: AI 提及监控配置（已废弃）
 
 #### 方法
 
@@ -124,10 +122,6 @@ new Watcher(client: GitcodeClient, repoUrl: string, options?: WatchOptions)
 **容器事件**：
 - `container:created`: 容器创建时触发，回调参数：`(data: { container, pr, timestamp }) => void`
 - `container:removed`: 容器删除时触发，回调参数：`(data: { prId, timestamp }) => void`
-
-**Mention 事件**（已废弃）：
-- `mention:found`: 检测到 AI 提及时触发
-- `mention:reply`: AI 回复成功时触发
 
 ### 状态持久化
 
@@ -260,64 +254,6 @@ watcher.start();
 #### 状态持久化
 
 监视器会把最后一次看到的评论 ID 保存在 `~/.gitcode/watchers/issues/*.json` 中，避免重复触发事件。`runOnce()` 可在不启动后台定时任务的情况下执行一次检测。
-
-### AI 评论助手
-
-> ⚠️ **已废弃 (Deprecated)**
->
-> `watchMentions` 和 `runMentionsOnce` 功能已标记为废弃，建议迁移至 GitCode 个人通知 API 实现类似功能。
->
-> 该功能将在未来版本中移除。
-
-`watchMentions` 会同时监听 Issue 评论与 PR 评论。当新增评论中包含指定标记（默认为 `@AI`）时，会收集 Issue 标题、描述、历史评论等上下文，并通过 Docker 容器中的 Anthropic SDK 直接调用 Claude API。相比旧版 Claude CLI 方式，响应速度从 30-60 秒降至 <1 秒。当 AI 调用成功且生成了内容时，会自动在对应的 Issue 或 PR 下创建回复评论。
-
-若只需在脚本中执行一次检测与回复，可使用 `runMentionsOnce`，它会串行执行一次 Issue/PR 轮询并立即处理所有检测到的提及。
-
-```ts
-import { watchMentions } from '@xbghc/gitcode-actions';
-import { GitcodeClient } from '@xbghc/gitcode-api';
-
-const client = new GitcodeClient();
-
-const aiWatcher = watchMentions(client, 'https://gitcode.com/owner/repo.git', {
-  chatOptions: { sha: 'dev' },
-  onChatResult: (result, context) => {
-    if (result.success) {
-      console.log('AI 输出:', result.output);
-    } else {
-      console.error('AI 调用失败:', result.error);
-    }
-  },
-  onReplyCreated: (reply) => {
-    console.log('AI 已回复评论，回复 ID:', reply.comment.id);
-  },
-});
-
-// aiWatcher.stop();
-```
-
-可通过以下选项自定义行为：
-
-- `mention`: 触发标记，默认 `@AI`
-- `buildPrompt(context)`: 自定义提示语内容，可复用导出的 `defaultPromptBuilder`
-- `issueIntervalSec` / `prIntervalSec`: Issue 与 PR 轮询频率
-- `issueQuery` / `issueCommentQuery`: 控制轮询 Issue 及其评论的筛选条件
-- `prCommentType`: 限定监听的 PR 评论类型（`diff_comment` 或 `pr_comment`）
-- `chatOptions`: 传给 `chat` 的选项，包括：
-  - 容器选项：`sha`、`keepContainer`、`nodeVersion` 等
-  - Claude API 参数：`model`（默认 `claude-sonnet-4-5-20250929`）、`maxTokens`（默认 `8000`）、`temperature`
-- `chatExecutor`: 自定义 chat 执行器，默认使用内置 `chat`
-- `includeIssueComments` / `includePullRequestComments`: 控制监听的评论类型
-- `replyWithComment`: 是否自动在 Issue/PR 下回复评论，默认 `true`
-- `buildReplyBody(result, context)`: 自定义回复内容
-- `onReplyCreated(reply, context)`: AI 回复成功创建时的回调
-- `onReplyError(error, context)`: AI 回复失败时的回调
-
-若只希望监听但不自动回复，可设置 `replyWithComment: false`；如需对回复内容进行包装，例如附带原评论引用，可通过 `buildReplyBody` 返回自定义文本。
-
-默认提示语（`defaultPromptBuilder`）会包含仓库、Issue/PR 与评论上下文，并明确要求 AI 使用中文进行回复。
-
-AI 监听器内部使用统一的 `Watcher` 类，同样会在 `~/.gitcode/watchers` 下持久化基线数据，避免重复处理历史评论。
 
 ## PR 监控工作原理
 

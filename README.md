@@ -101,12 +101,11 @@ const issues = await client.issue.list('https://gitcode.com/owner/repo', { state
 `@xbghc/gitcode-actions` 聚焦构建自动化：
 
 - 事件监听：`watchPullRequest` 与 `watchIssues` 会持久化状态到 `~/.gitcode/watchers`，支持 `start()`、`stop()` 与单次 `runOnce()`。
-- AI 评论助手：`watchAiMentions` / `runAiMentionsOnce` 监听 `@AI` 等提及，通过 Docker 容器结合 Anthropic SDK 直接调用 Claude API 自动回复，提供更快的响应速度和更灵活的参数配置。
 - 容器工具链：提供 `createPrContainer`、`createWorkspaceContainer`、`testShaBuild`、`copyToContainer`、`collectDiagnostics` 等函数，用于拉起 PR 隔离环境、执行构建、采集日志并清理容器。
 
 ```ts
 import { GitcodeClient } from '@xbghc/gitcode-api';
-import { watchPullRequest, watchAiMentions, createPrContainer } from '@xbghc/gitcode-actions';
+import { watchPullRequest, createPrContainer } from '@xbghc/gitcode-actions';
 
 const client = new GitcodeClient(process.env.GITCODE_TOKEN!);
 
@@ -116,18 +115,6 @@ watchPullRequest(client, 'https://gitcode.com/owner/repo', {
   onComment: (pr, comment) => console.log(`PR #${pr.number} 评论: ${comment.body}`),
   container: { image: 'node:22-bookworm' },
 }).start();
-
-// AI 评论助手 - 使用 Anthropic SDK 模式（推荐）
-watchAiMentions(client, 'https://gitcode.com/owner/repo', {
-  mention: '@AI',
-  chatOptions: {
-    sha: 'dev',
-    keepContainer: false,
-    model: 'claude-sonnet-4-5-20250929',  // 可选：指定模型
-    maxTokens: 8000,                      // 可选：最大 token 数
-    temperature: 0.7,                     // 可选：温度参数
-  },
-});
 
 await createPrContainer('https://gitcode.com/owner/repo', { id: 1, number: 12 } as any, {
   image: 'node:22-bookworm',

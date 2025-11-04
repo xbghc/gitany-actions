@@ -64,6 +64,18 @@ console.log(fileBlob.content, fileBlob.encoding);
 // 比较代码差异
 const comparison = await client.repo.compare('owner', 'repo', 'base', 'head');
 console.log(comparison.files.length);
+
+// 获取通知
+const notifications = await client.repo.getNotifications('owner', 'repo', {
+  type: 'referer',
+  unread: true,
+});
+console.log(notifications.total, notifications.list.length);
+
+// 标记通知为已读
+await client.repo.markNotificationsRead('owner', 'repo', {
+  ids: '123,456,789',
+});
 ```
 
 ### Pull Request 操作
@@ -131,6 +143,8 @@ process.env.GITCODE_TOKEN = 'your-token';
 - `client.repo.compare(owner, repo, base, head)` - 比较代码差异
 - `client.repo.getWebhooks(owner, repo)` - 获取仓库 Webhooks
 - `client.repo.getWebhook(owner, repo, id)` - 获取特定 Webhook
+- `client.repo.getNotifications(owner, repo, query?)` - 获取仓库通知
+- `client.repo.markNotificationsRead(owner, repo, params)` - 标记通知为已读
 
 ### Pull Request API
 
@@ -158,6 +172,10 @@ process.env.GITCODE_TOKEN = 'your-token';
 - `Compare` - 代码比较结果
 - `Webhook` - Webhook 配置
 - `PullRequestSettings` - PR 设置
+- `Notification` - 通知信息
+- `NotificationsResponse` - 通知列表响应
+- `NotificationQuery` - 通知查询参数
+- `MarkNotificationsReadParams` - 标记已读参数
 
 ## 错误处理
 

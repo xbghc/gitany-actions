@@ -34,6 +34,14 @@ const diff = await client.repo.compare('owner', 'repo', 'main', 'feature');
 // Webhook
 const hooks = await client.repo.getWebhooks('owner', 'repo');
 const hook = await client.repo.getWebhook('owner', 'repo', hooks[0]?.id ?? 0);
+
+// 通知
+const notifications = await client.repo.getNotifications('owner', 'repo');
+const filteredNotifs = await client.repo.getNotifications('owner', 'repo', {
+  type: 'referer',
+  unread: true,
+});
+await client.repo.markNotificationsRead('owner', 'repo', { ids: '123,456' });
 ```
 
 ## 导出与类型
@@ -46,6 +54,7 @@ const hook = await client.repo.getWebhook('owner', 'repo', hooks[0]?.id ?? 0);
 - 文件：`fileBlobUrl`、`fileBlobSchema`。
 - 对比：`compareUrl`、`compareSchema`。
 - Webhook：`webhooksUrl`、`webhookUrl`、`webhookSchema`。
+- 通知：`notificationsUrl`、`notificationSchema`、`notificationsResponseSchema`、`NotificationQuery`、`MarkNotificationsReadParams`。
 
 所有 Schema 均可通过包入口引用，以复用在自定义客户端中。
 
@@ -63,6 +72,8 @@ const hook = await client.repo.getWebhook('owner', 'repo', hooks[0]?.id ?? 0);
 - `client.repo.compare(owner, repo, base, head): Compare` — 提交比较详情（含 `files`、`commits` 等）。
 - `client.repo.getWebhooks(owner, repo): Webhooks` — 仓库所有 Webhook。
 - `client.repo.getWebhook(owner, repo, id): Webhook` — 指定 Webhook 详情。
+- `client.repo.getNotifications(owner, repo, query?): NotificationsResponse` — 获取仓库通知列表，支持按类型、已读状态、时间范围筛选。
+- `client.repo.markNotificationsRead(owner, repo, params): void` — 批量标记通知为已读，通过 `ids` 参数传入逗号分隔的通知 ID。
 
 ## 注意事项
 
@@ -72,5 +83,6 @@ const hook = await client.repo.getWebhook('owner', 'repo', hooks[0]?.id ?? 0);
 
 ## 更新记录
 
+- **2025-11-04**：新增通知 API，支持获取仓库通知和标记已读。
 - **2025-09-13**：新增仓库事件、分支、提交、文件、对比与 Webhook 等接口封装。
 - **2025-09-17**：所有请求支持 `searchParams`/`json` 选项并复用 HTTP 调试日志、重试机制。

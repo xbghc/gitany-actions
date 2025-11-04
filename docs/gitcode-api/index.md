@@ -56,8 +56,9 @@ const profile = await client.user.getProfile();
 
 - PR：`listPullsUrl`、`createPullUrl`、`prCommentsUrl`、`pullRequestSettingsUrl`、`createPrCommentUrl`、`prCountUrl` 等。
 - Issue：`listIssuesUrl`、`issueCommentsUrl`、`createIssueUrl`、`createIssueCommentUrl`、`getIssueUrl`、`updateIssueUrl` 等。
-- Repo：`repoSettingsUrl`、`repoEventsUrl`、`contributorsUrl`、`branchesUrl`、`commitsUrl`、`fileBlobUrl`、`compareUrl`、`webhooksUrl` 等。
+- Repo：`repoSettingsUrl`、`repoEventsUrl`、`contributorsUrl`、`branchesUrl`、`commitsUrl`、`fileBlobUrl`、`compareUrl`、`webhooksUrl`、`notificationsUrl` 等。
 - User：`userProfileUrl`、`userNamespaceUrl`。
+- Notification：`notificationSchema`、`notificationsResponseSchema`。
 
 ### 类型定义（节选）
 
@@ -66,6 +67,7 @@ const profile = await client.user.getProfile();
 - Repo：`RepoSettings`、`RepoEvents`、`Contributors`、`Branch`、`Branches`、`Commits`、`FileBlob`、`Compare`、`Webhook`、`Webhooks`。
 - User：`UserProfile`、`UserNamespace`、`UserSummary`。
 - 权限：`SelfPermissionResponse`、`RoleInfo`、`PermissionPoint`、`ResourceNode`、`RepoRole`。
+- Notification：`Notification`、`NotificationActor`、`NotificationsResponse`、`NotificationQuery`、`MarkNotificationsReadParams`。
 
 ## 模块概览
 
@@ -84,6 +86,7 @@ const profile = await client.user.getProfile();
 
 ## 变更记录
 
+- **2025-11-04**：新增仓库通知 API（`getNotifications`、`markNotificationsRead`）。
 - **2025-09-17**：HTTP 层迁移至 `got`，新增 ETag 缓存、重试与调试日志；请求选项重命名为 `searchParams`/`json`。
 - **2025-09-13**：补全仓库、PR、Issue 相关 API，并以 Zod 校验响应；新增 `client.issue.update()`、`client.pr.createComment()`、`client.pr.count()` 等封装。
 - **2025-09-12**：新增 Issue 读写接口与命名空间 API，`parseGitUrl`/`toGitUrl` 暴露给外部使用。
