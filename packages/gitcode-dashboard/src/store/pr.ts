@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import { ref, shallowReactive, watch } from 'vue';
 import type { PullRequest, PRFilterParams, PrCount } from '@/types';
 import { getPRList, getPRCount } from '@/api';
 import { useRepoStore } from './repo';
@@ -8,6 +8,7 @@ import {
   getCache,
   setCache,
   deleteCache,
+  getCacheTimestamp,
   type RepoCache,
 } from '@/utils/swrCache';
 
@@ -19,7 +20,7 @@ export const usePRStore = defineStore('pr', () => {
   const loading = ref(false);
 
   // 完整 PR 列表（缓存）
-  const allPRs = ref<PullRequest[]>([]);
+  const allPRs = shallowReactive<PullRequest[]>([]);
 
   // 缓存进度
   const cacheProgress = ref({
@@ -31,11 +32,14 @@ export const usePRStore = defineStore('pr', () => {
   const prCount = ref<PrCount | null>(null);
   const countLoading = ref(false);
 
+  // 缓存时间戳
+  const lastCacheTimestamp = ref<number | null>(null);
+
   // 筛选参数（默认 open 状态，降序）
   const filters = ref<PRFilterParams>({
     state: 'open',
     page: 1,
-    per_page: 20,
+    per_page: 10,
     sort: 'updated',
     direction: 'desc',
   });
@@ -54,11 +58,13 @@ export const usePRStore = defineStore('pr', () => {
 
     const cached = await getCache<RepoCache<PullRequest>>(cacheKey);
     if (cached) {
-      allPRs.value = cached.items;
+      allPRs.splice(0, allPRs.length, ...cached.items);
       cacheProgress.value = {
         lastFetchedPage: cached.lastFetchedPage,
         isComplete: cached.isComplete,
       };
+      // 加载缓存时间戳
+      lastCacheTimestamp.value = await getCacheTimestamp(cacheKey);
       return true;
     }
     return false;
@@ -77,13 +83,15 @@ export const usePRStore = defineStore('pr', () => {
     });
 
     const cacheData: RepoCache<PullRequest> = {
-      items: allPRs.value,
+      items: allPRs,
       lastFetchedPage: cacheProgress.value.lastFetchedPage,
       isComplete: cacheProgress.value.isComplete,
       timestamp: Date.now(),
     };
 
     await setCache(cacheKey, cacheData);
+    // 更新缓存时间戳
+    lastCacheTimestamp.value = Date.now();
   };
 
   /**
@@ -91,9 +99,9 @@ export const usePRStore = defineStore('pr', () => {
    */
   const displayFromCache = () => {
     // 1. 筛选状态
-    let filtered = allPRs.value;
+    let filtered = allPRs;
     if (filters.value.state !== 'all') {
-      filtered = allPRs.value.filter(pr => pr.state === filters.value.state);
+      filtered = allPRs.filter((pr: PullRequest) => pr.state === filters.value.state);
     }
 
     // 2. 降序排序（最新的在前）
@@ -123,7 +131,7 @@ export const usePRStore = defineStore('pr', () => {
     // 1. 加载缓存
     const hasCache = await loadCache();
 
-    if (hasCache && allPRs.value.length > 0) {
+    if (hasCache && allPRs.length > 0) {
       // 2. 从缓存显示（降序）
       displayFromCache();
       loading.value = false;
@@ -196,9 +204,9 @@ export const usePRStore = defineStore('pr', () => {
         }
 
         // 合并到缓存（使用 Map 去重）
-        const itemMap = new Map(allPRs.value.map(pr => [pr.id, pr]));
+        const itemMap = new Map(allPRs.map((pr: PullRequest) => [pr.id, pr]));
         response.data.forEach(pr => itemMap.set(pr.id, pr));
-        allPRs.value = Array.from(itemMap.values());
+        allPRs.splice(0, allPRs.length, ...Array.from(itemMap.values()));
 
         // 更新进度
         cacheProgress.value.lastFetchedPage = currentPage;
@@ -256,7 +264,7 @@ export const usePRStore = defineStore('pr', () => {
       if (!response.data || response.data.length === 0) return;
 
       // 找到缓存中最新的 updated_at
-      const cachedLatest = allPRs.value.reduce((latest, pr) => {
+      const cachedLatest = allPRs.reduce((latest: number, pr: PullRequest) => {
         const prTime = new Date(pr.updated_at || 0).getTime();
         return prTime > latest ? prTime : latest;
       }, 0);
@@ -268,9 +276,9 @@ export const usePRStore = defineStore('pr', () => {
 
       if (newItems.length > 0) {
         // 合并到缓存
-        const itemMap = new Map(allPRs.value.map(pr => [pr.id, pr]));
+        const itemMap = new Map(allPRs.map((pr: PullRequest) => [pr.id, pr]));
         newItems.forEach(pr => itemMap.set(pr.id, pr));
-        allPRs.value = Array.from(itemMap.values());
+        allPRs.splice(0, allPRs.length, ...Array.from(itemMap.values()));
 
         await saveCache();
         displayFromCache();
@@ -298,11 +306,12 @@ export const usePRStore = defineStore('pr', () => {
     await deleteCache(cacheKey);
 
     // 重置状态
-    allPRs.value = [];
+    allPRs.splice(0, allPRs.length);
     cacheProgress.value = {
       lastFetchedPage: 0,
       isComplete: false,
     };
+    lastCacheTimestamp.value = null;
   };
 
   // 获取 PR 数量统计
@@ -341,7 +350,7 @@ export const usePRStore = defineStore('pr', () => {
   watch(
     () => [filters.value.state, filters.value.page, filters.value.per_page],
     () => {
-      if (allPRs.value.length > 0) {
+      if (allPRs.length > 0) {
         displayFromCache();
       }
     }
@@ -365,19 +374,20 @@ export const usePRStore = defineStore('pr', () => {
       if (newRepoId) {
         // 1. 立即清空旧数据
         prList.value = [];
-        allPRs.value = [];
+        allPRs.splice(0, allPRs.length);
         prCount.value = null;
         cacheProgress.value = {
           lastFetchedPage: 0,
           isComplete: false,
         };
+        lastCacheTimestamp.value = null;
 
         // 2. 重置筛选条件为 open
         resetFilters();
 
         // 3. 尝试从缓存读取新仓库数据
         const hasCache = await loadCache();
-        if (hasCache && allPRs.value.length > 0) {
+        if (hasCache && allPRs.length > 0) {
           displayFromCache();
           loading.value = false;
         } else {
@@ -402,6 +412,7 @@ export const usePRStore = defineStore('pr', () => {
     filters,
     prCount,
     countLoading,
+    lastCacheTimestamp,
     fetchPRList,
     fetchPRCount,
     clearCache,

@@ -21,6 +21,9 @@
           <el-form-item>
             <el-button :icon="RefreshRight" @click="handleRefresh">刷新</el-button>
           </el-form-item>
+          <el-form-item>
+            <span class="last-update-time">最后更新: {{ formatRelativeTime(lastCacheTimestamp) }}</span>
+          </el-form-item>
         </el-form>
       </div>
 
@@ -114,12 +117,13 @@ import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import WorkflowDialog from '@/components/WorkflowDialog.vue';
 import type { PullRequest } from '@/types';
+import { formatRelativeTime } from '@/utils/timeFormatter';
 
 const prStore = usePRStore();
 const repoStore = useRepoStore();
 
 // 使用 storeToRefs 解构响应式状态
-const { prList, loading, filters, prCount } = storeToRefs(prStore);
+const { prList, loading, filters, prCount, lastCacheTimestamp } = storeToRefs(prStore);
 const { selectedRepoId } = storeToRefs(repoStore);
 // 方法可以直接解构
 const { fetchPRList, clearCache } = prStore;
@@ -206,6 +210,25 @@ const handleWorkflowSuccess = () => {
 </script>
 
 <style scoped>
+.pr-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-list :deep(.el-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-list :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -236,5 +259,10 @@ const handleWorkflowSuccess = () => {
   margin-top: 24px;
   display: flex;
   justify-content: flex-end;
+}
+
+.last-update-time {
+  color: #909399;
+  font-size: 14px;
 }
 </style>

@@ -81,8 +81,46 @@ await client.repo.markNotificationsRead('owner', 'repo', { ids: '123,456' });
 - `getCommits`、`getEvents` 等接口直接返回 GitCode API 的原始分页结果（按默认分页大小）。如需更多数据，可自行拼接 `searchParams` 配合 `client.request` 与 URL 构建器使用。
 - `getFileBlob` 返回的 `content` 经过 base64 编码，需自行解码。
 
+## 类型定义说明
+
+### repoSchema
+
+仓库基础类型，包含以下字段：
+
+```ts
+{
+  id: number;
+  full_name: string;
+  human_name: string;
+  path: string;
+  name: string;
+  description?: string;
+  owner: UserSummary | null;  // 仓库所有者，使用 userSummarySchema
+  html_url: string;
+}
+```
+
+**注意**：`owner` 字段使用 `userSummarySchema.nullable()`，包含用户的基本信息（id、login、name、avatar_url、html_url），适合序列化和缓存。
+
+### branchSchema
+
+分支类型，包含以下字段：
+
+```ts
+{
+  label: string;
+  ref: string;
+  sha: string;
+  repo?: Repo;
+  user: UserSummary;  // 分支关联用户，使用 userSummarySchema
+}
+```
+
+**注意**：`user` 字段使用 `userSummarySchema`，确保所有用户信息都是可序列化的纯 JSON 对象，支持 IndexedDB 等存储机制。
+
 ## 更新记录
 
+- **2025-11-04**：完善类型定义，将 `repoSchema.owner` 从 `z.any()` 改为 `userSummarySchema.nullable()`，将 `branchSchema.user` 从 `z.unknown()` 改为 `userSummarySchema`，确保所有字段可序列化。
 - **2025-11-04**：新增通知 API，支持获取仓库通知和标记已读。
 - **2025-09-13**：新增仓库事件、分支、提交、文件、对比与 Webhook 等接口封装。
 - **2025-09-17**：所有请求支持 `searchParams`/`json` 选项并复用 HTTP 调试日志、重试机制。
