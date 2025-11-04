@@ -21,6 +21,8 @@ import {
   webhookSchema,
   webhooksUrl,
   webhookUrl,
+  notificationsResponseSchema,
+  notificationsUrl,
   type RepoSettings,
   type RepoEvents,
   type Contributors,
@@ -31,6 +33,8 @@ import {
   type Compare,
   type Webhook,
   type Webhooks,
+  type NotificationsResponse,
+  type NotificationQuery,
 } from '../../api/repo/index.js';
 
 export async function getRepoSettings(
@@ -138,6 +142,19 @@ export async function getWebhook(
   return webhookSchema.parse(data);
 }
 
+export async function getNotifications(
+  client: GitcodeClient,
+  owner: string,
+  repo: string,
+  query?: NotificationQuery,
+): Promise<NotificationsResponse> {
+  const url = notificationsUrl(owner, repo);
+  const data = await client.request<unknown>(url, 'GET', {
+    searchParams: query as Record<string, string | number | boolean>
+  });
+  return notificationsResponseSchema.parse(data);
+}
+
 export class GitcodeClientRepo {
   constructor(private client: GitcodeClient) {}
 
@@ -187,5 +204,9 @@ export class GitcodeClientRepo {
 
   async getWebhook(owner: string, repo: string, id: number): Promise<Webhook> {
     return await getWebhook(this.client, owner, repo, id);
+  }
+
+  async getNotifications(owner: string, repo: string, query?: NotificationQuery): Promise<NotificationsResponse> {
+    return await getNotifications(this.client, owner, repo, query);
   }
 }

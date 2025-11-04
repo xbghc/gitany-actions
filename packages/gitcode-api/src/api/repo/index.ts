@@ -17,3 +17,4 @@ export * from './settings.js';
 export * from './files.js';
 export * from './commits.js';
 export * from './webhooks.js';
+export * from './notifications.js';

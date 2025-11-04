@@ -94,4 +94,14 @@ export type {
   Branches,
   Commit,
   Commits,
+  Notification,
+  NotificationActor,
+  Notifications,
+  NotificationsResponse,
+  NotificationQuery,
+} from './api/repo/index.js';
+export {
+  notificationSchema,
+  notificationsResponseSchema,
+  notificationsUrl,
 } from './api/repo/index.js';
