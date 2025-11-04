@@ -75,7 +75,19 @@ const data = await client.request(url, 'GET', {
 - `PRComment` 除基础字段外还包含 `position`、`diff_hunk` 等原始属性，便于对齐差异信息。
 - `PrCount` 结构：`{ open: number; merged: number; closed: number; total: number }`。
 
+### pullRequestSchema
+
+PR 对象中的分支信息（`head` 和 `base`）使用 `branchSchema`，其中：
+
+- `head.user` 和 `base.user`：使用 `userSummarySchema.nullable().optional()`，包含用户基本信息（id、login、name、avatar_url、html_url）。当源分支所在仓库或用户被删除时，该字段可能为 `null` 或 `undefined`
+- `head.repo` 和 `base.repo`：使用 `repoSchema.nullable().optional()`，其中 `repo.owner` 也使用 `userSummarySchema.nullable()`
+
+所有用户和仓库信息都是可序列化的纯 JSON 对象，适合前端缓存（如 IndexedDB）。
+
 ## 更新记录
 
+- **2025-11-04**：
+  - 修复 `branchSchema` 中 `user` 和 `repo` 字段的类型定义，支持 `null` 和 `undefined`，解决源仓库或用户被删除时的 Zod 验证错误
+  - 完善类型定义，确保 PR 中的分支和仓库信息使用明确的用户类型（`userSummarySchema`），支持序列化和缓存
 - **2025-09-13**：新增 PR 设置、评论创建与 PR 数量统计封装；所有响应经 Zod 校验。
 - **2025-09-17**：所有请求改用 `searchParams`/`json` 选项，并继承 HTTP 重试与调试日志能力。

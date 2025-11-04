@@ -163,8 +163,10 @@ onMounted(() => {
 
 .content-tabs :deep(.el-tabs__content) {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
 }
 
 .fade-enter-active,

@@ -206,6 +206,25 @@ const handleWorkflowSuccess = () => {
 </script>
 
 <style scoped>
+.pr-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-list :deep(.el-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-list :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;

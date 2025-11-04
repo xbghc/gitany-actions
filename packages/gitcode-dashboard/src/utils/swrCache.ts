@@ -116,6 +116,8 @@ export async function getCache<T>(key: string): Promise<T | null> {
 
 /**
  * 写入缓存
+ *
+ * 使用 JSON 序列化移除 Vue 响应式 Proxy（包括 shallowReactive）
  */
 export async function setCache<T>(key: string, data: T, lastUpdatedAt?: string): Promise<void> {
   try {
@@ -123,9 +125,14 @@ export async function setCache<T>(key: string, data: T, lastUpdatedAt?: string):
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], 'readwrite');
       const objectStore = transaction.objectStore(STORE_NAME);
+
+      // 使用 JSON 序列化彻底移除响应式 Proxy
+      // shallowReactive 的数组本身仍然是 Proxy，需要序列化
+      const serializedData = JSON.parse(JSON.stringify(data)) as T;
+
       const cacheItem: CacheItem<T> = {
         key,
-        data,
+        data: serializedData,
         timestamp: Date.now(),
         lastUpdatedAt,
       };

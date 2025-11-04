@@ -218,6 +218,25 @@ const formatTime = (time: string) => {
 </script>
 
 <style scoped>
+.issue-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-list :deep(.el-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-list :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
