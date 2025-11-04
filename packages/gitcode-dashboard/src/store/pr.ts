@@ -8,6 +8,7 @@ import {
   getCache,
   setCache,
   deleteCache,
+  getCacheTimestamp,
   type RepoCache,
 } from '@/utils/swrCache';
 
@@ -31,11 +32,14 @@ export const usePRStore = defineStore('pr', () => {
   const prCount = ref<PrCount | null>(null);
   const countLoading = ref(false);
 
+  // 缓存时间戳
+  const lastCacheTimestamp = ref<number | null>(null);
+
   // 筛选参数（默认 open 状态，降序）
   const filters = ref<PRFilterParams>({
     state: 'open',
     page: 1,
-    per_page: 20,
+    per_page: 10,
     sort: 'updated',
     direction: 'desc',
   });
@@ -59,6 +63,8 @@ export const usePRStore = defineStore('pr', () => {
         lastFetchedPage: cached.lastFetchedPage,
         isComplete: cached.isComplete,
       };
+      // 加载缓存时间戳
+      lastCacheTimestamp.value = await getCacheTimestamp(cacheKey);
       return true;
     }
     return false;
@@ -84,6 +90,8 @@ export const usePRStore = defineStore('pr', () => {
     };
 
     await setCache(cacheKey, cacheData);
+    // 更新缓存时间戳
+    lastCacheTimestamp.value = Date.now();
   };
 
   /**
@@ -303,6 +311,7 @@ export const usePRStore = defineStore('pr', () => {
       lastFetchedPage: 0,
       isComplete: false,
     };
+    lastCacheTimestamp.value = null;
   };
 
   // 获取 PR 数量统计
@@ -371,6 +380,7 @@ export const usePRStore = defineStore('pr', () => {
           lastFetchedPage: 0,
           isComplete: false,
         };
+        lastCacheTimestamp.value = null;
 
         // 2. 重置筛选条件为 open
         resetFilters();
@@ -402,6 +412,7 @@ export const usePRStore = defineStore('pr', () => {
     filters,
     prCount,
     countLoading,
+    lastCacheTimestamp,
     fetchPRList,
     fetchPRCount,
     clearCache,

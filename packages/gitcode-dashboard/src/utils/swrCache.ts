@@ -255,6 +255,21 @@ export async function getCacheItem<T>(key: string): Promise<CacheItem<T> | null>
 }
 
 /**
+ * 获取缓存时间戳
+ */
+export async function getCacheTimestamp(key: string): Promise<number | null> {
+  try {
+    const cacheItem = await getCacheItem<unknown>(key);
+    return cacheItem ? cacheItem.timestamp : null;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('Failed to get cache timestamp:', error);
+    }
+    return null;
+  }
+}
+
+/**
  * 获取匹配特定前缀的所有缓存键
  */
 export async function getCacheKeysByPrefix(prefix: string): Promise<string[]> {

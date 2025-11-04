@@ -23,6 +23,9 @@
           <el-form-item>
             <el-button :icon="RefreshRight" @click="handleRefresh">刷新</el-button>
           </el-form-item>
+          <el-form-item>
+            <span class="last-update-time">最后更新: {{ formatRelativeTime(lastCacheTimestamp) }}</span>
+          </el-form-item>
         </el-form>
       </div>
 
@@ -123,12 +126,13 @@ import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import { ElMessage } from 'element-plus';
+import { formatRelativeTime } from '@/utils/timeFormatter';
 
 const issueStore = useIssueStore();
 const repoStore = useRepoStore();
 
 // 使用 storeToRefs 解构响应式状态
-const { issueList, loading, filters, issueCount } = storeToRefs(issueStore);
+const { issueList, loading, filters, issueCount, lastCacheTimestamp } = storeToRefs(issueStore);
 // 方法可以直接解构
 const { fetchIssueList, clearCache } = issueStore;
 
@@ -267,5 +271,10 @@ const formatTime = (time: string) => {
   margin-top: 24px;
   display: flex;
   justify-content: flex-end;
+}
+
+.last-update-time {
+  color: #909399;
+  font-size: 14px;
 }
 </style>
