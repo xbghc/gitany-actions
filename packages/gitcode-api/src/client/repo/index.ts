@@ -35,6 +35,7 @@ import {
   type Webhooks,
   type NotificationsResponse,
   type NotificationQuery,
+  type MarkNotificationsReadParams,
 } from '../../api/repo/index.js';
 
 export async function getRepoSettings(
@@ -155,6 +156,18 @@ export async function getNotifications(
   return notificationsResponseSchema.parse(data);
 }
 
+export async function markNotificationsRead(
+  client: GitcodeClient,
+  owner: string,
+  repo: string,
+  params: MarkNotificationsReadParams,
+): Promise<void> {
+  const url = notificationsUrl(owner, repo);
+  await client.request<void>(url, 'PUT', {
+    searchParams: params as unknown as Record<string, string | number | boolean>
+  });
+}
+
 export class GitcodeClientRepo {
   constructor(private client: GitcodeClient) {}
 
@@ -208,5 +221,9 @@ export class GitcodeClientRepo {
 
   async getNotifications(owner: string, repo: string, query?: NotificationQuery): Promise<NotificationsResponse> {
     return await getNotifications(this.client, owner, repo, query);
+  }
+
+  async markNotificationsRead(owner: string, repo: string, params: MarkNotificationsReadParams): Promise<void> {
+    return await markNotificationsRead(this.client, owner, repo, params);
   }
 }

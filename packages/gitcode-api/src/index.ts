@@ -99,6 +99,7 @@ export type {
   Notifications,
   NotificationsResponse,
   NotificationQuery,
+  MarkNotificationsReadParams,
 } from './api/repo/index.js';
 export {
   notificationSchema,

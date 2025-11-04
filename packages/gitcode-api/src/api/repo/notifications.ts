@@ -77,6 +77,14 @@ export interface NotificationQuery {
 }
 
 /**
+ * 标记通知为已读的参数
+ */
+export interface MarkNotificationsReadParams {
+  /** 用逗号分隔的通知 ID 列表 */
+  ids: string;
+}
+
+/**
  * 构造获取仓库通知的 URL
  *
  * @param owner - 仓库所有者
