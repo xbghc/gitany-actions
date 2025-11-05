@@ -3,7 +3,7 @@
  *
  * GitCodeClient 内置 429 自动处理机制
  */
-import { GitCodeClient } from '../src/index.js';
+import { GitCodeClient, isHttpError } from '../src/index.js';
 
 const token = process.env.GITCODE_TOKEN;
 if (!token) {
@@ -27,7 +27,7 @@ async function main() {
     const profile = await client.user.getProfile();
     console.log(`✅ 成功获取用户 ${profile.login} 的资料\n`);
   } catch (error) {
-    if ((error as any).response?.statusCode === 429) {
+    if (isHttpError(error) && error.response?.statusCode === 429) {
       console.log('⚠️ 触发限流，请稍后重试\n');
     } else {
       throw error;
@@ -40,8 +40,7 @@ async function main() {
     try {
       await client.pr.list('https://gitcode.com/xbghc/gitcode-actions');
     } catch (error) {
-      const err = error as any;
-      if (err.response?.statusCode === 429) {
+      if (isHttpError(error) && error.response?.statusCode === 429) {
         const waitTime = client.getRateLimitWaitTime();
         console.log(`❌ 请求被阻止，需要等待 ${waitTime} 秒`);
       }

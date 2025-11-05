@@ -2,6 +2,7 @@ export const version = '0.1.0';
 
 export { branchSchema, type Branch } from './api/branch/index.js';
 export { API_BASE } from './api/constants.js';
+export { isHttpError, type HttpError, type HttpErrorResponse } from './client/http-error.js';
 export {
   createdIssueCommentSchema,
   createdIssueSchema,

@@ -2,6 +2,7 @@
  * E2E 测试辅助函数
  */
 import type { GitCodeClient } from '../../client/index.js';
+import { isHttpError } from '../../client/http-error.js';
 
 /**
  * 带 429 重试的 API 调用包装器
@@ -34,7 +35,7 @@ export async function withRetry<T>(
       // 执行 API 调用
       return await fn();
     } catch (error) {
-      const is429 = (error as any).response?.statusCode === 429;
+      const is429 = isHttpError(error) && error.response?.statusCode === 429;
 
       if (is429 && attempt < maxRetries - 1) {
         const waitTime = client.getRateLimitWaitTime() || 5; // 默认等待 5 秒

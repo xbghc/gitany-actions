@@ -1,5 +1,6 @@
 import got, { type Got } from 'got';
 import { GitCodeClientAuth } from './auth/index.js';
+import { type HttpErrorResponse } from './http-error.js';
 import { GitCodeClientIssue } from './issue/index.js';
 import { GitCodeClientPr } from './pr/index.js';
 import { GitCodeClientRepo } from './repo/index.js';
@@ -37,11 +38,14 @@ export class GitCodeClient {
               const now = Date.now();
               if (this.rateLimitedUntil > now) {
                 const waitSeconds = Math.ceil((this.rateLimitedUntil - now) / 1000);
-                const error = new Error(`Rate limited. Retry after ${waitSeconds} seconds`);
-                (error as any).response = {
+                const response: HttpErrorResponse = {
                   statusCode: 429,
                   headers: { 'retry-after': String(waitSeconds) },
                 };
+                const error: Error & { response: HttpErrorResponse } = Object.assign(
+                  new Error(`Rate limited. Retry after ${waitSeconds} seconds`),
+                  { response },
+                );
                 throw error;
               }
             },

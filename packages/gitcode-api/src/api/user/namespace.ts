@@ -11,6 +11,7 @@ export const userNamespaceSchema = z.object({
 
 export type UserNamespace = z.infer<typeof userNamespaceSchema>;
 
+// TODO 移除
 export function userNamespaceUrl(): string {
   return `${API_BASE}/user/namespace`;
 }

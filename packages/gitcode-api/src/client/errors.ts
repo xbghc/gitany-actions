@@ -96,12 +96,12 @@ export class ApiValidationError extends Error {
    */
   private static extractValue(data: unknown, path: PropertyKey[]): unknown {
     try {
-      let current: any = data;
+      let current: unknown = data;
       for (const key of path) {
         if (current == null) return undefined;
         // 跳过 symbol 类型的键
         if (typeof key === 'symbol') return undefined;
-        current = current[key];
+        current = (current as Record<PropertyKey, unknown>)[key];
       }
       return current;
     } catch {
