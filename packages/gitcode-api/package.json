@@ -51,6 +51,7 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "bottleneck": "^2.19.5",
     "got": "^14.4.9",
     "zod": "^4.1.7"
   }
