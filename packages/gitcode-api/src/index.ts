@@ -69,12 +69,9 @@ export type {
   SelfPermissionResponse,
 } from './api/repo/self-permission.js';
 export {
-  userNamespaceSchema,
-  userNamespaceUrl,
   userProfileSchema,
   userProfileUrl,
   userSummarySchema,
-  type UserNamespace,
   type UserProfile,
   type UserProfileResponse,
   type UserSummary,

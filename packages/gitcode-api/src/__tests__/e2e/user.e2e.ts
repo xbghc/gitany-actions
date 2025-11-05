@@ -37,13 +37,4 @@ describe.skipIf(!hasToken)('User 模块 E2E 测试', () => {
       expect(profile.avatar_url).toMatch(/^https?:\/\//);
     });
   });
-
-  describe('client.user.getNamespace()', () => {
-    it('应该获取用户命名空间信息', async () => {
-      const namespace = await withRetry(() => client.user.getNamespace(), client);
-
-      // 结构由 Zod schema 保证，这里仅验证调用成功
-      expect(namespace).toBeDefined();
-    });
-  });
 });

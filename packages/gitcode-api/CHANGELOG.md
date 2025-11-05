@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Complete type definitions: `Notification`, `NotificationsResponse`, `NotificationQuery`, `MarkNotificationsReadParams`
   - Zod schemas for notification data validation
 
+### Removed
+
+- **BREAKING CHANGE**: Removed UserNamespace endpoint
+  - Removed `client.user.getNamespace()` method
+  - Removed `UserNamespace` type and `userNamespaceSchema`
+  - Removed `userNamespaceUrl()` function
+
 ## [0.0.1] - 2024-01-15
 
 ### Added
@@ -24,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `GitCodeAuth` for authentication management
 - `GitCodeClientPr` for Pull Request operations (create, list, comments, count)
 - `GitCodeClientRepo` for Repository operations (settings, branches, commits, webhooks, permissions, contributors)
-- `GitCodeClientUser` for User profile operations (getProfile, getNamespace)
+- `GitCodeClientUser` for User profile operations (getProfile)
 - `GitCodeClientIssue` for Issue operations (create, list, update, comments, get, close, reopen)
 - Complete type definitions with Zod validation
 - HTTP utilities with retry and caching support
