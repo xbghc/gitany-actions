@@ -76,6 +76,14 @@ const profile = await client.user.getProfile();
 - `client.repo`：仓库权限、设置、事件流、贡献者、分支、提交、文件内容与 Webhook。详见《[仓库 API](./repo.md)》。
 - `client.user`：获取当前登录用户资料与命名空间信息。详见《[用户 API](./user.md)》。
 
+## 测试系统
+
+本包包含完善的测试系统，采用最小化测试策略：
+- **单元测试**: 100% 覆盖工具函数，运行时间 <1 秒
+- **E2E 测试**: 验证真实 API，定时运行监控 API 变化
+
+详见《[测试系统](./testing.md)》。
+
 ## 认证与环境变量
 
 - `GITCODE_TOKEN`：默认读取的访问令牌，可通过 `client.auth.setToken()` 动态覆盖。
@@ -83,8 +91,38 @@ const profile = await client.user.getProfile();
 
 客户端使用 `Bearer` 头部发送 Token；未提供 Token 时，将以匿名方式访问公开资源。
 
+## Rate Limiting（限流处理）
+
+GitCodeClient 内置了自动 rate limiting 处理机制：
+
+```ts
+const client = new GitCodeClient(token);
+
+// 自动处理 429 响应
+try {
+  const data = await client.pr.list(url);
+} catch (error) {
+  // 如果触发限流，后续请求会自动等待
+}
+
+// 查询限流状态
+if (client.isRateLimited()) {
+  const waitTime = client.getRateLimitWaitTime();
+  console.log(`需要等待 ${waitTime} 秒`);
+}
+```
+
+**工作原理**:
+1. 当 API 返回 `429 Too Many Requests` 时，自动解析 `Retry-After` 响应头
+2. 设置全局限流标志，阻止后续请求
+3. 在限流期间发起的请求会立即抛出 429 错误（无需等待网络往返）
+4. 定时器到期后自动恢复正常
+
+**注意**: 如果使用自定义 `got` 实例（`new GitCodeClient(token, customHttp)`），需要自行实现 rate limiting。
+
 ## 变更记录
 
+- **2025-11-05**：新增测试系统（单元测试 + E2E 测试），内置 429 Rate Limiting 自动处理机制。
 - **2025-11-04**：新增仓库通知 API（`getNotifications`、`markNotificationsRead`）。
 - **2025-09-17**：HTTP 层迁移至 `got`，新增 ETag 缓存、重试与调试日志；请求选项重命名为 `searchParams`/`json`。
 - **2025-09-13**：补全仓库、PR、Issue 相关 API，并以 Zod 校验响应；新增 `client.issue.update()`、`client.pr.createComment()`、`client.pr.count()` 等封装。
