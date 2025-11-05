@@ -22,12 +22,10 @@ export function repoSettingsUrl(owner: string, repo: string): string {
 
 export const pullRequestSettingsSchema = z.object({
   // PR设置相关字段
-  allow_merge_commits: z.boolean().optional(),
-  allow_squash_commits: z.boolean().optional(),
-  allow_rebase_commits: z.boolean().optional(),
-  allow_updates_from_default_branch: z.boolean().optional(),
-  allow_worktree_inheritance: z.boolean().optional(),
-  allow_auto_close_on_conflict: z.boolean().optional(),
+  reject_not_signed_by_gpg: z.boolean(),
+  deny_force_push: z.boolean(),
+  max_file_size: z.number(),
+  skip_rule_for_owner: z.boolean(),
 });
 
 export type PullRequestSettings = z.infer<typeof pullRequestSettingsSchema>;

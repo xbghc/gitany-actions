@@ -12,17 +12,17 @@ PR 模块封装了列表、创建、评论、设置以及统计等常见操作�
 - 创建：POST `/api/v5/repos/{owner}/{repo}/pulls`
 - 评论：GET `/api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
 - 创建评论：POST `/api/v5/repos/{owner}/{repo}/pulls/{number}/comments`
-- 设置：GET `/api/v5/repos/{owner}/{repo}/pull_request_settings`
 - 统计：GET `/api/v5/repos/{owner}/{repo}/pull_requests/count`
+
+**注意**：PR 设置端点（`/pull_request_settings`）已迁移至 [仓库 API](./repo.md#pull-request-设置)。
 
 ## 导出与类型
 
 - `ListPullsQuery`、`ListPullsParams`、`PullRequest`、`ListPullsResponse`。
 - `CreatePullBody`：创建 PR 的请求体字段。
 - `PRComment`、`PRCommentQueryOptions`、`CreatedPrComment`。
-- `PullRequestSettings`：仓库 PR 配置。
 - `PrCount`：PR 数量统计（按状态聚合）。
-- URL/Schema：`listPullsUrl`、`createPullUrl`、`prCommentsUrl`、`createPrCommentUrl`、`pullRequestSettingsUrl`、`prCountUrl` 及对应的 Schema。
+- URL/Schema：`listPullsUrl`、`createPullUrl`、`prCommentsUrl`、`createPrCommentUrl`、`prCountUrl` 及对应的 Schema。
 
 以上均可从包入口 `@xbghc/gitcode-api` 引入。
 
@@ -49,10 +49,7 @@ await client.pr.create(repoUrl, {
 const comments = await client.pr.comments(repoUrl, 123, { comment_type: 'pr_comment' });
 const created = await client.pr.createComment(repoUrl, 123, '这个修复看起来不错！');
 
-// 4) 读取仓库的 PR 设置
-const settings = await client.pr.getSettings('owner', 'repo');
-
-// 5) 统计 PR 数量（open/merged/closed）
+// 4) 统计 PR 数量（open/merged/closed）
 const count = await client.pr.count(repoUrl);
 console.log(count.open, count.merged, count.closed);
 ```

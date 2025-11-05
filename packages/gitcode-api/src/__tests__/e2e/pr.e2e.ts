@@ -9,9 +9,9 @@
  * - 测试专注于业务逻辑、过滤器行为和数据约束
  * - 如果 API 返回结构错误，Zod 会直接抛出 ZodError
  */
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { GitCodeClient } from '../../client/index.js';
-import { withRetry, waitIfRateLimited } from './helpers.js';
+import { waitIfRateLimited, withRetry } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
 
@@ -41,8 +41,14 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
     });
 
     it('应该支持状态过滤', async () => {
-      const openPrs = await withRetry(() => client.pr.list(TEST_REPO_URL, { state: 'open' }), client);
-      const closedPrs = await withRetry(() => client.pr.list(TEST_REPO_URL, { state: 'closed' }), client);
+      const openPrs = await withRetry(
+        () => client.pr.list(TEST_REPO_URL, { state: 'open' }),
+        client,
+      );
+      const closedPrs = await withRetry(
+        () => client.pr.list(TEST_REPO_URL, { state: 'closed' }),
+        client,
+      );
 
       expect(Array.isArray(openPrs)).toBe(true);
       expect(Array.isArray(closedPrs)).toBe(true);
@@ -98,17 +104,6 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(comments)).toBe(true);
-    });
-  });
-
-  describe('client.pr.getSettings()', () => {
-    it('应该获取 PR 设置配置', async () => {
-      const [owner, repo] = TEST_REPO_URL.replace('https://gitcode.com/', '').split('/');
-      const settings = await withRetry(() => client.pr.getSettings(owner, repo), client);
-
-      // 如果 API 成功返回，Zod schema 已验证对象结构
-      // 这里仅验证调用成功
-      expect(settings).toBeDefined();
     });
   });
 });

@@ -12,6 +12,8 @@ import {
   fileBlobUrl,
   notificationsResponseSchema,
   notificationsUrl,
+  pullRequestSettingsSchema,
+  pullRequestSettingsUrl,
   repoEventsSchema,
   repoEventsUrl,
   repoSettingsSchema,
@@ -28,6 +30,7 @@ import {
   type MarkNotificationsReadParams,
   type NotificationQuery,
   type NotificationsResponse,
+  type PullRequestSettings,
   type RepoEvents,
   type RepoSettings,
   type Webhook,
@@ -171,6 +174,20 @@ export async function markNotificationsRead(
   });
 }
 
+export async function getPullRequestSettings(
+  client: GitCodeClient,
+  owner: string,
+  repo: string,
+): Promise<PullRequestSettings> {
+  const url = pullRequestSettingsUrl(owner, repo);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(pullRequestSettingsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
+}
+
 export class GitCodeClientRepo {
   constructor(private client: GitCodeClient) {}
 
@@ -236,5 +253,9 @@ export class GitCodeClientRepo {
     params: MarkNotificationsReadParams,
   ): Promise<void> {
     return await markNotificationsRead(this.client, owner, repo, params);
+  }
+
+  async getPullRequestSettings(owner: string, repo: string): Promise<PullRequestSettings> {
+    return await getPullRequestSettings(this.client, owner, repo);
   }
 }
