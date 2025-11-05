@@ -125,6 +125,14 @@ process.env.GITCODE_TOKEN = 'your-token';
 // 配置文件存储在 ~/.gitcode/config.json
 ```
 
+### 调试
+
+在开发环境中自动启用 HTTP 请求/响应日志：
+
+```bash
+NODE_ENV=development
+```
+
 ## API 参考
 
 ### 用户 API

@@ -167,7 +167,7 @@ gitcode auth status             # 查看认证状态
 GITCODE_TOKEN=your-token        # 认证令牌（优先级高于配置文件）
 GITCODE_API_BASE=https://gitcode.com/api/v5
 GITCODE_AUTH_STYLE=bearer
-GITCODE_HTTP_DEBUG=1            # 可选：输出请求调试信息
+NODE_ENV=development            # 开发环境（自动启用 HTTP 调试日志）
 ANTHROPIC_API_KEY=sk-ant-xxx    # AI 评论助手所需的 Claude API 密钥
 ```
 

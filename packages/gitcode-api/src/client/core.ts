@@ -1,4 +1,4 @@
-import { httpRequest, type HttpRequestOptions } from '../utils/http.js';
+import { httpRequest, type HttpRequestOptions } from '../utils/http/index.js';
 import { GitcodeClientUser } from './user/index.js';
 import { GitcodeClientPr } from './pr/index.js';
 import { GitcodeClientRepo } from './repo/index.js';
