@@ -34,6 +34,17 @@ const defaultRetryOptions = normalizeDefaultRetry();
 const etagStore = new Map<string, { etag: string; payload: unknown }>();
 const cacheHit = new WeakSet<object>();
 
+// 429 限流管理器
+interface RateLimitState {
+  isRateLimited: boolean;
+  resumeAt: number | null; // Unix timestamp (ms)
+}
+
+const rateLimitState: RateLimitState = {
+  isRateLimited: false,
+  resumeAt: null,
+};
+
 export function isNotModified(value: unknown): boolean {
   return isObjectLike(value) && cacheHit.has(value);
 }
@@ -69,6 +80,27 @@ function redactHeaders(headers: Record<string, string>) {
 
 export async function httpRequest<T = unknown>(params: HttpRequestParams): Promise<T> {
   const { method, url, token, options } = params;
+
+  // 检查是否处于限流期,如果是则等待
+  if (rateLimitState.isRateLimited && rateLimitState.resumeAt) {
+    const delayMs = rateLimitState.resumeAt - Date.now();
+    if (delayMs > 0) {
+      logHttp('rate-limit-wait', {
+        method,
+        url,
+        delayMs,
+        resumeAt: new Date(rateLimitState.resumeAt).toISOString(),
+      });
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      logHttp('rate-limit-resumed', {
+        method,
+        url,
+      });
+    }
+    // 时间已到,重置限流状态
+    rateLimitState.isRateLimited = false;
+    rateLimitState.resumeAt = null;
+  }
 
   const headers = buildHeaders(options?.headers, token);
   const searchParams = options?.searchParams;
@@ -248,6 +280,37 @@ function handleResponse<T>(
     body: response.body,
   });
 
+  // 特殊处理 429 Too Many Requests
+  if (response.statusCode === 429) {
+    const retryAfter = normalizedHeaders['retry-after'];
+    const delayMs = parseRetryAfter(retryAfter);
+    const resumeAt = Date.now() + delayMs;
+
+    // 设置全局限流状态
+    rateLimitState.isRateLimited = true;
+    rateLimitState.resumeAt = resumeAt;
+
+    logHttp('rate-limit-triggered', {
+      method,
+      url,
+      retryAfter: retryAfter ?? '(not provided)',
+      delayMs,
+      delaySec: Math.round(delayMs / 1000),
+      resumeAt: new Date(resumeAt).toISOString(),
+      rateLimitRemaining: normalizedHeaders['x-ratelimit-remaining'],
+      rateLimitLimit: normalizedHeaders['x-ratelimit-limit'],
+      rateLimitReset: normalizedHeaders['x-ratelimit-reset'],
+    });
+
+    // 让 got 的重试机制处理这个错误
+    const errorBody = stringifyBody(response.body);
+    throw new Error(
+      `GitCode API 限流 (429 Too Many Requests): 请求将在 ${Math.round(delayMs / 1000)} 秒后重试${
+        errorBody ? `\n${errorBody}` : ''
+      }`,
+    );
+  }
+
   if (response.statusCode >= 400) {
     const errorBody = stringifyBody(response.body);
     throw new Error(
@@ -279,6 +342,43 @@ function normalizeHeaders(
     }
   }
   return normalized;
+}
+
+/**
+ * 解析 Retry-After 响应头,返回延迟的毫秒数
+ * 支持两种格式:
+ * 1. 整数秒数: "Retry-After: 30"
+ * 2. HTTP 日期: "Retry-After: Wed, 21 Oct 2025 07:28:00 GMT"
+ *
+ * @param retryAfter - Retry-After 响应头的值
+ * @param defaultSeconds - 如果解析失败,使用的默认秒数
+ * @returns 延迟的毫秒数
+ */
+function parseRetryAfter(retryAfter: string | undefined, defaultSeconds = 30): number {
+  if (!retryAfter) {
+    return defaultSeconds * 1000;
+  }
+
+  // 尝试解析为整数秒数
+  const seconds = Number(retryAfter);
+  if (!Number.isNaN(seconds) && seconds > 0) {
+    return seconds * 1000;
+  }
+
+  // 尝试解析为 HTTP 日期
+  const date = new Date(retryAfter);
+  if (!Number.isNaN(date.getTime())) {
+    const delayMs = date.getTime() - Date.now();
+    // 确保延迟时间为正数,至少 1 秒
+    return Math.max(delayMs, 1000);
+  }
+
+  // 解析失败,使用默认值
+  logHttp('retry-after-parse-failed', {
+    retryAfter,
+    defaultSeconds,
+  });
+  return defaultSeconds * 1000;
 }
 
 function stringifyBody(body: unknown): string {
