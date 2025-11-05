@@ -36,6 +36,7 @@ import {
 import { type SelfPermissionResponse } from '../../api/repo/self-permission.js';
 import type { RepoRole } from '../../types/repo-role.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 
 export async function getRepoSettings(
@@ -45,7 +46,7 @@ export async function getRepoSettings(
 ): Promise<RepoSettings> {
   const url = repoSettingsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return repoSettingsSchema.parse(data);
+  return parseApiResponse(repoSettingsSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getRepoEvents(
@@ -55,7 +56,7 @@ export async function getRepoEvents(
 ): Promise<RepoEvents> {
   const url = repoEventsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return repoEventsSchema.parse(data);
+  return parseApiResponse(repoEventsSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getContributors(
@@ -65,7 +66,7 @@ export async function getContributors(
 ): Promise<Contributors> {
   const url = contributorsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return contributorsSchema.parse(data);
+  return parseApiResponse(contributorsSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getBranches(
@@ -75,7 +76,7 @@ export async function getBranches(
 ): Promise<Branches> {
   const url = branchesUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return branchSchema.array().parse(data);
+  return parseApiResponse(branchSchema.array(), data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getBranch(
@@ -86,7 +87,7 @@ export async function getBranch(
 ): Promise<Branch> {
   const url = branchUrl(owner, repo, branch);
   const data = await client.http.get(url).json();
-  return branchSchema.parse(data);
+  return parseApiResponse(branchSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getCommits(
@@ -96,7 +97,7 @@ export async function getCommits(
 ): Promise<Commits> {
   const url = commitsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return commitSchema.array().parse(data);
+  return parseApiResponse(commitSchema.array(), data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getFileBlob(
@@ -107,7 +108,7 @@ export async function getFileBlob(
 ): Promise<FileBlob> {
   const url = fileBlobUrl(owner, repo, sha);
   const data = await client.http.get(url).json();
-  return fileBlobSchema.parse(data);
+  return parseApiResponse(fileBlobSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function compare(
@@ -119,7 +120,7 @@ export async function compare(
 ): Promise<Compare> {
   const url = compareUrl(owner, repo, base, head);
   const data = await client.http.get(url).json();
-  return compareSchema.parse(data);
+  return parseApiResponse(compareSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getWebhooks(
@@ -129,7 +130,7 @@ export async function getWebhooks(
 ): Promise<Webhooks> {
   const url = webhooksUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return webhookSchema.array().parse(data);
+  return parseApiResponse(webhookSchema.array(), data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getWebhook(
@@ -140,7 +141,7 @@ export async function getWebhook(
 ): Promise<Webhook> {
   const url = webhookUrl(owner, repo, id);
   const data = await client.http.get(url).json();
-  return webhookSchema.parse(data);
+  return parseApiResponse(webhookSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function getNotifications(
@@ -155,7 +156,7 @@ export async function getNotifications(
       searchParams: query as Record<string, string | number | boolean>,
     })
     .json();
-  return notificationsResponseSchema.parse(data);
+  return parseApiResponse(notificationsResponseSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
 }
 
 export async function markNotificationsRead(

@@ -6,6 +6,7 @@ import {
 import type { RepoRole } from '../../types/repo-role.js';
 import { isObjectLike, parseGitUrl } from '../../utils/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 /**
  * 获取全量的用户权限资料
@@ -21,7 +22,11 @@ export async function getSelfRepoPermission(
   }
   const path = selfPermissionUrl({ owner, repo });
   const json = await client.http.get(path).json();
-  return selfPermissionResponseSchema.parse(json);
+  return parseApiResponse(selfPermissionResponseSchema, json, {
+    endpoint: path,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 /**

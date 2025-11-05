@@ -5,6 +5,7 @@
 import type { CreateIssueParams, CreatedIssue } from '../../api/issue/create.js';
 import { createIssueUrl, createdIssueSchema } from '../../api/issue/create.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 /**
  * Creates a new issue in a repository.
@@ -23,10 +24,5 @@ export async function createIssue(
     })
     .json();
 
-  const result = createdIssueSchema.safeParse(response);
-  if (!result.success) {
-    throw new Error(`Invalid issue response: ${result.error.message}`);
-  }
-
-  return result.data;
+  return parseApiResponse(createdIssueSchema, response, { endpoint: url, method: "POST" });
 }

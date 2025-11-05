@@ -6,6 +6,7 @@ import {
 } from '../../api/issue/index.js';
 import { parseGitUrl } from '../../utils/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function listIssues(
   client: GitCodeClient,
@@ -26,5 +27,9 @@ export async function listIssues(
     }
   }
   const json = await client.http.get(apiUrl, { searchParams: q }).json();
-  return listIssuesResponseSchema.parse(json);
+  return parseApiResponse(listIssuesResponseSchema, json, {
+    endpoint: apiUrl,
+    method: 'GET',
+    params: q,
+  });
 }

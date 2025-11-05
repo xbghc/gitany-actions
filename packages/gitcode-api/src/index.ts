@@ -111,3 +111,28 @@ export type {
   Webhook,
   Webhooks,
 } from './api/repo/index.js';
+
+// 错误处理
+export { ApiValidationError, type ApiValidationContext } from './client/errors.js';
+import { ApiValidationError } from './client/errors.js';
+
+/**
+ * 类型守卫：检查错误是否为 ApiValidationError
+ *
+ * @param error - 要检查的错误对象
+ * @returns 如果是 ApiValidationError 返回 true
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const data = await client.pr.list(url);
+ * } catch (error) {
+ *   if (isApiValidationError(error)) {
+ *     console.log('字段错误:', error.getFieldErrors());
+ *   }
+ * }
+ * ```
+ */
+export function isApiValidationError(error: unknown): error is ApiValidationError {
+  return error instanceof ApiValidationError;
+}

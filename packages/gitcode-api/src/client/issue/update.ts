@@ -5,6 +5,7 @@ import {
 } from '../../api/issue/update.js';
 import { parseGitUrl } from '../../utils/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function updateIssue(
   client: GitCodeClient,
@@ -19,5 +20,5 @@ export async function updateIssue(
 
   const apiUrl = updateIssueUrl(parsed.owner, parsed.repo, issueNumber);
   const json = await client.http.patch(apiUrl, { json: body }).json();
-  return updatedIssueSchema.parse(json);
+  return parseApiResponse(updatedIssueSchema, json, { endpoint: apiUrl, method: "GET" });
 }

@@ -11,6 +11,7 @@ import {
   updatedIssueCommentSchema,
 } from '../../api/issue/update-comment.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 /**
  * Updates an existing comment on an issue.
@@ -29,10 +30,5 @@ export async function updateIssueComment(
     })
     .json();
 
-  const result = updatedIssueCommentSchema.safeParse(response);
-  if (!result.success) {
-    throw new Error(`Invalid updated issue comment response: ${result.error.message}`);
-  }
-
-  return result.data;
+  return parseApiResponse(updatedIssueCommentSchema, response, { endpoint: url, method: "POST" });
 }

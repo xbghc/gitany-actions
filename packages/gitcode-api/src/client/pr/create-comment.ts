@@ -6,6 +6,7 @@ import type { CreatePrCommentParams, CreatedPrComment } from '../../api/pr/creat
 import { createPrCommentUrl, createdPrCommentSchema } from '../../api/pr/create-comment.js';
 import { parseGitUrl } from '../../utils/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 /**
  * Creates a new comment on a pull request.
@@ -31,10 +32,9 @@ export async function createPrComment(
     })
     .json();
 
-  const result = createdPrCommentSchema.safeParse(response);
-  if (!result.success) {
-    throw new Error(`Invalid PR comment response: ${result.error.message}`);
-  }
-
-  return result.data;
+  return parseApiResponse(createdPrCommentSchema, response, {
+    endpoint: url,
+    method: 'POST',
+    params: { number: params.number },
+  });
 }

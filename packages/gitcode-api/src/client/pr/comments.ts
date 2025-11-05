@@ -6,6 +6,7 @@ import {
 } from '../../api/pr/index.js';
 import { parseGitUrl, toQuery } from '../../utils/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function listPullRequestComments(
   client: GitCodeClient,
@@ -20,5 +21,9 @@ export async function listPullRequestComments(
   const apiUrl = prCommentsUrl(parsed.owner, parsed.repo, prNumber);
   const query = toQuery(queryOptions);
   const json = await client.http.get(apiUrl, { searchParams: query }).json();
-  return prCommentSchema.array().parse(json);
+  return parseApiResponse(prCommentSchema.array(), json, {
+    endpoint: apiUrl,
+    method: 'GET',
+    params: { prNumber, ...query },
+  });
 }

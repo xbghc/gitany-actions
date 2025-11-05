@@ -6,6 +6,7 @@ import {
 } from '../../api/pr/index.js';
 import { parseGitUrl } from '../../utils/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function listPullRequests(
   client: GitCodeClient,
@@ -24,5 +25,9 @@ export async function listPullRequests(
     }
   }
   const json = await client.http.get(apiUrl, { searchParams: query }).json();
-  return listPullsResponseSchema.parse(json);
+  return parseApiResponse(listPullsResponseSchema, json, {
+    endpoint: apiUrl,
+    method: 'GET',
+    params: query,
+  });
 }

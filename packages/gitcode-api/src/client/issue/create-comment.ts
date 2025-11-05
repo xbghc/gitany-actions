@@ -11,6 +11,7 @@ import {
   createdIssueCommentSchema,
 } from '../../api/issue/create-comment.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 /**
  * Creates a new comment on an issue.
@@ -29,10 +30,5 @@ export async function createIssueComment(
     })
     .json();
 
-  const result = createdIssueCommentSchema.safeParse(response);
-  if (!result.success) {
-    throw new Error(`Invalid issue comment response: ${result.error.message}`);
-  }
-
-  return result.data;
+  return parseApiResponse(createdIssueCommentSchema, response, { endpoint: url, method: "POST" });
 }

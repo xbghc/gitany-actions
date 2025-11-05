@@ -7,17 +7,18 @@ import {
   type UserProfile,
 } from '../../api/user/index.js';
 import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function getUserProfile(client: GitCodeClient): Promise<UserProfile> {
   const url = userProfileUrl();
   const data = await client.http.get(url).json();
-  return userProfileSchema.parse(data);
+  return parseApiResponse(userProfileSchema, data, { endpoint: url, method: "GET" });
 }
 
 export async function getUserNamespace(client: GitCodeClient): Promise<UserNamespace> {
   const url = userNamespaceUrl();
   const data = await client.http.get(url).json();
-  return userNamespaceSchema.parse(data);
+  return parseApiResponse(userNamespaceSchema, data, { endpoint: url, method: "GET" });
 }
 
 export class GitCodeClientUser {
