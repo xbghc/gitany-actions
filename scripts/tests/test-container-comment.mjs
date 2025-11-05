@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
-// Exercises PR container lifecycle and comment posting in Gitcode.
+// Exercises PR container lifecycle and comment posting in GitCode.
 import { config } from 'dotenv';
 import {
   createPrContainer,
-  removeContainer,
   getContainer,
+  removeContainer,
 } from '../../packages/gitcode-actions/dist/index.js';
-import { GitcodeClient, parseGitUrl, toGitUrl } from '../../packages/gitcode-api/dist/index.js';
+import { GitCodeClient, parseGitUrl, toGitUrl } from '../../packages/gitcode-api/dist/index.js';
 
 config({ path: new URL('.env', import.meta.url) });
 
@@ -83,8 +83,8 @@ async function main() {
   const maxPages = envPositiveInteger('TEST_PR_MAX_PAGES', 3);
   const keepContainer = envBoolean('TEST_KEEP_CONTAINER', false);
 
-  console.log('🔐 初始化 Gitcode 客户端...');
-  const client = new GitcodeClient();
+  console.log('🔐 初始化 GitCode 客户端...');
+  const client = new GitCodeClient();
 
   console.log(`📥 查找 PR #${prNumber} (最多 ${maxPages} 页)...`);
   const pr = await locatePullRequest(client, repoUrl, prNumber, maxPages);

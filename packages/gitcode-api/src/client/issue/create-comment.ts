@@ -2,9 +2,15 @@
  * Create Issue Comment - Client Implementation
  */
 
-import type { GitcodeClient } from '../core.js';
-import type { CreateIssueCommentParams, CreatedIssueComment } from '../../api/issue/create-comment.js';
-import { createIssueCommentUrl, createdIssueCommentSchema } from '../../api/issue/create-comment.js';
+import type {
+  CreateIssueCommentParams,
+  CreatedIssueComment,
+} from '../../api/issue/create-comment.js';
+import {
+  createIssueCommentUrl,
+  createdIssueCommentSchema,
+} from '../../api/issue/create-comment.js';
+import type { GitCodeClient } from '../core.js';
 
 /**
  * Creates a new comment on an issue.
@@ -13,13 +19,15 @@ import { createIssueCommentUrl, createdIssueCommentSchema } from '../../api/issu
  * @returns Promise resolving to the created comment
  */
 export async function createIssueComment(
-  client: GitcodeClient,
+  client: GitCodeClient,
   params: CreateIssueCommentParams,
 ): Promise<CreatedIssueComment> {
   const url = createIssueCommentUrl(params.owner, params.repo, params.number);
-  const response = await client.http.post(url, {
-    json: params.body,
-  }).json();
+  const response = await client.http
+    .post(url, {
+      json: params.body,
+    })
+    .json();
 
   const result = createdIssueCommentSchema.safeParse(response);
   if (!result.success) {

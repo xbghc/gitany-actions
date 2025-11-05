@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { join } from 'node:path';
 
-interface GitcodeConfig {
+interface GitCodeConfig {
   token?: string;
   authStyle?: 'query' | 'bearer' | 'token' | 'header';
   customAuthHeader?: string;
@@ -43,14 +43,14 @@ async function ensureConfigDir(): Promise<void> {
  * 读取配置文件（同步）
  * @returns 配置对象，如果文件不存在则返回空对象
  */
-export function readConfigSync(): GitcodeConfig {
+export function readConfigSync(): GitCodeConfig {
   try {
     const configPath = getConfigPath();
     if (!existsSync(configPath)) {
       return {};
     }
     const content = readFileSync(configPath, 'utf8');
-    return JSON.parse(content) as GitcodeConfig;
+    return JSON.parse(content) as GitCodeConfig;
   } catch (err) {
     console.error('Failed to read config:', err);
     return {};
@@ -61,14 +61,14 @@ export function readConfigSync(): GitcodeConfig {
  * 读取配置文件（异步）
  * @returns 配置对象，如果文件不存在则返回空对象
  */
-export async function readConfig(): Promise<GitcodeConfig> {
+export async function readConfig(): Promise<GitCodeConfig> {
   try {
     const configPath = getConfigPath();
     if (!existsSync(configPath)) {
       return {};
     }
     const content = await readFile(configPath, 'utf8');
-    return JSON.parse(content) as GitcodeConfig;
+    return JSON.parse(content) as GitCodeConfig;
   } catch (err) {
     console.error('Failed to read config:', err);
     return {};
@@ -79,7 +79,7 @@ export async function readConfig(): Promise<GitcodeConfig> {
  * 写入配置文件
  * @param config 要写入的配置对象
  */
-export async function writeConfig(config: GitcodeConfig): Promise<void> {
+export async function writeConfig(config: GitCodeConfig): Promise<void> {
   await ensureConfigDir();
   const configPath = getConfigPath();
   const content = JSON.stringify(config, null, 2);
@@ -90,7 +90,7 @@ export async function writeConfig(config: GitcodeConfig): Promise<void> {
  * 更新配置文件（合并现有配置）
  * @param updates 要更新的配置项
  */
-export async function updateConfig(updates: Partial<GitcodeConfig>): Promise<void> {
+export async function updateConfig(updates: Partial<GitCodeConfig>): Promise<void> {
   const config = await readConfig();
   const newConfig = { ...config, ...updates };
   await writeConfig(newConfig);

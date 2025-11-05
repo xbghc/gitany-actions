@@ -1,9 +1,9 @@
 import type {
-  GitcodeClient,
+  GitCodeClient,
   Issue,
   IssueComment,
-  ListIssuesQuery,
   IssueCommentsQuery,
+  ListIssuesQuery,
 } from '@xbghc/gitcode-api';
 import type { EmitFn, PollContext } from './resource-runner.js';
 
@@ -69,7 +69,7 @@ export async function pollIssues(
  * 获取 Issue 列表
  */
 async function fetchIssues(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   issueQuery?: ListIssuesQuery,
 ): Promise<Issue[]> {
@@ -82,7 +82,7 @@ async function fetchIssues(
 async function detectNewComments(
   issues: Issue[],
   prevLastCommentIds: Map<number, Set<number>>,
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   emit: EmitFn,
   commentQuery?: IssueCommentsQuery,
@@ -152,7 +152,7 @@ async function detectNewComments(
  * 获取 Issue 评论
  */
 async function fetchIssueComments(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   issueNumber: number,
   commentQuery?: IssueCommentsQuery,

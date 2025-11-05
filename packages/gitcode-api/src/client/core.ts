@@ -1,17 +1,17 @@
 import got, { type Got } from 'got';
-import { GitcodeClientUser } from './user/index.js';
-import { GitcodeClientPr } from './pr/index.js';
-import { GitcodeClientRepo } from './repo/index.js';
-import { GitcodeClientIssue } from './issue/index.js';
-import { GitcodeClientAuth } from './auth/index.js';
+import { GitCodeClientAuth } from './auth/index.js';
+import { GitCodeClientIssue } from './issue/index.js';
+import { GitCodeClientPr } from './pr/index.js';
+import { GitCodeClientRepo } from './repo/index.js';
+import { GitCodeClientUser } from './user/index.js';
 
 export class GitCodeClient {
   public readonly http: Got;
-  pr = new GitcodeClientPr(this);
-  repo = new GitcodeClientRepo(this);
-  issue = new GitcodeClientIssue(this);
-  user = new GitcodeClientUser(this);
-  auth: GitcodeClientAuth;
+  pr = new GitCodeClientPr(this);
+  repo = new GitCodeClientRepo(this);
+  issue = new GitCodeClientIssue(this);
+  user = new GitCodeClientUser(this);
+  auth: GitCodeClientAuth;
 
   constructor(token?: string, customHttp?: Got) {
     if (customHttp) {
@@ -21,14 +21,11 @@ export class GitCodeClient {
       // 创建默认的 got 实例
       this.http = got.extend({
         headers: {
-          'accept': 'application/json',
-          ...(token && { 'authorization': `Bearer ${token}` })
-        }
+          accept: 'application/json',
+          ...(token && { authorization: `Bearer ${token}` }),
+        },
       });
     }
-    this.auth = new GitcodeClientAuth(this, token);
+    this.auth = new GitCodeClientAuth(this, token);
   }
 }
-
-// 保持向后兼容的别名
-export { GitCodeClient as GitcodeClient };

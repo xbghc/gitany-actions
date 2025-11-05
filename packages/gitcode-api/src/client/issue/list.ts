@@ -1,14 +1,14 @@
 import {
+  listIssuesResponseSchema,
   listIssuesUrl,
   type ListIssuesQuery,
   type ListIssuesResponse,
-  listIssuesResponseSchema,
 } from '../../api/issue/index.js';
-import type { GitcodeClient } from '../core.js';
 import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
 
 export async function listIssues(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   query: ListIssuesQuery = { state: 'open' },
 ): Promise<ListIssuesResponse> {

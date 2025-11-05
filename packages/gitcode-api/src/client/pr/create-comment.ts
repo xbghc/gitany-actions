@@ -2,10 +2,10 @@
  * Create PR Comment - Client Implementation
  */
 
-import type { GitcodeClient } from '../core.js';
 import type { CreatePrCommentParams, CreatedPrComment } from '../../api/pr/create-comment.js';
 import { createPrCommentUrl, createdPrCommentSchema } from '../../api/pr/create-comment.js';
 import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
 
 /**
  * Creates a new comment on a pull request.
@@ -14,7 +14,7 @@ import { parseGitUrl } from '../../utils/index.js';
  * @returns Promise resolving to the created comment
  */
 export async function createPrComment(
-  client: GitcodeClient,
+  client: GitCodeClient,
   params: CreatePrCommentParams,
 ): Promise<CreatedPrComment> {
   const parsed = parseGitUrl(params.url);
@@ -25,9 +25,11 @@ export async function createPrComment(
   }
 
   const url = createPrCommentUrl(owner, repo, params.number);
-  const response = await client.http.post(url, {
-    json: params.body,
-  }).json();
+  const response = await client.http
+    .post(url, {
+      json: params.body,
+    })
+    .json();
 
   const result = createdPrCommentSchema.safeParse(response);
   if (!result.success) {

@@ -5,14 +5,14 @@ import {
 } from '../../api/repo/self-permission.js';
 import type { RepoRole } from '../../types/repo-role.js';
 import { isObjectLike, parseGitUrl } from '../../utils/index.js';
-import type { GitcodeClient } from '../core.js';
+import type { GitCodeClient } from '../core.js';
 
 /**
  * 获取全量的用户权限资料
  */
 
 export async function getSelfRepoPermission(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
 ): Promise<SelfPermissionResponse> {
   const { owner, repo } = parseGitUrl(url) || {};
@@ -29,7 +29,7 @@ export async function getSelfRepoPermission(
  * @returns 'admin' | 'write' | 'read' | 'none'
  */
 export async function getSelfRepoPermissionRole(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
 ): Promise<RepoRole> {
   try {

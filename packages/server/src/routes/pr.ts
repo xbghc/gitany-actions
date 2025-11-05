@@ -1,7 +1,7 @@
-import { Router, type Request, type Response } from 'express';
 import type { ListPullsQuery } from '@xbghc/gitcode-api';
+import { Router, type Request, type Response } from 'express';
 import { withAuth } from '../middleware/auth.js';
-import { createGitcodeClient } from '../utils/gitcode-client.js';
+import { createGitCodeClient } from '../utils/gitcode-client.js';
 
 export const prRouter: Router = Router();
 
@@ -10,65 +10,71 @@ export const prRouter: Router = Router();
  * GET /api/repo/:owner/:repo/pulls/count
  * 注意：此路由必须在 /repo/:owner/:repo/pulls/:number 之前定义
  */
-prRouter.get('/repo/:owner/:repo/pulls/count', withAuth(async (req, res, token) => {
-  try {
-    const { owner, repo } = req.params;
+prRouter.get(
+  '/repo/:owner/:repo/pulls/count',
+  withAuth(async (req, res, token) => {
+    try {
+      const { owner, repo } = req.params;
 
-    const client = createGitcodeClient(token);
-    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+      const client = createGitCodeClient(token);
+      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
-    const count = await client.pr.count(repoUrl);
+      const count = await client.pr.count(repoUrl);
 
-    res.json({
-      success: true,
-      data: count,
-    });
-  } catch (error) {
-    console.error('Failed to fetch PR count:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch PR count',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+      res.json({
+        success: true,
+        data: count,
+      });
+    } catch (error) {
+      console.error('Failed to fetch PR count:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch PR count',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }),
+);
 
 /**
  * 获取 PR 列表
  * GET /api/repo/:owner/:repo/pulls
  */
-prRouter.get('/repo/:owner/:repo/pulls', withAuth(async (req, res, token) => {
-  try {
-    const { owner, repo } = req.params;
-    const { state, page, per_page, sort, direction, head, base } = req.query;
+prRouter.get(
+  '/repo/:owner/:repo/pulls',
+  withAuth(async (req, res, token) => {
+    try {
+      const { owner, repo } = req.params;
+      const { state, page, per_page, sort, direction, head, base } = req.query;
 
-    const client = createGitcodeClient(token);
-    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+      const client = createGitCodeClient(token);
+      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
-    const query: ListPullsQuery = {};
-    if (state) query.state = state as string;
-    if (page) query.page = Number(page);
-    if (per_page) query.per_page = Number(per_page);
-    if (sort) query.sort = sort as string;
-    if (direction) query.direction = direction as 'asc' | 'desc';
-    if (head) query.head = head as string;
-    if (base) query.base = base as string;
+      const query: ListPullsQuery = {};
+      if (state) query.state = state as string;
+      if (page) query.page = Number(page);
+      if (per_page) query.per_page = Number(per_page);
+      if (sort) query.sort = sort as string;
+      if (direction) query.direction = direction as 'asc' | 'desc';
+      if (head) query.head = head as string;
+      if (base) query.base = base as string;
 
-    const pulls = await client.pr.list(repoUrl, query);
+      const pulls = await client.pr.list(repoUrl, query);
 
-    res.json({
-      success: true,
-      data: pulls,
-    });
-  } catch (error) {
-    console.error('Failed to fetch pull requests:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch pull requests',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+      res.json({
+        success: true,
+        data: pulls,
+      });
+    } catch (error) {
+      console.error('Failed to fetch pull requests:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch pull requests',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }),
+);
 
 /**
  * 获取 PR 详情
@@ -96,64 +102,70 @@ prRouter.get('/repo/:owner/:repo/pulls/:number', async (req: Request, res: Respo
  * 获取 PR 评论列表
  * GET /api/repo/:owner/:repo/pulls/:number/comments
  */
-prRouter.get('/repo/:owner/:repo/pulls/:number/comments', withAuth(async (req, res, token) => {
-  try {
-    const { owner, repo, number } = req.params;
+prRouter.get(
+  '/repo/:owner/:repo/pulls/:number/comments',
+  withAuth(async (req, res, token) => {
+    try {
+      const { owner, repo, number } = req.params;
 
-    const client = createGitcodeClient(token);
-    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+      const client = createGitCodeClient(token);
+      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
 
-    const comments = await client.pr.comments(repoUrl, Number(number));
+      const comments = await client.pr.comments(repoUrl, Number(number));
 
-    res.json({
-      success: true,
-      data: comments,
-    });
-  } catch (error) {
-    console.error('Failed to fetch PR comments:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch PR comments',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+      res.json({
+        success: true,
+        data: comments,
+      });
+    } catch (error) {
+      console.error('Failed to fetch PR comments:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch PR comments',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }),
+);
 
 /**
  * 添加 PR 评论
  * POST /api/repo/:owner/:repo/pulls/:number/comments
  */
-prRouter.post('/repo/:owner/:repo/pulls/:number/comments', withAuth(async (req, res, token) => {
-  try {
-    const { owner, repo, number } = req.params;
-    const { body } = req.body;
+prRouter.post(
+  '/repo/:owner/:repo/pulls/:number/comments',
+  withAuth(async (req, res, token) => {
+    try {
+      const { owner, repo, number } = req.params;
+      const { body } = req.body;
 
-    if (!body) {
-      res.status(400).json({
-        success: false,
-        error: 'Comment body is required',
+      if (!body) {
+        res.status(400).json({
+          success: false,
+          error: 'Comment body is required',
+        });
+        return;
+      }
+
+      const client = createGitCodeClient(token);
+      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
+      const comment = await client.pr.createComment(repoUrl, Number(number), body);
+
+      res.json({
+        success: true,
+        data: comment,
       });
-      return;
+    } catch (error) {
+      console.error('Failed to create PR comment:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create PR comment',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    const client = createGitcodeClient(token);
-    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
-
-    const comment = await client.pr.createComment(repoUrl, Number(number), body);
-
-    res.json({
-      success: true,
-      data: comment,
-    });
-  } catch (error) {
-    console.error('Failed to create PR comment:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to create PR comment',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+  }),
+);
 
 /**
  * 更新 PR 状态

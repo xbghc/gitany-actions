@@ -1,9 +1,9 @@
-import type { GitcodeClient } from '@xbghc/gitcode-api';
-import { getRepoStateDir } from '../../utils/index.js';
+import type { GitCodeClient } from '@xbghc/gitcode-api';
 import type { EventDataMap, EventName } from '../../types/events.js';
+import { getRepoStateDir } from '../../utils/index.js';
 import { FileStateStorage } from '../file-state-storage.js';
-import type { StateStorage } from '../state-storage.js';
 import { createSmartSerializer, type StateSerializer } from '../state-serializer.js';
+import type { StateStorage } from '../state-storage.js';
 
 const DEFAULT_INTERVAL_SEC = 5;
 
@@ -30,7 +30,7 @@ export interface IResourceRunner {
  * 轮询上下文
  */
 export interface PollContext {
-  client: GitcodeClient;
+  client: GitCodeClient;
   url: string;
 }
 
@@ -42,11 +42,7 @@ export interface PollContext {
  * @param emit - 事件发射函数
  * @returns 新状态
  */
-export type PollFn<TState> = (
-  state: TState,
-  context: PollContext,
-  emit: EmitFn,
-) => Promise<TState>;
+export type PollFn<TState> = (state: TState, context: PollContext, emit: EmitFn) => Promise<TState>;
 
 /**
  * 资源执行器 - 通用的轮询和状态管理

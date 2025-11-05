@@ -1,14 +1,14 @@
 import {
+  prCommentSchema,
   prCommentsUrl,
   type PRComment,
   type PRCommentQueryOptions,
-  prCommentSchema,
 } from '../../api/pr/index.js';
-import type { GitcodeClient } from '../core.js';
 import { parseGitUrl, toQuery } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
 
 export async function listPullRequestComments(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   prNumber: number,
   queryOptions?: PRCommentQueryOptions,

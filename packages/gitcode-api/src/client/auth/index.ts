@@ -1,4 +1,4 @@
-import type { GitcodeClient } from '../core.js';
+import type { GitCodeClient } from '../core.js';
 
 export type AuthConfig = {
   token?: string;
@@ -6,11 +6,11 @@ export type AuthConfig = {
   customAuthHeader?: string;
 };
 
-export class GitcodeClientAuth {
+export class GitCodeClientAuth {
   private _token: string | undefined;
 
   constructor(
-    private client: GitcodeClient,
+    private client: GitCodeClient,
     token?: string,
   ) {
     // Priority: provided token > environment variable

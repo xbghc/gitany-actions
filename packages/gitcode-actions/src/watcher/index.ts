@@ -1,6 +1,6 @@
-import { GitcodeClient } from '@xbghc/gitcode-api';
-import { Watcher } from './watcher.js';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 import type { WatchOptions } from './types.js';
+import { Watcher } from './watcher.js';
 
 /**
  * 创建仓库监听器
@@ -25,15 +25,11 @@ import type { WatchOptions } from './types.js';
  *   .start();
  * ```
  */
-export function watch(
-  client: GitcodeClient,
-  url: string,
-  options: WatchOptions = {},
-): Watcher {
+export function watch(client: GitCodeClient, url: string, options: WatchOptions = {}): Watcher {
   return new Watcher(client, url, options);
 }
 
 // 导出类型
-export type { Watcher, WatchOptions, WatcherStatus } from './types.js';
-export type { StateStorage } from './state-storage.js';
 export { FileStateStorage } from './file-state-storage.js';
+export type { StateStorage } from './state-storage.js';
+export type { Watcher, WatcherStatus, WatchOptions } from './types.js';

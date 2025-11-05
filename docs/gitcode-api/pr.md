@@ -29,10 +29,10 @@ PR 模块封装了列表、创建、评论、设置以及统计等常见操作�
 ## 客户端用法
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
 const repoUrl = 'https://gitcode.com/owner/repo.git';
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 
 // 1) 列表 PR（带查询参数）
 const pulls = await client.pr.list(repoUrl, { state: 'open', per_page: 50 });
@@ -60,9 +60,9 @@ console.log(count.open, count.merged, count.closed);
 ### 直接使用 URL 构建器
 
 ```ts
-import { GitcodeClient, listPullsUrl } from '@xbghc/gitcode-api';
+import { GitCodeClient, listPullsUrl } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 const url = listPullsUrl('owner', 'repo');
 const data = await client.request(url, 'GET', {
   searchParams: { state: 'closed', per_page: 20 },

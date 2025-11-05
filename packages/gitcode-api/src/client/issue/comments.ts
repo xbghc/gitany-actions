@@ -1,14 +1,14 @@
 import {
-  issueCommentsUrl,
   issueCommentSchema,
-  type IssueCommentsQuery,
+  issueCommentsUrl,
   type IssueComment,
+  type IssueCommentsQuery,
 } from '../../api/issue/index.js';
-import type { GitcodeClient } from '../core.js';
 import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
 
 export async function listIssueComments(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   issueNumber: number,
   query: IssueCommentsQuery = {},

@@ -1,9 +1,8 @@
-import { getIssueUrl } from '../../api/issue/get.js';
-import type { GitcodeClient } from '../core.js';
+import { getIssueUrl, issueDetailSchema } from '../../api/issue/get.js';
 import { parseGitUrl } from '../../utils/index.js';
-import { issueDetailSchema } from '../../api/issue/get.js';
+import type { GitCodeClient } from '../core.js';
 
-export async function getIssue(client: GitcodeClient, url: string, issueNumber: number) {
+export async function getIssue(client: GitCodeClient, url: string, issueNumber: number) {
   const parsed = parseGitUrl(url);
   if (!parsed?.owner || !parsed?.repo) {
     throw new Error(`Invalid Git URL: ${url}`);

@@ -1,21 +1,21 @@
-import type { GitcodeClient } from '../core.js';
-import { listPullRequests } from './list.js';
-import { listPullRequestComments } from './comments.js';
-import { createPullRequest } from './create.js';
-import { getPullRequestSettings } from './settings.js';
-import { createPrComment } from './create-comment.js';
-import { getPullRequestCount } from './count.js';
 import type {
-  ListPullsQuery,
-  CreatePullBody,
-  PRCommentQueryOptions,
-  PullRequestSettings,
   CreatedPrComment,
+  CreatePullBody,
+  ListPullsQuery,
+  PRCommentQueryOptions,
   PrCount,
+  PullRequestSettings,
 } from '../../api/pr/index.js';
+import type { GitCodeClient } from '../core.js';
+import { listPullRequestComments } from './comments.js';
+import { getPullRequestCount } from './count.js';
+import { createPrComment } from './create-comment.js';
+import { createPullRequest } from './create.js';
+import { listPullRequests } from './list.js';
+import { getPullRequestSettings } from './settings.js';
 
-export class GitcodeClientPr {
-  constructor(private client: GitcodeClient) {}
+export class GitCodeClientPr {
+  constructor(private client: GitCodeClient) {}
 
   list(url: string, query: ListPullsQuery = { state: 'open' }) {
     return listPullRequests(this.client, url, query);

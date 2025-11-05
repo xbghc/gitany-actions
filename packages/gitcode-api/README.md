@@ -13,9 +13,9 @@ pnpm add @xbghc/gitcode-api
 ### 初始化客户端
 
 ```typescript
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 ```
 
 ### 用户相关操作

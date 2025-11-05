@@ -7,15 +7,15 @@ title: GitCode API 工具库
 封装了访问 [GitCode REST API](https://docs.gitcode.com/docs/apis/) 所需的客户端、类型定义与 URL 构建工具，并附带常用的仓库地址解析与查询参数处理函数。
 
 - **包路径**：`packages/gitcode-api`
-- **导出形式**：ESM（`import { GitcodeClient } from '@xbghc/gitcode-api'`）
+- **导出形式**：ESM（`import { GitCodeClient } from '@xbghc/gitcode-api'`）
 
 ## 快速开始
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
 // 构造函数可直接接收 token（默认会读取 GITCODE_TOKEN 环境变量）
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 
 // 也可以稍后通过 auth 模块设置
 client.auth.setToken('your-token');
@@ -39,8 +39,8 @@ const profile = await client.user.getProfile();
 
 ### 客户端
 
-- `GitcodeClient`：带 `pr`、`issue`、`repo`、`user` 子模块以及 `auth` 管理器的核心客户端。
-- `GitcodeClientAuth`：轻量认证容器，提供 `setToken()` 与 `token()`，默认读取 `GITCODE_TOKEN`。
+- `GitCodeClient`：带 `pr`、`issue`、`repo`、`user` 子模块以及 `auth` 管理器的核心客户端。
+- `GitCodeClientAuth`：轻量认证容器，提供 `setToken()` 与 `token()`，默认读取 `GITCODE_TOKEN`。
 
 ### 工具函数
 

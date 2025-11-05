@@ -9,9 +9,9 @@ title: 用户 API
 ## 快速开始
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 const profile = await client.user.getProfile();
 const namespace = await client.user.getNamespace();
 

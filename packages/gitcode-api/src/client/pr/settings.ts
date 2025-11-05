@@ -3,10 +3,10 @@ import {
   pullRequestSettingsUrl,
   type PullRequestSettings,
 } from '../../api/pr/index.js';
-import type { GitcodeClient } from '../core.js';
+import type { GitCodeClient } from '../core.js';
 
 export async function getPullRequestSettings(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<PullRequestSettings> {

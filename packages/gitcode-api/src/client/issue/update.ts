@@ -1,9 +1,13 @@
+import {
+  updateIssueUrl,
+  updatedIssueSchema,
+  type UpdateIssueBody,
+} from '../../api/issue/update.js';
 import { parseGitUrl } from '../../utils/index.js';
-import { updateIssueUrl, updatedIssueSchema, type UpdateIssueBody } from '../../api/issue/update.js';
-import type { GitcodeClient } from '../core.js';
+import type { GitCodeClient } from '../core.js';
 
 export async function updateIssue(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   issueNumber: number,
   body: UpdateIssueBody,

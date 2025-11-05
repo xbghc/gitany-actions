@@ -9,9 +9,9 @@ title: 仓库 API
 ## 客户端方法
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 const repoUrl = 'https://gitcode.com/owner/repo.git';
 
 // 权限

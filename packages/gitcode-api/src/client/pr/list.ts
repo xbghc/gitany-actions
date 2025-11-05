@@ -1,14 +1,14 @@
 import {
+  listPullsResponseSchema,
   listPullsUrl,
   type ListPullsQuery,
   type ListPullsResponse,
-  listPullsResponseSchema,
 } from '../../api/pr/index.js';
-import type { GitcodeClient } from '../core.js';
 import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
 
 export async function listPullRequests(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   prQuery: ListPullsQuery = { state: 'open' },
 ): Promise<ListPullsResponse> {

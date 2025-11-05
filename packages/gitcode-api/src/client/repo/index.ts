@@ -1,45 +1,45 @@
-import { type SelfPermissionResponse } from '../../api/repo/self-permission.js';
-import type { RepoRole } from '../../types/repo-role.js';
-import type { GitcodeClient } from '../core.js';
-import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 import {
-  repoSettingsSchema,
-  repoSettingsUrl,
-  repoEventsSchema,
-  repoEventsUrl,
-  contributorsSchema,
-  contributorsUrl,
-  branchSchema,
   branchesUrl,
+  branchSchema,
   branchUrl,
   commitSchema,
   commitsUrl,
-  fileBlobSchema,
-  fileBlobUrl,
   compareSchema,
   compareUrl,
+  contributorsSchema,
+  contributorsUrl,
+  fileBlobSchema,
+  fileBlobUrl,
+  notificationsResponseSchema,
+  notificationsUrl,
+  repoEventsSchema,
+  repoEventsUrl,
+  repoSettingsSchema,
+  repoSettingsUrl,
   webhookSchema,
   webhooksUrl,
   webhookUrl,
-  notificationsResponseSchema,
-  notificationsUrl,
-  type RepoSettings,
-  type RepoEvents,
-  type Contributors,
   type Branch,
   type Branches,
   type Commits,
-  type FileBlob,
   type Compare,
+  type Contributors,
+  type FileBlob,
+  type MarkNotificationsReadParams,
+  type NotificationQuery,
+  type NotificationsResponse,
+  type RepoEvents,
+  type RepoSettings,
   type Webhook,
   type Webhooks,
-  type NotificationsResponse,
-  type NotificationQuery,
-  type MarkNotificationsReadParams,
 } from '../../api/repo/index.js';
+import { type SelfPermissionResponse } from '../../api/repo/self-permission.js';
+import type { RepoRole } from '../../types/repo-role.js';
+import type { GitCodeClient } from '../core.js';
+import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 
 export async function getRepoSettings(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<RepoSettings> {
@@ -49,7 +49,7 @@ export async function getRepoSettings(
 }
 
 export async function getRepoEvents(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<RepoEvents> {
@@ -59,7 +59,7 @@ export async function getRepoEvents(
 }
 
 export async function getContributors(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Contributors> {
@@ -69,7 +69,7 @@ export async function getContributors(
 }
 
 export async function getBranches(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Branches> {
@@ -79,7 +79,7 @@ export async function getBranches(
 }
 
 export async function getBranch(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   branch: string,
@@ -90,7 +90,7 @@ export async function getBranch(
 }
 
 export async function getCommits(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Commits> {
@@ -100,7 +100,7 @@ export async function getCommits(
 }
 
 export async function getFileBlob(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   sha: string,
@@ -111,7 +111,7 @@ export async function getFileBlob(
 }
 
 export async function compare(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   base: string,
@@ -123,7 +123,7 @@ export async function compare(
 }
 
 export async function getWebhooks(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Webhooks> {
@@ -133,7 +133,7 @@ export async function getWebhooks(
 }
 
 export async function getWebhook(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   id: number,
@@ -144,32 +144,34 @@ export async function getWebhook(
 }
 
 export async function getNotifications(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   query?: NotificationQuery,
 ): Promise<NotificationsResponse> {
   const url = notificationsUrl(owner, repo);
-  const data = await client.http.get(url, {
-    searchParams: query as Record<string, string | number | boolean>
-  }).json();
+  const data = await client.http
+    .get(url, {
+      searchParams: query as Record<string, string | number | boolean>,
+    })
+    .json();
   return notificationsResponseSchema.parse(data);
 }
 
 export async function markNotificationsRead(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   params: MarkNotificationsReadParams,
 ): Promise<void> {
   const url = notificationsUrl(owner, repo);
   await client.http.put(url, {
-    searchParams: params as unknown as Record<string, string | number | boolean>
+    searchParams: params as unknown as Record<string, string | number | boolean>,
   });
 }
 
-export class GitcodeClientRepo {
-  constructor(private client: GitcodeClient) {}
+export class GitCodeClientRepo {
+  constructor(private client: GitCodeClient) {}
 
   async getSelfRepoPermission(url: string): Promise<SelfPermissionResponse> {
     return await getSelfRepoPermission(this.client, url);
@@ -219,11 +221,19 @@ export class GitcodeClientRepo {
     return await getWebhook(this.client, owner, repo, id);
   }
 
-  async getNotifications(owner: string, repo: string, query?: NotificationQuery): Promise<NotificationsResponse> {
+  async getNotifications(
+    owner: string,
+    repo: string,
+    query?: NotificationQuery,
+  ): Promise<NotificationsResponse> {
     return await getNotifications(this.client, owner, repo, query);
   }
 
-  async markNotificationsRead(owner: string, repo: string, params: MarkNotificationsReadParams): Promise<void> {
+  async markNotificationsRead(
+    owner: string,
+    repo: string,
+    params: MarkNotificationsReadParams,
+  ): Promise<void> {
     return await markNotificationsRead(this.client, owner, repo, params);
   }
 }

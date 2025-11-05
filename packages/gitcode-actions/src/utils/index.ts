@@ -1,8 +1,8 @@
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { createHash } from 'node:crypto';
-import { homedir } from 'node:os';
 import { parseGitUrl } from '@xbghc/gitcode-api';
+import { createHash } from 'node:crypto';
+import * as fs from 'node:fs/promises';
+import { homedir } from 'node:os';
+import * as path from 'node:path';
 
 /** Returns ~/.gitcode */
 export function gitcodeBaseDir() {
@@ -11,7 +11,7 @@ export function gitcodeBaseDir() {
 }
 
 /** Resolves a sub-directory under ~/.gitcode */
-export function resolveGitcodeSubdir(subdir: string) {
+export function resolveGitCodeSubdir(subdir: string) {
   return path.join(gitcodeBaseDir(), subdir);
 }
 
