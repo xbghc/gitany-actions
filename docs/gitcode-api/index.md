@@ -33,7 +33,7 @@ const profile = await client.user.getProfile();
 - `options.json`：发送 JSON 请求体；如需原始体，可使用 `options.body`。
 - `options.retry`：控制 `got` 的重试策略（默认继承全局配置并追加 `POST`/`PUT` 重试支持）。
 - 内置 ETag 缓存，会在返回 `304` 时复用上次结果；可通过 `isNotModified(result)` 判断复用命中。
-- 设置环境变量 `GITCODE_HTTP_DEBUG=1` 可打印请求/响应日志，`GITCODE_HTTP_DEBUG_SHOW_SECRETS=1` 会取消 Header 脱敏。
+- 在开发环境 (`NODE_ENV=development`) 下自动打印请求/响应日志，授权头始终脱敏保护。
 
 ## 主要导出
 
@@ -79,8 +79,7 @@ const profile = await client.user.getProfile();
 ## 认证与环境变量
 
 - `GITCODE_TOKEN`：默认读取的访问令牌，可通过 `client.auth.setToken()` 动态覆盖。
-- `GITCODE_HTTP_DEBUG`：值为 `1/true/on/debug` 时输出调试日志。
-- `GITCODE_HTTP_DEBUG_SHOW_SECRETS`：调试日志中保留授权头。
+- `NODE_ENV`：设置为 `development` 时自动输出 HTTP 调试日志。
 
 客户端使用 `Bearer` 头部发送 Token；未提供 Token 时，将以匿名方式访问公开资源。
 

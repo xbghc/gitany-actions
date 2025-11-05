@@ -49,14 +49,7 @@ export function isNotModified(value: unknown): boolean {
   return isObjectLike(value) && cacheHit.has(value);
 }
 
-const httpDebugFlag = process.env.GITCODE_HTTP_DEBUG ?? '';
-const httpDebugEnabled = ['1', 'true', 'yes', 'on', 'debug'].includes(
-  httpDebugFlag.trim().toLowerCase(),
-);
-const httpDebugShowSensitiveFlag = process.env.GITCODE_HTTP_DEBUG_SHOW_SECRETS || '';
-const httpDebugShowSensitive = ['1', 'true', 'yes', 'on'].includes(
-  httpDebugShowSensitiveFlag.trim().toLowerCase(),
-);
+const httpDebugEnabled = process.env.NODE_ENV === 'development';
 
 function logHttp(event: string, detail: Record<string, unknown>) {
   if (!httpDebugEnabled) return;
@@ -64,9 +57,6 @@ function logHttp(event: string, detail: Record<string, unknown>) {
 }
 
 function redactHeaders(headers: Record<string, string>) {
-  if (httpDebugEnabled && httpDebugShowSensitive) {
-    return { ...headers };
-  }
   const sanitized: Record<string, string> = {};
   for (const [key, value] of Object.entries(headers)) {
     if (key.toLowerCase() === 'authorization') {
