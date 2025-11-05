@@ -11,8 +11,8 @@ export async function getPullRequestCount(
     throw new Error(`Invalid Git URL: ${url}`);
   }
   const apiUrl = prCountUrl(owner, repo);
-  const json = await client.request(apiUrl, 'GET', {
+  const json = await client.http.get(apiUrl, {
     searchParams: { only_count: true },
-  });
+  }).json();
   return prCountSchema.parse(json);
 }

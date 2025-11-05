@@ -4,7 +4,6 @@ import type {
   PRCommentQueryOptions,
   PullRequest,
 } from '@xbghc/gitcode-api';
-import { isNotModified } from '@xbghc/gitcode-api';
 import type { EmitFn, PollContext } from './resource-runner.js';
 
 /**
@@ -82,7 +81,7 @@ async function fetchPullRequests(
   url: string,
 ): Promise<{ data: PullRequest[]; notModified: boolean }> {
   const data = await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
-  return { data, notModified: isNotModified(data) };
+  return { data, notModified: false };
 }
 
 /**
@@ -209,5 +208,5 @@ async function fetchPrComments(
     : undefined;
 
   const data = await client.pr.comments(url, prNumber, query);
-  return { data, notModified: isNotModified(data) };
+  return { data, notModified: false };
 }

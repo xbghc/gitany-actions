@@ -44,7 +44,7 @@ export async function getRepoSettings(
   repo: string,
 ): Promise<RepoSettings> {
   const url = repoSettingsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return repoSettingsSchema.parse(data);
 }
 
@@ -54,7 +54,7 @@ export async function getRepoEvents(
   repo: string,
 ): Promise<RepoEvents> {
   const url = repoEventsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return repoEventsSchema.parse(data);
 }
 
@@ -64,7 +64,7 @@ export async function getContributors(
   repo: string,
 ): Promise<Contributors> {
   const url = contributorsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return contributorsSchema.parse(data);
 }
 
@@ -74,7 +74,7 @@ export async function getBranches(
   repo: string,
 ): Promise<Branches> {
   const url = branchesUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return branchSchema.array().parse(data);
 }
 
@@ -85,7 +85,7 @@ export async function getBranch(
   branch: string,
 ): Promise<Branch> {
   const url = branchUrl(owner, repo, branch);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return branchSchema.parse(data);
 }
 
@@ -95,7 +95,7 @@ export async function getCommits(
   repo: string,
 ): Promise<Commits> {
   const url = commitsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return commitSchema.array().parse(data);
 }
 
@@ -106,7 +106,7 @@ export async function getFileBlob(
   sha: string,
 ): Promise<FileBlob> {
   const url = fileBlobUrl(owner, repo, sha);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return fileBlobSchema.parse(data);
 }
 
@@ -118,7 +118,7 @@ export async function compare(
   head: string,
 ): Promise<Compare> {
   const url = compareUrl(owner, repo, base, head);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return compareSchema.parse(data);
 }
 
@@ -128,7 +128,7 @@ export async function getWebhooks(
   repo: string,
 ): Promise<Webhooks> {
   const url = webhooksUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return webhookSchema.array().parse(data);
 }
 
@@ -139,7 +139,7 @@ export async function getWebhook(
   id: number,
 ): Promise<Webhook> {
   const url = webhookUrl(owner, repo, id);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return webhookSchema.parse(data);
 }
 
@@ -150,9 +150,9 @@ export async function getNotifications(
   query?: NotificationQuery,
 ): Promise<NotificationsResponse> {
   const url = notificationsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {
+  const data = await client.http.get(url, {
     searchParams: query as Record<string, string | number | boolean>
-  });
+  }).json();
   return notificationsResponseSchema.parse(data);
 }
 
@@ -163,7 +163,7 @@ export async function markNotificationsRead(
   params: MarkNotificationsReadParams,
 ): Promise<void> {
   const url = notificationsUrl(owner, repo);
-  await client.request<void>(url, 'PUT', {
+  await client.http.put(url, {
     searchParams: params as unknown as Record<string, string | number | boolean>
   });
 }

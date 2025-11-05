@@ -19,6 +19,6 @@ export async function listPullRequestComments(
   }
   const apiUrl = prCommentsUrl(parsed.owner, parsed.repo, prNumber);
   const query = toQuery(queryOptions);
-  const json = await client.request(apiUrl, 'GET', { searchParams: query });
+  const json = await client.http.get(apiUrl, { searchParams: query }).json();
   return prCommentSchema.array().parse(json);
 }

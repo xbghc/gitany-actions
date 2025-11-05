@@ -10,13 +10,13 @@ import type { GitcodeClient } from '../core.js';
 
 export async function getUserProfile(client: GitcodeClient): Promise<UserProfile> {
   const url = userProfileUrl();
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return userProfileSchema.parse(data);
 }
 
 export async function getUserNamespace(client: GitcodeClient): Promise<UserNamespace> {
   const url = userNamespaceUrl();
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return userNamespaceSchema.parse(data);
 }
 

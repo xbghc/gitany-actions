@@ -25,6 +25,6 @@ export async function listIssues(
       q[k] = v;
     }
   }
-  const json = await client.request(apiUrl, 'GET', { searchParams: q });
+  const json = await client.http.get(apiUrl, { searchParams: q }).json();
   return listIssuesResponseSchema.parse(json);
 }

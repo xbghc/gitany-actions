@@ -17,9 +17,9 @@ export async function updateIssueComment(
   params: UpdateIssueCommentParams,
 ): Promise<UpdatedIssueComment> {
   const url = updateIssueCommentUrl(params.owner, params.repo, params.comment_id);
-  const response = await client.request(url, 'PATCH', {
+  const response = await client.http.patch(url, {
     json: params.body,
-  });
+  }).json();
 
   const result = updatedIssueCommentSchema.safeParse(response);
   if (!result.success) {

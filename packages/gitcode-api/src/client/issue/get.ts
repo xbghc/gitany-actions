@@ -9,6 +9,6 @@ export async function getIssue(client: GitcodeClient, url: string, issueNumber: 
     throw new Error(`Invalid Git URL: ${url}`);
   }
   const apiUrl = getIssueUrl(parsed.owner, parsed.repo, issueNumber);
-  const json = await client.request(apiUrl, 'GET');
+  const json = await client.http.get(apiUrl).json();
   return issueDetailSchema.parse(json);
 }

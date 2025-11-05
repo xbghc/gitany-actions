@@ -1,11 +1,10 @@
 import {
   type SelfPermissionResponse,
-  selfPermissionUrl,
   selfPermissionResponseSchema,
+  selfPermissionUrl,
 } from '../../api/repo/self-permission.js';
 import type { RepoRole } from '../../types/repo-role.js';
-import { isObjectLike } from '../../utils/index.js';
-import { parseGitUrl } from '../../utils/index.js';
+import { isObjectLike, parseGitUrl } from '../../utils/index.js';
 import type { GitcodeClient } from '../core.js';
 
 /**
@@ -21,14 +20,14 @@ export async function getSelfRepoPermission(
     throw new Error(`Invalid Git URL: ${url}`);
   }
   const path = selfPermissionUrl({ owner, repo });
-  const json = await client.request(path, 'GET', {});
+  const json = await client.http.get(path).json();
   return selfPermissionResponseSchema.parse(json);
 }
+
 /**
  * 获取用户在仓库的权限角色
  * @returns 'admin' | 'write' | 'read' | 'none'
  */
-
 export async function getSelfRepoPermissionRole(
   client: GitcodeClient,
   url: string,

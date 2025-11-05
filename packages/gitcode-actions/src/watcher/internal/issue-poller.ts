@@ -5,7 +5,6 @@ import type {
   ListIssuesQuery,
   IssueCommentsQuery,
 } from '@xbghc/gitcode-api';
-import { isNotModified } from '@xbghc/gitcode-api';
 import type { EmitFn, PollContext } from './resource-runner.js';
 
 /**
@@ -159,5 +158,5 @@ async function fetchIssueComments(
   commentQuery?: IssueCommentsQuery,
 ): Promise<{ data: IssueComment[]; notModified: boolean }> {
   const data = await client.issue.comments(url, issueNumber, commentQuery ?? {});
-  return { data, notModified: isNotModified(data) };
+  return { data, notModified: false };
 }

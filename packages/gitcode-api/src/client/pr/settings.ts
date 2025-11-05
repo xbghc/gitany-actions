@@ -11,6 +11,6 @@ export async function getPullRequestSettings(
   repo: string,
 ): Promise<PullRequestSettings> {
   const url = pullRequestSettingsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
+  const data = await client.http.get(url).json();
   return pullRequestSettingsSchema.parse(data);
 }
