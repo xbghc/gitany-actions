@@ -252,12 +252,7 @@ export class WorkflowService {
       this.updateStep(workflowId, 'fetch-pr', 'running');
       this.emitOutput(workflowId, 'fetch-pr', `正在获取 PR #${prNumber} 信息...\n`);
 
-      const pulls = await gitcodeClient.pr.list(repoUrl, { state: 'all', per_page: 100 });
-      const pr = pulls.find((p) => p.number === prNumber);
-
-      if (!pr) {
-        throw new Error(`PR #${prNumber} not found`);
-      }
+      const pr = await gitcodeClient.pr.get(repoUrl, prNumber);
 
       sourceBranch = pr.head.ref;
       this.emitOutput(workflowId, 'fetch-pr', `找到 PR 分支: ${sourceBranch}\n`);

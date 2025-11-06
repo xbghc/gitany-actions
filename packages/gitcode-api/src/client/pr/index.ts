@@ -4,12 +4,14 @@ import type {
   ListPullsQuery,
   PRCommentQueryOptions,
   PrCount,
+  PullRequestDetail,
 } from '../../api/pr/index.js';
 import type { GitCodeClient } from '../core.js';
 import { listPullRequestComments } from './comments.js';
 import { getPullRequestCount } from './count.js';
 import { createPrComment } from './create-comment.js';
 import { createPullRequest } from './create.js';
+import { getPullRequest } from './get.js';
 import { listPullRequests } from './list.js';
 
 export class GitCodeClientPr {
@@ -17,6 +19,10 @@ export class GitCodeClientPr {
 
   list(url: string, query: ListPullsQuery = { state: 'open' }) {
     return listPullRequests(this.client, url, query);
+  }
+
+  async get(url: string, prNumber: number): Promise<PullRequestDetail> {
+    return await getPullRequest(this.client, url, prNumber);
   }
 
   create(url: string, body: CreatePullBody) {
