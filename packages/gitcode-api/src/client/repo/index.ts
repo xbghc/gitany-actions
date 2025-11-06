@@ -42,14 +42,44 @@ import type { GitCodeClient } from '../core.js';
 import { parseApiResponse } from '../parser.js';
 import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 
+/**
+ * 获取仓库设置信息
+ *
+ * @param client - GitCode 客户端实例
+ * @param owner - 仓库所有者
+ * @param repo - 仓库名称
+ * @returns 仓库设置信息
+ * @throws {HTTPError} 403 - 权限不足，需要仓库管理员或维护者权限才能访问设置
+ *
+ * @remarks
+ * 此 API 需要用户对仓库具有管理员（admin）或维护者（maintainer）权限。
+ * 如果没有足够权限，将返回 403 Forbidden 错误。
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const settings = await getRepoSettings(client, 'owner', 'repo');
+ *   console.log('仓库设置:', settings);
+ * } catch (error) {
+ *   if (error.response?.statusCode === 403) {
+ *     console.error('权限不足：需要仓库管理员或维护者权限');
+ *   }
+ * }
+ * ```
+ */
 export async function getRepoSettings(
   client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<RepoSettings> {
   const url = repoSettingsUrl(owner, repo);
+  console.log('Fetching repo settings from URL:', url);
   const data = await client.http.get(url).json();
-  return parseApiResponse(repoSettingsSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(repoSettingsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getRepoEvents(
@@ -59,7 +89,11 @@ export async function getRepoEvents(
 ): Promise<RepoEvents> {
   const url = repoEventsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return parseApiResponse(repoEventsSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(repoEventsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getContributors(
@@ -69,7 +103,11 @@ export async function getContributors(
 ): Promise<Contributors> {
   const url = contributorsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return parseApiResponse(contributorsSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(contributorsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getBranches(
@@ -79,7 +117,11 @@ export async function getBranches(
 ): Promise<Branches> {
   const url = branchesUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return parseApiResponse(branchSchema.array(), data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(branchSchema.array(), data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getBranch(
@@ -90,7 +132,11 @@ export async function getBranch(
 ): Promise<Branch> {
   const url = branchUrl(owner, repo, branch);
   const data = await client.http.get(url).json();
-  return parseApiResponse(branchSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(branchSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getCommits(
@@ -100,7 +146,11 @@ export async function getCommits(
 ): Promise<Commits> {
   const url = commitsUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return parseApiResponse(commitSchema.array(), data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(commitSchema.array(), data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getFileBlob(
@@ -111,7 +161,11 @@ export async function getFileBlob(
 ): Promise<FileBlob> {
   const url = fileBlobUrl(owner, repo, sha);
   const data = await client.http.get(url).json();
-  return parseApiResponse(fileBlobSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(fileBlobSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function compare(
@@ -123,7 +177,11 @@ export async function compare(
 ): Promise<Compare> {
   const url = compareUrl(owner, repo, base, head);
   const data = await client.http.get(url).json();
-  return parseApiResponse(compareSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(compareSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getWebhooks(
@@ -133,7 +191,11 @@ export async function getWebhooks(
 ): Promise<Webhooks> {
   const url = webhooksUrl(owner, repo);
   const data = await client.http.get(url).json();
-  return parseApiResponse(webhookSchema.array(), data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(webhookSchema.array(), data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getWebhook(
@@ -144,7 +206,11 @@ export async function getWebhook(
 ): Promise<Webhook> {
   const url = webhookUrl(owner, repo, id);
   const data = await client.http.get(url).json();
-  return parseApiResponse(webhookSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(webhookSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getNotifications(
@@ -159,7 +225,11 @@ export async function getNotifications(
       searchParams: query as Record<string, string | number | boolean>,
     })
     .json();
-  return parseApiResponse(notificationsResponseSchema, data, { endpoint: url, method: "GET", params: { owner, repo } });
+  return parseApiResponse(notificationsResponseSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function markNotificationsRead(
@@ -199,6 +269,30 @@ export class GitCodeClientRepo {
     return await getSelfRepoPermissionRole(this.client, url);
   }
 
+  /**
+   * 获取仓库设置信息
+   *
+   * @param owner - 仓库所有者
+   * @param repo - 仓库名称
+   * @returns 仓库设置信息
+   * @throws {HTTPError} 403 - 权限不足，需要仓库管理员或维护者权限才能访问设置
+   *
+   * @remarks
+   * 此 API 需要用户对仓库具有管理员（admin）或维护者（maintainer）权限。
+   * 如果没有足够权限，将返回 403 Forbidden 错误。
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const settings = await client.repo.getSettings('owner', 'repo');
+   *   console.log('仓库设置:', settings);
+   * } catch (error) {
+   *   if (error.response?.statusCode === 403) {
+   *     console.error('权限不足：需要仓库管理员或维护者权限');
+   *   }
+   * }
+   * ```
+   */
   async getSettings(owner: string, repo: string): Promise<RepoSettings> {
     return await getRepoSettings(this.client, owner, repo);
   }

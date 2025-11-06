@@ -2,16 +2,14 @@ import { z } from 'zod';
 import { API_BASE } from '../constants.js';
 
 export const repoSettingsSchema = z.object({
-  // 仓库设置相关字段，根据API文档定义
-  default_branch: z.string().optional(),
-  has_issues: z.boolean().optional(),
-  has_wiki: z.boolean().optional(),
-  has_pull_requests: z.boolean().optional(),
-  has_projects: z.boolean().optional(),
-  allow_squash_merge: z.boolean().optional(),
-  allow_merge_commit: z.boolean().optional(),
-  allow_rebase_merge: z.boolean().optional(),
-  delete_branch_on_merge: z.boolean().optional(),
+  disable_fork: z.boolean().optional(),
+  forbidden_developer_create_branch: z.boolean().optional(),
+  forbidden_developer_create_tag: z.boolean().optional(),
+  forbidden_committer_create_branch: z.boolean().optional(),
+  generate_pre_merge_ref: z.boolean().optional(),
+  forbidden_gitlab_access: z.boolean().optional(),
+  rebase_disable_trigger_webhook: z.boolean().optional(),
+  include_lfs_objects: z.boolean().optional(),
 });
 
 export type RepoSettings = z.infer<typeof repoSettingsSchema>;

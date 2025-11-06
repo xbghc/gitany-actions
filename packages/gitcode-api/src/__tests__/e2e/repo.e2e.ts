@@ -9,13 +9,13 @@
  * - 测试专注于业务逻辑、过滤器行为和数据约束
  * - 如果 API 返回结构错误，Zod 会直接抛出 ZodError
  */
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { GitCodeClient } from '../../client/index.js';
 import { parseGitUrl } from '../../utils/index.js';
-import { withRetry, waitIfRateLimited } from './helpers.js';
+import { waitIfRateLimited, withRetry } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
-const TEST_REPO_URL = 'https://gitcode.com/xbghc/gitcode-actions';
+const TEST_REPO_URL = 'https://gitcode.com/xbghc/gitcode-demo';
 
 describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
   let client: GitCodeClient;
@@ -81,7 +81,10 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getSelfRepoPermission()', () => {
     it('应该获取当前用户的仓库权限', async () => {
-      const permission = await withRetry(() => client.repo.getSelfRepoPermission(TEST_REPO_URL), client);
+      const permission = await withRetry(
+        () => client.repo.getSelfRepoPermission(TEST_REPO_URL),
+        client,
+      );
 
       // 结构由 Zod schema 保证，这里仅验证调用成功
       expect(permission).toBeDefined();
@@ -90,7 +93,10 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getSelfRepoPermissionRole()', () => {
     it('应该提取用户角色', async () => {
-      const role = await withRetry(() => client.repo.getSelfRepoPermissionRole(TEST_REPO_URL), client);
+      const role = await withRetry(
+        () => client.repo.getSelfRepoPermissionRole(TEST_REPO_URL),
+        client,
+      );
 
       // 验证用户角色在合法范围内（业务规则）
       expect(['owner', 'admin', 'write', 'read']).toContain(role);
@@ -99,7 +105,10 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getNotifications()', () => {
     it('应该获取通知列表', async () => {
-      const notifications = await withRetry(() => client.repo.getNotifications(owner, repo), client);
+      const notifications = await withRetry(
+        () => client.repo.getNotifications(owner, repo),
+        client,
+      );
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(notifications.list)).toBe(true);
