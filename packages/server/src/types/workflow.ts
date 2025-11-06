@@ -25,6 +25,18 @@ export interface WorkflowStep {
 export interface WorkflowResult {
   /** Workflow唯一标识 */
   workflowId: string;
+  /** 仓库所有者 */
+  owner: string;
+  /** 仓库名称 */
+  repo: string;
+  /** 仓库 URL */
+  repoUrl: string;
+  /** PR 编号 */
+  prNumber: number;
+  /** 配置 ID（如果使用了预定义配置） */
+  configId?: string;
+  /** 配置名称（用于展示） */
+  configName?: string;
   /** 整体状态 */
   status: WorkflowStatus;
   /** 执行步骤列表 */

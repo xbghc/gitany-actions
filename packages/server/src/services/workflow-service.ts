@@ -153,6 +153,10 @@ export class WorkflowService {
     // 初始化workflow
     const workflow: WorkflowResult = {
       workflowId,
+      owner,
+      repo,
+      repoUrl,
+      prNumber,
       status: 'pending',
       createdAt: new Date().toISOString(),
       steps: [
@@ -546,6 +550,27 @@ export class WorkflowService {
 
       emitter.once('done', doneHandler);
     });
+  }
+
+  /**
+   * 列出指定仓库的所有 workflow
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @returns workflow 列表（按时间倒序）
+   */
+  listByRepo(owner: string, repo: string): WorkflowResult[] {
+    const results: WorkflowResult[] = [];
+
+    for (const workflow of this.workflows.values()) {
+      if (workflow.owner === owner && workflow.repo === repo) {
+        results.push(workflow);
+      }
+    }
+
+    // 按时间倒序排列
+    return results.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
   }
 
   /**

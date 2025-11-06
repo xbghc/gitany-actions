@@ -2,7 +2,7 @@ import type Docker from 'dockerode';
 import { executor } from '../executor/container-executor.js';
 import { installDependencies } from './install-dependencies.js';
 
-export interface PrepareForTestTarget {
+export interface PrepareTarget {
   /** 分支名称 */
   branch?: string;
   /** Git commit SHA */
@@ -12,7 +12,7 @@ export interface PrepareForTestTarget {
 }
 
 /**
- * 准备容器以运行测试
+ * 准备容器以运行测试或预览
  *
  * 工作流：
  * 1. 切换到指定版本（branch/sha/pr）
@@ -27,19 +27,16 @@ export interface PrepareForTestTarget {
  * @example
  * ```ts
  * // 准备测试 PR
- * await prepareForTest(container, { pr: 123 });
+ * await prepare(container, { pr: 123 });
  *
  * // 准备测试特定分支
- * await prepareForTest(container, { branch: 'main' });
+ * await prepare(container, { branch: 'main' });
  *
  * // 准备测试特定 commit
- * await prepareForTest(container, { sha: 'abc123' });
+ * await prepare(container, { sha: 'abc123' });
  * ```
  */
-export async function prepareForTest(
-  container: Docker.Container,
-  target: PrepareForTestTarget,
-): Promise<void> {
+export async function prepare(container: Docker.Container, target: PrepareTarget): Promise<void> {
   const { branch, sha, pr } = target;
 
   // 1. 切换到指定版本

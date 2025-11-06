@@ -94,6 +94,7 @@ async function detectPackageManager(container: Docker.Container): Promise<string
  * });
  * ```
  */
+// TODO 移除，一句命令的事，让用户自己写
 export async function installDependencies(
   container: Docker.Container,
   options?: InstallDependenciesOptions,

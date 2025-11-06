@@ -324,3 +324,33 @@ workflowRouter.get('/workflow/test-all-registry-mirrors', async (req: Request, r
     });
   }
 });
+
+/**
+ * 列出指定仓库的所有 workflow
+ * GET /api/workflows/:owner/:repo
+ */
+workflowRouter.get(
+  '/workflows/:owner/:repo',
+  withAuth(async (req, res) => {
+    try {
+      const { owner, repo } = req.params;
+
+      const workflows = workflowService.listByRepo(owner, repo);
+
+      res.json({
+        success: true,
+        data: {
+          workflows,
+          count: workflows.length,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to list workflows:', error);
+      res.status(500).json({
+        success: false,
+        error: 'LIST_FAILED',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }),
+);

@@ -18,8 +18,8 @@ export {
 } from './lifecycle.js';
 
 // 工作流 API
-export { prepareForTest } from './prepare-for-test.js';
-export type { PrepareForTestTarget } from './prepare-for-test.js';
+export { prepare } from './prepare.js';
+export type { PrepareTarget } from './prepare.js';
 
 export { installDependencies } from './install-dependencies.js';
 export type {
