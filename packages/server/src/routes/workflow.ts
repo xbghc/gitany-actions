@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { withAuth } from '../middleware/auth.js';
 import { workflowService } from '../services/workflow-service.js';
+import { workflowConfigService } from '../services/workflow-config-service.js';
 import type { RegistryMirrorTestResult, WorkflowConfig } from '../types/workflow.js';
 import { testRegistryMirror } from '../utils/docker-runner.js';
 import { createGitCodeClient } from '../utils/gitcode-client.js';
@@ -26,8 +27,16 @@ workflowRouter.post(
         return;
       }
 
-      const { owner, repo, packageManager, buildCommand, lintCommand, baseImage, timeout } =
-        req.body;
+      const {
+        owner,
+        repo,
+        configId,
+        packageManager,
+        buildCommand,
+        lintCommand,
+        baseImage,
+        timeout,
+      } = req.body;
 
       if (!owner || !repo) {
         res.status(400).json({
@@ -37,22 +46,48 @@ workflowRouter.post(
         return;
       }
 
-      // 验证packageManager
-      if (packageManager && !['npm', 'pnpm', 'yarn'].includes(packageManager)) {
-        res.status(400).json({
-          success: false,
-          error: 'packageManager must be one of: npm, pnpm, yarn',
-        });
-        return;
-      }
+      let config: WorkflowConfig;
+      let configName: string | undefined;
 
-      const config: WorkflowConfig = {
-        packageManager,
-        buildCommand,
-        lintCommand,
-        baseImage,
-        timeout,
-      };
+      // 优先使用 configId
+      if (configId) {
+        const workflowConfig = await workflowConfigService.getById(configId);
+
+        if (!workflowConfig) {
+          res.status(404).json({
+            success: false,
+            error: 'CONFIG_NOT_FOUND',
+            message: `Configuration not found: ${configId}`,
+          });
+          return;
+        }
+
+        // 将 WorkflowConfig 的 steps 转换为旧的 WorkflowConfig 格式
+        // 这里需要将 steps 转换为命令执行逻辑
+        configName = workflowConfig.name;
+        config = {
+          // 暂时保留原有字段，后续在 WorkflowService 中处理 steps
+          timeout: workflowConfig.timeout,
+        };
+      } else {
+        // 使用传统参数（向后兼容）
+        // 验证packageManager
+        if (packageManager && !['npm', 'pnpm', 'yarn'].includes(packageManager)) {
+          res.status(400).json({
+            success: false,
+            error: 'packageManager must be one of: npm, pnpm, yarn',
+          });
+          return;
+        }
+
+        config = {
+          packageManager,
+          buildCommand,
+          lintCommand,
+          baseImage,
+          timeout,
+        };
+      }
 
       const client = createGitCodeClient(token);
 
@@ -63,6 +98,8 @@ workflowRouter.post(
         prNumber,
         config,
         client,
+        configId,
+        configName,
       );
 
       res.json({

@@ -80,13 +80,18 @@
 
       <EmptyState v-if="!loading && prList.length === 0" description="暂无 PR" />
 
-      <!-- Workflow 测试对话框 -->
-      <WorkflowDialog
-        v-model="workflowDialogVisible"
-        :pr-number="selectedPR?.number || 0"
+      <!-- 配置选择对话框 -->
+      <WorkflowConfigSelector
+        v-model:visible="configSelectorVisible"
         :owner="selectedPR?.owner || ''"
         :repo="selectedPR?.repo || ''"
-        @success="handleWorkflowSuccess"
+        @select="handleConfigSelected"
+      />
+
+      <!-- Workflow 日志查看器 -->
+      <WorkflowLogViewer
+        v-model:visible="logViewerVisible"
+        :workflow-id="currentWorkflowId"
       />
 
       <!-- 分页 -->
@@ -109,13 +114,15 @@
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RefreshRight, Promotion } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import { usePRStore, useRepoStore } from '@/store';
+import { triggerPRWorkflow } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import WorkflowDialog from '@/components/WorkflowDialog.vue';
-import type { PullRequest } from '@/types';
+import WorkflowConfigSelector from '@/components/WorkflowConfigSelector.vue';
+import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
+import type { PullRequest, WorkflowConfig } from '@/types';
 import { formatRelativeTime } from '@/utils/timeFormatter';
 
 const prStore = usePRStore();
@@ -127,9 +134,13 @@ const { selectedRepoId } = storeToRefs(repoStore);
 // 方法可以直接解构
 const { fetchPRList, clearCache } = prStore;
 
-// Workflow 对话框
-const workflowDialogVisible = ref(false);
+// 配置选择对话框
+const configSelectorVisible = ref(false);
 const selectedPR = ref<PullRequest & { owner?: string; repo?: string }>();
+
+// Workflow 日志查看器
+const logViewerVisible = ref(false);
+const currentWorkflowId = ref('');
 
 // 计算当前筛选状态下的 PR 总数
 const totalCount = computed(() => {
@@ -180,7 +191,7 @@ const formatTime = (time: string) => {
 };
 
 /**
- * 运行测试
+ * 运行测试 - 打开配置选择对话框
  */
 const handleRunTest = (pr: PullRequest) => {
   if (!selectedRepoId.value) {
@@ -197,14 +208,47 @@ const handleRunTest = (pr: PullRequest) => {
     repo,
   };
 
-  workflowDialogVisible.value = true;
+  configSelectorVisible.value = true;
 };
 
 /**
- * 测试成功回调
+ * 配置选择完成 - 触发 workflow
  */
-const handleWorkflowSuccess = () => {
-  ElMessage.success('测试通过！');
+const handleConfigSelected = async (configId: string, config: WorkflowConfig) => {
+  if (!selectedPR.value) return;
+
+  const { owner, repo, number } = selectedPR.value;
+
+  if (!owner || !repo) {
+    ElMessage.error('无法获取仓库信息');
+    return;
+  }
+
+  try {
+    // 触发 workflow
+    const response = await triggerPRWorkflow(number, {
+      owner,
+      repo,
+      configId,
+    });
+
+    if (response.data) {
+      currentWorkflowId.value = response.data.workflowId;
+
+      // 显示通知
+      ElNotification.success({
+        title: `PR #${number} 测试已启动`,
+        message: `使用配置: ${config.name}`,
+        duration: 3000,
+      });
+
+      // 自动打开日志查看器
+      logViewerVisible.value = true;
+    }
+  } catch (error) {
+    console.error('触发 workflow 失败:', error);
+    ElMessage.error('启动测试失败');
+  }
 };
 </script>
 

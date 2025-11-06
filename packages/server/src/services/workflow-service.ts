@@ -138,6 +138,8 @@ export class WorkflowService {
    * @param prNumber PR编号
    * @param config 配置选项
    * @param gitcodeClient GitCode客户端（用于获取PR信息）
+   * @param configId 配置ID（可选）
+   * @param configName 配置名称（可选）
    * @returns workflowId
    */
   async executePrWorkflow(
@@ -146,6 +148,8 @@ export class WorkflowService {
     prNumber: number,
     config: WorkflowConfig,
     gitcodeClient: GitCodeClient,
+    configId?: string,
+    configName?: string,
   ): Promise<string> {
     const workflowId = this.generateWorkflowId(owner, repo, prNumber);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
@@ -157,6 +161,8 @@ export class WorkflowService {
       repo,
       repoUrl,
       prNumber,
+      configId,
+      configName,
       status: 'pending',
       createdAt: new Date().toISOString(),
       steps: [

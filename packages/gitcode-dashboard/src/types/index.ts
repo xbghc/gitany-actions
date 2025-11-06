@@ -303,11 +303,19 @@ export interface UpdateWorkflowConfigRequest {
 export interface TriggerPRWorkflowRequest {
   owner: string;
   repo: string;
+  /** 配置ID（优先使用，如果提供则忽略其他配置参数） */
+  configId?: string;
+  /** 包管理器（configId 未提供时使用） */
   packageManager?: 'npm' | 'pnpm' | 'yarn';
+  /** Build 命令（configId 未提供时使用） */
   buildCommand?: string;
+  /** Lint 命令（configId 未提供时使用） */
   lintCommand?: string;
+  /** Docker 基础镜像（configId 未提供时使用） */
   baseImage?: string;
+  /** npm 镜像源（configId 未提供时使用） */
   registryMirror?: string;
+  /** 超时时间（configId 未提供时使用） */
   timeout?: number;
 }
 
