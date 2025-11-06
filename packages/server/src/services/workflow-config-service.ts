@@ -88,6 +88,10 @@ class WorkflowConfigService {
       steps: request.steps,
       env: request.env,
       timeout: request.timeout,
+      beforeAll: request.beforeAll,
+      afterAll: request.afterAll,
+      baseImage: request.baseImage,
+      registryMirror: request.registryMirror,
     };
 
     configs.push(config);
