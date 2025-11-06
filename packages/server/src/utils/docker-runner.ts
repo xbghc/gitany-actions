@@ -474,127 +474,20 @@ function executeDockerCommand(args: string[]): Promise<void> {
 }
 
 /**
- * 构建在Docker容器中执行PR测试的命令
- * @param repoUrl 仓库URL
- * @param branch PR分支名
- * @param packageManager 包管理器
- * @param buildCommand build命令
- * @param lintCommand lint命令
- * @returns shell命令字符串
- */
-export function buildPrTestCommand(
-  repoUrl: string,
-  branch: string,
-  packageManager: 'npm' | 'pnpm' | 'yarn' = 'npm',
-  buildCommand?: string,
-  lintCommand?: string,
-): string {
-  const commands: string[] = [];
-
-  // 如果使用pnpm，需要安装
-  if (packageManager === 'pnpm') {
-    commands.push('npm install -g pnpm');
-  }
-
-  // 克隆仓库
-  commands.push(`echo "=== Cloning repository ===" && git clone ${repoUrl} /workspace`);
-
-  // 切换到工作目录
-  commands.push('cd /workspace');
-
-  // 切换分支
-  commands.push(`echo "=== Checking out branch ${branch} ===" && git checkout ${branch}`);
-
-  // 安装依赖
-  commands.push(`echo "=== Installing dependencies ===" && ${packageManager} install`);
-
-  // 执行build
-  if (buildCommand) {
-    commands.push(`echo "=== Running build ===" && ${buildCommand}`);
-  } else {
-    commands.push(`echo "=== Running build ===" && ${packageManager} run build`);
-  }
-
-  // 执行lint
-  if (lintCommand) {
-    commands.push(`echo "=== Running lint ===" && ${lintCommand}`);
-  } else {
-    commands.push(`echo "=== Running lint ===" && ${packageManager} run lint`);
-  }
-
-  commands.push('echo "=== All tests completed successfully ==="');
-
-  return commands.join(' && ');
-}
-
-/**
- * 生成初始化命令（克隆仓库、安装依赖）
+ * 生成初始化命令（克隆仓库到工作目录）
  * @param repoUrl 仓库URL
  * @param branch 分支名
- * @param packageManager 包管理器
  * @returns 初始化命令字符串
  */
-export function buildInitCommand(
-  repoUrl: string,
-  branch: string,
-  packageManager: 'npm' | 'pnpm' | 'yarn' = 'npm',
-): string {
+export function buildInitCommand(repoUrl: string, branch: string): string {
   const commands: string[] = [];
-
-  // 安装 pnpm（如果需要）
-  if (packageManager === 'pnpm') {
-    commands.push('npm install -g pnpm');
-  }
 
   // 克隆仓库并直接切换到指定分支
   commands.push(
     `echo "=== Cloning repository and checking out branch ${branch} ===" && git clone --branch ${branch} ${repoUrl} /workspace`,
   );
   commands.push('cd /workspace');
-
-  // 安装依赖
-  commands.push(`echo "=== Installing dependencies ===" && ${packageManager} install`);
   commands.push('echo "=== Initialization completed ==="');
-
-  return commands.join(' && ');
-}
-
-/**
- * 生成构建测试命令
- * @param packageManager 包管理器
- * @param buildCommand 自定义构建命令（可选）
- * @returns 构建命令字符串
- */
-export function buildBuildCommand(
-  packageManager: 'npm' | 'pnpm' | 'yarn' = 'npm',
-  buildCommand?: string,
-): string {
-  const commands: string[] = [];
-  commands.push('cd /workspace');
-
-  const cmd = buildCommand || `${packageManager} run build`;
-  commands.push(`echo "=== Running build ===" && ${cmd}`);
-  commands.push('echo "=== Build completed ==="');
-
-  return commands.join(' && ');
-}
-
-/**
- * 生成 Lint 测试命令
- * @param packageManager 包管理器
- * @param lintCommand 自定义lint命令（可选）
- * @returns Lint命令字符串
- */
-export function buildLintCommand(
-  packageManager: 'npm' | 'pnpm' | 'yarn' = 'npm',
-  lintCommand?: string,
-): string {
-  const commands: string[] = [];
-  commands.push('cd /workspace');
-
-  const cmd = lintCommand || `${packageManager} run lint`;
-  commands.push(`echo "=== Running lint ===" && ${cmd}`);
-  commands.push('echo "=== Lint completed ==="');
 
   return commands.join(' && ');
 }
@@ -756,117 +649,6 @@ export async function createAndStartContainer(
         error: 'Container creation timeout',
       });
     }, 30000);
-  });
-}
-
-/**
- * 在运行中的容器内执行命令
- * @param containerName 容器名称
- * @param command 要执行的命令
- * @param timeout 超时时间（毫秒），默认30分钟
- * @param onOutput 输出回调函数
- * @returns 执行结果
- */
-export async function execInContainer(
-  containerName: string,
-  command: string,
-  timeout = 30 * 60 * 1000,
-  onOutput?: (data: string, isError: boolean) => void,
-): Promise<DockerRunResult> {
-  return new Promise((resolve) => {
-    // docker exec <container> sh -c "<command>"
-    const dockerArgs = ['exec', containerName, 'sh', '-c', command];
-
-    let stdout = '';
-    let stderr = '';
-    let isTimedOut = false;
-
-    const dockerProcess = spawn('docker', dockerArgs, {
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-
-    // 设置超时
-    const timeoutId = setTimeout(() => {
-      isTimedOut = true;
-      dockerProcess.kill('SIGTERM');
-      setTimeout(() => {
-        if (!dockerProcess.killed) {
-          dockerProcess.kill('SIGKILL');
-        }
-      }, 5000);
-    }, timeout);
-
-    // 监听标准输出
-    if (dockerProcess.stdout) {
-      dockerProcess.stdout.on('data', (data: Buffer) => {
-        const text = data.toString();
-        stdout += text;
-        if (onOutput) {
-          onOutput(text, false);
-        }
-      });
-    }
-
-    // 监听错误输出
-    if (dockerProcess.stderr) {
-      dockerProcess.stderr.on('data', (data: Buffer) => {
-        const text = data.toString();
-        stderr += text;
-        if (onOutput) {
-          onOutput(text, true);
-        }
-      });
-    }
-
-    // 监听进程退出
-    dockerProcess.on('close', (exitCode) => {
-      clearTimeout(timeoutId);
-
-      if (isTimedOut) {
-        resolve({
-          success: false,
-          exitCode: null,
-          stdout,
-          stderr,
-          error: `Execution timed out after ${timeout}ms`,
-        });
-        return;
-      }
-
-      let errorMessage: string | undefined;
-      if (exitCode !== 0) {
-        errorMessage = `Process exited with code ${exitCode}`;
-        if (stderr) {
-          errorMessage += `\n\n${stderr.trim()}`;
-        }
-      }
-
-      resolve({
-        success: exitCode === 0,
-        exitCode,
-        stdout,
-        stderr,
-        error: errorMessage,
-      });
-    });
-
-    // 监听错误
-    dockerProcess.on('error', (error: NodeJS.ErrnoException) => {
-      clearTimeout(timeoutId);
-
-      let errorMessage = error.message;
-      if (error.code === 'ENOENT') {
-        errorMessage = 'Docker 命令不可用';
-      }
-
-      resolve({
-        success: false,
-        exitCode: null,
-        stdout,
-        stderr,
-        error: errorMessage,
-      });
-    });
   });
 }
 

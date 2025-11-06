@@ -25,6 +25,18 @@ export interface WorkflowStep {
 export interface WorkflowResult {
   /** Workflow唯一标识 */
   workflowId: string;
+  /** 仓库所有者 */
+  owner: string;
+  /** 仓库名称 */
+  repo: string;
+  /** 仓库 URL */
+  repoUrl: string;
+  /** PR 编号 */
+  prNumber: number;
+  /** 配置 ID（如果使用了预定义配置） */
+  configId?: string;
+  /** 配置名称（用于展示） */
+  configName?: string;
   /** 整体状态 */
   status: WorkflowStatus;
   /** 执行步骤列表 */
@@ -35,24 +47,6 @@ export interface WorkflowResult {
   completedAt?: string;
   /** 错误信息 */
   error?: string;
-}
-
-/**
- * Workflow配置
- */
-export interface WorkflowConfig {
-  /** 包管理器：npm/pnpm/yarn */
-  packageManager?: 'npm' | 'pnpm' | 'yarn';
-  /** build命令 */
-  buildCommand?: string;
-  /** lint命令 */
-  lintCommand?: string;
-  /** Docker基础镜像 */
-  baseImage?: string;
-  /** Docker镜像源（用于加速镜像拉取） */
-  registryMirror?: string;
-  /** 超时时间（毫秒） */
-  timeout?: number;
 }
 
 /**
@@ -130,4 +124,30 @@ export interface RegistryMirrorTestResult {
   speed?: number;
   /** 错误信息 */
   error?: string;
+}
+
+/**
+ * Workflow日志元数据（用于列表展示）
+ */
+export interface WorkflowLogMeta {
+  /** Workflow唯一标识 */
+  workflowId: string;
+  /** 仓库所有者 */
+  owner: string;
+  /** 仓库名称 */
+  repo: string;
+  /** PR 编号 */
+  prNumber: number;
+  /** 配置 ID */
+  configId?: string;
+  /** 配置名称 */
+  configName?: string;
+  /** 整体状态 */
+  status: WorkflowStatus;
+  /** 创建时间 */
+  createdAt: string;
+  /** 完成时间 */
+  completedAt?: string;
+  /** 执行耗时（毫秒） */
+  duration?: number;
 }

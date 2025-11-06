@@ -9,6 +9,8 @@ import { repoRouter } from './routes/repo.js';
 import { prRouter } from './routes/pr.js';
 import { issueRouter } from './routes/issue.js';
 import { workflowRouter } from './routes/workflow.js';
+import { workflowConfigRouter } from './routes/workflow-config.js';
+import { containerRouter } from './routes/container.js';
 import { userRouter } from './routes/user.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { avatarTransformerMiddleware } from './middleware/avatar-transformer.js';
@@ -57,6 +59,8 @@ app.use('/api', repoRouter);
 app.use('/api', prRouter);
 app.use('/api', issueRouter);
 app.use('/api', workflowRouter);
+app.use('/api', workflowConfigRouter);
+app.use('/api', containerRouter);
 
 // Error handling
 app.use(errorHandler);

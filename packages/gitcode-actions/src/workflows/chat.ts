@@ -4,7 +4,6 @@ import { prepareImage } from '../container/prepare-image.js';
 import { getDevContainer } from '../container/get-dev-container.js';
 import { createWorkspaceContainer } from '../container/create-workspace-container.js';
 import { verifySha } from '../executor/verify-sha.js';
-import { installDependencies } from '../executor/install-dependencies.js';
 import { createApiCallScript } from './call-anthropic.js';
 import {
   executor,
@@ -113,9 +112,6 @@ export async function chat(
       const verify = await verifySha({ container });
       if (!verify.success) return { success: false, error: verify.output };
     }
-
-    const installDeps = await installDependencies({ container, env: sharedStepEnv });
-    if (!installDeps.success) return { success: false, error: installDeps.output };
 
     try {
       await executor(container, { env: sharedStepEnv }).execute(

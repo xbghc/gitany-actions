@@ -1,4 +1,5 @@
 <template>
+  <!-- eslint-disable-next-line vue/no-v-html -->
   <div class="markdown-viewer" v-html="renderedMarkdown"></div>
 </template>
 

@@ -15,15 +15,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8
+          version: 10
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Generate type declarations
+        run: pnpm --filter @xbghc/gitcode-dashboard exec vite build --mode development
 
       - name: Build
         run: pnpm build

@@ -41,8 +41,8 @@
         type="primary"
         size="small"
         :icon="Plus"
-        @click="showAddDialog = true"
         style="width: 100%"
+        @click="showAddDialog = true"
       >
         添加仓库
       </el-button>
@@ -69,7 +69,7 @@
       </el-form>
       <template #footer>
         <el-button @click="handleCancelAdd">取消</el-button>
-        <el-button type="primary" @click="handleAddRepo" :disabled="!isFormValid"> 添加 </el-button>
+        <el-button type="primary" :disabled="!isFormValid" @click="handleAddRepo"> 添加 </el-button>
       </template>
     </el-dialog>
   </div>
@@ -105,7 +105,7 @@ const handleRepoUrlChange = () => {
   const input = addForm.repoUrl.trim();
 
   // 尝试从 URL 中提取 owner/repo
-  const urlMatch = input.match(/(?:https?:\/\/)?(?:www\.)?gitcode\.com\/([^\/]+)\/([^\/]+)/i);
+  const urlMatch = input.match(/(?:https?:\/\/)?(?:www\.)?gitcode\.com\/([^/]+)\/([^/]+)/i);
   if (urlMatch) {
     addForm.owner = urlMatch[1];
     addForm.repo = urlMatch[2].replace(/\.git$/, '');
@@ -113,7 +113,7 @@ const handleRepoUrlChange = () => {
   }
 
   // 尝试直接解析 owner/repo 格式
-  const simpleMatch = input.match(/^([^\/\s]+)\/([^\/\s]+)$/);
+  const simpleMatch = input.match(/^([^/\s]+)\/([^/\s]+)$/);
   if (simpleMatch) {
     addForm.owner = simpleMatch[1];
     addForm.repo = simpleMatch[2];

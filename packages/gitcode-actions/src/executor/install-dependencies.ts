@@ -18,14 +18,17 @@ const MAX_RETRIES = 3;
 const INITIAL_DELAY_MS = 2000;
 
 /**
- * Installs dependencies in the workspace container.
+ * 自动检测包管理器并安装依赖
  *
- * This function attempts to install dependencies using pnpm. It includes a retry
- * mechanism to handle transient network errors, attempting the installation up
- * to 3 times with exponential backoff.
+ * @internal 仅供内部使用
  *
- * @param options - The options for executing the step.
- * @returns A promise that resolves with the result of the step execution.
+ * TODO: 未来允许用户自定义 prepare 流程，此函数作为 fallback
+ * - 允许用户提供自定义的容器准备流程
+ * - 保留自动检测逻辑作为默认 fallback 行为
+ * - 支持更灵活的依赖安装策略（缓存、增量安装等）
+ *
+ * @param options - 安装选项
+ * @returns 安装结果
  */
 export async function installDependencies({
   container,

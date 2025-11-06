@@ -241,7 +241,7 @@ export interface Statistics {
 /** Workflow 执行状态 */
 export type WorkflowStatus = 'pending' | 'running' | 'success' | 'failed';
 
-/** Workflow 步骤 */
+/** Workflow 执行步骤 */
 export interface WorkflowStep {
   name: string;
   status: WorkflowStatus;
@@ -253,6 +253,12 @@ export interface WorkflowStep {
 /** Workflow 执行结果 */
 export interface WorkflowResult {
   workflowId: string;
+  owner: string;
+  repo: string;
+  repoUrl: string;
+  prNumber: number;
+  configId?: string;
+  configName?: string;
   status: WorkflowStatus;
   steps: WorkflowStep[];
   createdAt: string;
@@ -260,16 +266,84 @@ export interface WorkflowResult {
   error?: string;
 }
 
-/** Workflow 配置 */
-export interface WorkflowConfig {
+/** Workflow 日志元数据（用于列表展示） */
+export interface WorkflowLogMeta {
+  workflowId: string;
   owner: string;
   repo: string;
-  packageManager?: 'npm' | 'pnpm' | 'yarn';
-  buildCommand?: string;
-  lintCommand?: string;
-  baseImage?: string;
-  registryMirror?: string; // Docker 镜像源
+  prNumber: number;
+  configId?: string;
+  configName?: string;
+  status: WorkflowStatus;
+  createdAt: string;
+  completedAt?: string;
+  /** 执行耗时（毫秒） */
+  duration?: number;
+}
+
+/** Workflow 配置步骤 */
+export interface WorkflowConfigStep {
+  name: string;
+  commands: string[];
+  /** 步骤级环境变量 */
+  env?: Record<string, string>;
+  /** 工作目录（默认 /workspace） */
+  workDir?: string;
+  /** 步骤超时时间（毫秒） */
   timeout?: number;
+  /** 失败后是否继续执行后续步骤 */
+  continueOnError?: boolean;
+  /** 失败后重试次数 */
+  retry?: number;
+}
+
+/** Workflow 配置 */
+export interface WorkflowConfig {
+  id: string;
+  name: string;
+  steps: WorkflowConfigStep[];
+  env?: Record<string, string>;
+  timeout?: number;
+  /** 全局前置钩子命令（默认：clone 代码） */
+  beforeAll?: string;
+  /** 全局后置钩子命令 */
+  afterAll?: string;
+  /** Docker 基础镜像 */
+  baseImage?: string;
+  /** Docker 镜像源（用于加速） */
+  registryMirror?: string;
+}
+
+/** 创建 Workflow 配置请求 */
+export interface CreateWorkflowConfigRequest {
+  name: string;
+  steps: WorkflowConfigStep[];
+  env?: Record<string, string>;
+  timeout?: number;
+  beforeAll?: string;
+  afterAll?: string;
+  baseImage?: string;
+  registryMirror?: string;
+}
+
+/** 更新 Workflow 配置请求 */
+export interface UpdateWorkflowConfigRequest {
+  name?: string;
+  steps?: WorkflowConfigStep[];
+  env?: Record<string, string>;
+  timeout?: number;
+  beforeAll?: string;
+  afterAll?: string;
+  baseImage?: string;
+  registryMirror?: string;
+}
+
+/** 触发 PR Workflow 的请求参数 */
+export interface TriggerPRWorkflowRequest {
+  owner: string;
+  repo: string;
+  /** 配置ID（必需） */
+  configId: string;
 }
 
 /** SSE 事件类型 */

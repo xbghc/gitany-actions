@@ -214,6 +214,7 @@ const handleCreateIssue = async () => {
     await fetchIssueList();
   } catch (error) {
     ElMessage.error('创建 Issue 失败');
+    console.error('创建 Issue 失败:', error);
   } finally {
     creating.value = false;
   }

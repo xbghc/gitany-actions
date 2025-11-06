@@ -24,6 +24,32 @@ export { FileStateStorage } from './watcher/file-state-storage.js';
 export { MemoryStateStorage } from './watcher/memory-state-storage.js';
 
 // ===== Container Management =====
+// New API (recommended)
+export {
+  createContainer,
+  getContainerById,
+  findContainers,
+  getContainerInfo,
+  startContainer,
+  stopContainer,
+  removeContainer,
+  removeContainersByLabels,
+  cleanupManagedContainers,
+  prepare,
+  resetContainer,
+  exec,
+} from './container/index.js';
+export type {
+  CreateContainerConfig,
+  CreateContainerResult,
+  ContainerInfo,
+  PrepareTarget,
+  ResetContainerOptions,
+  ExecOptions,
+  ExecResult,
+} from './container/index.js';
+
+// Legacy API (deprecated)
 export {
   cleanupPrContainers,
   ContainerCreationError,
@@ -35,8 +61,6 @@ export {
   getContainerStatus,
   ImagePullError,
   prepareImage,
-  removeContainer,
-  resetContainer,
 } from './container/index.js';
 export type {
   ContainerOptions,
@@ -53,7 +77,6 @@ export {
   execCommand,
   executor,
   ExecutorChain,
-  installDependencies,
   verifySha,
 } from './executor/index.js';
 export type {
@@ -65,8 +88,6 @@ export type {
   ExecutionHandle,
   ExecutionResult,
   ExecutorOptions,
-  InstallOptions,
-  InstallResult,
   ProjectCheckResult,
   ProjectDiagnostics,
   StepOptions,

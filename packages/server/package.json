@@ -26,6 +26,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@xbghc/gitcode-actions": "workspace:*",
     "@xbghc/gitcode-api": "workspace:*",
     "express": "^4.21.2",
     "cors": "^2.8.5",
