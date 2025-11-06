@@ -7,6 +7,64 @@ export interface ContainerOptions {
   autoRemove?: boolean;
 }
 
+/**
+ * 容器创建配置
+ */
+export interface CreateContainerConfig {
+  /** Git 仓库 URL */
+  repoUrl: string;
+
+  /** 代码版本（三选一） */
+  branch?: string;
+  sha?: string;
+  pr?: number;
+
+  /** 容器配置 */
+  image?: string;
+  labels?: Record<string, string>;
+  env?: Record<string, string>;
+
+  /** 依赖安装配置 */
+  install?:
+    | boolean
+    | {
+        packageManager?: 'npm' | 'pnpm' | 'yarn' | 'auto';
+        registry?: string;
+      };
+}
+
+/**
+ * 容器创建结果
+ */
+export interface CreateContainerResult {
+  /** 容器唯一 ID */
+  id: string;
+  /** Docker 容器实例 */
+  container: import('dockerode').Container;
+}
+
+/**
+ * 容器详细信息
+ */
+export interface ContainerInfo {
+  /** 容器唯一 ID */
+  id: string;
+  /** 容器名称 */
+  name: string;
+  /** 容器状态 */
+  status: 'running' | 'stopped' | 'exited' | 'paused' | 'restarting' | 'dead';
+  /** Docker 镜像 */
+  image: string;
+  /** 容器标签 */
+  labels: Record<string, string>;
+  /** 创建时间 */
+  created: Date;
+  /** 当前 Git 分支（如果是 Git 仓库容器） */
+  currentBranch?: string;
+  /** 当前 Git commit SHA */
+  currentSha?: string;
+}
+
 export interface TestShaBuildOptions {
   /** Node.js version for the test container. Defaults to `18`. */
   nodeVersion?: string;

@@ -1,11 +1,76 @@
-// 容器生命周期管理
+// ==================== 新 API（推荐使用） ====================
+
+// 容器创建
+export { createContainer } from './create.js';
+export type { CreateContainerConfig, CreateContainerResult } from './create.js';
+
+// 容器查询
+export { getContainerById, findContainers, getContainerInfo } from './query.js';
+export type { ContainerInfo } from './query.js';
+
+// 容器生命周期
+export {
+  startContainer,
+  stopContainer,
+  removeContainer,
+  removeContainersByLabels,
+  cleanupManagedContainers,
+} from './lifecycle.js';
+
+// 工作流 API
+export { prepareForTest } from './prepare-for-test.js';
+export type { PrepareForTestTarget } from './prepare-for-test.js';
+
+export { installDependencies } from './install-dependencies.js';
+export type {
+  InstallDependenciesOptions,
+  InstallDependenciesResult,
+} from './install-dependencies.js';
+
+export { resetContainer } from './reset.js';
+export type { ResetContainerOptions } from './reset.js';
+
+export { exec } from './exec.js';
+export type { ExecOptions, ExecResult } from './exec.js';
+
+// ==================== 旧 API（向后兼容） ====================
+
+/**
+ * @deprecated 使用 createContainer() 代替
+ */
 export { createPrContainer } from './create.js';
+
+/**
+ * @deprecated 容器管理已重构，使用新的 API
+ */
 export { ContainerCreationError, createWorkspaceContainer } from './create-workspace-container.js';
+
+/**
+ * @deprecated 使用 getContainerById() 或 findContainers() 代替
+ */
 export { getContainer, getContainerStatus } from './get.js';
+
+/**
+ * @deprecated 容器管理已重构
+ */
 export { getDevContainer } from './get-dev-container.js';
-export { removeContainer } from './remove-container.js';
-export { resetContainer } from './reset-container.js';
+
+/**
+ * @deprecated 使用 removeContainer() 代替
+ */
+export { removeContainer as removePrContainer } from './remove-container.js';
+
+/**
+ * @deprecated 使用 resetContainer() 代替
+ */
+export { resetContainer as resetPrContainer } from './reset-container.js';
+
+/**
+ * @deprecated 使用 cleanupManagedContainers() 代替
+ */
 export { cleanupPrContainers } from './cleanup.js';
+
+// ==================== 通用工具 ====================
 
 // 镜像和文件操作
 export { ImagePullError, prepareImage } from './prepare-image.js';
