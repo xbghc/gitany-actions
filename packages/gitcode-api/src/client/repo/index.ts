@@ -1,175 +1,265 @@
-import { type SelfPermissionResponse } from '../../api/repo/self-permission.js';
-import type { RepoRole } from '../../types/repo-role.js';
-import type { GitcodeClient } from '../core.js';
-import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 import {
-  repoSettingsSchema,
-  repoSettingsUrl,
-  repoEventsSchema,
-  repoEventsUrl,
-  contributorsSchema,
-  contributorsUrl,
-  branchSchema,
   branchesUrl,
+  branchSchema,
   branchUrl,
   commitSchema,
   commitsUrl,
-  fileBlobSchema,
-  fileBlobUrl,
   compareSchema,
   compareUrl,
+  contributorsSchema,
+  contributorsUrl,
+  fileBlobSchema,
+  fileBlobUrl,
+  notificationsResponseSchema,
+  notificationsUrl,
+  pullRequestSettingsSchema,
+  pullRequestSettingsUrl,
+  repoEventsSchema,
+  repoEventsUrl,
+  repoSettingsSchema,
+  repoSettingsUrl,
   webhookSchema,
   webhooksUrl,
   webhookUrl,
-  notificationsResponseSchema,
-  notificationsUrl,
-  type RepoSettings,
-  type RepoEvents,
-  type Contributors,
   type Branch,
   type Branches,
   type Commits,
-  type FileBlob,
   type Compare,
+  type Contributors,
+  type FileBlob,
+  type MarkNotificationsReadParams,
+  type NotificationQuery,
+  type NotificationsResponse,
+  type PullRequestSettings,
+  type RepoEvents,
+  type RepoSettings,
   type Webhook,
   type Webhooks,
-  type NotificationsResponse,
-  type NotificationQuery,
-  type MarkNotificationsReadParams,
 } from '../../api/repo/index.js';
+import { type SelfPermissionResponse } from '../../api/repo/self-permission.js';
+import type { RepoRole } from '../../types/repo-role.js';
+import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
+import { getSelfRepoPermission, getSelfRepoPermissionRole } from './permission.js';
 
+/**
+ * 获取仓库设置信息
+ *
+ * @param client - GitCode 客户端实例
+ * @param owner - 仓库所有者
+ * @param repo - 仓库名称
+ * @returns 仓库设置信息
+ * @throws {HTTPError} 403 - 权限不足，需要仓库管理员或维护者权限才能访问设置
+ *
+ * @remarks
+ * 此 API 需要用户对仓库具有管理员（admin）或维护者（maintainer）权限。
+ * 如果没有足够权限，将返回 403 Forbidden 错误。
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const settings = await getRepoSettings(client, 'owner', 'repo');
+ *   console.log('仓库设置:', settings);
+ * } catch (error) {
+ *   if (error.response?.statusCode === 403) {
+ *     console.error('权限不足：需要仓库管理员或维护者权限');
+ *   }
+ * }
+ * ```
+ */
 export async function getRepoSettings(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<RepoSettings> {
   const url = repoSettingsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return repoSettingsSchema.parse(data);
+  console.log('Fetching repo settings from URL:', url);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(repoSettingsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getRepoEvents(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<RepoEvents> {
   const url = repoEventsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return repoEventsSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(repoEventsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getContributors(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Contributors> {
   const url = contributorsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return contributorsSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(contributorsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getBranches(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Branches> {
   const url = branchesUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return branchSchema.array().parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(branchSchema.array(), data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getBranch(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   branch: string,
 ): Promise<Branch> {
   const url = branchUrl(owner, repo, branch);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return branchSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(branchSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getCommits(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Commits> {
   const url = commitsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return commitSchema.array().parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(commitSchema.array(), data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getFileBlob(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   sha: string,
 ): Promise<FileBlob> {
   const url = fileBlobUrl(owner, repo, sha);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return fileBlobSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(fileBlobSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function compare(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   base: string,
   head: string,
 ): Promise<Compare> {
   const url = compareUrl(owner, repo, base, head);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return compareSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(compareSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getWebhooks(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
 ): Promise<Webhooks> {
   const url = webhooksUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return webhookSchema.array().parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(webhookSchema.array(), data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getWebhook(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   id: number,
 ): Promise<Webhook> {
   const url = webhookUrl(owner, repo, id);
-  const data = await client.request<unknown>(url, 'GET', {});
-  return webhookSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(webhookSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
 }
 
 export async function getNotifications(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   query?: NotificationQuery,
 ): Promise<NotificationsResponse> {
   const url = notificationsUrl(owner, repo);
-  const data = await client.request<unknown>(url, 'GET', {
-    searchParams: query as Record<string, string | number | boolean>
+  const data = await client.http
+    .get(url, {
+      searchParams: query as Record<string, string | number | boolean>,
+    })
+    .json();
+  return parseApiResponse(notificationsResponseSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
   });
-  return notificationsResponseSchema.parse(data);
 }
 
 export async function markNotificationsRead(
-  client: GitcodeClient,
+  client: GitCodeClient,
   owner: string,
   repo: string,
   params: MarkNotificationsReadParams,
 ): Promise<void> {
   const url = notificationsUrl(owner, repo);
-  await client.request<void>(url, 'PUT', {
-    searchParams: params as unknown as Record<string, string | number | boolean>
+  await client.http.put(url, {
+    searchParams: params as unknown as Record<string, string | number | boolean>,
   });
 }
 
-export class GitcodeClientRepo {
-  constructor(private client: GitcodeClient) {}
+export async function getPullRequestSettings(
+  client: GitCodeClient,
+  owner: string,
+  repo: string,
+): Promise<PullRequestSettings> {
+  const url = pullRequestSettingsUrl(owner, repo);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(pullRequestSettingsSchema, data, {
+    endpoint: url,
+    method: 'GET',
+    params: { owner, repo },
+  });
+}
+
+export class GitCodeClientRepo {
+  constructor(private client: GitCodeClient) {}
 
   async getSelfRepoPermission(url: string): Promise<SelfPermissionResponse> {
     return await getSelfRepoPermission(this.client, url);
@@ -179,6 +269,30 @@ export class GitcodeClientRepo {
     return await getSelfRepoPermissionRole(this.client, url);
   }
 
+  /**
+   * 获取仓库设置信息
+   *
+   * @param owner - 仓库所有者
+   * @param repo - 仓库名称
+   * @returns 仓库设置信息
+   * @throws {HTTPError} 403 - 权限不足，需要仓库管理员或维护者权限才能访问设置
+   *
+   * @remarks
+   * 此 API 需要用户对仓库具有管理员（admin）或维护者（maintainer）权限。
+   * 如果没有足够权限，将返回 403 Forbidden 错误。
+   *
+   * @example
+   * ```typescript
+   * try {
+   *   const settings = await client.repo.getSettings('owner', 'repo');
+   *   console.log('仓库设置:', settings);
+   * } catch (error) {
+   *   if (error.response?.statusCode === 403) {
+   *     console.error('权限不足：需要仓库管理员或维护者权限');
+   *   }
+   * }
+   * ```
+   */
   async getSettings(owner: string, repo: string): Promise<RepoSettings> {
     return await getRepoSettings(this.client, owner, repo);
   }
@@ -219,11 +333,23 @@ export class GitcodeClientRepo {
     return await getWebhook(this.client, owner, repo, id);
   }
 
-  async getNotifications(owner: string, repo: string, query?: NotificationQuery): Promise<NotificationsResponse> {
+  async getNotifications(
+    owner: string,
+    repo: string,
+    query?: NotificationQuery,
+  ): Promise<NotificationsResponse> {
     return await getNotifications(this.client, owner, repo, query);
   }
 
-  async markNotificationsRead(owner: string, repo: string, params: MarkNotificationsReadParams): Promise<void> {
+  async markNotificationsRead(
+    owner: string,
+    repo: string,
+    params: MarkNotificationsReadParams,
+  ): Promise<void> {
     return await markNotificationsRead(this.client, owner, repo, params);
+  }
+
+  async getPullRequestSettings(owner: string, repo: string): Promise<PullRequestSettings> {
+    return await getPullRequestSettings(this.client, owner, repo);
   }
 }

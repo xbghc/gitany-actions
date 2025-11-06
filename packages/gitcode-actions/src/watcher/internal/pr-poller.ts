@@ -1,10 +1,9 @@
 import type {
-  GitcodeClient,
+  GitCodeClient,
   PRComment,
   PRCommentQueryOptions,
   PullRequest,
 } from '@xbghc/gitcode-api';
-import { isNotModified } from '@xbghc/gitcode-api';
 import type { EmitFn, PollContext } from './resource-runner.js';
 
 /**
@@ -78,11 +77,11 @@ export async function pollPullRequests(
  * 获取 PR 列表
  */
 async function fetchPullRequests(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
 ): Promise<{ data: PullRequest[]; notModified: boolean }> {
   const data = await client.pr.list(url, { state: 'all', page: 1, per_page: 10 });
-  return { data, notModified: isNotModified(data) };
+  return { data, notModified: false };
 }
 
 /**
@@ -122,7 +121,7 @@ function triggerPullRequestEvent(pr: PullRequest, emit: EmitFn): void {
 async function detectNewComments(
   prList: PullRequest[],
   prevLastCommentIds: Map<number, Set<number>>,
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   emit: EmitFn,
   commentType?: 'diff_comment' | 'pr_comment',
@@ -199,7 +198,7 @@ async function detectNewComments(
  * 获取 PR 评论
  */
 async function fetchPrComments(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   prNumber: number,
   commentType?: 'diff_comment' | 'pr_comment',
@@ -209,5 +208,5 @@ async function fetchPrComments(
     : undefined;
 
   const data = await client.pr.comments(url, prNumber, query);
-  return { data, notModified: isNotModified(data) };
+  return { data, notModified: false };
 }

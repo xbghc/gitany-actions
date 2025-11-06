@@ -9,9 +9,9 @@ title: 仓库 API
 ## 客户端方法
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 const repoUrl = 'https://gitcode.com/owner/repo.git';
 
 // 权限
@@ -21,6 +21,7 @@ const role = await client.repo.getSelfRepoPermissionRole(repoUrl);
 // 仓库配置与事件
 const settings = await client.repo.getSettings('owner', 'repo');
 const events = await client.repo.getEvents('owner', 'repo');
+const prSettings = await client.repo.getPullRequestSettings('owner', 'repo');
 
 // 分支/提交
 const branches = await client.repo.getBranches('owner', 'repo');
@@ -48,6 +49,7 @@ await client.repo.markNotificationsRead('owner', 'repo', { ids: '123,456' });
 
 - 权限：`selfPermissionUrl`、`selfPermissionResponseSchema`、`RepoRole` 以及相关类型。
 - 仓库配置与事件：`repoSettingsUrl`、`repoEventsUrl`、`repoSettingsSchema`、`repoEventsSchema`。
+- PR 设置：`pullRequestSettingsUrl`、`pullRequestSettingsSchema`、`PullRequestSettings`。
 - 贡献者：`contributorsUrl`、`contributorsSchema`。
 - 分支：`branchesUrl`、`branchUrl`、`branchSchema`。
 - 提交：`commitsUrl`、`commitSchema`。
@@ -63,6 +65,7 @@ await client.repo.markNotificationsRead('owner', 'repo', { ids: '123,456' });
 - `client.repo.getSelfRepoPermission(url): SelfPermissionResponse` — 解析远程地址（HTTP/SSH/`owner/repo`）并返回完整权限树。
 - `client.repo.getSelfRepoPermissionRole(url): RepoRole` — 在权限树基础上提取归一化角色（`'admin' | 'write' | 'read' | 'none'`）。
 - `client.repo.getSettings(owner, repo): RepoSettings` — 默认分支、合并策略、CI 等配置。
+- `client.repo.getPullRequestSettings(owner, repo): PullRequestSettings` — 获取仓库的 PR 合并策略设置（reject_not_signed_by_gpg、deny_force_push、max_file_size、skip_rule_for_owner）。
 - `client.repo.getEvents(owner, repo): RepoEvents` — 仓库事件时间线。
 - `client.repo.getContributors(owner, repo): Contributors` — 贡献者数组，包含提交次数与用户信息。
 - `client.repo.getBranches(owner, repo): Branches` — 所有分支信息（数组）。

@@ -1,24 +1,12 @@
-import { GitcodeClient } from '@xbghc/gitcode-api';
-import { EventEmitter } from 'node:events';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 import type Docker from 'dockerode';
-import type {
-  Watcher as IWatcher,
-  WatchOptions,
-  WatcherStatus,
-} from './types.js';
-import type { EventName, EventDataMap } from '../types/events.js';
-import { ResourceRunner, type IResourceRunner } from './internal/resource-runner.js';
-import {
-  pollPullRequests,
-  getInitialPrState,
-  type PrState,
-} from './internal/pr-poller.js';
-import {
-  pollIssues,
-  getInitialIssueState,
-  type IssueState,
-} from './internal/issue-poller.js';
+import { EventEmitter } from 'node:events';
+import type { EventDataMap, EventName } from '../types/events.js';
+import { getInitialIssueState, pollIssues, type IssueState } from './internal/issue-poller.js';
 import { pollNotifications, type NotificationState } from './internal/notification-poller.js';
+import { getInitialPrState, pollPullRequests, type PrState } from './internal/pr-poller.js';
+import { ResourceRunner, type IResourceRunner } from './internal/resource-runner.js';
+import type { Watcher as IWatcher, WatchOptions, WatcherStatus } from './types.js';
 
 /**
  * Watcher 主类
@@ -26,7 +14,7 @@ import { pollNotifications, type NotificationState } from './internal/notificati
  * 统一管理 PR、Issue 等资源的监听
  */
 export class Watcher extends EventEmitter implements IWatcher {
-  private readonly client: GitcodeClient;
+  private readonly client: GitCodeClient;
   private readonly url: string;
   private readonly options: WatchOptions;
   private readonly runners = new Map<string, IResourceRunner>();
@@ -39,7 +27,7 @@ export class Watcher extends EventEmitter implements IWatcher {
   private notificationIntervalId?: NodeJS.Timeout;
   private notificationState: NotificationState = { lastPollTime: undefined };
 
-  constructor(client: GitcodeClient, url: string, options: WatchOptions = {}) {
+  constructor(client: GitCodeClient, url: string, options: WatchOptions = {}) {
     super();
     this.client = client;
     this.url = url;
@@ -126,9 +114,15 @@ export class Watcher extends EventEmitter implements IWatcher {
 
     // 启动 notification 监听
     if (this.options.notification) {
-      const config = typeof this.options.notification === 'boolean'
-        ? { intervalSec: 30, type: 'referer' as const, unread: true }
-        : { intervalSec: 30, type: 'referer' as const, unread: true, ...this.options.notification };
+      const config =
+        typeof this.options.notification === 'boolean'
+          ? { intervalSec: 30, type: 'referer' as const, unread: true }
+          : {
+              intervalSec: 30,
+              type: 'referer' as const,
+              unread: true,
+              ...this.options.notification,
+            };
 
       if (config.enabled !== false) {
         const pollFn = async () => {
@@ -136,7 +130,7 @@ export class Watcher extends EventEmitter implements IWatcher {
             this.notificationState,
             { client: this.client, url: this.url },
             this.emitEvent.bind(this),
-            { useSinceParam: config.useSinceParam }
+            { useSinceParam: config.useSinceParam },
           );
         };
 

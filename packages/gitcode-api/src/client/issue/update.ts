@@ -1,9 +1,14 @@
+import {
+  updateIssueUrl,
+  updatedIssueSchema,
+  type UpdateIssueBody,
+} from '../../api/issue/update.js';
 import { parseGitUrl } from '../../utils/index.js';
-import { updateIssueUrl, updatedIssueSchema, type UpdateIssueBody } from '../../api/issue/update.js';
-import type { GitcodeClient } from '../core.js';
+import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function updateIssue(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   issueNumber: number,
   body: UpdateIssueBody,
@@ -14,6 +19,6 @@ export async function updateIssue(
   }
 
   const apiUrl = updateIssueUrl(parsed.owner, parsed.repo, issueNumber);
-  const json = await client.request(apiUrl, 'PATCH', { json: body });
-  return updatedIssueSchema.parse(json);
+  const json = await client.http.patch(apiUrl, { json: body }).json();
+  return parseApiResponse(updatedIssueSchema, json, { endpoint: apiUrl, method: "GET" });
 }

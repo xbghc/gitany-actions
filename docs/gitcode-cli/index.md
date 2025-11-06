@@ -92,6 +92,7 @@ gitcode auth set-token your_gitcode_token_here
 ```
 
 输出示例：
+
 ```
 Token saved successfully
 Config file: /home/user/.gitcode/config.json
@@ -106,18 +107,21 @@ gitcode auth status
 ```
 
 输出示例（使用配置文件）：
+
 ```
 Authenticated: your...here
 Source: Config file (/home/user/.gitcode/config.json)
 ```
 
 输出示例（使用环境变量）：
+
 ```
 Authenticated: env_...oken
 Source: Environment variable (GITCODE_TOKEN)
 ```
 
 未认证时的输出：
+
 ```
 Not authenticated
 Run "gitcode auth set-token <token>" to authenticate
@@ -132,6 +136,7 @@ gitcode auth remove-token
 ```
 
 输出示例：
+
 ```
 Token removed successfully
 ```
@@ -578,6 +583,7 @@ gitcode user namespace
 - `GITCODE_TOKEN`：GitCode 访问令牌
 
 **令牌读取优先级：**
+
 1. 环境变量 `GITCODE_TOKEN`（最高优先级）
 2. 配置文件 `~/.gitcode/config.json`
 
@@ -605,6 +611,7 @@ NODE_OPTIONS="--env-file=.env" gitcode pr list
 ```
 
 注意：
+
 - `.env` 路径基于当前工作目录（`process.cwd()`）。
 - 内置加载器按 `KEY=VALUE` 简单解析，不做变量插值。
 - 需要 Node ≥ 20.6；更旧版本请显式 `export` 环境变量或升级 Node。
@@ -614,6 +621,7 @@ NODE_OPTIONS="--env-file=.env" gitcode pr list
 CLI 将认证信息保存到：`~/.gitcode/config.json`
 
 配置文件格式：
+
 ```json
 {
   "token": "your-access-token",
@@ -623,17 +631,19 @@ CLI 将认证信息保存到：`~/.gitcode/config.json`
 ```
 
 **配置项说明：**
+
 - `token`: GitCode 访问令牌（通过 `gitcode auth set-token` 设置）
 - `authStyle`: 认证风格，可选值：`query`、`bearer`、`token`、`header`（可选）
 - `customAuthHeader`: 自定义认证头部（可选）
 
 **推荐做法：**
+
 - 使用 `gitcode auth set-token` 命令管理令牌，而不是手动编辑配置文件
 - 配置目录和文件会在首次保存令牌时自动创建
 
 ## 开发辅助
 
-在编写自定义命令时，可使用 `withClient` 工具统一创建 `GitcodeClient` 并处理错误：
+在编写自定义命令时，可使用 `withClient` 工具统一创建 `GitCodeClient` 并处理错误：
 
 ```ts
 import { withClient } from '@xbghc/gitcode-cli/utils/with-client';

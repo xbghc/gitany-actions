@@ -1,9 +1,9 @@
 import { Router, type Request, type Response } from 'express';
-import type { WorkflowConfig, RegistryMirrorTestResult } from '../types/workflow.js';
-import { workflowService } from '../services/workflow-service.js';
 import { withAuth } from '../middleware/auth.js';
-import { createGitcodeClient } from '../utils/gitcode-client.js';
+import { workflowService } from '../services/workflow-service.js';
+import type { RegistryMirrorTestResult, WorkflowConfig } from '../types/workflow.js';
 import { testRegistryMirror } from '../utils/docker-runner.js';
+import { createGitCodeClient } from '../utils/gitcode-client.js';
 
 export const workflowRouter: Router = Router();
 
@@ -54,7 +54,7 @@ workflowRouter.post(
         timeout,
       };
 
-      const client = createGitcodeClient(token);
+      const client = createGitCodeClient(token);
 
       // 执行workflow（异步）
       const workflowId = await workflowService.executePrWorkflow(
@@ -121,14 +121,20 @@ workflowRouter.get('/workflow/:workflowId/stream', (req: Request, res: Response)
   if (workflow.status === 'success' || workflow.status === 'failed') {
     // 发送所有步骤
     for (const step of workflow.steps) {
-      res.write(`event: step\ndata: ${JSON.stringify({ name: step.name, status: step.status })}\n\n`);
+      res.write(
+        `event: step\ndata: ${JSON.stringify({ name: step.name, status: step.status })}\n\n`,
+      );
       if (step.output) {
-        res.write(`event: output\ndata: ${JSON.stringify({ step: step.name, text: step.output })}\n\n`);
+        res.write(
+          `event: output\ndata: ${JSON.stringify({ step: step.name, text: step.output })}\n\n`,
+        );
       }
     }
 
     // 发送完成消息
-    res.write(`event: complete\ndata: ${JSON.stringify({ workflowId, status: workflow.status })}\n\n`);
+    res.write(
+      `event: complete\ndata: ${JSON.stringify({ workflowId, status: workflow.status })}\n\n`,
+    );
     res.end();
     return;
   }
@@ -243,7 +249,11 @@ workflowRouter.post('/workflow/test-registry-mirror', async (req: Request, res: 
   try {
     const { mirror, mirrorName, testImage } = req.body;
 
-    const result: RegistryMirrorTestResult = await testRegistryMirror(mirror, mirrorName, testImage);
+    const result: RegistryMirrorTestResult = await testRegistryMirror(
+      mirror,
+      mirrorName,
+      testImage,
+    );
 
     res.json({
       success: true,

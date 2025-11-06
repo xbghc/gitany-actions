@@ -4,13 +4,13 @@ GitCode Actions 是一个基于 pnpm 的 TypeScript monorepo，围绕 GitCode �
 
 ## 核心包
 
-| 包 | 说明 |
-| --- | --- |
-| `@xbghc/gitcode-api` | 强类型的 GitCode REST 客户端，封装用户、仓库、PR、Issue 等模块并提供响应缓存与重试策略。 |
-| `@xbghc/gitcode-cli` | `gitcode` 命令行工具，支持认证、仓库/PR/Issue 查询与评论等交互式操作。 |
-| `@xbghc/gitcode-actions` | 事件监听、容器编排与 AI 评论助手工具集，可用于构建自动化工作流。 |
-| `@xbghc/gitcode-actions-server` | 基于 Express 的后端服务，对外暴露 GitCode API 转发与自动化能力。 |
-| `@xbghc/gitcode-dashboard` | Vue 3 管理面板，封装 GitCode 仓库与 Issue 的可视化操作界面。 |
+| 包                              | 说明                                                                                     |
+| ------------------------------- | ---------------------------------------------------------------------------------------- |
+| `@xbghc/gitcode-api`            | 强类型的 GitCode REST 客户端，封装用户、仓库、PR、Issue 等模块并提供响应缓存与重试策略。 |
+| `@xbghc/gitcode-cli`            | `gitcode` 命令行工具，支持认证、仓库/PR/Issue 查询与评论等交互式操作。                   |
+| `@xbghc/gitcode-actions`        | 事件监听、容器编排与 AI 评论助手工具集，可用于构建自动化工作流。                         |
+| `@xbghc/gitcode-actions-server` | 基于 Express 的后端服务，对外暴露 GitCode API 转发与自动化能力。                         |
+| `@xbghc/gitcode-dashboard`      | Vue 3 管理面板，封装 GitCode 仓库与 Issue 的可视化操作界面。                             |
 
 ## 环境要求
 
@@ -76,14 +76,14 @@ GITCODE_TOKEN=... gitcode issue create owner repo --title "Bug" --body "重现�
 GITCODE_TOKEN=... gitcode issue comment 42 --repo owner/repo "感谢反馈！"
 ```
 
-CLI 底层通过 `GitcodeClient` 发起请求，并在出错时提供统一的错误处理与 JSON 输出选项。
+CLI 底层通过 `GitCodeClient` 发起请求，并在出错时提供统一的错误处理与 JSON 输出选项。
 
 ## API 客户端示例
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 
 const profile = await client.user.getProfile();
 const namespace = await client.user.getNamespace();
@@ -104,10 +104,10 @@ const issues = await client.issue.list('https://gitcode.com/owner/repo', { state
 - 容器工具链：提供 `createPrContainer`、`createWorkspaceContainer`、`testShaBuild`、`copyToContainer`、`collectDiagnostics` 等函数，用于拉起 PR 隔离环境、执行构建、采集日志并清理容器。
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 import { watchPullRequest, createPrContainer } from '@xbghc/gitcode-actions';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN!);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN!);
 
 watchPullRequest(client, 'https://gitcode.com/owner/repo', {
   intervalSec: 10,
@@ -123,6 +123,7 @@ await createPrContainer('https://gitcode.com/owner/repo', { id: 1, number: 12 } 
 ```
 
 **Chat 功能重大更新**：`chat()` 函数现在使用 Anthropic SDK 而非 Claude CLI，显著提升性能：
+
 - 启动时间从 30-60 秒降至 <1 秒
 - 内存占用从 ~500MB 降至 <50MB
 - 返回结构化元数据（模型信息、token 使用量等）
@@ -132,20 +133,17 @@ await createPrContainer('https://gitcode.com/owner/repo', { id: 1, number: 12 } 
 import { chat } from '@xbghc/gitcode-actions';
 
 // 基础使用（需要设置 ANTHROPIC_API_KEY 环境变量）
-const result = await chat(
-  'https://gitcode.com/owner/repo',
-  '请解释这段代码的功能'
-);
+const result = await chat('https://gitcode.com/owner/repo', '请解释这段代码的功能');
 
-console.log(result.output);           // Claude 的回复
-console.log(result.metadata.tokensUsed);  // Token 使用统计
+console.log(result.output); // Claude 的回复
+console.log(result.metadata.tokensUsed); // Token 使用统计
 
 // 自定义参数
 const result2 = await chat(repoUrl, prompt, {
   model: 'claude-sonnet-4-5-20250929',
   maxTokens: 16000,
   temperature: 0.5,
-  sha: 'main',  // 指定代码分支/提交
+  sha: 'main', // 指定代码分支/提交
 });
 ```
 
@@ -157,12 +155,14 @@ const result2 = await chat(repoUrl, prompt, {
 ## 环境与认证
 
 **CLI 认证**（推荐）：
+
 ```bash
 gitcode auth set-token <token>  # 保存到 ~/.gitcode/config.json
 gitcode auth status             # 查看认证状态
 ```
 
 **环境变量配置**（临时或 CI/CD 环境）：
+
 ```bash
 GITCODE_TOKEN=your-token        # 认证令牌（优先级高于配置文件）
 GITCODE_API_BASE=https://gitcode.com/api/v5

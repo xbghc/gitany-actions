@@ -13,9 +13,9 @@ pnpm add @xbghc/gitcode-api
 ### 初始化客户端
 
 ```typescript
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 ```
 
 ### 用户相关操作
@@ -24,10 +24,6 @@ const client = new GitcodeClient();
 // 获取用户信息
 const userProfile = await client.user.getProfile();
 console.log(userProfile.name, userProfile.email);
-
-// 获取用户命名空间
-const namespace = await client.user.getNamespace();
-console.log(namespace.path, namespace.type);
 ```
 
 ### 仓库相关操作
@@ -138,7 +134,6 @@ NODE_ENV=development
 ### 用户 API
 
 - `client.user.getProfile()` - 获取当前用户信息
-- `client.user.getNamespace()` - 获取用户命名空间
 
 ### 仓库 API
 
@@ -171,7 +166,6 @@ NODE_ENV=development
 所有 API 响应都有完整的 TypeScript 类型定义，包括：
 
 - `UserProfile` - 用户信息
-- `UserNamespace` - 用户命名空间
 - `RepoSettings` - 仓库设置
 - `Branch` - 分支信息
 - `Commit` - 提交信息

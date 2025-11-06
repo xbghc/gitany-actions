@@ -29,9 +29,9 @@ title: GitCode Actions 工具库
 
 ```ts
 import { Watcher } from '@xbghc/gitcode-actions';
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 
 // 创建 Watcher 实例
 const watcher = new Watcher(client, 'https://gitcode.com/owner/repo.git', {
@@ -86,11 +86,12 @@ watcher.start();
 #### 构造函数
 
 ```ts
-new Watcher(client: GitcodeClient, repoUrl: string, options?: WatchOptions)
+new Watcher(client: GitCodeClient, repoUrl: string, options?: WatchOptions)
 ```
 
 **参数**：
-- `client`: GitcodeClient 实例
+
+- `client`: GitCodeClient 实例
 - `repoUrl`: 仓库 URL
 - `options`: 监控选项（可选）
   - `pr`: PR 监控配置
@@ -111,15 +112,18 @@ new Watcher(client: GitcodeClient, repoUrl: string, options?: WatchOptions)
 #### 事件
 
 **PR 事件**：
+
 - `pr:opened`: PR 被打开时触发，回调参数：`(data: { pr, timestamp }) => void`
 - `pr:closed`: PR 被关闭时触发，回调参数：`(data: { pr, timestamp }) => void`
 - `pr:merged`: PR 被合并时触发，回调参数：`(data: { pr, timestamp }) => void`
 - `pr:comment:created`: PR 有新评论时触发，回调参数：`(data: { pr, comment, timestamp }) => void`
 
 **Issue 事件**：
+
 - `issue:comment:created`: Issue 有新评论时触发，回调参数：`(data: { issue, comment, timestamp }) => void`
 
 **容器事件**：
+
 - `container:created`: 容器创建时触发，回调参数：`(data: { container, pr, timestamp }) => void`
 - `container:removed`: 容器删除时触发，回调参数：`(data: { prId, timestamp }) => void`
 
@@ -140,9 +144,9 @@ Watcher 会自动将监控状态保存到本地文件系统，避免重复触发
 
 ```ts
 import { Watcher } from '@xbghc/gitcode-actions';
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 
 // 创建 Watcher 实例，配置 PR 监控
 const watcher = new Watcher(client, 'https://gitcode.com/owner/repo.git', {
@@ -206,9 +210,9 @@ watcher.start();
 
 ```ts
 import { Watcher } from '@xbghc/gitcode-actions';
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 
 // 创建 Watcher 实例，配置 Issue 监控
 const watcher = new Watcher(client, 'https://gitcode.com/owner/repo.git', {
@@ -277,9 +281,9 @@ import {
   getContainer,
   getContainerStatus,
 } from '@xbghc/gitcode-actions';
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 // 获取打开的 PR 列表并选择第一个
 const [pr] = await client.pr.list('https://gitcode.com/owner/repo.git', {
   state: 'open',
@@ -312,9 +316,9 @@ await removeContainer(pr.id);
 
 ```ts
 import { Watcher } from '@xbghc/gitcode-actions';
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient();
+const client = new GitCodeClient();
 
 // 创建 Watcher 实例，启用容器管理
 const watcher = new Watcher(client, 'https://gitcode.com/owner/repo.git', {
@@ -348,6 +352,7 @@ if (container) {
 **容器配置选项** (`options.pr.container`):
 
 可以传入 `ContainerOptions` 对象来自定义容器行为：
+
 - `image`: 容器镜像，默认为 Node.js 镜像
 - `env`: 额外的环境变量
 - `autoRemove`: 是否自动删除容器，默认根据 PR 状态决定
@@ -474,10 +479,7 @@ if (!result.success) {
 import { chat } from '@xbghc/gitcode-actions';
 
 // 基础使用（需要设置 ANTHROPIC_API_KEY 环境变量）
-const result = await chat(
-  'https://gitcode.com/owner/repo.git',
-  '请解释这个项目的结构'
-);
+const result = await chat('https://gitcode.com/owner/repo.git', '请解释这个项目的结构');
 
 if (result.success) {
   console.log('AI 回复:', result.output);
@@ -490,15 +492,15 @@ if (result.success) {
 // 自定义参数
 const result2 = await chat(repoUrl, prompt, {
   // 容器选项
-  sha: 'main',              // 目标提交或分支，默认 'dev'
-  keepContainer: false,     // 是否保留容器，默认 false
-  nodeVersion: '22',        // Node.js 版本，默认 '18'
-  verbose: true,            // 输出详细日志
+  sha: 'main', // 目标提交或分支，默认 'dev'
+  keepContainer: false, // 是否保留容器，默认 false
+  nodeVersion: '22', // Node.js 版本，默认 '18'
+  verbose: true, // 输出详细日志
 
   // Claude API 参数
-  model: 'claude-sonnet-4-5-20250929',  // Claude 模型
-  maxTokens: 16000,                     // 最大 token 数，默认 8000
-  temperature: 0.7,                     // 温度参数，可选
+  model: 'claude-sonnet-4-5-20250929', // Claude 模型
+  maxTokens: 16000, // 最大 token 数，默认 8000
+  temperature: 0.7, // 温度参数，可选
 
   // 镜像源
   npmRegistry: 'https://registry.npmmirror.com',
@@ -509,6 +511,7 @@ const result2 = await chat(repoUrl, prompt, {
 **参数选项**:
 
 容器相关：
+
 - `sha`: 目标提交或分支，默认 `dev`
 - `container`: 传入已有容器以复用，否则自动创建临时容器
 - `nodeVersion`: 自动创建容器时使用的 Node.js 版本，默认 `18`
@@ -517,6 +520,7 @@ const result2 = await chat(repoUrl, prompt, {
 - `npmRegistry` / `pnpmRegistry`: 自定义依赖安装时使用的镜像源
 
 Claude API 相关：
+
 - `model`: Claude 模型名称，默认 `claude-sonnet-4-5-20250929`
 - `maxTokens`: 最大生成 token 数，默认 `8000`
 - `temperature`: 温度参数（0-1），控制创造性，可选
@@ -525,14 +529,15 @@ Claude API 相关：
 
 ```typescript
 interface ChatResult {
-  success: boolean;          // 是否成功
-  output?: string;           // AI 回复内容（成功时）
-  error?: string;            // 错误信息（失败时）
-  metadata?: {               // 元数据（成功时）
-    model: string;           // 使用的模型
-    tokensUsed: number;      // 总 token 使用量
-    inputTokens: number;     // 输入 token 数
-    outputTokens: number;    // 输出 token 数
+  success: boolean; // 是否成功
+  output?: string; // AI 回复内容（成功时）
+  error?: string; // 错误信息（失败时）
+  metadata?: {
+    // 元数据（成功时）
+    model: string; // 使用的模型
+    tokensUsed: number; // 总 token 使用量
+    inputTokens: number; // 输入 token 数
+    outputTokens: number; // 输出 token 数
   };
 }
 ```

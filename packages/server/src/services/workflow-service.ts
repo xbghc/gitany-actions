@@ -1,25 +1,25 @@
+import type { GitCodeClient } from '@xbghc/gitcode-api';
 import { EventEmitter } from 'events';
 import type {
-  WorkflowResult,
-  WorkflowStatus,
-  WorkflowConfig,
+  SSECompleteMessage,
+  SSEErrorMessage,
   SSEOutputMessage,
   SSEStepMessage,
-  SSEErrorMessage,
-  SSECompleteMessage,
+  WorkflowConfig,
+  WorkflowResult,
+  WorkflowStatus,
 } from '../types/workflow.js';
 import {
-  buildInitCommand,
   buildBuildCommand,
+  buildInitCommand,
   buildLintCommand,
   checkDockerAvailable,
   checkImageExists,
-  pullDockerImage,
   createAndStartContainer,
   execInContainer,
+  pullDockerImage,
   removeContainer,
 } from '../utils/docker-runner.js';
-import type { GitcodeClient } from '@xbghc/gitcode-api';
 
 /**
  * Workflow服务
@@ -145,7 +145,7 @@ export class WorkflowService {
     repo: string,
     prNumber: number,
     config: WorkflowConfig,
-    gitcodeClient: GitcodeClient,
+    gitcodeClient: GitCodeClient,
   ): Promise<string> {
     const workflowId = this.generateWorkflowId(owner, repo, prNumber);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
@@ -190,7 +190,7 @@ export class WorkflowService {
     prNumber: number,
     repoUrl: string,
     config: WorkflowConfig,
-    gitcodeClient: GitcodeClient,
+    gitcodeClient: GitCodeClient,
   ) {
     const workflow = this.workflows.get(workflowId);
     if (!workflow) throw new Error('Workflow not found');
@@ -329,7 +329,7 @@ export class WorkflowService {
         buildCommand,
         lintCommand,
         baseImage = 'node:22',
-        registryMirror = 'docker.m.daocloud.io',  // 默认使用DaoCloud镜像源（2025年可用）
+        registryMirror = 'docker.m.daocloud.io', // 默认使用DaoCloud镜像源（2025年可用）
         timeout,
       } = config;
 
@@ -338,25 +338,20 @@ export class WorkflowService {
       const imageExists = await checkImageExists(baseImage);
 
       if (!imageExists) {
-        this.emitOutput(
-          workflowId,
-          'fetch-pr',
-          `⚠️  镜像 ${baseImage} 不存在，需要拉取。\n`,
-        );
+        this.emitOutput(workflowId, 'fetch-pr', `⚠️  镜像 ${baseImage} 不存在，需要拉取。\n`);
 
         // 拉取镜像（使用镜像源）
         const pullResult = await pullDockerImage(
           baseImage,
-          registryMirror,  // 传递镜像源
+          registryMirror, // 传递镜像源
           (text) => {
             this.emitOutput(workflowId, 'fetch-pr', text);
-          }
+          },
         );
 
         if (!pullResult.success) {
           const errorMsg =
-            pullResult.error ||
-            `镜像拉取失败。\n\n请手动拉取镜像后重试: docker pull ${baseImage}`;
+            pullResult.error || `镜像拉取失败。\n\n请手动拉取镜像后重试: docker pull ${baseImage}`;
 
           this.emitError(workflowId, 'fetch-pr', errorMsg);
           this.updateStep(workflowId, 'fetch-pr', 'failed', errorMsg);
@@ -368,13 +363,9 @@ export class WorkflowService {
 
       // 步骤3.5: 创建并启动持久容器
       this.emitOutput(workflowId, 'fetch-pr', `正在创建工作容器 ${containerName}...\n`);
-      const createResult = await createAndStartContainer(
-        containerName,
-        baseImage,
-        {
-          GITCODE_TOKEN: process.env.GITCODE_TOKEN || '',
-        }
-      );
+      const createResult = await createAndStartContainer(containerName, baseImage, {
+        GITCODE_TOKEN: process.env.GITCODE_TOKEN || '',
+      });
 
       if (!createResult.success) {
         const errorMsg = createResult.error || '容器创建失败';
@@ -390,15 +381,10 @@ export class WorkflowService {
       this.emitOutput(workflowId, 'docker-init', '正在初始化环境...\n');
 
       const initCommand = buildInitCommand(repoUrl, sourceBranch, packageManager);
-      const initResult = await execInContainer(
-        containerName,
-        initCommand,
-        timeout,
-        (data) => {
-          this.updateStep(workflowId, 'docker-init', 'running', data);
-          this.emitOutput(workflowId, 'docker-init', data);
-        },
-      );
+      const initResult = await execInContainer(containerName, initCommand, timeout, (data) => {
+        this.updateStep(workflowId, 'docker-init', 'running', data);
+        this.emitOutput(workflowId, 'docker-init', data);
+      });
 
       if (!initResult.success) {
         this.updateStep(workflowId, 'docker-init', 'failed', initResult.error);
@@ -416,15 +402,10 @@ export class WorkflowService {
       this.emitOutput(workflowId, 'docker-build', '正在执行构建测试...\n');
 
       const buildCmd = buildBuildCommand(packageManager, buildCommand);
-      const buildResult = await execInContainer(
-        containerName,
-        buildCmd,
-        timeout,
-        (data) => {
-          this.updateStep(workflowId, 'docker-build', 'running', data);
-          this.emitOutput(workflowId, 'docker-build', data);
-        },
-      );
+      const buildResult = await execInContainer(containerName, buildCmd, timeout, (data) => {
+        this.updateStep(workflowId, 'docker-build', 'running', data);
+        this.emitOutput(workflowId, 'docker-build', data);
+      });
 
       if (!buildResult.success) {
         this.updateStep(workflowId, 'docker-build', 'failed', buildResult.error);
@@ -442,15 +423,10 @@ export class WorkflowService {
       this.emitOutput(workflowId, 'docker-lint', '正在执行Lint测试...\n');
 
       const lintCmd = buildLintCommand(packageManager, lintCommand);
-      const lintResult = await execInContainer(
-        containerName,
-        lintCmd,
-        timeout,
-        (data) => {
-          this.updateStep(workflowId, 'docker-lint', 'running', data);
-          this.emitOutput(workflowId, 'docker-lint', data);
-        },
-      );
+      const lintResult = await execInContainer(containerName, lintCmd, timeout, (data) => {
+        this.updateStep(workflowId, 'docker-lint', 'running', data);
+        this.emitOutput(workflowId, 'docker-lint', data);
+      });
 
       if (!lintResult.success) {
         this.updateStep(workflowId, 'docker-lint', 'failed', lintResult.error);
@@ -495,7 +471,10 @@ export class WorkflowService {
         await removeContainer(containerName);
         console.log(`[Workflow ${workflowId}] Container ${containerName} removed`);
       } catch (error) {
-        console.error(`[Workflow ${workflowId}] Failed to remove container ${containerName}:`, error);
+        console.error(
+          `[Workflow ${workflowId}] Failed to remove container ${containerName}:`,
+          error,
+        );
       }
     }
   }
@@ -517,11 +496,15 @@ export class WorkflowService {
    */
   subscribeToWorkflow(
     workflowId: string,
-    callback: (message: SSEStepMessage | SSEOutputMessage | SSEErrorMessage | SSECompleteMessage) => void,
+    callback: (
+      message: SSEStepMessage | SSEOutputMessage | SSEErrorMessage | SSECompleteMessage,
+    ) => void,
   ): () => void {
     const emitter = this.getEventEmitter(workflowId);
 
-    const messageHandler = (message: SSEStepMessage | SSEOutputMessage | SSEErrorMessage | SSECompleteMessage) => {
+    const messageHandler = (
+      message: SSEStepMessage | SSEOutputMessage | SSEErrorMessage | SSECompleteMessage,
+    ) => {
       callback(message);
     };
 

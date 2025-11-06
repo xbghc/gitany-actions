@@ -1,14 +1,15 @@
 import {
-  issueCommentsUrl,
   issueCommentSchema,
-  type IssueCommentsQuery,
+  issueCommentsUrl,
   type IssueComment,
+  type IssueCommentsQuery,
 } from '../../api/issue/index.js';
-import type { GitcodeClient } from '../core.js';
 import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function listIssueComments(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   issueNumber: number,
   query: IssueCommentsQuery = {},
@@ -24,6 +25,6 @@ export async function listIssueComments(
       q[k] = v;
     }
   }
-  const json = await client.request(apiUrl, 'GET', { searchParams: q });
-  return issueCommentSchema.array().parse(json);
+  const json = await client.http.get(apiUrl, { searchParams: q }).json();
+  return parseApiResponse(issueCommentSchema.array(), json, { endpoint: apiUrl, method: "GET" });
 }

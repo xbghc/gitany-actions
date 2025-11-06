@@ -1,14 +1,15 @@
 import {
+  listIssuesResponseSchema,
   listIssuesUrl,
   type ListIssuesQuery,
   type ListIssuesResponse,
-  listIssuesResponseSchema,
 } from '../../api/issue/index.js';
-import type { GitcodeClient } from '../core.js';
 import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 export async function listIssues(
-  client: GitcodeClient,
+  client: GitCodeClient,
   url: string,
   query: ListIssuesQuery = { state: 'open' },
 ): Promise<ListIssuesResponse> {
@@ -25,6 +26,10 @@ export async function listIssues(
       q[k] = v;
     }
   }
-  const json = await client.request(apiUrl, 'GET', { searchParams: q });
-  return listIssuesResponseSchema.parse(json);
+  const json = await client.http.get(apiUrl, { searchParams: q }).json();
+  return parseApiResponse(listIssuesResponseSchema, json, {
+    endpoint: apiUrl,
+    method: 'GET',
+    params: q,
+  });
 }

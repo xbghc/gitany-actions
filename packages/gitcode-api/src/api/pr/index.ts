@@ -6,9 +6,4 @@ export type { PRComment, PRCommentQueryOptions } from './comments.js';
 export { prCommentsUrl, prCommentSchema } from './comments.js';
 export type { CreatePrCommentParams, CreatedPrComment } from './create-comment.js';
 export { createPrCommentUrl, createdPrCommentSchema } from './create-comment.js';
-export {
-  pullRequestSettingsSchema,
-  pullRequestSettingsUrl,
-  type PullRequestSettings,
-} from './settings.js';
 export { prCountSchema, prCountUrl, type PrCount } from './count.js';

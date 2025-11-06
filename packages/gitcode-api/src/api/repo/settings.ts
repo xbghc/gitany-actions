@@ -2,16 +2,14 @@ import { z } from 'zod';
 import { API_BASE } from '../constants.js';
 
 export const repoSettingsSchema = z.object({
-  // 仓库设置相关字段，根据API文档定义
-  default_branch: z.string().optional(),
-  has_issues: z.boolean().optional(),
-  has_wiki: z.boolean().optional(),
-  has_pull_requests: z.boolean().optional(),
-  has_projects: z.boolean().optional(),
-  allow_squash_merge: z.boolean().optional(),
-  allow_merge_commit: z.boolean().optional(),
-  allow_rebase_merge: z.boolean().optional(),
-  delete_branch_on_merge: z.boolean().optional(),
+  disable_fork: z.boolean().optional(),
+  forbidden_developer_create_branch: z.boolean().optional(),
+  forbidden_developer_create_tag: z.boolean().optional(),
+  forbidden_committer_create_branch: z.boolean().optional(),
+  generate_pre_merge_ref: z.boolean().optional(),
+  forbidden_gitlab_access: z.boolean().optional(),
+  rebase_disable_trigger_webhook: z.boolean().optional(),
+  include_lfs_objects: z.boolean().optional(),
 });
 
 export type RepoSettings = z.infer<typeof repoSettingsSchema>;
@@ -22,12 +20,10 @@ export function repoSettingsUrl(owner: string, repo: string): string {
 
 export const pullRequestSettingsSchema = z.object({
   // PR设置相关字段
-  allow_merge_commits: z.boolean().optional(),
-  allow_squash_commits: z.boolean().optional(),
-  allow_rebase_commits: z.boolean().optional(),
-  allow_updates_from_default_branch: z.boolean().optional(),
-  allow_worktree_inheritance: z.boolean().optional(),
-  allow_auto_close_on_conflict: z.boolean().optional(),
+  reject_not_signed_by_gpg: z.boolean(),
+  deny_force_push: z.boolean(),
+  max_file_size: z.number(),
+  skip_rule_for_owner: z.boolean(),
 });
 
 export type PullRequestSettings = z.infer<typeof pullRequestSettingsSchema>;
