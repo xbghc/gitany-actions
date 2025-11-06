@@ -7,9 +7,17 @@
           {{ authStore.isConfigured ? '已配置' : '未配置' }}
         </el-tag>
       </div>
-      <el-button size="small" type="primary" @click="showDialog = true">
-        {{ authStore.isConfigured ? '修改 Token' : '配置 Token' }}
-      </el-button>
+      <div class="user-actions">
+        <div v-if="userStore.userProfile" class="user-info">
+          <el-avatar :size="32" :src="userStore.userProfile.avatar_url">
+            <el-icon><component :is="User" /></el-icon>
+          </el-avatar>
+          <span class="user-name">{{ userStore.displayName }}</span>
+        </div>
+        <el-button size="small" type="primary" @click="showDialog = true">
+          {{ authStore.isConfigured ? '修改 Token' : '配置 Token' }}
+        </el-button>
+      </div>
     </div>
 
     <!-- Token 配置对话框 -->
@@ -44,16 +52,21 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useAuthStore } from '@/store';
+import { useAuthStore, useUserStore } from '@/store';
 import { ElMessage } from 'element-plus';
+import { User } from '@element-plus/icons-vue';
 
 const authStore = useAuthStore();
+const userStore = useUserStore();
 
 const showDialog = ref(false);
 const tokenInput = ref('');
 
 onMounted(() => {
   authStore.loadToken();
+  if (authStore.isConfigured) {
+    userStore.fetchUserProfile();
+  }
 });
 
 const handleSave = () => {
@@ -66,6 +79,8 @@ const handleSave = () => {
   ElMessage.success('Token 保存成功');
   showDialog.value = false;
   tokenInput.value = '';
+
+  userStore.fetchUserProfile();
 };
 
 const handleCancel = () => {
@@ -104,6 +119,24 @@ const handleCancel = () => {
 .token-status .label {
   font-size: 14px;
   color: #6b7280;
+  font-weight: 500;
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #1f2937;
   font-weight: 500;
 }
 </style>
