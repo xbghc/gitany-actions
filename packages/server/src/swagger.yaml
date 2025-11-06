@@ -41,6 +41,8 @@ servers:
 tags:
   - name: Health
     description: 健康检查
+  - name: User
+    description: 用户信息相关操作
   - name: Pull Requests
     description: Pull Request 相关操作
   - name: Issues
@@ -68,6 +70,73 @@ paths:
                   timestamp:
                     type: string
                     format: date-time
+
+  /api/user:
+    get:
+      tags:
+        - User
+      summary: 获取当前用户信息
+      description: 获取已认证用户的详细资料信息
+      operationId: getUserProfile
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功获取用户信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/avatar-proxy:
+    get:
+      tags:
+        - User
+      summary: 头像代理
+      description: 代理转发 GitCode CDN 头像请求，解决跨域和防盗链问题
+      operationId: avatarProxy
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: 头像图片的完整 URL（必须来自 GitCode 官方 CDN）
+          schema:
+            type: string
+            example: "https://cdn-img.gitcode.com/avatars/u/123456"
+      responses:
+        '200':
+          description: 成功返回头像图片
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: 请求参数错误
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Missing avatar URL
+        '500':
+          $ref: '#/components/responses/ServerError'
 
   /api/repo/{owner}/{repo}/pulls/count:
     get:
@@ -648,6 +717,85 @@ components:
       example: 42
 
   schemas:
+    UserProfile:
+      type: object
+      description: 用户详细资料
+      required:
+        - avatar_url
+        - followers_url
+        - html_url
+        - id
+        - login
+        - name
+        - type
+        - url
+        - followers
+        - following
+        - top_languages
+      properties:
+        avatar_url:
+          type: string
+          description: 用户头像 URL
+          example: "https://gitcode.com/avatars/u/123456"
+        followers_url:
+          type: string
+          description: 关注者列表 URL
+          example: "https://gitcode.com/api/v5/users/username/followers"
+        html_url:
+          type: string
+          description: 用户主页 URL
+          example: "https://gitcode.com/username"
+        id:
+          type: string
+          description: 用户 ID
+          example: "123456"
+        login:
+          type: string
+          description: 用户登录名
+          example: "username"
+        name:
+          type: string
+          description: 用户显示名称
+          example: "张三"
+        type:
+          type: string
+          description: 用户类型
+          example: "User"
+        url:
+          type: string
+          description: 用户 API URL
+          example: "https://gitcode.com/api/v5/users/username"
+        bio:
+          type: string
+          description: 用户简介
+          example: "Full-stack developer"
+        blog:
+          type: string
+          description: 用户博客 URL
+          example: "https://example.com"
+        company:
+          type: string
+          description: 用户所在公司
+          example: "Tech Corp"
+        email:
+          type: string
+          description: 用户邮箱
+          example: "user@example.com"
+        followers:
+          type: integer
+          description: 关注者数量
+          example: 42
+        following:
+          type: integer
+          description: 正在关注的数量
+          example: 18
+        top_languages:
+          type: array
+          description: 最常用的编程语言
+          items:
+            type: string
+          example: ["TypeScript", "Python", "Go"]
+
     SuccessResponse:
       type: object
       properties:

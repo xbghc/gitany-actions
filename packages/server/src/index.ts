@@ -9,7 +9,9 @@ import { repoRouter } from './routes/repo.js';
 import { prRouter } from './routes/pr.js';
 import { issueRouter } from './routes/issue.js';
 import { workflowRouter } from './routes/workflow.js';
+import { userRouter } from './routes/user.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { avatarTransformerMiddleware } from './middleware/avatar-transformer.js';
 
 dotenv.config();
 
@@ -25,6 +27,9 @@ const swaggerDocument = YAML.load(join(__dirname, 'swagger.yaml'));
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Avatar URL transformer - must be before routes to intercept res.json()
+app.use(avatarTransformerMiddleware);
 
 // Root path - redirect to API docs
 app.get('/', (_req: Request, res: Response) => {
@@ -43,6 +48,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // Routes
+app.use('/api', userRouter);
 app.use('/api', repoRouter);
 app.use('/api', prRouter);
 app.use('/api', issueRouter);

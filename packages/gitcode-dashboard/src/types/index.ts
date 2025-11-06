@@ -1,17 +1,165 @@
-// 从 gitcode-api 导入基础类型
-import type {
-  PullRequest,
-  PRComment,
-  Issue,
-  IssueComment,
-  UserSummary,
-  ListPullsQuery,
-  ListIssuesQuery,
-  CreateIssueBody,
-  UpdateIssueBody,
-  Branch,
-  PrCount,
-} from '@xbghc/gitcode-api';
+// ============================================
+// 基础类型定义（参考自 gitcode-api）
+// ============================================
+
+/** 用户摘要信息（嵌入在 PR/Issue 中的简化用户对象） */
+export interface UserSummary {
+  avatar_url?: string;
+  html_url: string;
+  id: string;
+  login: string;
+  name: string;
+}
+
+/** 完整的用户资料信息 */
+export interface UserProfile {
+  avatar_url: string;
+  followers_url: string;
+  html_url: string;
+  id: string;
+  login: string;
+  name: string;
+  type: string;
+  url: string;
+  bio?: string;
+  blog?: string;
+  company?: string;
+  email?: string;
+  followers: number;
+  following: number;
+  top_languages: string[];
+}
+
+/** 仓库信息 */
+export interface Repo {
+  id: number;
+  full_name: string;
+  human_name: string;
+  path: string;
+  name: string;
+  description?: string;
+  owner?: UserSummary;
+  html_url: string;
+}
+
+/** 分支信息 */
+export interface Branch {
+  label: string;
+  ref: string;
+  sha: string;
+  repo?: Repo | null;
+  user?: UserSummary | null;
+}
+
+/** Pull Request 查询参数 */
+export interface ListPullsQuery {
+  state?: string;
+  page?: number;
+  per_page?: number;
+  sort?: string;
+  direction?: string;
+  head?: string;
+  base?: string;
+}
+
+/** Pull Request 对象 */
+export interface PullRequest {
+  id: number;
+  number: number;
+  title: string;
+  state: string;
+  head: Branch;
+  base: Branch;
+  user: UserSummary;
+  body?: string;
+  created_at?: string;
+  updated_at?: string;
+  merged_at?: string | null;
+}
+
+/** PR 评论对象 */
+export interface PRComment {
+  id: number;
+  body: string;
+  user: UserSummary;
+  created_at: string;
+  updated_at: string;
+}
+
+/** PR 统计计数 */
+export interface PrCount {
+  all: number;
+  opened: number;
+  closed: number;
+  merged: number;
+  locked: number;
+}
+
+/** Issue 查询参数 */
+export interface ListIssuesQuery {
+  state?: 'open' | 'closed' | 'all';
+  labels?: string;
+  page?: number;
+  per_page?: number;
+  sort?: 'created' | 'updated' | 'comments';
+}
+
+/** Issue 标签 */
+export interface IssueLabel {
+  id?: number | string;
+  name?: string;
+  title?: string;
+  color?: string;
+  description?: string;
+}
+
+/** Issue 对象 */
+export interface Issue {
+  id: number;
+  html_url: string;
+  number: string;
+  state: string;
+  title: string;
+  body?: string | null;
+  user?: UserSummary;
+  assignees: UserSummary[];
+  labels: IssueLabel[];
+  created_at: string;
+  updated_at: string;
+  closed_at?: string;
+}
+
+/** Issue 评论对象 */
+export interface IssueComment {
+  id: number;
+  comment_id?: number;
+  body: string;
+  user: UserSummary;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 创建 Issue 请求体 */
+export interface CreateIssueBody {
+  repo?: string;
+  title: string;
+  body: string;
+  assignee?: string;
+  milestone?: number;
+  labels?: string;
+  security_hole?: string;
+  template_path?: string;
+}
+
+/** 更新 Issue 请求体 */
+export interface UpdateIssueBody {
+  title?: string;
+  body?: string;
+  assignee?: string;
+  milestone?: number;
+  labels?: Array<string | number>;
+  state?: 'open' | 'closed';
+}
 
 // ============================================
 // 类型别名 - 保持 dashboard 代码兼容性
@@ -28,12 +176,6 @@ export type CreateIssueParams = CreateIssueBody;
 
 /** 更新 Issue 参数类型别名 */
 export type UpdateIssueParams = UpdateIssueBody;
-
-// ============================================
-// 重新导出 gitcode-api 类型
-// ============================================
-
-export type { PullRequest, PRComment, Issue, IssueComment, PrCount };
 
 // ============================================
 // Dashboard 特有类型
