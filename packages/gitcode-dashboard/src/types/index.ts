@@ -266,6 +266,21 @@ export interface WorkflowResult {
   error?: string;
 }
 
+/** Workflow 日志元数据（用于列表展示） */
+export interface WorkflowLogMeta {
+  workflowId: string;
+  owner: string;
+  repo: string;
+  prNumber: number;
+  configId?: string;
+  configName?: string;
+  status: WorkflowStatus;
+  createdAt: string;
+  completedAt?: string;
+  /** 执行耗时（毫秒） */
+  duration?: number;
+}
+
 /** Workflow 配置步骤 */
 export interface WorkflowConfigStep {
   name: string;

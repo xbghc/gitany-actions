@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   TriggerPRWorkflowRequest,
   WorkflowResult,
+  WorkflowLogMeta,
   RegistryMirrorTestResult,
 } from '@/types';
 
@@ -75,5 +76,30 @@ export const testAllRegistryMirrors = (testImage?: string) => {
   return http.get<ApiResponse<RegistryMirrorTestResult[]>>(
     '/api/workflow/test-all-registry-mirrors',
     { params: { testImage } },
+  );
+};
+
+/**
+ * 获取 workflow 历史日志列表（元数据）
+ */
+export const getWorkflowLogs = (owner: string, repo: string) => {
+  return http.get<ApiResponse<{ logs: WorkflowLogMeta[]; count: number }>>(
+    `/api/repos/${owner}/${repo}/workflows/logs`,
+  );
+};
+
+/**
+ * 获取单个 workflow 完整日志
+ */
+export const getWorkflowLogDetail = (owner: string, repo: string, id: string) => {
+  return http.get<ApiResponse<WorkflowResult>>(`/api/repos/${owner}/${repo}/workflows/logs/${id}`);
+};
+
+/**
+ * 删除 workflow 日志
+ */
+export const deleteWorkflowLog = (owner: string, repo: string, id: string) => {
+  return http.delete<ApiResponse<{ message: string }>>(
+    `/api/repos/${owner}/${repo}/workflows/logs/${id}`,
   );
 };

@@ -73,7 +73,8 @@
 import { ref, computed, watch, nextTick, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { CopyDocument } from '@element-plus/icons-vue';
-import { createWorkflowStream, getWorkflowStatus } from '@/api';
+import { createWorkflowStream, getWorkflowStatus, getWorkflowLogDetail } from '@/api';
+import { useRepoStore } from '@/store';
 import type {
   WorkflowStatus,
   WorkflowStep,
@@ -87,7 +88,11 @@ import type {
 interface Props {
   visible: boolean;
   workflowId: string;
+  owner?: string;
+  repo?: string;
 }
+
+const repoStore = useRepoStore();
 
 interface Emits {
   (e: 'update:visible', value: boolean): void;
@@ -196,6 +201,7 @@ const loadWorkflowInfo = async () => {
   if (!props.workflowId) return;
 
   try {
+    // 优先尝试从内存中获取（运行中的workflow）
     const response = await getWorkflowStatus(props.workflowId);
     if (response.data) {
       workflowInfo.value = response.data;
@@ -220,6 +226,39 @@ const loadWorkflowInfo = async () => {
       }
     }
   } catch (error) {
+    // 如果内存中不存在，尝试从持久化日志API获取
+    const owner = props.owner || repoStore.currentOwner;
+    const repo = props.repo || repoStore.currentRepo;
+
+    if (owner && repo) {
+      try {
+        const logResponse = await getWorkflowLogDetail(owner, repo, props.workflowId);
+        if (logResponse.data) {
+          workflowInfo.value = logResponse.data;
+          steps.value = logResponse.data.steps || [];
+
+          // 加载步骤输出
+          steps.value.forEach((step) => {
+            if (step.output) {
+              stepLogs.value.set(step.name, step.output);
+            }
+          });
+
+          // 自动选中第一个有输出的步骤
+          const firstStepWithOutput = steps.value.find((s) => s.output);
+          if (firstStepWithOutput) {
+            selectedStep.value = firstStepWithOutput.name;
+          }
+          return;
+        }
+      } catch (logError) {
+        if (import.meta.env.DEV) {
+          console.error('从日志API加载失败:', logError);
+        }
+      }
+    }
+
+    // 两种方式都失败
     if (import.meta.env.DEV) {
       console.error('加载 workflow 信息失败:', error);
     }

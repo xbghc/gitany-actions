@@ -7,7 +7,7 @@
         <div class="toolbar">
           <div class="toolbar-left">
             <!-- 状态筛选 -->
-            <el-radio-group v-model="workflowStore.statusFilter" size="small">
+            <el-radio-group v-model="workflowLogStore.statusFilter" size="small">
               <el-radio-button value="all">全部</el-radio-button>
               <el-radio-button value="success">成功</el-radio-button>
               <el-radio-button value="failed">失败</el-radio-button>
@@ -23,8 +23,8 @@
 
         <!-- 执行记录表格 -->
         <el-table
-          v-loading="workflowStore.loading"
-          :data="workflowStore.pagedWorkflowList"
+          v-loading="workflowLogStore.loading"
+          :data="workflowLogStore.pagedLogList"
           stripe
           style="width: 100%"
         >
@@ -68,11 +68,21 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column label="操作" width="250" fixed="right">
             <template #default="{ row }">
               <el-button type="primary" size="small" @click="handleViewLogs(row.workflowId)">
                 查看日志
               </el-button>
+              <el-popconfirm
+                title="确定要删除这条日志吗？"
+                confirm-button-text="确定"
+                cancel-button-text="取消"
+                @confirm="handleDeleteLog(row.workflowId)"
+              >
+                <template #reference>
+                  <el-button type="danger" size="small" :icon="Delete">删除</el-button>
+                </template>
+              </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
@@ -80,9 +90,9 @@
         <!-- 分页 -->
         <div class="pagination">
           <el-pagination
-            v-model:current-page="workflowStore.currentPage"
-            :page-size="workflowStore.pageSize"
-            :total="workflowStore.filteredCount"
+            v-model:current-page="workflowLogStore.currentPage"
+            :page-size="workflowLogStore.pageSize"
+            :total="workflowLogStore.filteredCount"
             layout="total, prev, pager, next"
             @current-change="handlePageChange"
           />
@@ -168,14 +178,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Refresh, Plus } from '@element-plus/icons-vue';
+import { Refresh, Plus, Delete } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
-import { useWorkflowStore, useWorkflowConfigStore } from '@/store';
+import { useWorkflowConfigStore } from '@/store';
+import { useWorkflowLogStore } from '@/store/workflow-log';
 import type { WorkflowStatus, WorkflowConfig } from '@/types';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import WorkflowConfigDialog from '@/components/WorkflowConfigDialog.vue';
 
-const workflowStore = useWorkflowStore();
+const workflowLogStore = useWorkflowLogStore();
 const configStore = useWorkflowConfigStore();
 
 // Tab 状态
@@ -254,7 +265,7 @@ const formatTime = (time: string) => {
  * 刷新 Workflow 列表
  */
 const handleRefreshWorkflows = () => {
-  workflowStore.refreshWorkflowList();
+  workflowLogStore.refreshLogList();
 };
 
 /**
@@ -268,7 +279,14 @@ const handleRefreshConfigs = () => {
  * 分页变化
  */
 const handlePageChange = (page: number) => {
-  workflowStore.updatePage(page);
+  workflowLogStore.updatePage(page);
+};
+
+/**
+ * 删除日志
+ */
+const handleDeleteLog = async (workflowId: string) => {
+  await workflowLogStore.deleteLog(workflowId);
 };
 
 /**

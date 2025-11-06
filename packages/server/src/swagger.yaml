@@ -1455,6 +1455,138 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
+  /api/repos/{owner}/{repo}/workflows/logs:
+    get:
+      tags:
+        - Workflows
+      summary: 获取 workflow 历史日志列表
+      description: 获取指定仓库的所有 workflow 执行日志的元数据列表
+      operationId: listWorkflowLogs
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      responses:
+        '200':
+          description: 成功获取日志列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WorkflowLogMeta'
+                      count:
+                        type: integer
+                        description: 日志总数
+                        example: 15
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repos/{owner}/{repo}/workflows/logs/{id}:
+    get:
+      tags:
+        - Workflows
+      summary: 获取 workflow 完整数据
+      description: 获取指定 workflow 的完整 WorkflowResult 对象
+      operationId: getWorkflowLog
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - name: id
+          in: path
+          required: true
+          description: Workflow ID
+          schema:
+            type: string
+          example: 'owner-repo-123-1730900000000'
+      responses:
+        '200':
+          description: 成功获取 workflow 数据
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/WorkflowResult'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Workflow 日志不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: 'Not Found'
+                message: 'Workflow log not found'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - Workflows
+      summary: 删除 workflow 日志
+      description: 删除指定的 workflow 日志文件（管理操作）
+      operationId: deleteWorkflowLog
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - name: id
+          in: path
+          required: true
+          description: Workflow ID
+          schema:
+            type: string
+          example: 'owner-repo-123-1730900000000'
+      responses:
+        '200':
+          description: 成功删除日志
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Workflow log deleted successfully'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Workflow 日志不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
 components:
   securitySchemes:
     GitCodeToken:
@@ -1892,6 +2024,61 @@ components:
         error:
           type: string
           description: 错误信息
+
+    WorkflowLogMeta:
+      type: object
+      description: Workflow 日志元数据（用于列表展示）
+      required:
+        - workflowId
+        - owner
+        - repo
+        - prNumber
+        - status
+        - createdAt
+      properties:
+        workflowId:
+          type: string
+          description: Workflow 唯一标识
+          example: 'owner-repo-123-1730900000000'
+        owner:
+          type: string
+          description: 仓库所有者
+          example: 'username'
+        repo:
+          type: string
+          description: 仓库名称
+          example: 'my-project'
+        prNumber:
+          type: integer
+          description: PR 编号
+          example: 123
+        configId:
+          type: string
+          description: 配置 ID
+          example: 'config-abc123'
+        configName:
+          type: string
+          description: 配置名称
+          example: 'Build and Test'
+        status:
+          type: string
+          description: 执行状态
+          enum: [pending, running, success, failed]
+          example: 'success'
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+          example: '2024-11-07T00:00:00.000Z'
+        completedAt:
+          type: string
+          format: date-time
+          description: 完成时间
+          example: '2024-11-07T00:05:30.000Z'
+        duration:
+          type: integer
+          description: 执行耗时（毫秒）
+          example: 330000
 
   responses:
     BadRequestError:

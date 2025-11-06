@@ -18,6 +18,7 @@ import {
   pullDockerImage,
   removeContainer,
 } from '../utils/docker-runner.js';
+import { workflowLogService } from './workflow-log-service.js';
 
 /**
  * Workflow服务
@@ -117,6 +118,14 @@ export class WorkflowService {
     };
     emitter.emit('message', message);
     emitter.emit('done'); // 通知SSE连接可以关闭
+
+    // 持久化workflow日志到文件系统
+    const workflow = this.workflows.get(workflowId);
+    if (workflow) {
+      workflowLogService.saveWorkflowLog(workflow).catch((error) => {
+        console.error(`Failed to save workflow log ${workflowId}:`, error);
+      });
+    }
   }
 
   /**

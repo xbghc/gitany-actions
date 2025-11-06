@@ -125,3 +125,29 @@ export interface RegistryMirrorTestResult {
   /** 错误信息 */
   error?: string;
 }
+
+/**
+ * Workflow日志元数据（用于列表展示）
+ */
+export interface WorkflowLogMeta {
+  /** Workflow唯一标识 */
+  workflowId: string;
+  /** 仓库所有者 */
+  owner: string;
+  /** 仓库名称 */
+  repo: string;
+  /** PR 编号 */
+  prNumber: number;
+  /** 配置 ID */
+  configId?: string;
+  /** 配置名称 */
+  configName?: string;
+  /** 整体状态 */
+  status: WorkflowStatus;
+  /** 创建时间 */
+  createdAt: string;
+  /** 完成时间 */
+  completedAt?: string;
+  /** 执行耗时（毫秒） */
+  duration?: number;
+}
