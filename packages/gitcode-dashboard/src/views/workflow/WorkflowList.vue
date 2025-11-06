@@ -140,13 +140,10 @@
 
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
-              <el-button type="primary" size="small" @click="handleEditConfig(row.configId)">
+              <el-button type="primary" size="small" @click="handleEditConfig(row.id)">
                 编辑
               </el-button>
-              <el-popconfirm
-                title="确定要删除这个配置吗？"
-                @confirm="handleDeleteConfig(row.configId)"
-              >
+              <el-popconfirm title="确定要删除这个配置吗？" @confirm="handleDeleteConfig(row.id)">
                 <template #reference>
                   <el-button type="danger" size="small">删除</el-button>
                 </template>
@@ -163,7 +160,7 @@
     <!-- WorkflowConfigDialog 对话框 -->
     <WorkflowConfigDialog
       v-model:visible="configDialogVisible"
-      :config-id="selectedConfigId"
+      :config="selectedConfig"
       @success="handleConfigSuccess"
     />
   </div>
@@ -172,8 +169,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Refresh, Plus } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus';
 import { useWorkflowStore, useWorkflowConfigStore } from '@/store';
-import type { WorkflowStatus } from '@/types';
+import type { WorkflowStatus, WorkflowConfig } from '@/types';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import WorkflowConfigDialog from '@/components/WorkflowConfigDialog.vue';
 
@@ -189,7 +187,7 @@ const selectedWorkflowId = ref('');
 
 // ConfigDialog 对话框
 const configDialogVisible = ref(false);
-const selectedConfigId = ref<string | undefined>(undefined);
+const selectedConfig = ref<WorkflowConfig | undefined>(undefined);
 
 /**
  * 获取状态标签类型
@@ -285,23 +283,28 @@ const handleViewLogs = (workflowId: string) => {
  * 创建配置
  */
 const handleCreateConfig = () => {
-  selectedConfigId.value = undefined;
+  selectedConfig.value = undefined;
   configDialogVisible.value = true;
 };
 
 /**
  * 编辑配置
  */
-const handleEditConfig = (configId: string) => {
-  selectedConfigId.value = configId;
+const handleEditConfig = (id: string) => {
+  const config = configStore.configList.find((c) => c.id === id);
+  if (!config) {
+    ElMessage.error('配置不存在');
+    return;
+  }
+  selectedConfig.value = config;
   configDialogVisible.value = true;
 };
 
 /**
  * 删除配置
  */
-const handleDeleteConfig = async (configId: string) => {
-  await configStore.deleteConfig(configId);
+const handleDeleteConfig = async (id: string) => {
+  await configStore.deleteConfig(id);
 };
 
 /**

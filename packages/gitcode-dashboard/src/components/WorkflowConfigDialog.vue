@@ -122,13 +122,12 @@
 import { ref, watch, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
-import type { WorkflowConfigStep } from '@/types';
+import type { WorkflowConfigStep, WorkflowConfig } from '@/types';
 import { useWorkflowConfigStore } from '@/store';
-import { getWorkflowConfig } from '@/api';
 
 interface Props {
   visible: boolean;
-  configId?: string;
+  config?: WorkflowConfig;
 }
 
 interface Emits {
@@ -233,30 +232,6 @@ const updateEnvKey = (oldKey: string, newKey: string) => {
 };
 
 /**
- * 加载配置数据（编辑模式）
- */
-const loadConfig = async () => {
-  if (!props.configId) return;
-
-  try {
-    const response = await getWorkflowConfig(props.configId);
-    if (response.data) {
-      const config = response.data;
-      formData.name = config.name;
-      formData.steps = JSON.parse(JSON.stringify(config.steps)); // 深拷贝
-      formData.env = config.env ? JSON.parse(JSON.stringify(config.env)) : {};
-      formData.timeout = config.timeout || 0;
-      isEditMode.value = true;
-    }
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.error('加载配置失败:', error);
-    }
-    ElMessage.error('加载配置失败');
-  }
-};
-
-/**
  * 重置表单
  */
 const resetForm = () => {
@@ -297,9 +272,9 @@ const handleSave = async () => {
   saving.value = true;
   let success = false;
 
-  if (isEditMode.value && props.configId) {
+  if (isEditMode.value && props.config) {
     // 更新配置
-    success = await configStore.updateConfig(props.configId, {
+    success = await configStore.updateConfig(props.config.id, {
       name: formData.name,
       steps: cleanedSteps,
       env: Object.keys(cleanedEnv).length > 0 ? cleanedEnv : undefined,
@@ -336,8 +311,13 @@ watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
-      if (props.configId) {
-        loadConfig();
+      if (props.config) {
+        // 使用传入的配置对象
+        formData.name = props.config.name;
+        formData.steps = JSON.parse(JSON.stringify(props.config.steps));
+        formData.env = props.config.env ? JSON.parse(JSON.stringify(props.config.env)) : {};
+        formData.timeout = props.config.timeout || 0;
+        isEditMode.value = true;
       } else {
         resetForm();
       }

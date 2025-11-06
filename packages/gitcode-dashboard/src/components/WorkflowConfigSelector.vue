@@ -23,8 +23,8 @@
       <el-radio-group v-model="selectedConfigId" class="config-radio-group">
         <el-radio
           v-for="config in configList"
-          :key="config.configId"
-          :value="config.configId"
+          :key="config.id"
+          :value="config.id"
           class="config-radio-item"
           border
         >
@@ -116,7 +116,7 @@ const loadConfigs = async () => {
 
     // 如果只有一个配置，自动选中
     if (configList.value.length === 1) {
-      selectedConfigId.value = configList.value[0].configId;
+      selectedConfigId.value = configList.value[0].id;
     }
   } catch (error) {
     if (import.meta.env.DEV) {
@@ -137,9 +137,7 @@ const handleConfirm = () => {
     return;
   }
 
-  const selectedConfig = configList.value.find(
-    (config) => config.configId === selectedConfigId.value,
-  );
+  const selectedConfig = configList.value.find((config) => config.id === selectedConfigId.value);
 
   if (!selectedConfig) {
     ElMessage.error('配置不存在');

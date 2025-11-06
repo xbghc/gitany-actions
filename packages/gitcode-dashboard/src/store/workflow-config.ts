@@ -86,9 +86,19 @@ export const useWorkflowConfigStore = defineStore('workflow-config', () => {
   /**
    * 更新配置
    */
-  const updateConfig = async (configId: string, config: UpdateWorkflowConfigRequest) => {
+  const updateConfig = async (id: string, config: UpdateWorkflowConfigRequest) => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) {
+      ElMessage.error('请先选择仓库');
+      return false;
+    }
+
     try {
-      const response = await apiUpdateWorkflowConfig(configId, config);
+      const response = await apiUpdateWorkflowConfig(
+        repoStore.currentOwner,
+        repoStore.currentRepo,
+        id,
+        config,
+      );
 
       if (response.data) {
         ElMessage.success('配置更新成功');
@@ -108,9 +118,14 @@ export const useWorkflowConfigStore = defineStore('workflow-config', () => {
   /**
    * 删除配置
    */
-  const deleteConfig = async (configId: string) => {
+  const deleteConfig = async (id: string) => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) {
+      ElMessage.error('请先选择仓库');
+      return false;
+    }
+
     try {
-      await apiDeleteWorkflowConfig(configId);
+      await apiDeleteWorkflowConfig(repoStore.currentOwner, repoStore.currentRepo, id);
       ElMessage.success('配置删除成功');
       // 刷新列表
       await fetchConfigList();

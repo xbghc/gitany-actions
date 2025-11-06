@@ -274,9 +274,7 @@ export interface WorkflowConfigStep {
 
 /** Workflow 配置 */
 export interface WorkflowConfig {
-  configId: string;
-  owner: string;
-  repo: string;
+  id: string;
   name: string;
   steps: WorkflowConfigStep[];
   env?: Record<string, string>;

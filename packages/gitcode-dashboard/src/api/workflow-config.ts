@@ -11,15 +11,8 @@ import type {
  */
 export const getWorkflowConfigs = (owner: string, repo: string) => {
   return http.get<ApiResponse<{ configs: WorkflowConfig[]; count: number }>>(
-    `/api/workflow-configs/${owner}/${repo}`,
+    `/api/repos/${owner}/${repo}/workflows`,
   );
-};
-
-/**
- * 获取单个 Workflow 配置
- */
-export const getWorkflowConfig = (configId: string) => {
-  return http.get<ApiResponse<WorkflowConfig>>(`/api/workflow-config/${configId}`);
 };
 
 /**
@@ -30,19 +23,27 @@ export const createWorkflowConfig = (
   repo: string,
   config: CreateWorkflowConfigRequest,
 ) => {
-  return http.post<ApiResponse<WorkflowConfig>>(`/api/workflow-config/${owner}/${repo}`, config);
+  return http.post<ApiResponse<WorkflowConfig>>(`/api/repos/${owner}/${repo}/workflows`, config);
 };
 
 /**
  * 更新 Workflow 配置
  */
-export const updateWorkflowConfig = (configId: string, config: UpdateWorkflowConfigRequest) => {
-  return http.put<ApiResponse<WorkflowConfig>>(`/api/workflow-config/${configId}`, config);
+export const updateWorkflowConfig = (
+  owner: string,
+  repo: string,
+  id: string,
+  config: UpdateWorkflowConfigRequest,
+) => {
+  return http.put<ApiResponse<WorkflowConfig>>(
+    `/api/repos/${owner}/${repo}/workflows/${id}`,
+    config,
+  );
 };
 
 /**
  * 删除 Workflow 配置
  */
-export const deleteWorkflowConfig = (configId: string) => {
-  return http.delete<ApiResponse<void>>(`/api/workflow-config/${configId}`);
+export const deleteWorkflowConfig = (owner: string, repo: string, id: string) => {
+  return http.delete<ApiResponse<void>>(`/api/repos/${owner}/${repo}/workflows/${id}`);
 };
