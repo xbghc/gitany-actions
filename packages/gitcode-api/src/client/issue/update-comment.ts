@@ -30,5 +30,5 @@ export async function updateIssueComment(
     })
     .json();
 
-  return parseApiResponse(updatedIssueCommentSchema, response, { endpoint: url, method: "POST" });
+  return parseApiResponse(updatedIssueCommentSchema, response, { endpoint: url, method: 'POST' });
 }

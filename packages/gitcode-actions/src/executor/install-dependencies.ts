@@ -1,5 +1,8 @@
 import type Docker from 'dockerode';
-import { executor, StepExecutionError as ContainerStepExecutionError } from './container-executor.js';
+import {
+  executor,
+  StepExecutionError as ContainerStepExecutionError,
+} from './container-executor.js';
 
 export interface InstallOptions {
   container: Docker.Container;
@@ -51,10 +54,9 @@ export async function installDependencies({
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const result = await executor(container, { env })
-        .execute(installScript, {
-          name: `install (attempt ${attempt}/${MAX_RETRIES})`,
-        });
+      const result = await executor(container, { env }).execute(installScript, {
+        name: `install (attempt ${attempt}/${MAX_RETRIES})`,
+      });
 
       if (result.success) {
         return {

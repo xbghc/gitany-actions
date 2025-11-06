@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @xbghc/gitcode-api test",
     "clean": "pnpm -r clean",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
@@ -20,7 +21,8 @@
     "dev:dashboard": "pnpm --filter @xbghc/gitcode-dashboard dev",
     "verify": "node ./scripts/verify-env.mjs",
     "publish:dry-run": "node ./scripts/publish.mjs --dry-run",
-    "publish:packages": "node ./scripts/publish.mjs"
+    "publish:packages": "node ./scripts/publish.mjs",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
@@ -31,9 +33,20 @@
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^9.1.2",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "vitepress": "^1.6.4"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint",
+      "prettier --check"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --check"
+    ]
   }
 }

@@ -66,7 +66,10 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
     if (value instanceof Map) {
       return {
         __type: 'Map',
-        entries: Array.from(value.entries()).map(([k, v]) => [serializeValue(k), serializeValue(v)]),
+        entries: Array.from(value.entries()).map(([k, v]) => [
+          serializeValue(k),
+          serializeValue(v),
+        ]),
       };
     }
 

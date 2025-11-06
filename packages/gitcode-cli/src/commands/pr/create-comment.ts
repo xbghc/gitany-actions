@@ -68,7 +68,8 @@ export async function createPrCommentAction(
       if (options.json) {
         console.log(JSON.stringify(comment, null, 2));
       } else {
-        const preview = comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
+        const preview =
+          comment.body.length > 100 ? comment.body.substring(0, 100) + '...' : comment.body;
         console.log('💬 PR comment created successfully');
         console.log(`   PR:        #${prNum}`);
         console.log(`   Comment:   ${comment.id}`);

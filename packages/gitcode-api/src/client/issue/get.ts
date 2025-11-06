@@ -10,5 +10,5 @@ export async function getIssue(client: GitCodeClient, url: string, issueNumber: 
   }
   const apiUrl = getIssueUrl(parsed.owner, parsed.repo, issueNumber);
   const json = await client.http.get(apiUrl).json();
-  return parseApiResponse(issueDetailSchema, json, { endpoint: apiUrl, method: "GET" });
+  return parseApiResponse(issueDetailSchema, json, { endpoint: apiUrl, method: 'GET' });
 }

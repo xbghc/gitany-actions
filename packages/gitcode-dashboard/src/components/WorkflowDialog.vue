@@ -49,11 +49,7 @@
             <el-option label="轩辕镜像源" value="docker.xuanyuan.me" />
             <el-option label="不使用镜像源（Docker Hub直连）" value="" />
           </el-select>
-          <el-button
-            :icon="Lightning"
-            :loading="testingSingleMirror"
-            @click="testCurrentMirror"
-          >
+          <el-button :icon="Lightning" :loading="testingSingleMirror" @click="testCurrentMirror">
             测试
           </el-button>
         </div>
@@ -63,12 +59,7 @@
       </el-form-item>
 
       <el-form-item label="超时时间">
-        <el-input-number
-          v-model="timeoutMinutes"
-          :min="1"
-          :max="60"
-          placeholder="分钟"
-        />
+        <el-input-number v-model="timeoutMinutes" :min="1" :max="60" placeholder="分钟" />
         <span style="margin-left: 8px; color: #909399">分钟</span>
       </el-form-item>
 
@@ -116,20 +107,19 @@
               {{ currentStepInfo.title }}
             </span>
             <span v-else class="step-title">实时日志</span>
-            <el-tag v-if="currentStepInfo" :type="getStatusTagType(currentStepInfo.status)" size="small" style="margin-left: 8px">
+            <el-tag
+              v-if="currentStepInfo"
+              :type="getStatusTagType(currentStepInfo.status)"
+              size="small"
+              style="margin-left: 8px"
+            >
               {{ getStatusText(currentStepInfo.status) }}
             </el-tag>
             <span v-if="currentStepInfo?.subtask" class="subtask-info">
               · 当前任务: {{ currentStepInfo.subtask }}
             </span>
           </div>
-          <el-button
-            :icon="CopyDocument"
-            size="small"
-            @click="copyLogs"
-          >
-            复制日志
-          </el-button>
+          <el-button :icon="CopyDocument" size="small" @click="copyLogs"> 复制日志 </el-button>
         </div>
         <pre ref="logElement" class="log-output">{{ currentLogs }}</pre>
       </div>
@@ -138,12 +128,7 @@
     <template #footer>
       <div v-if="!workflowStarted">
         <el-button @click="visible = false">取消</el-button>
-        <el-button
-          type="primary"
-          :loading="starting"
-          :icon="Promotion"
-          @click="startWorkflow"
-        >
+        <el-button type="primary" :loading="starting" :icon="Promotion" @click="startWorkflow">
           开始测试
         </el-button>
       </div>
@@ -161,11 +146,7 @@
   </el-dialog>
 
   <!-- 测试结果对话框 -->
-  <el-dialog
-    v-model="showTestResultsDialog"
-    title="镜像源测试结果"
-    width="700px"
-  >
+  <el-dialog v-model="showTestResultsDialog" title="镜像源测试结果" width="700px">
     <el-table :data="testResults" style="width: 100%">
       <el-table-column prop="mirrorName" label="镜像源" width="200" />
       <el-table-column label="状态" width="80">
@@ -198,9 +179,7 @@
             选择
           </el-button>
           <el-tooltip v-else :content="row.error || '未知错误'" placement="top">
-            <el-button type="info" size="small" disabled>
-              查看错误
-            </el-button>
+            <el-button type="info" size="small" disabled> 查看错误 </el-button>
           </el-tooltip>
         </template>
       </el-table-column>
@@ -216,7 +195,12 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { ElMessage } from 'element-plus';
 import { CopyDocument, Promotion, Lightning } from '@element-plus/icons-vue';
-import { triggerPRWorkflow, createWorkflowStream, testRegistryMirror, testAllRegistryMirrors } from '@/api/workflow';
+import {
+  triggerPRWorkflow,
+  createWorkflowStream,
+  testRegistryMirror,
+  testAllRegistryMirrors,
+} from '@/api/workflow';
 import type {
   WorkflowConfig,
   WorkflowStatus,
@@ -252,7 +236,7 @@ const config = ref<WorkflowConfig>({
   repo: props.repo,
   packageManager: 'pnpm',
   baseImage: 'node:22',
-  registryMirror: 'docker.m.daocloud.io',  // 默认使用DaoCloud镜像源
+  registryMirror: 'docker.m.daocloud.io', // 默认使用DaoCloud镜像源
 });
 
 const timeoutMinutes = ref(30);
@@ -337,13 +321,15 @@ const currentLogs = computed(() => {
 // 当前选中步骤的详细信息
 const currentStepInfo = computed(() => {
   if (!selectedStep.value) return null;
-  const step = steps.value.find(s => s.name === selectedStep.value);
-  return step ? {
-    name: selectedStep.value,
-    title: stepTitles[selectedStep.value] || selectedStep.value,
-    status: step.status,
-    subtask: currentSubtask.value.get(selectedStep.value) || null,
-  } : null;
+  const step = steps.value.find((s) => s.name === selectedStep.value);
+  return step
+    ? {
+        name: selectedStep.value,
+        title: stepTitles[selectedStep.value] || selectedStep.value,
+        status: step.status,
+        subtask: currentSubtask.value.get(selectedStep.value) || null,
+      }
+    : null;
 });
 
 /**
@@ -434,7 +420,10 @@ const connectSSE = () => {
     // 连接信息保存到第一个步骤
     const firstStep = steps.value[0]?.name || 'fetch-pr';
     const currentLog = stepLogs.value.get(firstStep) || '';
-    stepLogs.value.set(firstStep, currentLog + `\n=== 已连接到 Workflow: ${data.workflowId} ===\n\n`);
+    stepLogs.value.set(
+      firstStep,
+      currentLog + `\n=== 已连接到 Workflow: ${data.workflowId} ===\n\n`,
+    );
     scrollToBottom();
   });
 
@@ -445,7 +434,10 @@ const connectSSE = () => {
     // 将步骤状态变更保存到对应步骤的日志
     const statusText = getStatusText(data.status);
     const currentLog = stepLogs.value.get(data.name) || '';
-    stepLogs.value.set(data.name, currentLog + `\n[步骤] ${stepTitles[data.name] || data.name}: ${statusText}\n`);
+    stepLogs.value.set(
+      data.name,
+      currentLog + `\n[步骤] ${stepTitles[data.name] || data.name}: ${statusText}\n`,
+    );
 
     // 自动选中正在运行或失败的步骤
     if (data.status === 'running' || data.status === 'failed') {
@@ -553,7 +545,7 @@ const copyLogs = async () => {
       logText = stepLogs.value.get(selectedStep.value) || '';
     } else {
       // 合并所有步骤的日志
-      steps.value.forEach(step => {
+      steps.value.forEach((step) => {
         const stepLog = stepLogs.value.get(step.name);
         if (stepLog) {
           logText += `\n=== ${stepTitles[step.name] || step.name} ===\n${stepLog}\n`;
@@ -613,28 +605,24 @@ const testCurrentMirror = async () => {
 
   try {
     const selectedOption = registryMirrorOptions.find(
-      (opt) => opt.value === config.value.registryMirror
+      (opt) => opt.value === config.value.registryMirror,
     );
     const mirrorName = selectedOption?.label || 'Docker Hub';
 
     // 使用当前选择的Docker镜像进行测试，更准确
     const testImage = config.value.baseImage || 'alpine:latest';
 
-    const response = await testRegistryMirror(
-      config.value.registryMirror,
-      mirrorName,
-      testImage
-    );
+    const response = await testRegistryMirror(config.value.registryMirror, mirrorName, testImage);
 
     if (response.data) {
       const result = response.data;
       if (result.success) {
         ElMessage.success(
-          `✅ ${result.mirrorName} 可用！\n测试镜像: ${testImage}\n耗时: ${(result.duration / 1000).toFixed(2)}秒\n速度: ${result.speed?.toFixed(2)} MB/s`
+          `✅ ${result.mirrorName} 可用！\n测试镜像: ${testImage}\n耗时: ${(result.duration / 1000).toFixed(2)}秒\n速度: ${result.speed?.toFixed(2)} MB/s`,
         );
       } else {
         ElMessage.error(
-          `❌ ${result.mirrorName} 不可用\n测试镜像: ${testImage}\n错误: ${result.error}\n提示: 可能是白名单限制，请尝试其他镜像源`
+          `❌ ${result.mirrorName} 不可用\n测试镜像: ${testImage}\n错误: ${result.error}\n提示: 可能是白名单限制，请尝试其他镜像源`,
         );
       }
     }
@@ -692,7 +680,7 @@ watch(visible, (newVal) => {
 // 监听当前日志变化，自动滚动（仅当选中步骤正在运行时）
 watch(currentLogs, () => {
   // 检查当前选中步骤是否正在运行
-  const runningStep = steps.value.find(s => s.status === 'running');
+  const runningStep = steps.value.find((s) => s.status === 'running');
   if (runningStep && selectedStep.value === runningStep.name) {
     scrollToBottom();
   }

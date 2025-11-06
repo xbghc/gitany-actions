@@ -26,5 +26,5 @@ export async function listIssueComments(
     }
   }
   const json = await client.http.get(apiUrl, { searchParams: q }).json();
-  return parseApiResponse(issueCommentSchema.array(), json, { endpoint: apiUrl, method: "GET" });
+  return parseApiResponse(issueCommentSchema.array(), json, { endpoint: apiUrl, method: 'GET' });
 }

@@ -56,7 +56,7 @@ function exec(cmd, silent = false) {
     return execSync(cmd, {
       encoding: 'utf-8',
       stdio: silent ? 'pipe' : 'inherit',
-      cwd: ROOT_DIR
+      cwd: ROOT_DIR,
     });
   } catch (err) {
     if (!silent) throw err;
@@ -135,8 +135,8 @@ function suggestNextVersion(currentVersion) {
   const parts = currentVersion.split('.').map(Number);
   return [
     `${parts[0]}.${parts[1]}.${parts[2] + 1}`, // patch
-    `${parts[0]}.${parts[1] + 1}.0`,           // minor
-    `${parts[0] + 1}.0.0`,                     // major
+    `${parts[0]}.${parts[1] + 1}.0`, // minor
+    `${parts[0] + 1}.0.0`, // major
   ];
 }
 

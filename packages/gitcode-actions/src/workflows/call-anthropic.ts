@@ -11,9 +11,7 @@ export interface CreateApiCallScriptOptions {
 /**
  * 在容器中创建 API 调用脚本
  */
-export async function createApiCallScript(
-  options: CreateApiCallScriptOptions,
-): Promise<void> {
+export async function createApiCallScript(options: CreateApiCallScriptOptions): Promise<void> {
   const {
     container,
     prompt,

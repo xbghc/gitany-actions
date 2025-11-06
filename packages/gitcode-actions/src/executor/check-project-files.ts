@@ -16,9 +16,7 @@ export interface ProjectCheckResult {
   diagnostics: ProjectDiagnostics;
 }
 
-export async function checkProjectFiles({
-  container,
-}: CheckOptions): Promise<ProjectCheckResult> {
+export async function checkProjectFiles({ container }: CheckOptions): Promise<ProjectCheckResult> {
   const result = await executor(container)
     .execute('ls -la /tmp/workspace/package.json 2>/dev/null', {
       name: '检查 package.json',

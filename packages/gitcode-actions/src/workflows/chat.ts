@@ -6,7 +6,10 @@ import { createWorkspaceContainer } from '../container/create-workspace-containe
 import { verifySha } from '../executor/verify-sha.js';
 import { installDependencies } from '../executor/install-dependencies.js';
 import { createApiCallScript } from './call-anthropic.js';
-import { executor, StepExecutionError as ContainerStepExecutionError } from '../executor/container-executor.js';
+import {
+  executor,
+  StepExecutionError as ContainerStepExecutionError,
+} from '../executor/container-executor.js';
 
 export interface ChatOptions {
   /** Optional existing container to use. */
@@ -115,10 +118,12 @@ export async function chat(
     if (!installDeps.success) return { success: false, error: installDeps.output };
 
     try {
-      await executor(container, { env: sharedStepEnv })
-        .execute('cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1', {
+      await executor(container, { env: sharedStepEnv }).execute(
+        'cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1',
+        {
           name: 'Install Anthropic SDK',
-        });
+        },
+      );
     } catch (error) {
       if (error instanceof ContainerStepExecutionError) {
         return { success: false, error: error.output };
@@ -145,10 +150,12 @@ export async function chat(
 
     let chatOutput: string;
     try {
-      const chatResult = await executor(container, { env: chatEnv })
-        .execute('cd /tmp/workspace && node /tmp/call-anthropic.mjs 2>&1', {
+      const chatResult = await executor(container, { env: chatEnv }).execute(
+        'cd /tmp/workspace && node /tmp/call-anthropic.mjs 2>&1',
+        {
           name: 'call-anthropic-api',
-        });
+        },
+      );
       chatOutput = chatResult.steps[0].output;
     } catch (error) {
       if (error instanceof ContainerStepExecutionError) {

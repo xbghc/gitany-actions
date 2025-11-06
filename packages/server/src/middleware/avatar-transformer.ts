@@ -24,11 +24,7 @@ function transformAvatarUrl(originalUrl: string): string {
  * @returns 是否为 Record<string, unknown> 类型
  */
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return (
-    value !== null &&
-    typeof value === 'object' &&
-    !Array.isArray(value)
-  );
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
@@ -44,7 +40,7 @@ function transformAvatarUrlsRecursive(data: unknown): unknown {
 
   // 处理数组
   if (Array.isArray(data)) {
-    return data.map(item => transformAvatarUrlsRecursive(item));
+    return data.map((item) => transformAvatarUrlsRecursive(item));
   }
 
   // 处理对象 - 使用类型守卫
@@ -88,11 +84,7 @@ function transformAvatarUrlsRecursive(data: unknown): unknown {
  * - 嵌套对象中的 avatar_url（如 response.data.user.avatar_url）
  * - 数组中的 avatar_url（如 response.data.assignees[].avatar_url）
  */
-export function avatarTransformerMiddleware(
-  _req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+export function avatarTransformerMiddleware(_req: Request, res: Response, next: NextFunction) {
   // 保存原始的 res.json 方法
   const originalJson = res.json.bind(res);
 

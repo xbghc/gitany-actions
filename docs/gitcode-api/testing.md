@@ -11,6 +11,7 @@ title: 测试系统
 ### 单元测试（Unit Tests）
 
 **测试内容**: 纯函数，不依赖外部 API
+
 - `parseGitUrl()` - URL 解析
 - `toGitUrl()` - URL 格式化
 - `toQuery()` - 查询参数构建
@@ -22,11 +23,13 @@ title: 测试系统
 ### E2E 测试（End-to-End Tests）
 
 **测试内容**: 真实 GitCode API 调用
+
 - 验证 API 契约
 - 发现 API 变化
 - 确保 Zod schema 能解析真实响应
 
 **运行时机**:
+
 - ❌ **不在 PR 检查中运行**（避免依赖 token、rate limit）
 - ✅ **定时任务**: 每天凌晨 2 点（UTC）
 - ✅ **手动触发**: 本地开发或 CI workflow_dispatch
@@ -61,12 +64,13 @@ pnpm test:ui
 
 ```yaml
 - Build
-- Test (仅单元测试)  # 快速反馈
+- Test (仅单元测试) # 快速反馈
 - Type Check
 - Lint
 ```
 
 **特点**:
+
 - ✅ 快速反馈（<5 秒）
 - ✅ 不需要 secrets
 - ✅ 稳定可靠
@@ -76,11 +80,12 @@ pnpm test:ui
 ```yaml
 on:
   schedule:
-    - cron: '0 2 * * *'  # 每天凌晨 2 点
-  workflow_dispatch:     # 支持手动触发
+    - cron: '0 2 * * *' # 每天凌晨 2 点
+  workflow_dispatch: # 支持手动触发
 ```
 
 **特点**:
+
 - 🔍 监控 API 变化
 - 📧 失败时自动创建 Issue
 - 🚫 不阻塞 PR 合并
@@ -90,6 +95,7 @@ on:
 ### 为什么不使用 Mock 测试？
 
 Mock 测试的问题：
+
 1. **无法验证真实 API 契约** - Mock 数据可能与实际不符
 2. **只测试了自己的假设** - "我认为 API 会返回 X"
 3. **维护成本高** - API 变化时需要同步更新 mock 数据
@@ -98,10 +104,12 @@ Mock 测试的问题：
 ### 我们的做法
 
 **单元测试**:
+
 - ✅ 覆盖不依赖外部的纯函数
 - ✅ 确定性、快速、稳定
 
 **E2E 测试**:
+
 - ✅ 验证真实 API 行为
 - ✅ 及时发现 API 变化
 - ✅ 确保 Zod schema 真的能解析真实响应

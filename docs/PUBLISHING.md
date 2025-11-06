@@ -24,6 +24,7 @@ npm login
 ```
 
 确认登录状态：
+
 ```bash
 npm whoami
 ```
@@ -33,6 +34,7 @@ npm whoami
 手动编辑每个要发布包的 `package.json`，更新 `version` 字段。
 
 遵循 [语义化版本](https://semver.org/lang/zh-CN/)：
+
 - **Patch** (0.1.0 → 0.1.1): 向下兼容的 bug 修复
 - **Minor** (0.1.0 → 0.2.0): 向下兼容的新功能
 - **Major** (0.1.0 → 1.0.0): 不兼容的 API 变更
@@ -45,12 +47,15 @@ npm whoami
 ## [0.2.0] - 2024-01-20
 
 ### Added
+
 - 新功能描述
 
 ### Changed
+
 - 变更描述
 
 ### Fixed
+
 - Bug 修复描述
 ```
 
@@ -74,12 +79,14 @@ pnpm run publish:dry-run
 ```
 
 脚本会检查：
+
 - ✓ Git 工作区状态
 - ✓ npm 登录状态
 - ✓ 版本号有效性（自动与 npm 对比）
 - ✓ 构建和类型检查
 
 **版本检查逻辑**：
+
 - 如果本地版本号已存在于 npm → 提示更新版本号
 - 如果本地版本号小于等于 npm 最新版本 → 提示更新版本号
 - 如果本地版本号大于 npm 最新版本 → 通过检查
@@ -94,6 +101,7 @@ pnpm run publish:packages
 ```
 
 脚本会：
+
 1. 执行所有检查
 2. 询问确认
 3. 按依赖顺序发布包：
@@ -135,6 +143,7 @@ git push --tags
 ### 3. 验证发布
 
 访问 npm 查看发布的包：
+
 - https://www.npmjs.com/package/@xbghc/gitcode-api
 - https://www.npmjs.com/package/@xbghc/gitcode-cli
 
@@ -162,6 +171,7 @@ git push --tags
 ### 包版本同步
 
 通常情况下，建议所有包使用相同的版本号，即使某个包没有变更。这样：
+
 - ✓ 简化版本管理
 - ✓ 用户容易理解依赖关系
 - ✓ 避免版本冲突
@@ -179,10 +189,12 @@ git push --tags
 ### Q: 发布失败：403 权限错误
 
 **原因**：
+
 1. 未登录 npm
 2. 没有包的发布权限
 
 **解决**：
+
 ```bash
 # 重新登录
 npm logout
@@ -195,6 +207,7 @@ npm whoami
 ### Q: workspace 依赖没有转换
 
 **原因**：pnpm 会自动转换 `workspace:*` 为实际版本号，但需要确保：
+
 1. 被依赖的包已经发布
 2. 版本号在 package.json 中正确
 
@@ -203,6 +216,7 @@ npm whoami
 ### Q: 如何撤回已发布的版本
 
 **npm unpublish 限制**：
+
 - 发布后 72 小时内可以撤回
 - 只能撤回没有被其他包依赖的版本
 

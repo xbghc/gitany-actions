@@ -15,12 +15,14 @@ GitCode Dashboard 是一个基于 Vue 3 的前端应用，用于管理 GitCode �
 ## 功能特性
 
 ### PR 管理
+
 - ✅ PR 列表展示（支持状态筛选）
 - ✅ PR 详情查看
 - ✅ PR 评论管理
 - ✅ 代码变更统计
 
 ### Issue 管理
+
 - ✅ Issue 列表展示（支持状态筛选）
 - ✅ Issue 详情查看
 - ✅ 创建新 Issue
@@ -28,6 +30,7 @@ GitCode Dashboard 是一个基于 Vue 3 的前端应用，用于管理 GitCode �
 - ✅ Issue 评论管理
 
 ### 通用功能
+
 - ✅ 仓库选择器
 - ✅ 用户头像显示
 - ✅ Markdown 内容渲染
@@ -81,11 +84,13 @@ VITE_API_BASE_URL=http://localhost:3000
 Dashboard 需要 `@xbghc/gitcode-actions-server` 提供 API 服务。
 
 1. 启动后端服务器:
+
 ```bash
 pnpm dev:server
 ```
 
 2. 确保设置了 `GITCODE_TOKEN` 环境变量:
+
 ```bash
 export GITCODE_TOKEN=your_gitcode_token
 ```
@@ -130,6 +135,7 @@ src/
 Dashboard 通过以下 RESTful API 与后端通信：
 
 ### Pull Request
+
 - `GET /api/repo/:owner/:repo/pulls` - 获取 PR 列表
 - `GET /api/repo/:owner/:repo/pulls/:number` - 获取 PR 详情
 - `GET /api/repo/:owner/:repo/pulls/:number/comments` - 获取 PR 评论
@@ -138,6 +144,7 @@ Dashboard 通过以下 RESTful API 与后端通信：
 - `PUT /api/repo/:owner/:repo/pulls/:number/merge` - 合并 PR
 
 ### Issue
+
 - `GET /api/repo/:owner/:repo/issues` - 获取 Issue 列表
 - `GET /api/repo/:owner/:repo/issues/:number` - 获取 Issue 详情
 - `POST /api/repo/:owner/:repo/issues` - 创建 Issue
@@ -150,6 +157,7 @@ Dashboard 通过以下 RESTful API 与后端通信：
 ### 1. 设置仓库
 
 首次使用时，在仪表盘页面输入：
+
 - **所有者**: GitCode 仓库的所有者用户名
 - **仓库**: 仓库名称
 

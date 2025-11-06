@@ -2,7 +2,10 @@ import type Docker from 'dockerode';
 
 import { checkProjectFiles } from '../executor/check-project-files.js';
 import { DiagnosticsCollectionError } from '../executor/collect-diagnostics.js';
-import { executor, StepExecutionError as ContainerStepExecutionError } from '../executor/container-executor.js';
+import {
+  executor,
+  StepExecutionError as ContainerStepExecutionError,
+} from '../executor/container-executor.js';
 import { createWorkspaceContainer } from '../container/create-workspace-container.js';
 import { installDependencies } from '../executor/install-dependencies.js';
 import { ImagePullError, prepareImage, type ImagePullStatus } from '../container/prepare-image.js';
@@ -113,10 +116,12 @@ export async function testShaBuild(
     }
 
     try {
-      const checkoutExecResult = await executor(container)
-        .execute('cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1', {
+      const checkoutExecResult = await executor(container).execute(
+        'cd /tmp/workspace && git checkout "$TARGET_SHA" 2>&1',
+        {
           name: 'Checkout SHA',
-        });
+        },
+      );
 
       const checkoutStep = checkoutExecResult.steps[0];
       fullOutput += checkoutStep.output;

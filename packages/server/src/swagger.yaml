@@ -113,7 +113,7 @@ paths:
           description: 头像图片的完整 URL（必须来自 GitCode 官方 CDN）
           schema:
             type: string
-            example: "https://cdn-img.gitcode.com/avatars/u/123456"
+            example: 'https://cdn-img.gitcode.com/avatars/u/123456'
       responses:
         '200':
           description: 成功返回头像图片
@@ -379,7 +379,7 @@ paths:
                 body:
                   type: string
                   description: 评论内容
-                  example: "This looks good to me!"
+                  example: 'This looks good to me!'
       responses:
         '200':
           description: 成功添加评论
@@ -506,19 +506,19 @@ paths:
                 title:
                   type: string
                   description: Issue 标题
-                  example: "Bug: Login failed"
+                  example: 'Bug: Login failed'
                 body:
                   type: string
                   description: Issue 描述
-                  example: "When I try to login, I get an error..."
+                  example: 'When I try to login, I get an error...'
                 labels:
                   type: string
                   description: 标签（逗号分隔）
-                  example: "bug,urgent"
+                  example: 'bug,urgent'
                 assignees:
                   type: string
                   description: 分配给的用户（逗号分隔）
-                  example: "user1,user2"
+                  example: 'user1,user2'
       responses:
         '200':
           description: 成功创建 Issue
@@ -660,7 +660,7 @@ paths:
                 body:
                   type: string
                   description: 评论内容
-                  example: "Thanks for reporting this issue!"
+                  example: 'Thanks for reporting this issue!'
       responses:
         '200':
           description: 成功添加评论
@@ -736,51 +736,51 @@ components:
         avatar_url:
           type: string
           description: 用户头像 URL
-          example: "https://gitcode.com/avatars/u/123456"
+          example: 'https://gitcode.com/avatars/u/123456'
         followers_url:
           type: string
           description: 关注者列表 URL
-          example: "https://gitcode.com/api/v5/users/username/followers"
+          example: 'https://gitcode.com/api/v5/users/username/followers'
         html_url:
           type: string
           description: 用户主页 URL
-          example: "https://gitcode.com/username"
+          example: 'https://gitcode.com/username'
         id:
           type: string
           description: 用户 ID
-          example: "123456"
+          example: '123456'
         login:
           type: string
           description: 用户登录名
-          example: "username"
+          example: 'username'
         name:
           type: string
           description: 用户显示名称
-          example: "张三"
+          example: '张三'
         type:
           type: string
           description: 用户类型
-          example: "User"
+          example: 'User'
         url:
           type: string
           description: 用户 API URL
-          example: "https://gitcode.com/api/v5/users/username"
+          example: 'https://gitcode.com/api/v5/users/username'
         bio:
           type: string
           description: 用户简介
-          example: "Full-stack developer"
+          example: 'Full-stack developer'
         blog:
           type: string
           description: 用户博客 URL
-          example: "https://example.com"
+          example: 'https://example.com'
         company:
           type: string
           description: 用户所在公司
-          example: "Tech Corp"
+          example: 'Tech Corp'
         email:
           type: string
           description: 用户邮箱
-          example: "user@example.com"
+          example: 'user@example.com'
         followers:
           type: integer
           description: 关注者数量
@@ -794,7 +794,7 @@ components:
           description: 最常用的编程语言
           items:
             type: string
-          example: ["TypeScript", "Python", "Go"]
+          example: ['TypeScript', 'Python', 'Go']
 
     SuccessResponse:
       type: object

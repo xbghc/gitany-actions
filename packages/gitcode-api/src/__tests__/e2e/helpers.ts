@@ -39,9 +39,7 @@ export async function withRetry<T>(
 
       if (is429 && attempt < maxRetries - 1) {
         const waitTime = client.getRateLimitWaitTime() || 5; // 默认等待 5 秒
-        console.warn(
-          `⚠️ Got 429, retry ${attempt + 1}/${maxRetries - 1} after ${waitTime}s...`,
-        );
+        console.warn(`⚠️ Got 429, retry ${attempt + 1}/${maxRetries - 1} after ${waitTime}s...`);
         await sleep(waitTime * 1000);
       } else {
         // 非 429 错误或已达最大重试次数，直接抛出

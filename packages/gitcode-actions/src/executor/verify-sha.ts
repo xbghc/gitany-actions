@@ -51,10 +51,12 @@ export interface VerifyResult {
  */
 export async function verifySha({ container }: VerifyOptions): Promise<VerifyResult> {
   try {
-    const result = await executor(container)
-      .execute('git -C /tmp/workspace rev-parse --verify "$TARGET_SHA"^{commit} >/dev/null 2>&1', {
+    const result = await executor(container).execute(
+      'git -C /tmp/workspace rev-parse --verify "$TARGET_SHA"^{commit} >/dev/null 2>&1',
+      {
         name: '验证 SHA/分支存在性',
-      });
+      },
+    );
 
     const output = result.steps.map((s) => s.output).join('');
 

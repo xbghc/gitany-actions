@@ -334,11 +334,13 @@ $ gitcode pr list https://gitcode.com/myorg/myrepo --json
 ```
 
 **配置项说明：**
+
 - `token`: GitCode 认证令牌（通过 `gitcode auth set-token` 设置）
 - `authStyle`: 认证风格，可选值：`query`、`bearer`、`token`、`header`
 - `customAuthHeader`: 自定义认证头部（可选）
 
 **推荐使用 CLI 命令管理配置：**
+
 - 使用 `gitcode auth set-token` 而不是手动编辑配置文件
 - 配置文件会在首次保存 token 时自动创建
 

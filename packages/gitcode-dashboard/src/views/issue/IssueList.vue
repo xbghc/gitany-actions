@@ -14,7 +14,12 @@
       <div class="filters">
         <el-form :inline="true">
           <el-form-item label="状态">
-            <el-select v-model="filters.state" placeholder="选择状态" style="width: 120px" @change="handleFilterChange">
+            <el-select
+              v-model="filters.state"
+              placeholder="选择状态"
+              style="width: 120px"
+              @change="handleFilterChange"
+            >
               <el-option label="全部" value="all" />
               <el-option label="Open" value="open" />
               <el-option label="Closed" value="closed" />
@@ -24,17 +29,15 @@
             <el-button :icon="RefreshRight" @click="handleRefresh">刷新</el-button>
           </el-form-item>
           <el-form-item>
-            <span class="last-update-time">最后更新: {{ formatRelativeTime(lastCacheTimestamp) }}</span>
+            <span class="last-update-time"
+              >最后更新: {{ formatRelativeTime(lastCacheTimestamp) }}</span
+            >
           </el-form-item>
         </el-form>
       </div>
 
       <!-- Issue 列表 -->
-      <el-table
-        v-loading="loading"
-        :data="issueList"
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="issueList" style="width: 100%">
         <el-table-column prop="number" label="编号" width="80" />
         <el-table-column label="标题" min-width="300">
           <template #default="{ row }">

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.1] - 2024-01-15
 
 ### Added
+
 - Initial release of GitCode CLI
 - Authentication commands (`auth set-token`, `auth status`, `auth remove-token`)
 - User commands (`user show`, `user namespace`)
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive error handling
 
 ### Features
+
 - Commander.js-based CLI framework
 - Integration with `@xbghc/gitcode-api` for API calls
 - Integration with `@xbghc/git-lib` for Git operations

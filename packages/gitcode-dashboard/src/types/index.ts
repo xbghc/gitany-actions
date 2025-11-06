@@ -268,7 +268,7 @@ export interface WorkflowConfig {
   buildCommand?: string;
   lintCommand?: string;
   baseImage?: string;
-  registryMirror?: string;  // Docker 镜像源
+  registryMirror?: string; // Docker 镜像源
   timeout?: number;
 }
 

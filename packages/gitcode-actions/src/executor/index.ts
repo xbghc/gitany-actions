@@ -11,11 +11,7 @@ export type {
 
 // 底层 API
 export { execCommand } from './execute-step.js';
-export type {
-  ExecuteOptions,
-  ExecuteResult,
-  ExecutionHandle,
-} from './execute-step.js';
+export type { ExecuteOptions, ExecuteResult, ExecutionHandle } from './execute-step.js';
 
 // 辅助功能
 export { verifySha } from './verify-sha.js';

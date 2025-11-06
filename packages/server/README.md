@@ -73,6 +73,7 @@ pnpm start
 ```
 
 服务启动后：
+
 - 访问 `http://localhost:3000/` - 自动跳转到 API 文档
 - 访问 `http://localhost:3000/api-docs` - 查看 Swagger UI 交互式文档
 - 访问 `http://localhost:3000/health` - 健康检查
@@ -94,11 +95,13 @@ pnpm start
 支持以下三种方式之一：
 
 1. **X-GitCode-Token** 请求头（推荐）
+
    ```
    X-GitCode-Token: your_token_here
    ```
 
 2. **Authorization Bearer** 请求头
+
    ```
    Authorization: Bearer your_token_here
    ```
@@ -127,6 +130,7 @@ gitcode auth login
 📖 **API 文档地址**: http://localhost:3000/api-docs
 
 在文档页面，您可以：
+
 - 查看所有 API 端点的详细信息
 - 直接在浏览器中测试 API（支持设置认证 Token）
 - 查看请求/响应的数据结构
@@ -141,6 +145,7 @@ GET /health
 ```
 
 响应示例：
+
 ```json
 {
   "status": "ok",
@@ -155,21 +160,23 @@ POST /api/pulls
 ```
 
 请求体：
+
 ```json
 {
   "owner": "username",
   "repo": "repository-name",
-  "state": "open",       // 可选: open/closed/all
-  "page": 1,             // 可选: 页码
-  "per_page": 20,        // 可选: 每页数量
-  "sort": "created",     // 可选: 排序字段
-  "direction": "desc",   // 可选: asc/desc
-  "head": "feature",     // 可选: head 分支过滤
-  "base": "main"         // 可选: base 分支过滤
+  "state": "open", // 可选: open/closed/all
+  "page": 1, // 可选: 页码
+  "per_page": 20, // 可选: 每页数量
+  "sort": "created", // 可选: 排序字段
+  "direction": "desc", // 可选: asc/desc
+  "head": "feature", // 可选: head 分支过滤
+  "base": "main" // 可选: base 分支过滤
 }
 ```
 
 响应示例：
+
 ```json
 {
   "owner": "username",
@@ -195,19 +202,21 @@ POST /api/issues
 ```
 
 请求体：
+
 ```json
 {
   "owner": "username",
   "repo": "repository-name",
-  "state": "open",          // 可选: open/closed/all
-  "page": 1,                // 可选: 页码
-  "per_page": 20,           // 可选: 每页数量
-  "sort": "created",        // 可选: created/updated/comments
-  "labels": "bug,feature"   // 可选: 标签过滤（逗号分隔）
+  "state": "open", // 可选: open/closed/all
+  "page": 1, // 可选: 页码
+  "per_page": 20, // 可选: 每页数量
+  "sort": "created", // 可选: created/updated/comments
+  "labels": "bug,feature" // 可选: 标签过滤（逗号分隔）
 }
 ```
 
 响应示例：
+
 ```json
 {
   "owner": "username",
@@ -301,15 +310,15 @@ const response = await fetch('http://localhost:3000/api/pulls', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'X-GitCode-Token': 'your_token_here'
+    'X-GitCode-Token': 'your_token_here',
   },
   body: JSON.stringify({
     owner: 'username',
     repo: 'myrepo',
     state: 'open',
     page: 1,
-    per_page: 20
-  })
+    per_page: 20,
+  }),
 });
 
 if (!response.ok) {
@@ -327,13 +336,13 @@ const response2 = await fetch('http://localhost:3000/api/issues', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': 'Bearer your_token_here'
+    Authorization: 'Bearer your_token_here',
   },
   body: JSON.stringify({
     owner: 'username',
     repo: 'myrepo',
-    state: 'all'
-  })
+    state: 'all',
+  }),
 });
 const issues = await response2.json();
 ```

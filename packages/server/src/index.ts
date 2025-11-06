@@ -37,10 +37,14 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 // API Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'GitCode Actions Server API',
-}));
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'GitCode Actions Server API',
+  }),
+);
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {

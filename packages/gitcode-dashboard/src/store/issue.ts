@@ -105,9 +105,8 @@ export const useIssueStore = defineStore('issue', () => {
     }
 
     // 2. 降序排序（最新的在前）
-    const sorted = [...filtered].sort((a, b) =>
-      new Date(b.updated_at || 0).getTime() -
-      new Date(a.updated_at || 0).getTime()
+    const sorted = [...filtered].sort(
+      (a, b) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime(),
     );
 
     // 3. 分页
@@ -148,16 +147,12 @@ export const useIssueStore = defineStore('issue', () => {
     // 无缓存：先获取第一页给用户看（降序）
     loading.value = true;
     try {
-      const response = await getIssueList(
-        repoStore.currentOwner,
-        repoStore.currentRepo,
-        {
-          page: 1,
-          per_page: 20,
-          sort: 'updated',
-          direction: 'desc',
-        }
-      );
+      const response = await getIssueList(repoStore.currentOwner, repoStore.currentRepo, {
+        page: 1,
+        per_page: 20,
+        sort: 'updated',
+        direction: 'desc',
+      });
 
       if (response.data) {
         issueList.value = response.data;
@@ -186,16 +181,12 @@ export const useIssueStore = defineStore('issue', () => {
 
     while (!cacheProgress.value.isComplete) {
       try {
-        const response = await getIssueList(
-          repoStore.currentOwner,
-          repoStore.currentRepo,
-          {
-            page: currentPage,
-            per_page: perPage,
-            sort: 'updated',
-            direction: 'asc', // 升序：从旧到新
-          }
-        );
+        const response = await getIssueList(repoStore.currentOwner, repoStore.currentRepo, {
+          page: currentPage,
+          per_page: perPage,
+          sort: 'updated',
+          direction: 'asc', // 升序：从旧到新
+        });
 
         if (!response.data || response.data.length === 0) {
           cacheProgress.value.isComplete = true;
@@ -205,7 +196,7 @@ export const useIssueStore = defineStore('issue', () => {
 
         // 合并到缓存（使用 Map 去重）
         const itemMap = new Map(allIssues.map((issue: Issue) => [issue.id, issue]));
-        response.data.forEach(issue => itemMap.set(issue.id, issue));
+        response.data.forEach((issue) => itemMap.set(issue.id, issue));
         allIssues.splice(0, allIssues.length, ...Array.from(itemMap.values()));
 
         // 更新进度
@@ -250,16 +241,12 @@ export const useIssueStore = defineStore('issue', () => {
     if (!repoStore.currentOwner || !repoStore.currentRepo) return;
 
     try {
-      const response = await getIssueList(
-        repoStore.currentOwner,
-        repoStore.currentRepo,
-        {
-          page: 1,
-          per_page: 100,
-          sort: 'updated',
-          direction: 'desc',
-        }
-      );
+      const response = await getIssueList(repoStore.currentOwner, repoStore.currentRepo, {
+        page: 1,
+        per_page: 100,
+        sort: 'updated',
+        direction: 'desc',
+      });
 
       if (!response.data || response.data.length === 0) return;
 
@@ -270,14 +257,14 @@ export const useIssueStore = defineStore('issue', () => {
       }, 0);
 
       // 找出比缓存更新的数据
-      const newItems = response.data.filter(issue =>
-        new Date(issue.updated_at || 0).getTime() > cachedLatest
+      const newItems = response.data.filter(
+        (issue) => new Date(issue.updated_at || 0).getTime() > cachedLatest,
       );
 
       if (newItems.length > 0) {
         // 合并到缓存
         const itemMap = new Map(allIssues.map((issue: Issue) => [issue.id, issue]));
-        newItems.forEach(issue => itemMap.set(issue.id, issue));
+        newItems.forEach((issue) => itemMap.set(issue.id, issue));
         allIssues.splice(0, allIssues.length, ...Array.from(itemMap.values()));
 
         await saveCache();
@@ -323,10 +310,7 @@ export const useIssueStore = defineStore('issue', () => {
 
     countLoading.value = true;
     try {
-      const response = await getIssueCount(
-        repoStore.currentOwner,
-        repoStore.currentRepo
-      );
+      const response = await getIssueCount(repoStore.currentOwner, repoStore.currentRepo);
       if (response.data) {
         issueCount.value = response.data;
       }
@@ -353,7 +337,7 @@ export const useIssueStore = defineStore('issue', () => {
       if (allIssues.length > 0) {
         displayFromCache();
       }
-    }
+    },
   );
 
   // 重置筛选条件
@@ -403,7 +387,7 @@ export const useIssueStore = defineStore('issue', () => {
         loading.value = false;
       }
     },
-    { immediate: true }
+    { immediate: true },
   );
 
   return {

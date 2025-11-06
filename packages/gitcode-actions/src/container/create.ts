@@ -24,9 +24,7 @@ export async function createPrContainer(
   }
 
   if (!pr.head.repo) {
-    throw new Error(
-      `无法创建 PR #${pr.id} 的容器: 源仓库已被删除或不可访问`,
-    );
+    throw new Error(`无法创建 PR #${pr.id} 的容器: 源仓库已被删除或不可访问`);
   }
 
   const headRepoUrl = toGitUrl(pr.head.repo.html_url);

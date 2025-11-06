@@ -77,11 +77,7 @@ export type {
 } from './executor/index.js';
 
 // ===== Workflows =====
-export {
-  chat,
-  createApiCallScript,
-  testShaBuild,
-} from './workflows/index.js';
+export { chat, createApiCallScript, testShaBuild } from './workflows/index.js';
 export type {
   ChatOptions,
   ChatResult,

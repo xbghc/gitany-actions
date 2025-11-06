@@ -30,7 +30,7 @@ export async function createCommand(
     const pr = created;
     const numStr = String(pr.number ?? pr.id ?? '?');
     const titleOut = pr.title || '(no title)';
-    
+
     if (options.json) {
       console.log(JSON.stringify(created, null, 2));
     } else {

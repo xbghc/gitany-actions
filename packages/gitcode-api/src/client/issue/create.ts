@@ -24,5 +24,5 @@ export async function createIssue(
     })
     .json();
 
-  return parseApiResponse(createdIssueSchema, response, { endpoint: url, method: "POST" });
+  return parseApiResponse(createdIssueSchema, response, { endpoint: url, method: 'POST' });
 }

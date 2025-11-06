@@ -37,7 +37,13 @@
     </div>
 
     <div class="repo-list-footer">
-      <el-button type="primary" size="small" :icon="Plus" @click="showAddDialog = true" style="width: 100%">
+      <el-button
+        type="primary"
+        size="small"
+        :icon="Plus"
+        @click="showAddDialog = true"
+        style="width: 100%"
+      >
         添加仓库
       </el-button>
     </div>
@@ -63,13 +69,7 @@
       </el-form>
       <template #footer>
         <el-button @click="handleCancelAdd">取消</el-button>
-        <el-button
-          type="primary"
-          @click="handleAddRepo"
-          :disabled="!isFormValid"
-        >
-          添加
-        </el-button>
+        <el-button type="primary" @click="handleAddRepo" :disabled="!isFormValid"> 添加 </el-button>
       </template>
     </el-dialog>
   </div>

@@ -79,6 +79,7 @@ const profile = await client.user.getProfile();
 ## 测试系统
 
 本包包含完善的测试系统，采用最小化测试策略：
+
 - **单元测试**: 100% 覆盖工具函数，运行时间 <1 秒
 - **E2E 测试**: 验证真实 API，定时运行监控 API 变化
 
@@ -113,6 +114,7 @@ if (client.isRateLimited()) {
 ```
 
 **工作原理**:
+
 1. 当 API 返回 `429 Too Many Requests` 时，自动解析 `Retry-After` 响应头
 2. 设置全局限流标志，阻止后续请求
 3. 在限流期间发起的请求会立即抛出 429 错误（无需等待网络往返）

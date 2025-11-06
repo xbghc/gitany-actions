@@ -40,7 +40,8 @@ export function parseGitRemotes(cwd: string = process.cwd()): GitRemote[] {
     const trimmed = line.trim();
 
     // Check for [remote "name"] section
-    const remoteMatch = trimmed.match(/^\[remote\s+"([^"]+)"\]$/) || trimmed.match(/^\[remote\s+'([^']+)'\]$/);
+    const remoteMatch =
+      trimmed.match(/^\[remote\s+"([^"]+)"\]$/) || trimmed.match(/^\[remote\s+'([^']+)'\]$/);
     if (remoteMatch) {
       // Save previous remote if exists
       if (currentRemote && currentRemote.name && currentRemote.url) {

@@ -214,10 +214,7 @@ export class ExecutorChain implements PromiseLike<ExecutionResult> {
  *   .execute('pnpm build')
  * ```
  */
-export function executor(
-  container: Docker.Container,
-  options?: ExecutorOptions,
-): ExecutorChain {
+export function executor(container: Docker.Container, options?: ExecutorOptions): ExecutorChain {
   return new ExecutorChain(container, options);
 }
 

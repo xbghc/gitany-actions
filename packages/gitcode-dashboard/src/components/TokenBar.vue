@@ -21,7 +21,12 @@
     </div>
 
     <!-- Token 配置对话框 -->
-    <el-dialog v-model="showDialog" title="配置 GitCode Token" width="500px" :close-on-click-modal="false">
+    <el-dialog
+      v-model="showDialog"
+      title="配置 GitCode Token"
+      width="500px"
+      :close-on-click-modal="false"
+    >
       <el-form>
         <el-form-item label="Access Token" required>
           <el-input
@@ -31,12 +36,7 @@
             show-password
           />
         </el-form-item>
-        <el-alert
-          title="如何获取 Token"
-          type="info"
-          :closable="false"
-          style="margin-top: 12px"
-        >
+        <el-alert title="如何获取 Token" type="info" :closable="false" style="margin-top: 12px">
           访问 GitCode 个人设置 → 访问令牌 → 创建新令牌
         </el-alert>
       </el-form>

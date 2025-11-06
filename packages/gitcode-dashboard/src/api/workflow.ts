@@ -1,5 +1,10 @@
 import { http } from './request';
-import type { ApiResponse, WorkflowConfig, WorkflowResult, RegistryMirrorTestResult } from '@/types';
+import type {
+  ApiResponse,
+  WorkflowConfig,
+  WorkflowResult,
+  RegistryMirrorTestResult,
+} from '@/types';
 
 /**
  * 触发 PR 的 build 和 lint 测试
@@ -7,7 +12,7 @@ import type { ApiResponse, WorkflowConfig, WorkflowResult, RegistryMirrorTestRes
 export const triggerPRWorkflow = (prNumber: number, config: WorkflowConfig) => {
   return http.post<ApiResponse<{ workflowId: string; status: string }>>(
     `/api/workflow/pr/${prNumber}`,
-    config
+    config,
   );
 };
 
@@ -34,10 +39,11 @@ export const createWorkflowStream = (workflowId: string, baseURL?: string) => {
  * 测试单个 Docker 镜像源
  */
 export const testRegistryMirror = (mirror?: string, mirrorName?: string, testImage?: string) => {
-  return http.post<ApiResponse<RegistryMirrorTestResult>>(
-    '/api/workflow/test-registry-mirror',
-    { mirror, mirrorName, testImage }
-  );
+  return http.post<ApiResponse<RegistryMirrorTestResult>>('/api/workflow/test-registry-mirror', {
+    mirror,
+    mirrorName,
+    testImage,
+  });
 };
 
 /**
@@ -46,6 +52,6 @@ export const testRegistryMirror = (mirror?: string, mirrorName?: string, testIma
 export const testAllRegistryMirrors = (testImage?: string) => {
   return http.get<ApiResponse<RegistryMirrorTestResult[]>>(
     '/api/workflow/test-all-registry-mirrors',
-    { params: { testImage } }
+    { params: { testImage } },
   );
 };

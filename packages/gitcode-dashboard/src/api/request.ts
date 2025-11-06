@@ -25,7 +25,7 @@ request.interceptors.request.use(
   (error) => {
     console.error('请求错误:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 响应拦截器
@@ -82,7 +82,7 @@ request.interceptors.response.use(
 
     ElMessage.error(errorMsg);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 封装请求方法

@@ -121,23 +121,28 @@ export async function runInDocker(options: DockerRunOptions): Promise<DockerRunR
       let errorMessage: string | undefined;
       if (exitCode !== 0) {
         // 检测镜像拉取失败
-        const isImagePullError = stderr.includes('manifest') ||
+        const isImagePullError =
+          stderr.includes('manifest') ||
           stderr.includes('registry') ||
           stderr.includes('docker.io') ||
           stderr.includes('pull access denied') ||
           (exitCode === 125 && stderr.includes('Error response from daemon'));
 
         if (isImagePullError) {
-          errorMessage = 'Docker 镜像拉取失败。\n\n' +
+          errorMessage =
+            'Docker 镜像拉取失败。\n\n' +
             '可能原因：\n' +
             '1. 网络连接问题（中国大陆用户建议配置镜像加速）\n' +
             '2. 镜像不存在或拼写错误\n' +
             '3. 需要配置代理访问 Docker Hub\n\n' +
             '建议操作：\n' +
-            '- 预先拉取镜像: docker pull ' + image + '\n' +
+            '- 预先拉取镜像: docker pull ' +
+            image +
+            '\n' +
             '- 配置镜像加速器（阿里云、腾讯云、网易等）\n' +
             '- 检查网络连接和代理设置\n\n' +
-            '原始错误: ' + stderr.trim();
+            '原始错误: ' +
+            stderr.trim();
         } else {
           errorMessage = `Process exited with code ${exitCode}`;
           if (stderr) {
@@ -162,7 +167,8 @@ export async function runInDocker(options: DockerRunOptions): Promise<DockerRunR
       // 特殊处理 ENOENT 错误（docker命令不存在）
       let errorMessage = error.message;
       if (error.code === 'ENOENT') {
-        errorMessage = 'Docker 命令不可用。请确保：\n' +
+        errorMessage =
+          'Docker 命令不可用。请确保：\n' +
           '1. Docker 已安装\n' +
           '2. Docker Desktop 已启动（Windows/Mac用户）\n' +
           '3. Docker 服务正在运行（Linux用户: sudo systemctl start docker）\n' +
@@ -380,7 +386,8 @@ export async function pullDockerImage(
         }
       } else {
         // 拉取失败
-        const errorMsg = '镜像拉取失败。\n\n' +
+        const errorMsg =
+          '镜像拉取失败。\n\n' +
           '可能原因：\n' +
           '1. ⚠️  镜像源白名单限制（2025年大部分国内镜像源只支持部分镜像）\n' +
           '2. 网络连接问题\n' +
@@ -390,7 +397,8 @@ export async function pullDockerImage(
           '- 🔄 尝试切换到其他镜像源（DaoCloud、1Panel、1ms等）\n' +
           '- 📦 如果都失败，可尝试使用Docker Hub直连（较慢但无限制）\n' +
           '- 💡 或选择更通用的镜像（如alpine、node等官方镜像）\n\n' +
-          '原始错误:\n' + stderr.trim();
+          '原始错误:\n' +
+          stderr.trim();
 
         resolve({ success: false, error: errorMsg });
       }
@@ -413,13 +421,16 @@ export async function pullDockerImage(
     });
 
     // 超时（10分钟）
-    setTimeout(() => {
-      dockerProcess.kill();
-      resolve({
-        success: false,
-        error: '镜像拉取超时（10分钟）。可能网络过慢或镜像过大。',
-      });
-    }, 10 * 60 * 1000);
+    setTimeout(
+      () => {
+        dockerProcess.kill();
+        resolve({
+          success: false,
+          error: '镜像拉取超时（10分钟）。可能网络过慢或镜像过大。',
+        });
+      },
+      10 * 60 * 1000,
+    );
   });
 }
 
@@ -536,7 +547,9 @@ export function buildInitCommand(
   }
 
   // 克隆仓库并直接切换到指定分支
-  commands.push(`echo "=== Cloning repository and checking out branch ${branch} ===" && git clone --branch ${branch} ${repoUrl} /workspace`);
+  commands.push(
+    `echo "=== Cloning repository and checking out branch ${branch} ===" && git clone --branch ${branch} ${repoUrl} /workspace`,
+  );
   commands.push('cd /workspace');
 
   // 安装依赖
@@ -862,7 +875,9 @@ export async function execInContainer(
  * @param containerName 容器名称
  * @returns 删除结果
  */
-export async function removeContainer(containerName: string): Promise<{ success: boolean; error?: string }> {
+export async function removeContainer(
+  containerName: string,
+): Promise<{ success: boolean; error?: string }> {
   return new Promise((resolve) => {
     // 使用 -f 强制删除，即使容器正在运行
     const dockerArgs = ['rm', '-f', containerName];

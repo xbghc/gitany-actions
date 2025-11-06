@@ -25,9 +25,7 @@ export const docker = new Proxy(dockerode, {
 });
 
 /** Forwarded Claude related env vars */
-const anthropicEnvVars = Object.keys(process.env).filter((key) =>
-  key.startsWith('ANTHROPIC_'),
-);
+const anthropicEnvVars = Object.keys(process.env).filter((key) => key.startsWith('ANTHROPIC_'));
 
 export const forward = [
   ...anthropicEnvVars,

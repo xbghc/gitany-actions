@@ -22,6 +22,7 @@ src/
 ### 1️⃣ 单元测试（Unit Tests）
 
 **测试内容**: 纯函数，不依赖外部 API
+
 - `parseGitUrl()` - URL 解析
 - `toGitUrl()` - URL 格式化
 - `toQuery()` - 查询参数构建
@@ -39,11 +40,13 @@ pnpm test:watch
 ### 2️⃣ E2E 测试（End-to-End Tests）
 
 **测试内容**: 真实 GitCode API 调用
+
 - 验证 API 契约
 - 发现 API 变化
 - 确保 Zod schema 能解析真实响应
 
 **运行时机**:
+
 - ❌ **不在 PR 检查中运行**（避免依赖 token、rate limit）
 - ✅ **定时任务**: 每天凌晨 2 点（UTC）
 - ✅ **手动触发**: 本地开发或 CI workflow_dispatch
@@ -58,15 +61,15 @@ GITCODE_TOKEN=your_token pnpm test:all
 
 ## 可用脚本
 
-| 命令 | 说明 |
-|------|------|
-| `pnpm test` | 运行单元测试（仅工具函数） |
-| `pnpm test:unit` | 同上 |
-| `pnpm test:e2e` | 运行 E2E 测试（需要 token） |
-| `pnpm test:all` | 运行所有测试 |
-| `pnpm test:watch` | 监听模式运行单元测试 |
-| `pnpm test:coverage` | 生成覆盖率报告 |
-| `pnpm test:ui` | 打开 Vitest UI 界面 |
+| 命令                 | 说明                        |
+| -------------------- | --------------------------- |
+| `pnpm test`          | 运行单元测试（仅工具函数）  |
+| `pnpm test:unit`     | 同上                        |
+| `pnpm test:e2e`      | 运行 E2E 测试（需要 token） |
+| `pnpm test:all`      | 运行所有测试                |
+| `pnpm test:watch`    | 监听模式运行单元测试        |
+| `pnpm test:coverage` | 生成覆盖率报告              |
+| `pnpm test:ui`       | 打开 Vitest UI 界面         |
 
 ## CI 集成
 
@@ -74,12 +77,13 @@ GITCODE_TOKEN=your_token pnpm test:all
 
 ```yaml
 - Build
-- Test (仅单元测试)  # 新增
+- Test (仅单元测试) # 新增
 - Type Check
 - Lint
 ```
 
 **特点**:
+
 - ✅ 快速反馈（<5 秒）
 - ✅ 不需要 secrets
 - ✅ 稳定可靠
@@ -89,11 +93,12 @@ GITCODE_TOKEN=your_token pnpm test:all
 ```yaml
 on:
   schedule:
-    - cron: '0 2 * * *'  # 每天凌晨 2 点
-  workflow_dispatch:     # 支持手动触发
+    - cron: '0 2 * * *' # 每天凌晨 2 点
+  workflow_dispatch: # 支持手动触发
 ```
 
 **特点**:
+
 - 🔍 监控 API 变化
 - 📧 失败时自动创建 Issue
 - 🚫 不阻塞 PR 合并
@@ -121,14 +126,15 @@ E2E 测试使用真实仓库 `https://gitcode.com/xbghc/gitcode-actions`。
 
 ## 测试覆盖率目标
 
-| 模块 | 目标覆盖率 | 说明 |
-|------|-----------|------|
-| `utils/` | 100% | 纯函数，必须全覆盖 |
-| 其他模块 | N/A | 通过 E2E 验证真实功能 |
+| 模块     | 目标覆盖率 | 说明                  |
+| -------- | ---------- | --------------------- |
+| `utils/` | 100%       | 纯函数，必须全覆盖    |
+| 其他模块 | N/A        | 通过 E2E 验证真实功能 |
 
 ## 为什么不使用 Mock 测试？
 
 Mock 测试的问题：
+
 1. **无法验证真实 API 契约** - Mock 数据可能与实际不符
 2. **只测试了自己的假设** - "我认为 API 会返回 X"
 3. **维护成本高** - API 变化时需要同步更新 mock 数据
@@ -153,6 +159,7 @@ Mock 测试的问题：
 ### Q: E2E 测试失败怎么办？
 
 A: 检查以下几点：
+
 1. `GITCODE_TOKEN` 是否有效
 2. 测试仓库是否可访问
 3. GitCode API 是否有变化（查看 Issue 中的详细日志）

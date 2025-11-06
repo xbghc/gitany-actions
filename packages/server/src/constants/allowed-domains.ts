@@ -26,7 +26,7 @@ export function isValidGitCodeImageUrl(url: string): boolean {
 
     // 精确匹配 hostname
     return GITCODE_IMAGE_HOSTNAMES.includes(
-      parsedUrl.hostname as typeof GITCODE_IMAGE_HOSTNAMES[number],
+      parsedUrl.hostname as (typeof GITCODE_IMAGE_HOSTNAMES)[number],
     );
   } catch {
     // 无效的 URL 格式

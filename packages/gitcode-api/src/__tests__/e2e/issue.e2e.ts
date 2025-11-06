@@ -29,15 +29,24 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
 
   describe('client.issue.list()', () => {
     it('应该获取真实的 Issue 列表', async () => {
-      const issues = await withRetry(() => client.issue.list(TEST_REPO_URL, { state: 'all' }), client);
+      const issues = await withRetry(
+        () => client.issue.list(TEST_REPO_URL, { state: 'all' }),
+        client,
+      );
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(issues)).toBe(true);
     });
 
     it('应该支持状态过滤', async () => {
-      const openIssues = await withRetry(() => client.issue.list(TEST_REPO_URL, { state: 'open' }), client);
-      const closedIssues = await withRetry(() => client.issue.list(TEST_REPO_URL, { state: 'closed' }), client);
+      const openIssues = await withRetry(
+        () => client.issue.list(TEST_REPO_URL, { state: 'open' }),
+        client,
+      );
+      const closedIssues = await withRetry(
+        () => client.issue.list(TEST_REPO_URL, { state: 'closed' }),
+        client,
+      );
 
       expect(Array.isArray(openIssues)).toBe(true);
       expect(Array.isArray(closedIssues)).toBe(true);
@@ -70,7 +79,10 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
   describe('client.issue.get()', () => {
     it('应该根据 number 获取 Issue 详情', async () => {
       // 先获取一个 Issue
-      const issues = await withRetry(() => client.issue.list(TEST_REPO_URL, { state: 'all' }), client);
+      const issues = await withRetry(
+        () => client.issue.list(TEST_REPO_URL, { state: 'all' }),
+        client,
+      );
 
       if (issues.length === 0) {
         console.warn('⚠️ 测试仓库没有 Issue，跳过详情测试');
@@ -87,7 +99,10 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
 
   describe('client.issue.comments()', () => {
     it('应该获取 Issue 的评论列表', async () => {
-      const issues = await withRetry(() => client.issue.list(TEST_REPO_URL, { state: 'all' }), client);
+      const issues = await withRetry(
+        () => client.issue.list(TEST_REPO_URL, { state: 'all' }),
+        client,
+      );
 
       if (issues.length === 0) {
         console.warn('⚠️ 测试仓库没有 Issue，跳过评论测试');
@@ -95,7 +110,10 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
       }
 
       const issueNumber = Number(issues[0].number);
-      const comments = await withRetry(() => client.issue.comments(TEST_REPO_URL, issueNumber), client);
+      const comments = await withRetry(
+        () => client.issue.comments(TEST_REPO_URL, issueNumber),
+        client,
+      );
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(comments)).toBe(true);

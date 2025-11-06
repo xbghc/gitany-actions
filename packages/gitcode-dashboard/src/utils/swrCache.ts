@@ -42,10 +42,10 @@ export interface SimpleCacheParams {
  * 仓库缓存数据结构（渐进式缓存）
  */
 export interface RepoCache<T> {
-  items: T[];              // 已缓存的所有项目
+  items: T[]; // 已缓存的所有项目
   lastFetchedPage: number; // 已缓存到第几页（升序缓存的页码）
-  isComplete: boolean;     // 是否已获取所有数据
-  timestamp: number;       // 缓存创建时间
+  isComplete: boolean; // 是否已获取所有数据
+  timestamp: number; // 缓存创建时间
 }
 
 const DB_NAME = 'swr_cache_db';
@@ -175,7 +175,7 @@ export async function deleteCache(key: string): Promise<void> {
 export async function clearCacheByType(
   type: 'pr' | 'issue',
   owner?: string,
-  repo?: string
+  repo?: string,
 ): Promise<void> {
   try {
     const db = await initDB();
@@ -184,9 +184,8 @@ export async function clearCacheByType(
       const objectStore = transaction.objectStore(STORE_NAME);
       const request = objectStore.openCursor();
 
-      const prefix = owner && repo
-        ? `${CACHE_PREFIX}${type}_${owner}_${repo}_`
-        : `${CACHE_PREFIX}${type}_`;
+      const prefix =
+        owner && repo ? `${CACHE_PREFIX}${type}_${owner}_${repo}_` : `${CACHE_PREFIX}${type}_`;
 
       request.onerror = () => reject(request.error);
       request.onsuccess = (event) => {
@@ -308,9 +307,7 @@ export async function getCacheKeysByPrefix(prefix: string): Promise<string[]> {
  * @param cachePrefix 缓存键前缀（不包含页码部分）
  * @returns 合并后的数据数组
  */
-export async function getMergedCache<T extends { id: number }>(
-  cachePrefix: string
-): Promise<T[]> {
+export async function getMergedCache<T extends { id: number }>(cachePrefix: string): Promise<T[]> {
   try {
     // 获取所有匹配的缓存键
     const keys = await getCacheKeysByPrefix(cachePrefix);
@@ -330,9 +327,7 @@ export async function getMergedCache<T extends { id: number }>(
     }
 
     // 去重（使用 ID 作为唯一标识）
-    const uniqueData = Array.from(
-      new Map(allData.map(item => [item.id, item])).values()
-    );
+    const uniqueData = Array.from(new Map(allData.map((item) => [item.id, item])).values());
 
     return uniqueData;
   } catch (error) {

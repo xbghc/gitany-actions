@@ -59,7 +59,7 @@ userRouter.get('/avatar-proxy', async (req: Request, res: Response) => {
     const response = await fetch(avatarUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Referer': 'https://gitcode.com/',
+        Referer: 'https://gitcode.com/',
       },
     });
 

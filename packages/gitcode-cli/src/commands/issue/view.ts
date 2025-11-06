@@ -112,7 +112,9 @@ export async function viewAction(
             const id = comment.comment_id ?? comment.id ?? '?';
             const user = formatUserName(comment.user);
             const bodyText = (comment.body ?? '').split('\n')[0];
-            const created = comment.created_at ? new Date(comment.created_at).toLocaleString() : undefined;
+            const created = comment.created_at
+              ? new Date(comment.created_at).toLocaleString()
+              : undefined;
             const metaParts = [user];
             if (created) {
               metaParts.push(created);

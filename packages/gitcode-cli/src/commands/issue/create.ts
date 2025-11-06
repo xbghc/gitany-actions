@@ -104,14 +104,16 @@ export async function createAction(
     if (options.assignee) {
       const assignees = Array.isArray(options.assignee) ? options.assignee : [options.assignee];
       // 处理 @me 特殊值
-      const processedAssignees = assignees.map((a) => {
-        if (a === '@me') {
-          // 在真实环境中，这里应该获取当前用户信息
-          console.log('Note: @me assignment will be implemented in future versions');
-          return null;
-        }
-        return a;
-      }).filter((a): a is string => a !== null);
+      const processedAssignees = assignees
+        .map((a) => {
+          if (a === '@me') {
+            // 在真实环境中，这里应该获取当前用户信息
+            console.log('Note: @me assignment will be implemented in future versions');
+            return null;
+          }
+          return a;
+        })
+        .filter((a): a is string => a !== null);
 
       if (processedAssignees.length > 0) {
         // 将数组合并为逗号分隔的字符串

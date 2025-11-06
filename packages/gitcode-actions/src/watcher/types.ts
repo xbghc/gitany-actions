@@ -1,9 +1,6 @@
 import type { EventEmitter } from 'node:events';
 import type Docker from 'dockerode';
-import type {
-  ListIssuesQuery,
-  IssueCommentsQuery,
-} from '@xbghc/gitcode-api';
+import type { ListIssuesQuery, IssueCommentsQuery } from '@xbghc/gitcode-api';
 import type { EventName, EventDataMap } from '../types/events.js';
 import type { ContainerOptions } from '../container/types.js';
 
@@ -102,4 +99,3 @@ export interface WatcherStatus {
     notification?: { enabled: boolean; running: boolean; lastPoll?: Date };
   };
 }
-

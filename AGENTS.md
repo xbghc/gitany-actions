@@ -3,12 +3,13 @@
 ## Project Structure & Module Organization
 
 Monorepo managed with `pnpm` workspaces. Code lives in `packages/*`:
+
 - `packages/gitcode-api` — core API client.
 - `packages/gitcode-cli` — CLI (`gitcode`).
 - `packages/gitcode-actions` — automation/workflows.
 - `packages/server` — backend server.
 - `packages/gitcode-dashboard` — web UI.
-Docs mirror packages in `docs/*` (e.g., `docs/gitcode-cli`). Shared config at root: `tsconfig.base.json`, `eslint.config.cjs`, `prettier.config.cjs`, `pnpm-workspace.yaml`. Utility scripts in `scripts/`. Git hooks live under `.husky` when configured.
+  Docs mirror packages in `docs/*` (e.g., `docs/gitcode-cli`). Shared config at root: `tsconfig.base.json`, `eslint.config.cjs`, `prettier.config.cjs`, `pnpm-workspace.yaml`. Utility scripts in `scripts/`. Git hooks live under `.husky` when configured.
 
 ## Build, Test, and Development Commands
 
