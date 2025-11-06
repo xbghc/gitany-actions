@@ -48,6 +48,9 @@
                 <el-tab-pane label="Pull Request" name="pr">
                   <PRList />
                 </el-tab-pane>
+                <el-tab-pane label="Workflow" name="workflow">
+                  <WorkflowList />
+                </el-tab-pane>
               </el-tabs>
             </div>
           </div>
@@ -66,13 +69,14 @@ import TokenBar from '@/components/TokenBar.vue';
 import RepoList from '@/components/RepoList.vue';
 import IssueList from '@/views/issue/IssueList.vue';
 import PRList from '@/views/pr/PRList.vue';
+import WorkflowList from '@/views/workflow/WorkflowList.vue';
 import { useRepoStore, useAuthStore } from '@/store';
 
 const route = useRoute();
 const repoStore = useRepoStore();
 const authStore = useAuthStore();
 
-const activeTab = ref<'issue' | 'pr'>('issue');
+const activeTab = ref<'issue' | 'pr' | 'workflow'>('issue');
 
 // 判断是否在详情页
 const isDetailPage = computed(() => {

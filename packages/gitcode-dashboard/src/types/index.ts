@@ -241,7 +241,7 @@ export interface Statistics {
 /** Workflow 执行状态 */
 export type WorkflowStatus = 'pending' | 'running' | 'success' | 'failed';
 
-/** Workflow 步骤 */
+/** Workflow 执行步骤 */
 export interface WorkflowStep {
   name: string;
   status: WorkflowStatus;
@@ -253,6 +253,12 @@ export interface WorkflowStep {
 /** Workflow 执行结果 */
 export interface WorkflowResult {
   workflowId: string;
+  owner: string;
+  repo: string;
+  repoUrl: string;
+  prNumber: number;
+  configId?: string;
+  configName?: string;
   status: WorkflowStatus;
   steps: WorkflowStep[];
   createdAt: string;
@@ -260,15 +266,48 @@ export interface WorkflowResult {
   error?: string;
 }
 
+/** Workflow 配置步骤 */
+export interface WorkflowConfigStep {
+  name: string;
+  commands: string[];
+}
+
 /** Workflow 配置 */
 export interface WorkflowConfig {
+  configId: string;
+  owner: string;
+  repo: string;
+  name: string;
+  steps: WorkflowConfigStep[];
+  env?: Record<string, string>;
+  timeout?: number;
+}
+
+/** 创建 Workflow 配置请求 */
+export interface CreateWorkflowConfigRequest {
+  name: string;
+  steps: WorkflowConfigStep[];
+  env?: Record<string, string>;
+  timeout?: number;
+}
+
+/** 更新 Workflow 配置请求 */
+export interface UpdateWorkflowConfigRequest {
+  name?: string;
+  steps?: WorkflowConfigStep[];
+  env?: Record<string, string>;
+  timeout?: number;
+}
+
+/** 触发 PR Workflow 的请求参数 */
+export interface TriggerPRWorkflowRequest {
   owner: string;
   repo: string;
   packageManager?: 'npm' | 'pnpm' | 'yarn';
   buildCommand?: string;
   lintCommand?: string;
   baseImage?: string;
-  registryMirror?: string; // Docker 镜像源
+  registryMirror?: string;
   timeout?: number;
 }
 

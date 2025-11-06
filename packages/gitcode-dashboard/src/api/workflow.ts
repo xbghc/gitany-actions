@@ -1,7 +1,7 @@
 import { http } from './request';
 import type {
   ApiResponse,
-  WorkflowConfig,
+  TriggerPRWorkflowRequest,
   WorkflowResult,
   RegistryMirrorTestResult,
 } from '@/types';
@@ -9,10 +9,19 @@ import type {
 /**
  * 触发 PR 的 build 和 lint 测试
  */
-export const triggerPRWorkflow = (prNumber: number, config: WorkflowConfig) => {
+export const triggerPRWorkflow = (prNumber: number, config: TriggerPRWorkflowRequest) => {
   return http.post<ApiResponse<{ workflowId: string; status: string }>>(
     `/api/workflow/pr/${prNumber}`,
     config,
+  );
+};
+
+/**
+ * 获取仓库的 Workflow 执行历史列表
+ */
+export const getWorkflowList = (owner: string, repo: string) => {
+  return http.get<ApiResponse<{ workflows: WorkflowResult[]; count: number }>>(
+    `/api/workflows/${owner}/${repo}`,
   );
 };
 
@@ -21,6 +30,19 @@ export const triggerPRWorkflow = (prNumber: number, config: WorkflowConfig) => {
  */
 export const getWorkflowStatus = (workflowId: string) => {
   return http.get<ApiResponse<WorkflowResult>>(`/api/workflow/${workflowId}`);
+};
+
+/**
+ * 清理过期的 Workflow 记录
+ * @param maxAge 最大保留时间（毫秒），不传则使用服务端默认值
+ */
+export const cleanupOldWorkflows = (maxAge?: number) => {
+  return http.delete<ApiResponse<{ deletedCount: number; message: string }>>(
+    '/api/workflow/cleanup',
+    {
+      params: maxAge ? { maxAge } : undefined,
+    },
+  );
 };
 
 /**

@@ -202,7 +202,7 @@ import {
   testAllRegistryMirrors,
 } from '@/api/workflow';
 import type {
-  WorkflowConfig,
+  TriggerPRWorkflowRequest,
   WorkflowStatus,
   WorkflowStep,
   SSEStepData,
@@ -231,7 +231,7 @@ const visible = computed({
 });
 
 // 配置
-const config = ref<WorkflowConfig>({
+const config = ref<TriggerPRWorkflowRequest>({
   owner: props.owner,
   repo: props.repo,
   packageManager: 'pnpm',
