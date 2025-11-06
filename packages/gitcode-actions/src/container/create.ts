@@ -1,12 +1,12 @@
-import type Docker from 'dockerode';
 import type { PullRequest } from '@xbghc/gitcode-api';
 import { toGitUrl } from '@xbghc/gitcode-api';
+import type Docker from 'dockerode';
 
-import { docker, collectForwardEnv } from './shared.js';
-import type { ContainerOptions } from './types.js';
+import { executor } from '../executor/container-executor.js';
 import { getContainer } from './get.js';
 import { prepareImage } from './prepare-image.js';
-import { executor } from '../executor/container-executor.js';
+import { collectForwardEnv, docker } from './shared.js';
+import type { ContainerOptions } from './types.js';
 
 export interface CreateContainerConfig {
   /** Git 仓库 URL */
@@ -21,14 +21,6 @@ export interface CreateContainerConfig {
   image?: string;
   labels?: Record<string, string>;
   env?: Record<string, string>;
-
-  /** 依赖安装配置 */
-  install?:
-    | boolean
-    | {
-        packageManager?: 'npm' | 'pnpm' | 'yarn' | 'auto';
-        registry?: string;
-      };
 }
 
 export interface CreateContainerResult {
@@ -46,30 +38,23 @@ export interface CreateContainerResult {
  * 2. 创建容器
  * 3. 克隆仓库到 /workspace
  * 4. checkout 到指定版本
- * 5. 可选：安装依赖
  *
  * @example
  * ```ts
  * const { id, container } = await createContainer({
  *   repoUrl: 'https://gitcode.com/owner/repo',
- *   branch: 'main',
- *   install: { packageManager: 'pnpm' }
+ *   branch: 'main'
  * });
+ * // 手动安装依赖
+ * await executor(container).execute('pnpm install');
  * ```
+ *
+ * @todo 重构
  */
 export async function createContainer(
   config: CreateContainerConfig,
 ): Promise<CreateContainerResult> {
-  const {
-    repoUrl,
-    branch,
-    sha,
-    pr,
-    image = 'node:22-bookworm',
-    labels = {},
-    env = {},
-    install = false,
-  } = config;
+  const { repoUrl, branch, sha, pr, image = 'node:22-bookworm', labels = {}, env = {} } = config;
 
   // 1. 准备镜像
   await prepareImage({ docker, image });
@@ -78,12 +63,6 @@ export async function createContainer(
   const envVars = [...collectForwardEnv()];
   for (const [key, value] of Object.entries(env)) {
     envVars.push(`${key}=${value}`);
-  }
-
-  // 添加 registry 环境变量（如果配置了）
-  if (typeof install === 'object' && install.registry) {
-    envVars.push(`NPM_CONFIG_REGISTRY=${install.registry}`);
-    envVars.push(`PNPM_CONFIG_REGISTRY=${install.registry}`);
   }
 
   // 3. 创建容器
@@ -133,20 +112,6 @@ export async function createContainer(
       });
     }
     // 否则使用默认分支（clone 后的默认状态）
-
-    // 6. 安装依赖（如果配置）
-    if (install) {
-      const { installDependencies } = await import('./install-dependencies.js');
-      await installDependencies(
-        container,
-        typeof install === 'object'
-          ? {
-              packageManager: install.packageManager,
-              registry: install.registry,
-            }
-          : undefined,
-      );
-    }
 
     return {
       id: containerId,

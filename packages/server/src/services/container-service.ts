@@ -32,9 +32,6 @@ class ContainerService {
         'gitcode.repo': repoUrl,
         ...options?.labels,
       },
-      install: {
-        packageManager: 'auto',
-      },
     };
 
     const { id } = await createContainer(config);
@@ -107,7 +104,6 @@ class ContainerService {
 
     await resetContainer(container, {
       branch: options?.branch,
-      reinstallDeps: true,
     });
   }
 

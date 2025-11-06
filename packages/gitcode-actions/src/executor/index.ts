@@ -20,8 +20,5 @@ export type { VerifyOptions, VerifyResult } from './verify-sha.js';
 export { checkProjectFiles } from './check-project-files.js';
 export type { CheckOptions, CheckStepResult, ProjectCheckResult } from './check-project-files.js';
 
-export { installDependencies } from './install-dependencies.js';
-export type { InstallOptions, InstallResult } from './install-dependencies.js';
-
 export { collectDiagnostics, DiagnosticsCollectionError } from './collect-diagnostics.js';
 export type { ProjectDiagnostics } from './collect-diagnostics.js';

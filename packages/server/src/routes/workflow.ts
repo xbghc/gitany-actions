@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { withAuth } from '../middleware/auth.js';
 import { workflowService } from '../services/workflow-service.js';
 import { workflowConfigService } from '../services/workflow-config-service.js';
-import type { RegistryMirrorTestResult, WorkflowConfig } from '../types/workflow.js';
+import type { RegistryMirrorTestResult } from '../types/workflow.js';
 import { testRegistryMirror } from '../utils/docker-runner.js';
 import { createGitCodeClient } from '../utils/gitcode-client.js';
 
@@ -27,16 +27,7 @@ workflowRouter.post(
         return;
       }
 
-      const {
-        owner,
-        repo,
-        configId,
-        packageManager,
-        buildCommand,
-        lintCommand,
-        baseImage,
-        timeout,
-      } = req.body;
+      const { owner, repo, configId } = req.body;
 
       if (!owner || !repo) {
         res.status(400).json({
@@ -46,62 +37,38 @@ workflowRouter.post(
         return;
       }
 
-      let config: WorkflowConfig;
-      let configName: string | undefined;
+      // 强制要求 configId
+      if (!configId) {
+        res.status(400).json({
+          success: false,
+          error: 'CONFIG_ID_REQUIRED',
+          message: 'configId is required',
+        });
+        return;
+      }
 
-      // 优先使用 configId
-      if (configId) {
-        // 从指定仓库的配置列表中查找
-        const configs = await workflowConfigService.listByRepo(owner, repo);
-        const workflowConfig = configs.find((c) => c.id === configId);
+      // 从指定仓库的配置列表中查找
+      const configs = await workflowConfigService.listByRepo(owner, repo);
+      const config = configs.find((c) => c.id === configId);
 
-        if (!workflowConfig) {
-          res.status(404).json({
-            success: false,
-            error: 'CONFIG_NOT_FOUND',
-            message: `Configuration not found: ${configId}`,
-          });
-          return;
-        }
-
-        // 将 WorkflowConfig 的 steps 转换为旧的 WorkflowConfig 格式
-        // 这里需要将 steps 转换为命令执行逻辑
-        configName = workflowConfig.name;
-        config = {
-          // 暂时保留原有字段，后续在 WorkflowService 中处理 steps
-          timeout: workflowConfig.timeout,
-        };
-      } else {
-        // 使用传统参数（向后兼容）
-        // 验证packageManager
-        if (packageManager && !['npm', 'pnpm', 'yarn'].includes(packageManager)) {
-          res.status(400).json({
-            success: false,
-            error: 'packageManager must be one of: npm, pnpm, yarn',
-          });
-          return;
-        }
-
-        config = {
-          packageManager,
-          buildCommand,
-          lintCommand,
-          baseImage,
-          timeout,
-        };
+      if (!config) {
+        res.status(404).json({
+          success: false,
+          error: 'CONFIG_NOT_FOUND',
+          message: `Configuration not found: ${configId}`,
+        });
+        return;
       }
 
       const client = createGitCodeClient(token);
 
-      // 执行workflow（异步）
-      const workflowId = await workflowService.executePrWorkflow(
+      // 执行配置驱动的 workflow
+      const workflowId = await workflowService.executeConfigDrivenWorkflow(
         owner,
         repo,
         prNumber,
         config,
         client,
-        configId,
-        configName,
       );
 
       res.json({

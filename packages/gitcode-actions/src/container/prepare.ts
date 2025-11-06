@@ -1,6 +1,5 @@
 import type Docker from 'dockerode';
 import { executor } from '../executor/container-executor.js';
-import { installDependencies } from './install-dependencies.js';
 
 export interface PrepareTarget {
   /** 分支名称 */
@@ -17,9 +16,10 @@ export interface PrepareTarget {
  * 工作流：
  * 1. 切换到指定版本（branch/sha/pr）
  * 2. 清理脏状态（git clean -fdx）
- * 3. 安装依赖（总是执行）
  *
- * 注意：此函数假设容器中已经克隆了仓库（在 /workspace 目录）
+ * 注意：
+ * - 此函数假设容器中已经克隆了仓库（在 /workspace 目录）
+ * - 此函数不再自动安装依赖，需要手动执行（如使用 exec() 或 executor()）
  *
  * @param container - 容器实例
  * @param target - 目标版本
@@ -28,9 +28,12 @@ export interface PrepareTarget {
  * ```ts
  * // 准备测试 PR
  * await prepare(container, { pr: 123 });
+ * // 手动安装依赖
+ * await exec(container, 'pnpm install');
  *
  * // 准备测试特定分支
  * await prepare(container, { branch: 'main' });
+ * await executor(container).execute('pnpm install');
  *
  * // 准备测试特定 commit
  * await prepare(container, { sha: 'abc123' });
@@ -78,7 +81,4 @@ export async function prepare(container: Docker.Container, target: PrepareTarget
   await executor(container).execute('git clean -fdx', {
     name: '清理未跟踪文件',
   });
-
-  // 3. 总是安装依赖
-  await installDependencies(container);
 }

@@ -270,6 +270,16 @@ export interface WorkflowResult {
 export interface WorkflowConfigStep {
   name: string;
   commands: string[];
+  /** 步骤级环境变量 */
+  env?: Record<string, string>;
+  /** 工作目录（默认 /workspace） */
+  workDir?: string;
+  /** 步骤超时时间（毫秒） */
+  timeout?: number;
+  /** 失败后是否继续执行后续步骤 */
+  continueOnError?: boolean;
+  /** 失败后重试次数 */
+  retry?: number;
 }
 
 /** Workflow 配置 */
@@ -279,6 +289,14 @@ export interface WorkflowConfig {
   steps: WorkflowConfigStep[];
   env?: Record<string, string>;
   timeout?: number;
+  /** 全局前置钩子命令（默认：clone 代码） */
+  beforeAll?: string;
+  /** 全局后置钩子命令 */
+  afterAll?: string;
+  /** Docker 基础镜像 */
+  baseImage?: string;
+  /** Docker 镜像源（用于加速） */
+  registryMirror?: string;
 }
 
 /** 创建 Workflow 配置请求 */
@@ -287,6 +305,10 @@ export interface CreateWorkflowConfigRequest {
   steps: WorkflowConfigStep[];
   env?: Record<string, string>;
   timeout?: number;
+  beforeAll?: string;
+  afterAll?: string;
+  baseImage?: string;
+  registryMirror?: string;
 }
 
 /** 更新 Workflow 配置请求 */
@@ -295,26 +317,18 @@ export interface UpdateWorkflowConfigRequest {
   steps?: WorkflowConfigStep[];
   env?: Record<string, string>;
   timeout?: number;
+  beforeAll?: string;
+  afterAll?: string;
+  baseImage?: string;
+  registryMirror?: string;
 }
 
 /** 触发 PR Workflow 的请求参数 */
 export interface TriggerPRWorkflowRequest {
   owner: string;
   repo: string;
-  /** 配置ID（优先使用，如果提供则忽略其他配置参数） */
-  configId?: string;
-  /** 包管理器（configId 未提供时使用） */
-  packageManager?: 'npm' | 'pnpm' | 'yarn';
-  /** Build 命令（configId 未提供时使用） */
-  buildCommand?: string;
-  /** Lint 命令（configId 未提供时使用） */
-  lintCommand?: string;
-  /** Docker 基础镜像（configId 未提供时使用） */
-  baseImage?: string;
-  /** npm 镜像源（configId 未提供时使用） */
-  registryMirror?: string;
-  /** 超时时间（configId 未提供时使用） */
-  timeout?: number;
+  /** 配置ID（必需） */
+  configId: string;
 }
 
 /** SSE 事件类型 */

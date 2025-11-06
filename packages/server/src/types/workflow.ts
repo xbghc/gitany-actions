@@ -50,24 +50,6 @@ export interface WorkflowResult {
 }
 
 /**
- * Workflow配置
- */
-export interface WorkflowConfig {
-  /** 包管理器：npm/pnpm/yarn */
-  packageManager?: 'npm' | 'pnpm' | 'yarn';
-  /** build命令 */
-  buildCommand?: string;
-  /** lint命令 */
-  lintCommand?: string;
-  /** Docker基础镜像 */
-  baseImage?: string;
-  /** Docker镜像源（用于加速镜像拉取） */
-  registryMirror?: string;
-  /** 超时时间（毫秒） */
-  timeout?: number;
-}
-
-/**
  * SSE消息类型
  */
 export type SSEMessageType = 'step' | 'output' | 'error' | 'complete';

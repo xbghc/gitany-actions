@@ -7,7 +7,6 @@ import {
   StepExecutionError as ContainerStepExecutionError,
 } from '../executor/container-executor.js';
 import { createWorkspaceContainer } from '../container/create-workspace-container.js';
-import { installDependencies } from '../executor/install-dependencies.js';
 import { ImagePullError, prepareImage, type ImagePullStatus } from '../container/prepare-image.js';
 import { docker } from '../container/shared.js';
 import type { TestShaBuildOptions, TestShaBuildResult } from '../container/types.js';
@@ -169,21 +168,6 @@ export async function testShaBuild(
         : '项目缺少 package.json 文件';
       result.error = `项目检查失败: ${reason}`;
       result.exitCode = 1;
-      return result;
-    }
-
-    const installResult = await installDependencies({
-      container,
-      env: [`NPM_CONFIG_REGISTRY=${npmRegistry}`, `PNPM_CONFIG_REGISTRY=${pnpmRegistry}`],
-    });
-    fullOutput += installResult.output;
-    result.diagnostics.steps.install = {
-      success: installResult.success,
-      duration: 0, // 时间统计已外部化
-      error: installResult.success ? undefined : installResult.output,
-    };
-    if (!installResult.success) {
-      result.error = `步骤 install 失败: ${installResult.output.trim()}`;
       return result;
     }
 

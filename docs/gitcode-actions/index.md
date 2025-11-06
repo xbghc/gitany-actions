@@ -425,7 +425,8 @@ if (!result.success) {
 3. `cloneRepo`：将仓库克隆至 `/tmp/workspace`。
 4. `verifySha` 与 `checkoutSha`：确认目标提交/分支存在并检出。
 5. `checkProjectFiles`：执行基础文件检查并通过 `collectDiagnostics` 解析 `package.json`、`pnpm-lock.yaml` 等信息。
-6. `installDependencies`：使用 `corepack pnpm install` 安装依赖，内置 3 次指数退避重试。
+
+注意：从此版本开始，容器管理 API 不再自动安装依赖。如需安装依赖，请使用 `executor()` 或 `exec()` 手动执行安装命令。
 
 `options` 支持：
 
@@ -454,9 +455,18 @@ if (!result.success) {
 - `checkoutSha(options)`: 检出指定 SHA 或分支。
 - `checkProjectFiles(options)`: 执行基础文件检测，返回 `ProjectCheckResult`（包含 `StepResult` 与 `ProjectDiagnostics`）。
 - `collectDiagnostics(output)`: 解析步骤输出，判断是否为 pnpm 项目。
-- `installDependencies(options)`: 根据项目的 `packageManager` 字段自动选择 pnpm 版本并进行安装，带指数退避重试。
 - `executeStep(options)`: 在容器内执行任意脚本并返回 `StepResult`，失败时抛出 `StepExecutionError`。
 - `cleanupPrContainers()`: 扫描并清理遗留的 PR 容器。
+
+**依赖安装**：不再提供专门的 `installDependencies` 函数。请使用 `executor()` 链式 API 或 `exec()` 手动执行安装命令：
+
+```ts
+// 使用 executor()
+await executor(container).execute('pnpm install');
+
+// 或使用 exec()
+await exec(container, 'pnpm install');
+```
 
 ### 安装 CLI 工具
 

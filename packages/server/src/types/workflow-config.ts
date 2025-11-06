@@ -6,6 +6,16 @@ export interface WorkflowConfigStep {
   name: string;
   /** 命令列表 */
   commands: string[];
+  /** 步骤级环境变量 */
+  env?: Record<string, string>;
+  /** 工作目录（默认 /workspace） */
+  workDir?: string;
+  /** 步骤超时时间（毫秒） */
+  timeout?: number;
+  /** 失败后是否继续执行后续步骤 */
+  continueOnError?: boolean;
+  /** 失败后重试次数 */
+  retry?: number;
 }
 
 /**
@@ -22,6 +32,14 @@ export interface WorkflowConfig {
   env?: Record<string, string>;
   /** 可选超时时间（毫秒） */
   timeout?: number;
+  /** 全局前置钩子命令（默认：clone 代码） */
+  beforeAll?: string;
+  /** 全局后置钩子命令 */
+  afterAll?: string;
+  /** Docker 基础镜像 */
+  baseImage?: string;
+  /** Docker 镜像源（用于加速） */
+  registryMirror?: string;
 }
 
 /**
@@ -32,6 +50,10 @@ export interface CreateWorkflowConfigRequest {
   steps: WorkflowConfigStep[];
   env?: Record<string, string>;
   timeout?: number;
+  beforeAll?: string;
+  afterAll?: string;
+  baseImage?: string;
+  registryMirror?: string;
 }
 
 /**
@@ -42,4 +64,8 @@ export interface UpdateWorkflowConfigRequest {
   steps?: WorkflowConfigStep[];
   env?: Record<string, string>;
   timeout?: number;
+  beforeAll?: string;
+  afterAll?: string;
+  baseImage?: string;
+  registryMirror?: string;
 }

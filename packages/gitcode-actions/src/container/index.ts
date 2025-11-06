@@ -21,12 +21,6 @@ export {
 export { prepare } from './prepare.js';
 export type { PrepareTarget } from './prepare.js';
 
-export { installDependencies } from './install-dependencies.js';
-export type {
-  InstallDependenciesOptions,
-  InstallDependenciesResult,
-} from './install-dependencies.js';
-
 export { resetContainer } from './reset.js';
 export type { ResetContainerOptions } from './reset.js';
 

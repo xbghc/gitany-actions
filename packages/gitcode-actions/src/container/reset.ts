@@ -1,12 +1,9 @@
 import type Docker from 'dockerode';
 import { executor } from '../executor/container-executor.js';
-import { installDependencies } from './install-dependencies.js';
 
 export interface ResetContainerOptions {
   /** 重置后 checkout 到的分支 */
   branch?: string;
-  /** 是否重新安装依赖 */
-  reinstallDeps?: boolean;
 }
 
 /**
@@ -16,7 +13,8 @@ export interface ResetContainerOptions {
  * 1. 清理所有未跟踪文件（git clean -fdx）
  * 2. 重置所有修改（git reset --hard）
  * 3. checkout 到指定分支（如果指定）
- * 4. 可选：重新安装依赖
+ *
+ * 注意：此函数不再自动安装依赖，需要手动执行（如使用 exec() 或 executor()）
  *
  * @param container - 容器实例
  * @param options - 重置选项
@@ -29,11 +27,9 @@ export interface ResetContainerOptions {
  * // 重置并切换到 main 分支
  * await resetContainer(container, { branch: 'main' });
  *
- * // 重置并重新安装依赖
- * await resetContainer(container, {
- *   branch: 'main',
- *   reinstallDeps: true
- * });
+ * // 重置后手动安装依赖
+ * await resetContainer(container, { branch: 'main' });
+ * await executor(container).execute('pnpm install');
  * ```
  */
 export async function resetContainer(
@@ -62,10 +58,5 @@ export async function resetContainer(
       .execute('git pull', {
         name: 'Pull latest',
       });
-  }
-
-  // 4. 重新安装依赖（如果需要）
-  if (options?.reinstallDeps) {
-    await installDependencies(container, { force: true });
   }
 }
