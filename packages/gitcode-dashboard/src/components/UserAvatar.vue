@@ -20,6 +20,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  user: undefined,
   size: 32,
   showName: false,
 });

@@ -42,7 +42,7 @@
       </el-form>
       <template #footer>
         <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleSave" :disabled="!tokenInput.trim()">
+        <el-button type="primary" :disabled="!tokenInput.trim()" @click="handleSave">
           保存
         </el-button>
       </template>

@@ -17,6 +17,8 @@ interface Props {
 
 withDefaults(defineProps<Props>(), {
   description: '暂无数据',
+  actionText: undefined,
+  actionHandler: undefined,
 });
 </script>
 

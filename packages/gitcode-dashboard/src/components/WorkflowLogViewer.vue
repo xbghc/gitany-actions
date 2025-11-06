@@ -408,6 +408,7 @@ const copyLogs = async () => {
     await navigator.clipboard.writeText(logText);
     ElMessage.success('日志已复制到剪贴板');
   } catch (error) {
+    console.error('复制日志失败:', error);
     ElMessage.error('复制失败');
   }
 };
