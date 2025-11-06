@@ -19,11 +19,24 @@ function transformAvatarUrl(originalUrl: string): string {
 }
 
 /**
+ * 类型守卫：检查值是否为普通对象（非 null、非数组）
+ * @param value - 要检查的值
+ * @returns 是否为 Record<string, unknown> 类型
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
+  );
+}
+
+/**
  * 递归遍历对象/数组，转换所有 avatar_url 字段
  * @param data - 要处理的数据（可以是对象、数组或原始值）
  * @returns 转换后的数据
  */
-function transformAvatarUrlsRecursive(data: any): any {
+function transformAvatarUrlsRecursive(data: unknown): unknown {
   // 处理 null 和 undefined
   if (data == null) {
     return data;
@@ -34,9 +47,9 @@ function transformAvatarUrlsRecursive(data: any): any {
     return data.map(item => transformAvatarUrlsRecursive(item));
   }
 
-  // 处理对象
-  if (typeof data === 'object') {
-    const transformed: any = {};
+  // 处理对象 - 使用类型守卫
+  if (isRecord(data)) {
+    const transformed: Record<string, unknown> = {};
 
     for (const key in data) {
       if (!Object.prototype.hasOwnProperty.call(data, key)) {
@@ -84,7 +97,7 @@ export function avatarTransformerMiddleware(
   const originalJson = res.json.bind(res);
 
   // 重写 res.json 方法
-  res.json = function (body: any) {
+  res.json = function (body: unknown) {
     // 如果响应数据存在，进行转换
     if (body != null) {
       body = transformAvatarUrlsRecursive(body);
