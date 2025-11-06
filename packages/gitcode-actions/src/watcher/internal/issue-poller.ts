@@ -46,10 +46,8 @@ export async function pollIssues(
   emit: EmitFn,
   options: IssuePollerOptions = {},
 ): Promise<IssueState> {
-  // 获取 Issue 列表
   const issues = await fetchIssues(context.client, context.url, options.issueQuery);
 
-  // 检测新评论
   const newLastCommentIds = await detectNewComments(
     issues,
     state.lastCommentByIssue,
@@ -59,7 +57,6 @@ export async function pollIssues(
     options.commentQuery,
   );
 
-  // 返回新状态
   return {
     lastCommentByIssue: newLastCommentIds,
   };
@@ -93,7 +90,6 @@ async function detectNewComments(
     const issueNumber = Number(issue.number);
     if (!Number.isFinite(issueNumber)) continue;
 
-    // 获取评论
     const { data: comments, notModified } = await fetchIssueComments(
       client,
       url,
@@ -103,7 +99,6 @@ async function detectNewComments(
 
     const existingLastSeen = prevLastCommentIds.get(issueNumber);
 
-    // 如果数据未修改
     if (notModified) {
       if (!existingLastSeen) {
         newLastCommentIds.set(issueNumber, new Set(comments.map((c) => c.id)));
@@ -113,7 +108,6 @@ async function detectNewComments(
       continue;
     }
 
-    // 如果没有评论
     if (!comments.length) {
       newLastCommentIds.set(issueNumber, new Set());
       continue;
@@ -121,13 +115,11 @@ async function detectNewComments(
 
     const currentCommentIds = new Set(comments.map((c) => c.id));
 
-    // 首次检查该 Issue
     if (!existingLastSeen) {
       newLastCommentIds.set(issueNumber, currentCommentIds);
       continue;
     }
 
-    // 检测新评论
     const newCommentIds = new Set(
       comments.filter((c) => !existingLastSeen.has(c.id)).map((c) => c.id),
     );

@@ -48,7 +48,6 @@ export async function pollNotifications(
   const { owner, repo } = parsed;
 
   try {
-    // 构建查询参数
     const query: {
       type: 'referer';
       unread: true;
@@ -58,15 +57,12 @@ export async function pollNotifications(
       unread: true,
     };
 
-    // 如果启用 since 参数且有上次轮询时间，使用它优化查询
     if (useSinceParam && state.lastPollTime) {
       query.since = state.lastPollTime.toISOString();
     }
 
-    // 获取未读的通知
     const response: NotificationsResponse = await client.repo.getNotifications(owner, repo, query);
 
-    // 发射所有未读通知的事件
     for (const notification of response.list) {
       emit('notification:detected', {
         notification,
@@ -75,19 +71,16 @@ export async function pollNotifications(
       });
     }
 
-    // 返回更新后的状态
     return {
       lastPollTime: new Date(),
     };
   } catch (error) {
-    // 发射错误事件
     emit('notification:poll:failed', {
       error: error instanceof Error ? error : new Error(String(error)),
       owner,
       repo,
     });
 
-    // 返回原状态
     return state;
   }
 }

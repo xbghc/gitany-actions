@@ -79,10 +79,8 @@ export class ResourceRunner<TState> implements IResourceRunner {
       return;
     }
 
-    // 立即执行一次
     void this.runOnce();
 
-    // 设置定时器
     this.intervalId = setInterval(() => {
       void this.runOnce();
     }, this.intervalMs);
@@ -107,19 +105,15 @@ export class ResourceRunner<TState> implements IResourceRunner {
     const startedAt = Date.now();
 
     try {
-      // 执行轮询，获取新状态
       this.state = await this.pollFn(this.state, this.context, this.emitFn);
 
-      // 持久化状态
       await this.persistState();
 
-      // 发射成功事件
       this.emitFn('watcher:poll:complete', {
         watcher: this.type,
         durationMs: Date.now() - startedAt,
       });
     } catch (err) {
-      // 发射失败事件
       this.emitFn('watcher:poll:failed', {
         watcher: this.type,
         error: err,

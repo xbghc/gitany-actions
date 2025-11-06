@@ -112,7 +112,6 @@ export class Watcher extends EventEmitter implements IWatcher {
       runner.start();
     }
 
-    // 启动 notification 监听
     if (this.options.notification) {
       const config =
         typeof this.options.notification === 'boolean'
@@ -134,7 +133,7 @@ export class Watcher extends EventEmitter implements IWatcher {
           );
         };
 
-        void pollFn(); // 立即执行一次
+        void pollFn();
         this.notificationIntervalId = setInterval(() => void pollFn(), config.intervalSec * 1000);
       }
     }
@@ -210,7 +209,6 @@ export class Watcher extends EventEmitter implements IWatcher {
         await runner.clearState();
       }
     } else {
-      // 清理所有资源状态
       for (const runner of this.runners.values()) {
         await runner.clearState();
       }

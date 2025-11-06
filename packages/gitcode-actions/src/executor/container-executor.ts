@@ -126,7 +126,6 @@ export class ExecutorChain implements PromiseLike<ExecutionResult> {
       const env = this.mergeEnv(options?.env);
       const name = options?.name ?? command;
 
-      // 执行命令
       const execution = await execCommand({
         container: this.container,
         command,

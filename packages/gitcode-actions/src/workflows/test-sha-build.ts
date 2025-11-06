@@ -77,7 +77,6 @@ export async function testShaBuild(
         .execute('rm -rf /tmp/workspace', { name: '清理工作空间' })
         .execute('git clone "$REPO_URL" /tmp/workspace 2>&1', { name: '克隆仓库' });
 
-      // 聚合所有步骤的输出
       const combinedOutput = cloneExecResult.steps.map((s) => s.output).join('\n');
       fullOutput += combinedOutput;
       result.diagnostics.steps.clone = {

@@ -114,7 +114,6 @@ export async function chat(
     const installDeps = await installDependencies({ container, env: sharedStepEnv });
     if (!installDeps.success) return { success: false, error: installDeps.output };
 
-    // 安装 Anthropic SDK
     try {
       await executor(container, { env: sharedStepEnv })
         .execute('cd /tmp/workspace && npm install --no-save @anthropic-ai/sdk 2>&1', {
@@ -127,7 +126,6 @@ export async function chat(
       throw error;
     }
 
-    // 创建 API 调用脚本
     await createApiCallScript({
       container,
       prompt: question,
@@ -136,7 +134,6 @@ export async function chat(
       temperature,
     });
 
-    // 收集 ANTHROPIC_ 环境变量
     const anthropicEnv: string[] = [];
     for (const [key, value] of Object.entries(process.env)) {
       if (key.startsWith('ANTHROPIC_') && typeof value === 'string') {
@@ -146,7 +143,6 @@ export async function chat(
 
     const chatEnv = [...anthropicEnv, ...forwardedEnv];
 
-    // 执行 API 调用脚本
     let chatOutput: string;
     try {
       const chatResult = await executor(container, { env: chatEnv })
@@ -161,7 +157,6 @@ export async function chat(
       throw error;
     }
 
-    // 解析 JSON 输出
     try {
       const parsed = JSON.parse(chatOutput);
       if (parsed.success) {

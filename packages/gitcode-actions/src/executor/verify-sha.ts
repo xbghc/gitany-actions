@@ -56,7 +56,6 @@ export async function verifySha({ container }: VerifyOptions): Promise<VerifyRes
         name: '验证 SHA/分支存在性',
       });
 
-    // 聚合输出
     const output = result.steps.map((s) => s.output).join('');
 
     return {

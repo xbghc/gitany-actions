@@ -43,12 +43,10 @@ export class FileStateStorage<TState = unknown> implements StateStorage<TState> 
     try {
       const filePath = this.getFilePath(key);
 
-      // 检查文件是否存在
       if (!fsSync.existsSync(filePath)) {
         return undefined;
       }
 
-      // 读取并解析 JSON
       const raw = fsSync.readFileSync(filePath, 'utf8');
       if (!raw) {
         return undefined;
@@ -56,11 +54,8 @@ export class FileStateStorage<TState = unknown> implements StateStorage<TState> 
 
       const json = JSON.parse(raw);
 
-      // 使用 serializer 反序列化
       return this.serializer.deserialize(json);
     } catch {
-      // 解析失败或读取失败，返回 undefined
-      // 错误处理由 BaseWatcher 负责（会触发事件）
       return undefined;
     }
   }
@@ -74,15 +69,12 @@ export class FileStateStorage<TState = unknown> implements StateStorage<TState> 
    * - 使用 serializer 自动转换 Map/Set/Date 等类型
    */
   async save(key: string, state: TState): Promise<void> {
-    // 确保目录存在
     const filePath = this.getFilePath(key);
     const dir = path.dirname(filePath);
     await ensureDir(dir);
 
-    // 使用 serializer 序列化
     const data = this.serializer.serialize(state);
 
-    // 写入文件（格式化 JSON 便于调试）
     const json = JSON.stringify(data, null, 2);
     await fs.writeFile(filePath, json, 'utf8');
   }
@@ -95,7 +87,6 @@ export class FileStateStorage<TState = unknown> implements StateStorage<TState> 
     try {
       await fs.unlink(filePath);
     } catch (err) {
-      // 忽略文件不存在的错误
       if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
         throw err;
       }

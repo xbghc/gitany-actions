@@ -46,15 +46,12 @@ export async function pollPullRequests(
   emit: EmitFn,
   options: PrPollerOptions = {},
 ): Promise<PrState> {
-  // 1. 获取当前 PR 列表
   const { data: currentPrs, notModified } = await fetchPullRequests(context.client, context.url);
 
-  // 2. 检测状态变化（仅在数据未被修改时跳过）
   if (!notModified) {
     await detectStateChanges(state.prList, currentPrs, emit);
   }
 
-  // 3. 检测新评论
   const newLastCommentIds = await detectNewComments(
     currentPrs,
     state.lastCommentIdsByPr,
@@ -64,7 +61,6 @@ export async function pollPullRequests(
     options.commentType,
   );
 
-  // 4. 返回新状态
   return {
     prList: notModified
       ? state.prList
@@ -95,7 +91,6 @@ async function detectStateChanges(
   for (const pr of newPrList) {
     const existed = prevPrList.find((p) => p.id === pr.id);
 
-    // 新 PR 或状态变化
     if (!existed || existed.state !== pr.state) {
       triggerPullRequestEvent(pr, emit);
     }
@@ -129,9 +124,7 @@ async function detectNewComments(
   const newLastCommentIds = new Map<number, Set<number>>();
 
   for (const pr of prList) {
-    // 只检查 open 状态的 PR
     if (pr.state !== 'open') {
-      // 保留之前的评论 ID
       const prev = prevLastCommentIds.get(pr.number);
       if (prev) {
         newLastCommentIds.set(pr.number, prev);
@@ -139,7 +132,6 @@ async function detectNewComments(
       continue;
     }
 
-    // 获取评论
     const { data: comments, notModified } = await fetchPrComments(
       client,
       url,
@@ -149,7 +141,6 @@ async function detectNewComments(
 
     const existingLastSeen = prevLastCommentIds.get(pr.number);
 
-    // 如果数据未修改
     if (notModified) {
       if (!existingLastSeen) {
         newLastCommentIds.set(pr.number, new Set(comments.map((c) => c.id)));
@@ -159,7 +150,6 @@ async function detectNewComments(
       continue;
     }
 
-    // 如果没有评论
     if (!comments.length) {
       newLastCommentIds.set(pr.number, new Set());
       continue;
@@ -167,13 +157,11 @@ async function detectNewComments(
 
     const currentCommentIds = new Set(comments.map((c) => c.id));
 
-    // 首次检查该 PR
     if (!existingLastSeen) {
       newLastCommentIds.set(pr.number, currentCommentIds);
       continue;
     }
 
-    // 检测新评论
     const newCommentIds = new Set(
       comments.filter((c) => !existingLastSeen.has(c.id)).map((c) => c.id),
     );

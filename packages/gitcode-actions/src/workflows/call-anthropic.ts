@@ -71,13 +71,11 @@ async function main() {
       ]
     });
 
-    // 提取文本内容
     const textContent = response.content.find(c => c.type === 'text');
     if (!textContent || textContent.type !== 'text') {
       throw new Error('No text content in API response');
     }
 
-    // 输出 JSON 格式结果
     const result = {
       success: true,
       output: textContent.text,

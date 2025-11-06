@@ -77,7 +77,6 @@ export async function execCommand({
   command,
   env,
 }: ExecuteOptions): Promise<ExecutionHandle> {
-  // 1. 创建 exec
   const exec = await container.exec({
     Cmd: ['sh', '-lc', command],
     AttachStdout: true,
@@ -86,11 +85,9 @@ export async function execCommand({
     Tty: false,
   });
 
-  // 2. 启动并获取流
   const stream = await exec.start({ hijack: true, stdin: false });
   let output = '';
 
-  // 3. 创建 PassThrough 流
   const stdoutStream = new PassThrough();
   const stderrStream = new PassThrough();
 
@@ -111,7 +108,6 @@ export async function execCommand({
     stream.pipe(stdoutStream);
   }
 
-  // 5. 返回 ExecutionHandle
   return {
     stream: stdoutStream,
     wait: () => createWaitPromise(stream, stdoutStream, stderrStream, exec, () => output),

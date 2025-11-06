@@ -59,12 +59,10 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
    * 递归序列化值
    */
   const serializeValue = (value: unknown): unknown => {
-    // null 和 undefined
     if (value === null || value === undefined) {
       return value;
     }
 
-    // Map → 特殊对象标记
     if (value instanceof Map) {
       return {
         __type: 'Map',
@@ -72,7 +70,6 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
       };
     }
 
-    // Set → 特殊对象标记
     if (value instanceof Set) {
       return {
         __type: 'Set',
@@ -80,7 +77,6 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
       };
     }
 
-    // Date → ISO 字符串
     if (value instanceof Date) {
       return {
         __type: 'Date',
@@ -88,12 +84,10 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
       };
     }
 
-    // 数组 → 递归处理
     if (Array.isArray(value)) {
       return value.map(serializeValue);
     }
 
-    // 普通对象 → 递归处理
     if (typeof value === 'object') {
       const result: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(value)) {
@@ -102,7 +96,6 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
       return result;
     }
 
-    // 原始类型（string, number, boolean）
     return value;
   };
 
@@ -110,39 +103,32 @@ export function createSmartSerializer<TState>(): StateSerializer<TState> {
    * 递归反序列化值
    */
   const deserializeValue = (value: unknown): unknown => {
-    // null 和 undefined
     if (value === null || value === undefined) {
       return value;
     }
 
-    // 非对象类型直接返回
     if (typeof value !== 'object') {
       return value;
     }
 
-    // 还原 Map
     if (isTypedObject(value) && value.__type === 'Map') {
       const entries = value.entries as Array<[unknown, unknown]>;
       return new Map(entries.map(([k, v]) => [deserializeValue(k), deserializeValue(v)]));
     }
 
-    // 还原 Set
     if (isTypedObject(value) && value.__type === 'Set') {
       const values = value.values as unknown[];
       return new Set(values.map(deserializeValue));
     }
 
-    // 还原 Date
     if (isTypedObject(value) && value.__type === 'Date') {
       return new Date(value.value as string);
     }
 
-    // 数组 → 递归处理
     if (Array.isArray(value)) {
       return value.map(deserializeValue);
     }
 
-    // 普通对象 → 递归处理
     const result: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value)) {
       result[k] = deserializeValue(v);
