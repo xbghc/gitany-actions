@@ -1,3 +1,4 @@
+import { exec } from '@xbghc/gitcode-actions';
 import type { GitCodeClient } from '@xbghc/gitcode-api';
 import { EventEmitter } from 'events';
 import type { WorkflowConfig } from '../types/workflow-config.js';
@@ -14,7 +15,6 @@ import {
   checkDockerAvailable,
   checkImageExists,
   createAndStartContainer,
-  execInContainer,
   pullDockerImage,
   removeContainer,
 } from '../utils/docker-runner.js';
@@ -310,18 +310,18 @@ export class WorkflowService {
       this.emitOutput(workflowId, 'beforeAll', '正在执行前置钩子...\n');
 
       const beforeAllCommand = config.beforeAll || buildInitCommand(repoUrl, sourceBranch);
-      const beforeAllResult = await execInContainer(
-        containerName,
-        beforeAllCommand,
-        config.timeout,
-        (data) => {
+      const beforeAllResult = await exec(containerName, beforeAllCommand, {
+        timeout: config.timeout,
+        onOutput: (data) => {
           this.emitOutput(workflowId, 'beforeAll', data);
         },
-        undefined, // beforeAll 在容器根目录执行，负责创建 /workspace
-      );
+        // beforeAll 在容器根目录执行，负责创建 /workspace，所以不传 workDir
+      });
 
-      if (!beforeAllResult.success) {
-        throw new Error(`beforeAll 执行失败: ${beforeAllResult.error}`);
+      if (beforeAllResult.exitCode !== 0) {
+        throw new Error(
+          `beforeAll 执行失败，退出码: ${beforeAllResult.exitCode}\n${beforeAllResult.stdout}`,
+        );
       }
 
       this.updateStep(workflowId, 'beforeAll', 'success');
@@ -336,18 +336,18 @@ export class WorkflowService {
         this.updateStep(workflowId, 'afterAll', 'running');
         this.emitOutput(workflowId, 'afterAll', '正在执行后置钩子...\n');
 
-        const afterAllResult = await execInContainer(
-          containerName,
-          config.afterAll,
-          config.timeout,
-          (data) => {
+        const afterAllResult = await exec(containerName, config.afterAll, {
+          workDir: '/workspace',
+          timeout: config.timeout,
+          onOutput: (data) => {
             this.emitOutput(workflowId, 'afterAll', data);
           },
-          '/workspace',
-        );
+        });
 
-        if (!afterAllResult.success) {
-          throw new Error(`afterAll 执行失败: ${afterAllResult.error}`);
+        if (afterAllResult.exitCode !== 0) {
+          throw new Error(
+            `afterAll 执行失败，退出码: ${afterAllResult.exitCode}\n${afterAllResult.stdout}`,
+          );
         }
 
         this.updateStep(workflowId, 'afterAll', 'success');
@@ -359,13 +359,23 @@ export class WorkflowService {
       this.emitComplete(workflowId, 'success');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // 添加服务器日志，方便调试
+      console.error(`[Workflow ${workflowId}] Execution failed:`, error);
+
       workflow.status = 'failed';
       workflow.error = errorMessage;
       workflow.completedAt = new Date().toISOString();
 
       const runningStep = workflow.steps.find((s) => s.status === 'running');
       if (runningStep) {
+        // 关键修复：先发送错误消息到前端
+        this.emitError(workflowId, runningStep.name, errorMessage);
+        // 再更新步骤状态
         this.updateStep(workflowId, runningStep.name, 'failed', errorMessage);
+      } else {
+        // 如果没有运行中的步骤，说明是初始化阶段失败
+        this.emitError(workflowId, 'workflow', errorMessage);
       }
 
       this.emitComplete(workflowId, 'failed');
@@ -432,23 +442,21 @@ export class WorkflowService {
         await new Promise((resolve) => setTimeout(resolve, waitTime));
       }
 
-      const result = await execInContainer(
-        containerName,
-        fullCommand,
-        stepTimeout,
-        (data) => {
+      const result = await exec(containerName, fullCommand, {
+        workDir,
+        timeout: stepTimeout,
+        onOutput: (data) => {
           this.emitOutput(workflowId, step.name, data);
         },
-        workDir,
-      );
+      });
 
-      if (result.success) {
+      if (result.exitCode === 0) {
         this.updateStep(workflowId, step.name, 'success');
         this.emitOutput(workflowId, step.name, `✓ 步骤完成\n`);
         return;
       }
 
-      lastError = result.error || 'Unknown error';
+      lastError = `退出码: ${result.exitCode}\n${result.stdout}`;
       attempt++;
     }
 

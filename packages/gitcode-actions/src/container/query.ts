@@ -21,28 +21,62 @@ export interface ContainerInfo {
 }
 
 /**
- * 通过容器 ID 获取容器实例
- * 这是最可靠的查询方式
+ * 根据容器 ID 或名称获取容器实例
+ * 支持完整 ID、ID 前缀或容器名称作为输入
  *
- * @param id - 容器 ID（完整或前缀）
+ * @param idOrName - 容器 ID、ID 前缀或容器名称
  * @returns 容器实例，如果不存在则返回 null
  *
  * @example
  * ```ts
- * const container = await getContainerById('abc123');
- * if (container) {
- *   await startContainer(container);
- * }
+ * // 通过名称查询
+ * const container1 = await getContainerById('workflow-test-123');
+ *
+ * // 通过完整 ID 查询
+ * const container2 = await getContainerById('abc123def456...');
+ *
+ * // 通过 ID 前缀查询
+ * const container3 = await getContainerById('abc123');
  * ```
  */
-export async function getContainerById(id: string): Promise<Docker.Container | null> {
+export async function getContainerById(idOrName: string): Promise<Docker.Container | null> {
   try {
-    const container = docker.getContainer(id);
-    // 尝试 inspect 验证容器是否存在
+    // 步骤 1: 列出所有容器（包括停止的）
+    const containers = await docker.listContainers({ all: true });
+
+    // 步骤 2: 查找匹配的容器（支持 ID、ID 前缀、名称）
+    const match = containers.find((c) => {
+      // 匹配完整 ID
+      if (c.Id === idOrName) return true;
+
+      // 匹配 ID 前缀（Docker CLI 风格）
+      if (c.Id.startsWith(idOrName)) return true;
+
+      // 匹配容器名称（注意 Docker 返回的名称带前导 /）
+      if (
+        c.Names.some(
+          (name) => name === `/${idOrName}` || name === idOrName || name.substring(1) === idOrName,
+        )
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (!match) {
+      return null;
+    }
+
+    // 步骤 3: 使用确定的 ID 获取容器实例
+    const container = docker.getContainer(match.Id);
+
+    // 步骤 4: 验证容器可访问
     await container.inspect();
+
     return container;
   } catch (error: unknown) {
-    // 404 表示容器不存在
+    // 404 表示容器不存在（理论上不会到这里，因为已通过 listContainers 验证）
     if (error && typeof error === 'object' && 'statusCode' in error && error.statusCode === 404) {
       return null;
     }

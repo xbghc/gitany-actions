@@ -9,6 +9,8 @@ export interface ExecOptions {
   env?: Record<string, string>;
   /** 超时时间（毫秒） */
   timeout?: number;
+  /** 实时输出回调（每当有新输出时调用） */
+  onOutput?: (data: string) => void;
 }
 
 export interface ExecResult {
@@ -43,6 +45,15 @@ export interface ExecResult {
  * if (result2.exitCode !== 0) {
  *   console.error('Command failed:', result2.stdout);
  * }
+ *
+ * // 实时输出（用于 SSE 推送等场景）
+ * const result3 = await exec(container, 'pnpm build', {
+ *   workDir: '/workspace',
+ *   timeout: 300000,
+ *   onOutput: (data) => {
+ *     console.log('[实时输出]', data);
+ *   }
+ * });
  * ```
  */
 export async function exec(
@@ -75,6 +86,13 @@ export async function exec(
     command: fullCommand,
     env: env.length > 0 ? env : undefined,
   });
+
+  // 如果提供了 onOutput 回调，实时推送输出
+  if (options?.onOutput) {
+    handle.stream.on('data', (chunk: Buffer) => {
+      options.onOutput!(chunk.toString());
+    });
+  }
 
   // 应用超时
   let timeoutId: NodeJS.Timeout | undefined;

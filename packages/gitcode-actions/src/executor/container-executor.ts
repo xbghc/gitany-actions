@@ -214,7 +214,6 @@ export class ExecutorChain implements PromiseLike<ExecutionResult> {
  *   .execute('pnpm build')
  * ```
  */
-// TODO 实现重试机制
 export function executor(container: Docker.Container, options?: ExecutorOptions): ExecutorChain {
   return new ExecutorChain(container, options);
 }
