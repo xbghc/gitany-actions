@@ -275,15 +275,25 @@ const connectSSE = () => {
   });
 
   eventSource.addEventListener('error', (e: MessageEvent) => {
-    const data: SSEErrorData = JSON.parse(e.data);
-    // 将错误信息保存到对应步骤的日志
-    const currentLog = stepLogs.value.get(data.step) || '';
-    stepLogs.value.set(data.step, currentLog + `\n❌ 错误 [${data.step}]: ${data.message}\n`);
+    // 只有自定义 'error' 事件才会有 data 字段
+    if (!e.data) {
+      console.warn('收到空数据的 error 事件，可能是连接错误');
+      return;
+    }
 
-    // 自动选中出错的步骤
-    selectedStep.value = data.step;
+    try {
+      const data: SSEErrorData = JSON.parse(e.data);
+      // 将错误信息保存到对应步骤的日志
+      const currentLog = stepLogs.value.get(data.step) || '';
+      stepLogs.value.set(data.step, currentLog + `\n❌ 错误 [${data.step}]: ${data.message}\n`);
 
-    scrollToBottom();
+      // 自动选中出错的步骤
+      selectedStep.value = data.step;
+
+      scrollToBottom();
+    } catch (error) {
+      console.error('解析 error 事件失败:', error, 'data:', e.data);
+    }
   });
 
   eventSource.addEventListener('complete', (e: MessageEvent) => {
@@ -304,7 +314,8 @@ const connectSSE = () => {
     closeSSE();
   });
 
-  eventSource.onerror = () => {
+  eventSource.onerror = (e: Event) => {
+    console.warn('SSE 连接错误:', e);
     // 将连接中断信息保存到当前选中的步骤（如果有）
     if (selectedStep.value) {
       const currentLog = stepLogs.value.get(selectedStep.value) || '';
