@@ -178,7 +178,6 @@ ANTHROPIC_API_KEY=sk-ant-xxx    # AI 评论助手所需的 Claude API 密钥
 ## 文档与规范
 
 - 项目文档位于 `docs/`，使用 VitePress (`pnpm docs:*`) 构建。
-- 提交前会运行 `scripts/check-docs-updated.mjs`，要求 `packages/gitcode-api` 与 `packages/gitcode-cli` 的变更同步更新对应文档，可通过 `SKIP_DOCS_CHECK=1` 暂时跳过（不推荐）。
 - 统一代码风格：ESLint + Prettier，TypeScript 采用 `tsconfig.base.json` 中的严格配置。
 
 ## 贡献指南
