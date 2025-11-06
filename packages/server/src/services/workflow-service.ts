@@ -89,6 +89,26 @@ export class WorkflowService {
   }
 
   /**
+   * 处理Docker基础设施错误
+   * - 向前端发送用户友好的消息
+   * - 在服务器日志记录完整的技术错误
+   */
+  private emitDockerInfraError(
+    workflowId: string,
+    step: string,
+    technicalError: string,
+    userMessage: string = '测试服务暂时不可用，请稍后重试或联系管理员',
+  ) {
+    // 服务器日志记录完整错误
+    console.error(`[Workflow ${workflowId}] Docker infrastructure error in step ${step}:`);
+    console.error(technicalError);
+
+    // 前端只看到用户友好消息
+    this.emitError(workflowId, step, userMessage);
+    this.updateStep(workflowId, step, 'failed', userMessage);
+  }
+
+  /**
    * 发送完成事件
    */
   private emitComplete(workflowId: string, status: WorkflowStatus) {
@@ -315,7 +335,8 @@ export class WorkflowService {
       this.emitOutput(workflowId, 'fetch-pr', '正在检查 Docker 环境...\n');
       const dockerCheck = await checkDockerAvailable();
       if (!dockerCheck.available) {
-        const errorMsg =
+        // 构建技术错误消息（仅用于服务器日志）
+        const technicalError =
           `Docker 环境检查失败\n\n` +
           `${dockerCheck.error || 'Docker 不可用'}\n\n` +
           `请检查：\n` +
@@ -327,9 +348,9 @@ export class WorkflowService {
           `- macOS: 启动 Docker Desktop\n` +
           `- Windows: 启动 Docker Desktop`;
 
-        this.emitError(workflowId, 'fetch-pr', errorMsg);
-        this.updateStep(workflowId, 'fetch-pr', 'failed', errorMsg);
-        throw new Error(errorMsg);
+        // 使用用户友好的消息发送到前端
+        this.emitDockerInfraError(workflowId, 'fetch-pr', technicalError);
+        throw new Error('测试服务暂时不可用');
       }
       this.emitOutput(workflowId, 'fetch-pr', '✓ Docker 可用\n');
 
@@ -360,12 +381,18 @@ export class WorkflowService {
         );
 
         if (!pullResult.success) {
-          const errorMsg =
+          // 构建技术错误消息（仅用于服务器日志）
+          const technicalError =
             pullResult.error || `镜像拉取失败。\n\n请手动拉取镜像后重试: docker pull ${baseImage}`;
 
-          this.emitError(workflowId, 'fetch-pr', errorMsg);
-          this.updateStep(workflowId, 'fetch-pr', 'failed', errorMsg);
-          throw new Error(errorMsg);
+          // 使用用户友好的消息发送到前端
+          this.emitDockerInfraError(
+            workflowId,
+            'fetch-pr',
+            technicalError,
+            '测试环境初始化失败，请联系管理员',
+          );
+          throw new Error('测试环境初始化失败');
         }
       } else {
         this.emitOutput(workflowId, 'fetch-pr', `✓ 镜像 ${baseImage} 已存在\n`);
@@ -378,10 +405,17 @@ export class WorkflowService {
       });
 
       if (!createResult.success) {
-        const errorMsg = createResult.error || '容器创建失败';
-        this.emitError(workflowId, 'fetch-pr', errorMsg);
-        this.updateStep(workflowId, 'fetch-pr', 'failed', errorMsg);
-        throw new Error(errorMsg);
+        // 构建技术错误消息（仅用于服务器日志）
+        const technicalError = createResult.error || '容器创建失败';
+
+        // 使用用户友好的消息发送到前端
+        this.emitDockerInfraError(
+          workflowId,
+          'fetch-pr',
+          technicalError,
+          '测试环境初始化失败，请联系管理员',
+        );
+        throw new Error('测试环境初始化失败');
       }
 
       this.emitOutput(workflowId, 'fetch-pr', `✓ 工作容器已创建并启动\n`);

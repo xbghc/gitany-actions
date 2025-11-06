@@ -304,10 +304,7 @@ const connectSSE = () => {
     closeSSE();
   });
 
-  eventSource.onerror = (error) => {
-    if (import.meta.env.DEV) {
-      console.error('SSE connection error:', error);
-    }
+  eventSource.onerror = () => {
     // 将连接中断信息保存到当前选中的步骤（如果有）
     if (selectedStep.value) {
       const currentLog = stepLogs.value.get(selectedStep.value) || '';
