@@ -47,6 +47,12 @@ tags:
     description: Pull Request 相关操作
   - name: Issues
     description: Issue 相关操作
+  - name: Workflow Configuration
+    description: Workflow 配置管理
+  - name: Containers
+    description: 容器生命周期管理
+  - name: Workflows
+    description: Workflow 执行和监控
 
 paths:
   /health:
@@ -675,6 +681,780 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
 
+  /api/workflow-configs/{owner}/{repo}:
+    get:
+      tags:
+        - Workflow Configuration
+      summary: 列出仓库的所有 Workflow 配置
+      description: 获取指定仓库的所有 Workflow 配置列表
+      operationId: listWorkflowConfigs
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      responses:
+        '200':
+          description: 成功获取配置列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      configs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WorkflowConfig'
+                      count:
+                        type: integer
+                        example: 5
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow-config/{owner}/{repo}:
+    post:
+      tags:
+        - Workflow Configuration
+      summary: 创建 Workflow 配置
+      description: 为指定仓库创建新的 Workflow 配置
+      operationId: createWorkflowConfig
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkflowConfigRequest'
+      responses:
+        '200':
+          description: 成功创建配置
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      config:
+                        $ref: '#/components/schemas/WorkflowConfig'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: 配置已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow-config/{configId}:
+    get:
+      tags:
+        - Workflow Configuration
+      summary: 获取 Workflow 配置详情
+      description: 根据配置 ID 获取 Workflow 配置的详细信息
+      operationId: getWorkflowConfig
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConfigIdParam'
+      responses:
+        '200':
+          description: 成功获取配置详情
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      config:
+                        $ref: '#/components/schemas/WorkflowConfig'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 配置不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      tags:
+        - Workflow Configuration
+      summary: 更新 Workflow 配置
+      description: 更新指定的 Workflow 配置
+      operationId: updateWorkflowConfig
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConfigIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkflowConfigRequest'
+      responses:
+        '200':
+          description: 成功更新配置
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      config:
+                        $ref: '#/components/schemas/WorkflowConfig'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 配置不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: 配置名称已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - Workflow Configuration
+      summary: 删除 Workflow 配置
+      description: 删除指定的 Workflow 配置
+      operationId: deleteWorkflowConfig
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ConfigIdParam'
+      responses:
+        '200':
+          description: 成功删除配置
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Configuration deleted successfully'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 配置不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/container:
+    post:
+      tags:
+        - Containers
+      summary: 创建容器
+      description: 为指定仓库创建新的 Docker 容器
+      operationId: createContainer
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - owner
+                - repo
+              properties:
+                owner:
+                  type: string
+                  description: 仓库所有者
+                  example: 'username'
+                repo:
+                  type: string
+                  description: 仓库名称
+                  example: 'my-project'
+                branch:
+                  type: string
+                  description: 分支名称
+                  example: 'main'
+                image:
+                  type: string
+                  description: Docker 镜像
+                  example: 'node:22-bookworm'
+                labels:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: 容器标签
+      responses:
+        '200':
+          description: 成功创建容器
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      containerId:
+                        type: string
+                        example: 'abc123def456'
+                      info:
+                        $ref: '#/components/schemas/ContainerInfo'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/containers/{owner}/{repo}:
+    get:
+      tags:
+        - Containers
+      summary: 列出仓库的所有容器
+      description: 获取指定仓库的所有容器列表
+      operationId: listContainersByRepo
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      responses:
+        '200':
+          description: 成功获取容器列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      containers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            containerId:
+                              type: string
+                            info:
+                              $ref: '#/components/schemas/ContainerInfo'
+                      count:
+                        type: integer
+                        example: 3
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/containers:
+    get:
+      tags:
+        - Containers
+      summary: 列出所有容器
+      description: 获取所有 GitCode 管理的容器列表
+      operationId: listAllContainers
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功获取容器列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      containers:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            repoUrl:
+                              type: string
+                            containerId:
+                              type: string
+                            info:
+                              $ref: '#/components/schemas/ContainerInfo'
+                      count:
+                        type: integer
+                        example: 10
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/container/{containerId}:
+    get:
+      tags:
+        - Containers
+      summary: 获取容器详情
+      description: 根据容器 ID 获取容器的详细信息
+      operationId: getContainer
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ContainerIdParam'
+      responses:
+        '200':
+          description: 成功获取容器详情
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      info:
+                        $ref: '#/components/schemas/ContainerInfo'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 容器不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      tags:
+        - Containers
+      summary: 删除容器
+      description: 删除指定的 Docker 容器
+      operationId: deleteContainer
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ContainerIdParam'
+      responses:
+        '200':
+          description: 成功删除容器
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Container deleted successfully'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/container/{containerId}/reset:
+    post:
+      tags:
+        - Containers
+      summary: 重置容器
+      description: 重置容器到干净状态，可选择切换分支
+      operationId: resetContainer
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ContainerIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                branch:
+                  type: string
+                  description: 可选的分支名称
+                  example: 'main'
+      responses:
+        '200':
+          description: 成功重置容器
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: 'Container reset successfully'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: 容器不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow/pr/{number}:
+    post:
+      tags:
+        - Workflows
+      summary: 触发 PR 的 build 和 lint 测试
+      description: 为指定的 Pull Request 触发 workflow 执行（build、lint 等）
+      operationId: triggerPrWorkflow
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - name: number
+          in: path
+          required: true
+          description: PR 编号
+          schema:
+            type: integer
+          example: 42
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - owner
+                - repo
+              properties:
+                owner:
+                  type: string
+                  description: 仓库所有者
+                  example: 'username'
+                repo:
+                  type: string
+                  description: 仓库名称
+                  example: 'my-project'
+                packageManager:
+                  type: string
+                  description: 包管理器
+                  enum: [npm, pnpm, yarn]
+                  example: 'pnpm'
+                buildCommand:
+                  type: string
+                  description: 构建命令
+                  example: 'pnpm build'
+                lintCommand:
+                  type: string
+                  description: lint 命令
+                  example: 'pnpm lint'
+                baseImage:
+                  type: string
+                  description: Docker 基础镜像
+                  example: 'node:22-bookworm'
+                timeout:
+                  type: number
+                  description: 超时时间（毫秒）
+                  example: 600000
+      responses:
+        '200':
+          description: 成功启动 workflow
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      workflowId:
+                        type: string
+                        example: 'workflow-ghi789'
+                      status:
+                        type: string
+                        example: 'pending'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow/{workflowId}/stream:
+    get:
+      tags:
+        - Workflows
+      summary: 通过 SSE 实时接收 workflow 输出
+      description: 使用 Server-Sent Events (SSE) 实时推送 workflow 执行输出
+      operationId: streamWorkflowOutput
+      parameters:
+        - $ref: '#/components/parameters/WorkflowIdParam'
+      responses:
+        '200':
+          description: 成功建立 SSE 连接
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE 事件流
+        '404':
+          description: Workflow 不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow/{workflowId}:
+    get:
+      tags:
+        - Workflows
+      summary: 查询 workflow 状态
+      description: 获取指定 workflow 的执行状态和详细信息
+      operationId: getWorkflowStatus
+      parameters:
+        - $ref: '#/components/parameters/WorkflowIdParam'
+      responses:
+        '200':
+          description: 成功获取 workflow 状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/WorkflowResult'
+        '404':
+          description: Workflow 不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflows/{owner}/{repo}:
+    get:
+      tags:
+        - Workflows
+      summary: 列出仓库的所有 workflow 历史
+      description: 获取指定仓库的所有 workflow 执行记录
+      operationId: listWorkflows
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+      responses:
+        '200':
+          description: 成功获取 workflow 列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      workflows:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WorkflowResult'
+                      count:
+                        type: integer
+                        example: 15
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow/cleanup:
+    delete:
+      tags:
+        - Workflows
+      summary: 清理过期的 workflow 记录
+      description: 删除旧的 workflow 执行记录，可指定最大保留时间
+      operationId: cleanupWorkflows
+      parameters:
+        - name: maxAge
+          in: query
+          description: 最大保留时间（毫秒）
+          schema:
+            type: number
+          example: 86400000
+      responses:
+        '200':
+          description: 成功清理 workflow
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      deletedCount:
+                        type: integer
+                        example: 10
+                      message:
+                        type: string
+                        example: 'Cleaned up 10 old workflow(s)'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow/test-registry-mirror:
+    post:
+      tags:
+        - Workflows
+      summary: 测试单个 Docker 镜像源
+      description: 测试指定 Docker 镜像源的可用性和速度
+      operationId: testRegistryMirror
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mirror:
+                  type: string
+                  description: 镜像源地址（空字符串表示 Docker Hub）
+                  example: 'docker.m.daocloud.io'
+                mirrorName:
+                  type: string
+                  description: 镜像源名称（用于显示）
+                  example: 'DaoCloud镜像源'
+                testImage:
+                  type: string
+                  description: 测试用的镜像
+                  example: 'alpine:latest'
+      responses:
+        '200':
+          description: 成功测试镜像源
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RegistryMirrorTestResult'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/workflow/test-all-registry-mirrors:
+    get:
+      tags:
+        - Workflows
+      summary: 测试所有预定义的 Docker 镜像源
+      description: 并发测试所有预定义的 Docker 镜像源，返回按速度排序的结果
+      operationId: testAllRegistryMirrors
+      parameters:
+        - name: testImage
+          in: query
+          description: 测试用的镜像
+          schema:
+            type: string
+          example: 'node:22-alpine'
+      responses:
+        '200':
+          description: 成功测试所有镜像源
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RegistryMirrorTestResult'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
 components:
   securitySchemes:
     GitCodeToken:
@@ -715,6 +1495,33 @@ components:
       schema:
         type: integer
       example: 42
+
+    ConfigIdParam:
+      name: configId
+      in: path
+      required: true
+      description: Workflow 配置唯一 ID
+      schema:
+        type: string
+      example: config-abc123
+
+    ContainerIdParam:
+      name: containerId
+      in: path
+      required: true
+      description: 容器唯一 ID
+      schema:
+        type: string
+      example: container-def456
+
+    WorkflowIdParam:
+      name: workflowId
+      in: path
+      required: true
+      description: Workflow 执行唯一 ID
+      schema:
+        type: string
+      example: workflow-ghi789
 
   schemas:
     UserProfile:
@@ -823,6 +1630,268 @@ components:
           type: string
           description: 错误详细信息
           example: Repository not found
+
+    WorkflowConfigStep:
+      type: object
+      required:
+        - name
+        - commands
+      properties:
+        name:
+          type: string
+          description: 步骤名称
+          example: 'Build'
+        commands:
+          type: array
+          items:
+            type: string
+          description: 命令列表
+          example: ['pnpm install', 'pnpm build']
+
+    WorkflowConfig:
+      type: object
+      required:
+        - configId
+        - owner
+        - repo
+        - name
+        - steps
+      properties:
+        configId:
+          type: string
+          description: 配置唯一 ID
+          example: 'config-abc123'
+        owner:
+          type: string
+          description: 仓库所有者
+          example: 'username'
+        repo:
+          type: string
+          description: 仓库名称
+          example: 'my-project'
+        name:
+          type: string
+          description: 配置名称
+          example: 'Build and Test'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowConfigStep'
+          description: 执行步骤
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: 可选环境变量
+          example:
+            NODE_ENV: 'production'
+        timeout:
+          type: number
+          description: 可选超时时间（毫秒）
+          example: 600000
+
+    CreateWorkflowConfigRequest:
+      type: object
+      required:
+        - name
+        - steps
+      properties:
+        name:
+          type: string
+          description: 配置名称
+          example: 'Build and Test'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowConfigStep'
+          description: 执行步骤
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: 可选环境变量
+        timeout:
+          type: number
+          description: 可选超时时间（毫秒）
+
+    UpdateWorkflowConfigRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 配置名称
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowConfigStep'
+          description: 执行步骤
+        env:
+          type: object
+          additionalProperties:
+            type: string
+          description: 可选环境变量
+        timeout:
+          type: number
+          description: 可选超时时间（毫秒）
+
+    ContainerInfo:
+      type: object
+      required:
+        - containerId
+        - status
+        - repoUrl
+      properties:
+        containerId:
+          type: string
+          description: 容器唯一 ID
+          example: 'abc123def456'
+        status:
+          type: string
+          description: 容器状态
+          enum: [running, stopped, created, exited]
+          example: 'running'
+        repoUrl:
+          type: string
+          description: 仓库 Git URL
+          example: 'https://gitcode.com/username/my-project.git'
+        currentBranch:
+          type: string
+          description: 当前分支
+          example: 'main'
+        currentSha:
+          type: string
+          description: 当前 commit SHA
+          example: 'abc123def456789'
+        image:
+          type: string
+          description: Docker 镜像
+          example: 'node:22-bookworm'
+        labels:
+          type: object
+          additionalProperties:
+            type: string
+          description: 容器标签
+
+    WorkflowStep:
+      type: object
+      required:
+        - name
+        - status
+      properties:
+        name:
+          type: string
+          description: 步骤名称
+          example: 'Build'
+        status:
+          type: string
+          description: 步骤状态
+          enum: [pending, running, success, failed]
+          example: 'success'
+        output:
+          type: string
+          description: 步骤输出（日志）
+        startTime:
+          type: string
+          format: date-time
+          description: 开始时间
+        endTime:
+          type: string
+          format: date-time
+          description: 结束时间
+
+    WorkflowResult:
+      type: object
+      required:
+        - workflowId
+        - owner
+        - repo
+        - repoUrl
+        - prNumber
+        - status
+        - steps
+        - createdAt
+      properties:
+        workflowId:
+          type: string
+          description: Workflow 唯一标识
+          example: 'workflow-ghi789'
+        owner:
+          type: string
+          description: 仓库所有者
+          example: 'username'
+        repo:
+          type: string
+          description: 仓库名称
+          example: 'my-project'
+        repoUrl:
+          type: string
+          description: 仓库 URL
+          example: 'https://gitcode.com/username/my-project'
+        prNumber:
+          type: integer
+          description: PR 编号
+          example: 42
+        configId:
+          type: string
+          description: 配置 ID（如果使用了预定义配置）
+          example: 'config-abc123'
+        configName:
+          type: string
+          description: 配置名称（用于展示）
+          example: 'Build and Test'
+        status:
+          type: string
+          description: 整体状态
+          enum: [pending, running, success, failed]
+          example: 'success'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowStep'
+          description: 执行步骤列表
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        completedAt:
+          type: string
+          format: date-time
+          description: 完成时间
+        error:
+          type: string
+          description: 错误信息
+
+    RegistryMirrorTestResult:
+      type: object
+      required:
+        - success
+        - mirror
+        - mirrorName
+        - duration
+      properties:
+        success:
+          type: boolean
+          description: 是否成功
+          example: true
+        mirror:
+          type: string
+          description: 镜像源地址（空字符串表示 Docker Hub）
+          example: 'docker.m.daocloud.io'
+        mirrorName:
+          type: string
+          description: 镜像源名称（用于显示）
+          example: 'DaoCloud镜像源（推荐）'
+        duration:
+          type: number
+          description: 耗时（毫秒）
+          example: 1234
+        speed:
+          type: number
+          description: 下载速度（MB/s）
+          example: 5.67
+        error:
+          type: string
+          description: 错误信息
 
   responses:
     BadRequestError:
