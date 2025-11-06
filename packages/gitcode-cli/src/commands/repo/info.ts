@@ -14,9 +14,7 @@ export async function repoBranchesCommand(owner: string, repo: string): Promise<
 
     console.log(`仓库分支: ${branches.length}`);
     branches.forEach((branch) => {
-      console.log(
-        `${branch.name} (默认: ${branch.default ? '是' : '否'}, 受保护: ${branch.protected ? '是' : '否'})`,
-      );
+      console.log(`${branch.name} (受保护: ${branch.protected ? '是' : '否'})`);
     });
   }, '获取仓库分支失败');
 }
@@ -38,7 +36,9 @@ export async function repoContributorsCommand(owner: string, repo: string): Prom
 
     console.log(`仓库贡献者: ${contributors.length}`);
     contributors.forEach((contributor) => {
-      console.log(`${contributor.name} <${contributor.email}> - ${contributor.contributions} 次贡献`);
+      console.log(
+        `${contributor.name} <${contributor.email}> - ${contributor.contributions} 次贡献`,
+      );
     });
   }, '获取仓库贡献者失败');
 }
