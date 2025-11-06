@@ -10,10 +10,10 @@ export const workflowConfigRouter: Router = Router();
 
 /**
  * 列出仓库的所有配置
- * GET /api/workflow-configs/:owner/:repo
+ * GET /api/repos/:owner/:repo/workflows
  */
 workflowConfigRouter.get(
-  '/workflow-configs/:owner/:repo',
+  '/repos/:owner/:repo/workflows',
   withAuth(async (req, res) => {
     try {
       const { owner, repo } = req.params;
@@ -40,10 +40,10 @@ workflowConfigRouter.get(
 
 /**
  * 创建配置
- * POST /api/workflow-config/:owner/:repo
+ * POST /api/repos/:owner/:repo/workflows
  */
 workflowConfigRouter.post(
-  '/workflow-config/:owner/:repo',
+  '/repos/:owner/:repo/workflows',
   withAuth(async (req, res) => {
     try {
       const { owner, repo } = req.params;
@@ -101,52 +101,14 @@ workflowConfigRouter.post(
 );
 
 /**
- * 获取配置
- * GET /api/workflow-config/:configId
- */
-workflowConfigRouter.get(
-  '/workflow-config/:configId',
-  withAuth(async (req, res) => {
-    try {
-      const { configId } = req.params;
-
-      const config = await workflowConfigService.getById(configId);
-
-      if (!config) {
-        res.status(404).json({
-          success: false,
-          error: 'CONFIG_NOT_FOUND',
-          message: `Configuration not found: ${configId}`,
-        });
-        return;
-      }
-
-      res.json({
-        success: true,
-        data: {
-          config,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to get workflow config:', error);
-      res.status(500).json({
-        success: false,
-        error: 'GET_FAILED',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
-    }
-  }),
-);
-
-/**
  * 更新配置
- * PUT /api/workflow-config/:configId
+ * PUT /api/repos/:owner/:repo/workflows/:id
  */
 workflowConfigRouter.put(
-  '/workflow-config/:configId',
+  '/repos/:owner/:repo/workflows/:id',
   withAuth(async (req, res) => {
     try {
-      const { configId } = req.params;
+      const { owner, repo, id } = req.params;
       const updates: UpdateWorkflowConfigRequest = req.body;
 
       // 验证 steps 格式（如果提供）
@@ -163,7 +125,7 @@ workflowConfigRouter.put(
         }
       }
 
-      const config = await workflowConfigService.update(configId, updates);
+      const config = await workflowConfigService.update(owner, repo, id, updates);
 
       res.json({
         success: true,
@@ -203,15 +165,15 @@ workflowConfigRouter.put(
 
 /**
  * 删除配置
- * DELETE /api/workflow-config/:configId
+ * DELETE /api/repos/:owner/:repo/workflows/:id
  */
 workflowConfigRouter.delete(
-  '/workflow-config/:configId',
+  '/repos/:owner/:repo/workflows/:id',
   withAuth(async (req, res) => {
     try {
-      const { configId } = req.params;
+      const { owner, repo, id } = req.params;
 
-      await workflowConfigService.delete(configId);
+      await workflowConfigService.delete(owner, repo, id);
 
       res.json({
         success: true,

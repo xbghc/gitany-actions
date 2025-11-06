@@ -12,12 +12,8 @@ export interface WorkflowConfigStep {
  * Workflow 配置
  */
 export interface WorkflowConfig {
-  /** 配置唯一 ID */
-  configId: string;
-  /** 仓库所有者 */
-  owner: string;
-  /** 仓库名称 */
-  repo: string;
+  /** 配置唯一 ID (UUID) */
+  id: string;
   /** 配置名称 */
   name: string;
   /** 执行步骤 */

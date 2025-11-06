@@ -68,11 +68,7 @@
 
     <template #footer>
       <el-button @click="handleClose">取消</el-button>
-      <el-button
-        type="primary"
-        :disabled="!selectedConfigId"
-        @click="handleConfirm"
-      >
+      <el-button type="primary" :disabled="!selectedConfigId" @click="handleConfirm">
         开始测试
       </el-button>
     </template>

@@ -89,10 +89,7 @@
       />
 
       <!-- Workflow 日志查看器 -->
-      <WorkflowLogViewer
-        v-model:visible="logViewerVisible"
-        :workflow-id="currentWorkflowId"
-      />
+      <WorkflowLogViewer v-model:visible="logViewerVisible" :workflow-id="currentWorkflowId" />
 
       <!-- 分页 -->
       <div class="pagination">

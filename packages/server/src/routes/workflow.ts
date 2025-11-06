@@ -51,7 +51,9 @@ workflowRouter.post(
 
       // 优先使用 configId
       if (configId) {
-        const workflowConfig = await workflowConfigService.getById(configId);
+        // 从指定仓库的配置列表中查找
+        const configs = await workflowConfigService.listByRepo(owner, repo);
+        const workflowConfig = configs.find((c) => c.id === configId);
 
         if (!workflowConfig) {
           res.status(404).json({
