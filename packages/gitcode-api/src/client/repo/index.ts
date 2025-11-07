@@ -32,6 +32,7 @@ import {
   type NotificationsResponse,
   type PullRequestSettings,
   type RepoEvents,
+  type RepoEventsQuery,
   type RepoSettings,
   type Webhook,
   type Webhooks,
@@ -82,13 +83,47 @@ export async function getRepoSettings(
   });
 }
 
+/**
+ * 获取仓库事件列表
+ *
+ * @param client - GitCode 客户端实例
+ * @param owner - 仓库所有者
+ * @param repo - 仓库名称
+ * @param query - 查询参数（可选）
+ * @returns 仓库事件列表
+ *
+ * @example
+ * ```typescript
+ * // 获取所有事件
+ * const events = await getRepoEvents(client, 'owner', 'repo');
+ *
+ * // 获取特定作者的 push 事件
+ * const pushEvents = await getRepoEvents(client, 'owner', 'repo', {
+ *   filter: 'push',
+ *   author: 'username',
+ *   page: 1,
+ *   per_page: 20,
+ * });
+ *
+ * // 获取指定日期范围的事件
+ * const recentEvents = await getRepoEvents(client, 'owner', 'repo', {
+ *   after: '2024-01-01',
+ *   before: '2024-12-31',
+ * });
+ * ```
+ */
 export async function getRepoEvents(
   client: GitCodeClient,
   owner: string,
   repo: string,
+  query?: RepoEventsQuery,
 ): Promise<RepoEvents> {
   const url = repoEventsUrl(owner, repo);
-  const data = await client.http.get(url).json();
+  const data = await client.http
+    .get(url, {
+      searchParams: query as Record<string, string | number | boolean>,
+    })
+    .json();
   return parseApiResponse(repoEventsSchema, data, {
     endpoint: url,
     method: 'GET',
@@ -297,8 +332,30 @@ export class GitCodeClientRepo {
     return await getRepoSettings(this.client, owner, repo);
   }
 
-  async getEvents(owner: string, repo: string): Promise<RepoEvents> {
-    return await getRepoEvents(this.client, owner, repo);
+  /**
+   * 获取仓库事件列表
+   *
+   * @param owner - 仓库所有者
+   * @param repo - 仓库名称
+   * @param query - 查询参数（可选）
+   * @returns 仓库事件列表
+   *
+   * @example
+   * ```typescript
+   * // 获取所有事件
+   * const events = await client.repo.getEvents('owner', 'repo');
+   *
+   * // 获取特定类型的事件并分页
+   * const pushEvents = await client.repo.getEvents('owner', 'repo', {
+   *   filter: 'push',
+   *   author: 'username',
+   *   page: 1,
+   *   per_page: 20,
+   * });
+   * ```
+   */
+  async getEvents(owner: string, repo: string, query?: RepoEventsQuery): Promise<RepoEvents> {
+    return await getRepoEvents(this.client, owner, repo, query);
   }
 
   async getContributors(owner: string, repo: string): Promise<Contributors> {

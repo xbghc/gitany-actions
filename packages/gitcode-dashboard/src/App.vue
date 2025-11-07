@@ -42,6 +42,14 @@
 
               <!-- Tab 切换 -->
               <el-tabs v-model="activeTab" class="content-tabs">
+                <el-tab-pane name="activity">
+                  <template #label>
+                    <span
+                      ><el-icon><Bell /></el-icon> 动态</span
+                    >
+                  </template>
+                  <ActivityList />
+                </el-tab-pane>
                 <el-tab-pane label="Issue" name="issue">
                   <IssueList />
                 </el-tab-pane>
@@ -64,9 +72,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
-import { Folder, FolderOpened } from '@element-plus/icons-vue';
+import { Folder, FolderOpened, Bell } from '@element-plus/icons-vue';
 import TokenBar from '@/components/TokenBar.vue';
 import RepoList from '@/components/RepoList.vue';
+import ActivityList from '@/views/activity/ActivityList.vue';
 import IssueList from '@/views/issue/IssueList.vue';
 import PRList from '@/views/pr/PRList.vue';
 import WorkflowList from '@/views/workflow/WorkflowList.vue';
@@ -76,7 +85,7 @@ const route = useRoute();
 const repoStore = useRepoStore();
 const authStore = useAuthStore();
 
-const activeTab = ref<'issue' | 'pr' | 'workflow'>('issue');
+const activeTab = ref<'activity' | 'issue' | 'pr' | 'workflow'>('activity');
 
 // 判断是否在详情页
 const isDetailPage = computed(() => {

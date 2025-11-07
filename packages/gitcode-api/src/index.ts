@@ -105,6 +105,7 @@ export type {
   PullRequestSettings,
   RepoEvent,
   RepoEvents,
+  RepoEventsQuery,
   RepoSettings,
   Webhook,
   Webhooks,
