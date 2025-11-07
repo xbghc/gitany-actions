@@ -1,5 +1,5 @@
 import type { ApiResponse } from '@/types';
-import type { RepoEvents } from '@xbghc/gitcode-api';
+import type { RepoEventsResponse } from '@/types';
 import { http } from './request';
 
 export interface EventsFilterParams {
@@ -15,7 +15,7 @@ export interface EventsFilterParams {
  * 获取仓库事件列表
  */
 export const getRepoEvents = (owner: string, repo: string, params?: EventsFilterParams) => {
-  return http.get<ApiResponse<RepoEvents>>(`/api/repo/${owner}/${repo}/events`, {
+  return http.get<ApiResponse<RepoEventsResponse>>(`/api/repo/${owner}/${repo}/events`, {
     params,
   });
 };

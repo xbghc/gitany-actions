@@ -70,10 +70,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { ChatDotRound, Right, Download } from '@element-plus/icons-vue';
-import type { ActivityItem } from '@/types';
+import type { RepoEvent } from '@/types';
 
 const props = defineProps<{
-  activity: ActivityItem;
+  activity: RepoEvent;
 }>();
 
 // 判断事件类型

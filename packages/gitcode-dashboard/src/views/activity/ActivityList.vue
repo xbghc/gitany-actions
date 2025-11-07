@@ -69,7 +69,7 @@ import { Refresh } from '@element-plus/icons-vue';
 import { useActivityStore } from '@/store';
 import { useActivityTime } from './useActivityTime';
 import ActivityCard from './ActivityCard.vue';
-import type { ActivityItem } from '@/types';
+import type { RepoEvent } from '@/types';
 
 const activityStore = useActivityStore();
 
@@ -82,7 +82,7 @@ const pageSize = ref(20);
 const timeDisplayMode = ref<'relative' | 'absolute'>('relative');
 
 // 获取 timeline 节点颜色
-const getTimelineColor = (activity: ActivityItem): string => {
+const getTimelineColor = (activity: RepoEvent): string => {
   // Push 事件
   if (activity.action_name.toLowerCase().includes('push') && activity.push_data) {
     return '#2196f3'; // 蓝色
