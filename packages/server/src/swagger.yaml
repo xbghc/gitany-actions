@@ -43,6 +43,8 @@ tags:
     description: 健康检查
   - name: User
     description: 用户信息相关操作
+  - name: Events
+    description: 仓库事件和动态相关操作
   - name: Pull Requests
     description: Pull Request 相关操作
   - name: Issues
@@ -676,6 +678,78 @@ paths:
                 $ref: '#/components/schemas/SuccessResponse'
         '400':
           $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/repo/{owner}/{repo}/events:
+    get:
+      tags:
+        - Events
+      summary: 获取仓库事件列表
+      description: 获取指定仓库的事件动态，支持按类型、作者、时间过滤和分页
+      operationId: getRepoEvents
+      security:
+        - GitCodeToken: []
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OwnerParam'
+        - $ref: '#/components/parameters/RepoParam'
+        - name: filter
+          in: query
+          description: 事件类型过滤
+          schema:
+            type: string
+            enum: [all, push, merged, issue, comments, team, project]
+            default: all
+        - name: author
+          in: query
+          description: 按作者用户名过滤
+          schema:
+            type: string
+        - name: before
+          in: query
+          description: 结束日期（YYYY-MM-DD）
+          schema:
+            type: string
+            format: date
+          example: '2024-12-31'
+        - name: after
+          in: query
+          description: 开始日期（YYYY-MM-DD）
+          schema:
+            type: string
+            format: date
+          example: '2024-01-01'
+        - name: page
+          in: query
+          description: 页码（从 1 开始）
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: 成功获取事件列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RepoEvents'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '500':
@@ -1734,6 +1808,297 @@ components:
           items:
             type: string
           example: ['TypeScript', 'Python', 'Go']
+
+    RepoEventAuthor:
+      type: object
+      description: 仓库事件作者信息
+      required:
+        - id
+        - iam_id
+        - username
+        - state
+        - email
+        - name
+        - name_cn
+        - web_url
+      properties:
+        id:
+          type: integer
+          description: 用户 ID
+          example: 123456
+        iam_id:
+          type: string
+          description: IAM ID
+          example: 'iam_abc123'
+        username:
+          type: string
+          description: 用户名
+          example: 'john_doe'
+        state:
+          type: string
+          description: 用户状态
+          example: 'active'
+        avatar_url:
+          type: string
+          description: 头像 URL
+          example: 'https://gitcode.com/avatars/u/123456'
+        email:
+          type: string
+          description: 邮箱地址
+          example: 'john@example.com'
+        name:
+          type: string
+          description: 用户名称
+          example: 'John Doe'
+        name_cn:
+          type: string
+          description: 用户中文名称
+          example: '张三'
+        web_url:
+          type: string
+          description: 用户主页 URL
+          example: 'https://gitcode.com/john_doe'
+
+    RepoPushData:
+      type: object
+      description: Push 事件特有数据
+      required:
+        - commit_count
+        - action
+        - ref_type
+        - commit_to
+        - ref
+        - commit_title
+      properties:
+        commit_count:
+          type: integer
+          description: 提交数量
+          example: 5
+        action:
+          type: string
+          description: Push 动作类型
+          enum: [pushed, created]
+          example: 'pushed'
+        ref_type:
+          type: string
+          description: 引用类型
+          example: 'branch'
+        commit_from:
+          type: string
+          description: 起始提交 SHA（可选，创建新分支时没有）
+          example: '972d57acb678095d30a5b495a0013e90435ea061'
+        commit_to:
+          type: string
+          description: 目标提交 SHA
+          example: 'e9e32242fa5fa32affeceecd3fde01e11f81b222'
+        ref:
+          type: string
+          description: 分支名称
+          example: 'main'
+        commit_title:
+          type: string
+          description: 提交标题
+          example: '!140 merge dev into main'
+
+    RepoMergeRequestInfo:
+      type: object
+      description: MergeRequest 事件特有数据
+      required:
+        - source_branch
+        - source_project
+        - target_branch
+        - target_project
+        - user_notes_count
+      properties:
+        source_branch:
+          type: string
+          description: 源分支
+          example: 'dev'
+        source_project:
+          type: string
+          description: 源项目
+          example: 'DevCloudFE/MateChat'
+        target_branch:
+          type: string
+          description: 目标分支
+          example: 'main'
+        target_project:
+          type: string
+          description: 目标项目
+          example: 'DevCloudFE/MateChat'
+        user_notes_count:
+          type: integer
+          description: 用户评论数量
+          example: 7
+
+    RepoEvent:
+      type: object
+      description: 单个仓库事件
+      required:
+        - action
+        - action_name
+        - author
+        - author_id
+        - author_username
+        - created_at
+        - project_id
+      properties:
+        action:
+          type: integer
+          description: 事件动作类型代码
+          example: 5
+        action_name:
+          type: string
+          description: 事件动作名称
+          enum: [push, merged, issue, comments, team, project]
+          example: 'push'
+        author:
+          $ref: '#/components/schemas/RepoEventAuthor'
+        author_id:
+          type: integer
+          description: 作者 ID
+          example: 123456
+        author_username:
+          type: string
+          description: 作者用户名
+          example: 'john_doe'
+        created_at:
+          type: string
+          format: date-time
+          description: 事件创建时间
+          example: '2024-11-07T10:30:00Z'
+        project_id:
+          type: integer
+          description: 项目 ID
+          example: 789
+        title:
+          type: string
+          description: 事件标题
+          example: 'John Doe pushed to branch main'
+        filter_sensitive:
+          type: boolean
+          description: 是否过滤敏感信息
+          example: false
+        note:
+          type: object
+          description: 评论对象（用于评论类型事件）
+          properties:
+            id:
+              type: integer
+              example: 118351309
+            type:
+              type: string
+              example: 'DiffNote'
+            body:
+              type: string
+              example: '删除'
+            author:
+              type: object
+              description: 评论作者
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+            system:
+              type: boolean
+            noteable_id:
+              type: integer
+            noteable_type:
+              type: string
+            resolvable:
+              type: boolean
+            is_reply:
+              type: boolean
+            noteable_iid:
+              type: integer
+            discussion_id:
+              type: string
+            project:
+              type: string
+            diff:
+              type: string
+            archived:
+              type: boolean
+        project:
+          type: object
+          description: 项目详细信息
+          properties:
+            main_repository_language:
+              type: array
+              items:
+                type: string
+            star_count:
+              type: integer
+              example: 1769
+            forks_count:
+              type: integer
+              example: 168
+            develop_mode:
+              type: string
+              example: 'normal'
+            stared:
+              type: boolean
+              example: false
+        project_name:
+          type: string
+          description: 项目名称
+          example: 'DevCloudFE/MateChat'
+        target_id:
+          type: integer
+          description: 目标资源 ID
+          example: 118351309
+        target_iid:
+          type: integer
+          description: 目标资源内部 ID
+          example: 118351309
+        target_title:
+          type: string
+          description: 目标资源标题
+          example: 'feat: matechat/ng组件库 && 多框架融合网站发布'
+        target_type:
+          type: string
+          description: 目标类型
+          enum: [Note, MergeRequest, Issue, Commit]
+          example: 'Note'
+        target_type_format:
+          type: string
+          description: 格式化的目标类型
+          example: 'note'
+        push_data:
+          $ref: '#/components/schemas/RepoPushData'
+          description: Push 事件特有数据（仅 push 事件有）
+        merge_request_info:
+          $ref: '#/components/schemas/RepoMergeRequestInfo'
+          description: MergeRequest 事件特有数据（仅 MergeRequest 相关事件有）
+        _links:
+          type: object
+          description: 相关链接
+          properties:
+            project:
+              type: string
+              example: 'https://gitcode.com/DevCloudFE/MateChat'
+            action_type:
+              type: string
+              example: 'https://gitcode.com/DevCloudFE/MateChat/merge_requests/129#note_xxx'
+
+    RepoEvents:
+      type: object
+      description: 仓库事件列表响应
+      required:
+        - events
+        - has_next_page
+      properties:
+        events:
+          type: array
+          description: 事件列表
+          items:
+            $ref: '#/components/schemas/RepoEvent'
+        has_next_page:
+          type: boolean
+          description: 是否有下一页
+          example: true
 
     SuccessResponse:
       type: object
