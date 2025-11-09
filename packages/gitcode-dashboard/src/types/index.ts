@@ -409,7 +409,7 @@ export interface RepoEventAuthor {
 /** 事件评论对象 */
 export interface RepoEventNote {
   id: number;
-  type: string;
+  type?: string;
   body: string;
   author: {
     id: number;
