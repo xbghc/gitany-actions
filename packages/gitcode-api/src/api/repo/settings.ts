@@ -126,7 +126,7 @@ export const repoEventsSchema = z.object({
           commit_from: z.string().optional(),
           commit_to: z.string(),
           ref: z.string(),
-          commit_title: z.string(),
+          commit_title: z.string().optional(),
         })
         .optional(),
       merge_request_info: z

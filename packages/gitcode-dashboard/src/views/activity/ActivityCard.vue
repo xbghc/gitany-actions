@@ -30,24 +30,27 @@
 
     <!-- MergeRequest 事件内容 -->
     <template v-else-if="isMergeRequestEvent">
-      <div class="mr-action">
-        <a :href="activity.author.web_url" target="_blank" class="author-link" @click.stop>
-          {{ activity.author.name }}
-        </a>
-        {{ mergeRequestAction }}
+      <div class="mr-header">
+        <div class="mr-left">
+          <div class="mr-action">
+            <a :href="activity.author.web_url" target="_blank" class="author-link" @click.stop>
+              {{ activity.author.name }}
+            </a>
+            {{ mergeRequestAction }}
+          </div>
+          <div v-if="activity.merge_request_info" class="branch-flow">
+            <span class="source-branch">{{ activity.merge_request_info.source_branch }}</span>
+            <el-icon class="arrow-icon"><Right /></el-icon>
+            <span class="target-branch">{{ activity.merge_request_info.target_branch }}</span>
+          </div>
+        </div>
+        <div v-if="activity.target_iid" class="mr-number">!{{ activity.target_iid }}</div>
       </div>
 
       <div v-if="displayTitle" class="mr-title">
         {{ displayTitle }}
       </div>
-      <div v-if="activity.merge_request_info" class="mr-details">
-        <div class="branch-flow">
-          <span class="source-branch">{{ activity.merge_request_info.source_branch }}</span>
-          <el-icon class="arrow-icon"><Right /></el-icon>
-          <span class="target-branch">{{ activity.merge_request_info.target_branch }}</span>
-        </div>
-        <div v-if="activity.target_iid" class="mr-number">!{{ activity.target_iid }}</div>
-      </div>
+
       <div v-if="activity.note?.body" class="comment-content">
         <el-icon class="comment-icon"><ChatDotRound /></el-icon>
         <span class="comment-text">{{ activity.note.body }}</span>
@@ -245,11 +248,25 @@ const handleCardClick = () => {
   border-left: 4px solid #4caf50;
 }
 
+.mr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mr-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: 8px;
+}
+
 .mr-action {
   font-weight: 500;
   font-size: 14px;
   color: #2e7d32;
-  margin-bottom: 8px;
 }
 
 .mr-action .author-link {
@@ -265,11 +282,39 @@ const handleCardClick = () => {
   text-decoration: underline;
 }
 
+.branch-flow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #2e7d32;
+  font-weight: 500;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+}
+
+.source-branch,
+.target-branch {
+  background: rgba(76, 175, 80, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.arrow-icon {
+  color: #4caf50;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
 .mr-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #2e7d32;
-  line-height: 1.4;
+  line-height: 1.5;
+  padding: 12px 16px;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -278,49 +323,15 @@ const handleCardClick = () => {
   -webkit-box-orient: vertical;
 }
 
-.mr-details {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.7);
-  border-radius: 8px;
-  border: 1px solid rgba(76, 175, 80, 0.15);
-}
-
-.branch-flow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #2e7d32;
-  font-weight: 500;
-  font-size: 14px;
-  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
-  margin-right: auto;
-}
-
-.source-branch,
-.target-branch {
-  background: rgba(76, 175, 80, 0.15);
-  padding: 3px 10px;
-  border-radius: 4px;
-  font-weight: 600;
-}
-
-.arrow-icon {
-  color: #4caf50;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
 .mr-number {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
   color: #1b5e20;
   background: rgba(76, 175, 80, 0.25);
   padding: 4px 10px;
   border-radius: 4px;
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .comment-content {
