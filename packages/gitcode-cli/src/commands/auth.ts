@@ -122,7 +122,17 @@ export function authCommand(): Command {
 
         // 3. 生成授权 URL
         const { url } = oauth.generateAuthorizationUrl({
-          scope: ['user', 'repo', 'pull_requests', 'issues'],
+          scope: [
+            'all_user',
+            'all_key',
+            'all_groups',
+            'all_projects',
+            'all_pr',
+            'all_issue',
+            'all_note',
+            'all_hook',
+            'all_repository',
+          ],
         });
 
         // 4. 打印说明
@@ -176,13 +186,7 @@ export function authCommand(): Command {
 
         // 10. 验证登录
         console.log('⏳ 验证登录状态...');
-        const client = new GitCodeClient();
-        client.auth.configureOAuth({
-          clientId,
-          clientSecret,
-          redirectUri,
-        });
-        client.auth.setOAuthToken(tokenResponse);
+        const client = new GitCodeClient(tokenResponse.access_token);
         const user = await client.user.getProfile();
 
         // 11. 显示成功消息

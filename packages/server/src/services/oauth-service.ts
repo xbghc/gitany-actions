@@ -22,7 +22,17 @@ export class OAuthService {
       clientId,
       clientSecret,
       redirectUri,
-      defaultScope: ['user', 'repo', 'pull_requests', 'issues'],
+      defaultScope: [
+        'all_user',
+        'all_key',
+        'all_groups',
+        'all_projects',
+        'all_pr',
+        'all_issue',
+        'all_note',
+        'all_hook',
+        'all_repository',
+      ],
     });
   }
 
