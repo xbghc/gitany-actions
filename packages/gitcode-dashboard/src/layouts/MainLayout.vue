@@ -1,7 +1,7 @@
 <template>
   <div class="main-layout">
-    <!-- 顶部 Token 配置栏 -->
-    <TokenBar />
+    <!-- 顶部 Header -->
+    <Header />
 
     <el-container class="main-container">
       <!-- 左侧仓库列表 -->
@@ -70,7 +70,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { Folder, FolderOpened, Bell } from '@element-plus/icons-vue';
-import TokenBar from '@/components/TokenBar.vue';
+import Header from '@/components/Header.vue';
 import RepoList from '@/components/RepoList.vue';
 import ActivityList from '@/views/activity/ActivityList.vue';
 import IssueList from '@/views/issue/IssueList.vue';
@@ -106,7 +106,7 @@ onMounted(() => {
 
 .main-container {
   flex: 1;
-  margin-top: 50px; /* Token Bar 的高度 */
+  margin-top: 50px; /* Header 的高度 */
   overflow: hidden;
 }
 
