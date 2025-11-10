@@ -13,6 +13,7 @@ import { workflowRouter } from './routes/workflow.js';
 import { workflowConfigRouter } from './routes/workflow-config.js';
 import { containerRouter } from './routes/container.js';
 import { userRouter } from './routes/user.js';
+import { oauthRouter } from './routes/oauth.js';
 import { errorHandler } from './middleware/error-handler.js';
 import { avatarTransformerMiddleware } from './middleware/avatar-transformer.js';
 
@@ -55,6 +56,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // Routes
+app.use('/api', oauthRouter);
 app.use('/api', userRouter);
 app.use('/api', repoRouter);
 app.use('/api', prRouter);

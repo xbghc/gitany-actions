@@ -31,6 +31,7 @@ const router = createRouter({
 // 路由守卫：未登录跳转到登录页
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore();
+  authStore.loadToken();
   const requiresAuth = to.meta.requiresAuth !== false; // 默认需要认证
 
   if (requiresAuth && !authStore.isConfigured) {

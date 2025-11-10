@@ -72,17 +72,28 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store';
 import { ElMessage } from 'element-plus';
 import { UserFilled } from '@element-plus/icons-vue';
+import { getAuthorizationUrl } from '@/api/oauth';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const tokenInput = ref('');
 
-// OAuth 登录（暂时显示提示）
-const handleOAuthLogin = () => {
-  ElMessage.info('OAuth 登录功能开发中，敬请期待！');
-  // TODO: 实现 OAuth 登录
-  // 1. 调用后端 API 获取授权 URL
-  // 2. 跳转到 GitCode 授权页面
+// OAuth 登录
+const handleOAuthLogin = async () => {
+  try {
+    // 1. 调用后端 API 获取授权 URL
+    const { url } = await getAuthorizationUrl();
+
+    // 2. 跳转到 GitCode 授权页面
+    window.location.href = url;
+  } catch (error) {
+    console.error('OAuth login error:', error);
+    const errorMessage = error instanceof Error ? error.message : '未知错误';
+    ElMessage.error({
+      message: `OAuth 登录失败: ${errorMessage}`,
+      duration: 5000,
+    });
+  }
 };
 
 // Token 登录

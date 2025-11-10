@@ -102,17 +102,14 @@ export function authCommand(): Command {
         // 1. 检查环境变量配置
         const clientId = process.env.GITCODE_OAUTH_CLIENT_ID;
         const clientSecret = process.env.GITCODE_OAUTH_CLIENT_SECRET;
-        const redirectUri =
-          process.env.GITCODE_OAUTH_REDIRECT_URI || 'http://127.0.0.1:5173/oauth/callback';
+        const redirectUri = process.env.GITCODE_OAUTH_REDIRECT_URI;
 
-        if (!clientId || !clientSecret) {
+        if (!clientId || !clientSecret || !redirectUri) {
           console.error('❌ 缺少 OAuth 配置');
           console.log('\n请设置以下环境变量:');
           console.log('  export GITCODE_OAUTH_CLIENT_ID=your_client_id');
           console.log('  export GITCODE_OAUTH_CLIENT_SECRET=your_client_secret');
-          console.log(
-            '  export GITCODE_OAUTH_REDIRECT_URI=http://127.0.0.1:5173/oauth/callback  # 可选',
-          );
+          console.log('  export GITCODE_OAUTH_REDIRECT_URI=http://127.0.0.1:5173/oauth/callback');
           process.exit(1);
         }
 
