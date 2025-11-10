@@ -107,6 +107,18 @@ export const useRepoStore = defineStore('repo', () => {
       }
     }
 
+    // 如果没有仓库数据，添加默认仓库
+    if (repoList.value.length === 0) {
+      const defaultRepos = [
+        { owner: 'xbghc', repo: 'gitcode-actions' },
+        { owner: 'DevCloudFE', repo: 'MateChat' },
+      ];
+
+      defaultRepos.forEach(({ owner, repo }) => {
+        addRepo(owner, repo);
+      });
+    }
+
     const savedSelectedId = localStorage.getItem(SELECTED_REPO_KEY);
     if (savedSelectedId && repoList.value.some((r) => r.id === savedSelectedId)) {
       selectedRepoId.value = savedSelectedId;
