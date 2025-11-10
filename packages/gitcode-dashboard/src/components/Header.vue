@@ -1,12 +1,18 @@
 <template>
   <div class="header">
     <div class="header-content">
-      <div v-if="userStore.userProfile" class="user-info">
+      <a
+        v-if="userStore.userProfile"
+        :href="userStore.userProfile.html_url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="user-info"
+      >
         <el-avatar :size="32" :src="userStore.userProfile.avatar_url">
           <el-icon><component :is="User" /></el-icon>
         </el-avatar>
         <span class="user-name">{{ userStore.displayName }}</span>
-      </div>
+      </a>
       <el-button size="small" type="danger" @click="handleLogout">注销</el-button>
     </div>
   </div>
@@ -69,11 +75,25 @@ const handleLogout = () => {
   display: flex;
   align-items: center;
   gap: 10px;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.user-info:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
 }
 
 .user-name {
   font-size: 14px;
   color: #1f2937;
   font-weight: 500;
+}
+
+.user-info:hover .user-name {
+  color: #2563eb;
 }
 </style>
