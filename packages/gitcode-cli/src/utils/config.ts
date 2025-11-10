@@ -3,10 +3,25 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
+/**
+ * OAuth token 数据结构
+ */
+export interface OAuthTokenData {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number; // Unix 时间戳（毫秒）
+  scope: string;
+  tokenType: string;
+}
+
+/**
+ * GitCode 配置文件结构
+ */
 interface GitCodeConfig {
-  token?: string;
+  token?: string; // Personal Access Token
   authStyle?: 'query' | 'bearer' | 'token' | 'header';
   customAuthHeader?: string;
+  oauth?: OAuthTokenData; // OAuth token 数据
 }
 
 /**
@@ -125,4 +140,66 @@ export async function removeToken(): Promise<void> {
   const config = await readConfig();
   delete config.token;
   await writeConfig(config);
+}
+
+/**
+ * 保存 OAuth token 到配置文件
+ * @param tokenData OAuth token 数据
+ */
+export async function saveOAuthToken(tokenData: OAuthTokenData): Promise<void> {
+  await updateConfig({
+    oauth: tokenData,
+    // 同时更新 token 字段以保持向后兼容
+    token: tokenData.accessToken,
+  });
+}
+
+/**
+ * 获取 OAuth token
+ * @returns OAuth token 数据，如果不存在则返回 undefined
+ */
+export function getOAuthToken(): OAuthTokenData | undefined {
+  const config = readConfigSync();
+  return config.oauth;
+}
+
+/**
+ * 检查 OAuth token 是否存在且有效（未过期）
+ * @param bufferSeconds 提前多少秒判定为过期（默认 300 秒 = 5 分钟）
+ * @returns true 表示 token 存在且未过期
+ */
+export function isOAuthTokenValid(bufferSeconds = 300): boolean {
+  const tokenData = getOAuthToken();
+  if (!tokenData) {
+    return false;
+  }
+
+  const now = Date.now();
+  const bufferMs = bufferSeconds * 1000;
+  return tokenData.expiresAt - bufferMs > now;
+}
+
+/**
+ * 删除 OAuth token
+ */
+export async function removeOAuthToken(): Promise<void> {
+  const config = await readConfig();
+  const oauthAccessToken = config.oauth?.accessToken;
+  delete config.oauth;
+  // 如果 token 字段是 OAuth access token，也删除
+  if (oauthAccessToken && config.token === oauthAccessToken) {
+    delete config.token;
+  }
+  await writeConfig(config);
+}
+
+/**
+ * 获取认证类型
+ * @returns 'oauth', 'token', 或 'none'
+ */
+export function getAuthType(): 'oauth' | 'token' | 'none' {
+  const config = readConfigSync();
+  if (config.oauth) return 'oauth';
+  if (config.token) return 'token';
+  return 'none';
 }

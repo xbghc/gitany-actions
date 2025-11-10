@@ -8,6 +8,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/Home.vue'),
     meta: { title: '首页' },
   },
+  {
+    path: '/oauth/callback',
+    name: 'OAuthCallback',
+    component: () => import('@/views/OAuthCallback.vue'),
+    meta: { title: 'OAuth 授权成功' },
+  },
 ];
 
 const router = createRouter({
