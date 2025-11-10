@@ -128,37 +128,6 @@ export const useRepoStore = defineStore('repo', () => {
     }
   };
 
-  // 兼容旧版本：从旧的 localStorage 数据迁移
-  const migrateFromOldStorage = () => {
-    const oldOwner = localStorage.getItem('current_owner');
-    const oldRepo = localStorage.getItem('current_repo');
-
-    if (oldOwner && oldRepo && repoList.value.length === 0) {
-      addRepo(oldOwner, oldRepo);
-      // 清除旧数据
-      localStorage.removeItem('current_owner');
-      localStorage.removeItem('current_repo');
-    }
-  };
-
-  // 向后兼容：setCurrentRepo
-  const setCurrentRepo = (owner: string, repo: string) => {
-    const id = generateRepoId(owner, repo);
-    const existingRepo = repoList.value.find((r) => r.id === id);
-
-    if (existingRepo) {
-      selectRepo(id);
-    } else {
-      addRepo(owner, repo);
-    }
-  };
-
-  // 从 localStorage 恢复（向后兼容）
-  const restoreFromStorage = () => {
-    loadRepos();
-    migrateFromOldStorage();
-  };
-
   return {
     // 状态
     repoList,
@@ -173,9 +142,5 @@ export const useRepoStore = defineStore('repo', () => {
     selectRepo,
     loadRepos,
     saveRepos,
-
-    // 兼容旧版本
-    setCurrentRepo,
-    restoreFromStorage,
   };
 });
