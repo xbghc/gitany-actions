@@ -77,10 +77,27 @@ export {
   type UserSummary,
 } from './api/user/index.js';
 export { GitCodeClientAuth } from './client/auth/index.js';
+export { OAuthClient } from './client/auth/oauth.js';
 export { GitCodeClient } from './client/index.js';
 export { extractRepoRoleFromSelfPermission } from './client/repo/permission.js';
 export type { RepoRole } from './types/repo-role.js';
 export * from './utils/index.js';
+
+// OAuth 相关类型导出
+export {
+  OAuthError,
+  OAuthTokenExpiredError,
+  oauthTokenResponseSchema,
+  oauthErrorResponseSchema,
+} from './types/oauth.js';
+export type {
+  OAuthConfig,
+  OAuthTokenResponse,
+  OAuthTokenState,
+  AuthorizationUrlOptions,
+  AuthorizationUrlResult,
+  OAuthErrorResponse,
+} from './types/oauth.js';
 
 // 新的仓库相关类型导出
 export {

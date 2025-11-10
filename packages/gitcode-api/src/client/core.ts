@@ -21,19 +21,32 @@ export class GitCodeClient {
   private rateLimitedUntil: number = 0;
 
   constructor(token?: string, customHttp?: Got) {
+    // 先初始化 auth（在配置 http 之前）
+    this.auth = new GitCodeClientAuth(this, token);
+
     if (customHttp) {
       // 使用外部传入的 got 实例
       this.http = customHttp;
     } else {
-      // 创建默认的 got 实例，包含 rate limiting 处理
+      // 创建默认的 got 实例，包含 OAuth 支持和 rate limiting 处理
       this.http = got.extend({
         headers: {
           accept: 'application/json',
-          ...(token && { authorization: `Bearer ${token}` }),
         },
         hooks: {
           beforeRequest: [
-            () => {
+            async (options) => {
+              // 动态设置 authorization header（支持 OAuth 自动刷新）
+              try {
+                const validToken = await this.auth.getValidToken();
+                if (validToken) {
+                  options.headers.authorization = `Bearer ${validToken}`;
+                }
+              } catch {
+                // 如果获取 token 失败，继续发送请求（可能是公开 API）
+                // 实际的认证错误会在 API 响应中处理
+              }
+
               // 检查是否还在限流中
               const now = Date.now();
               if (this.rateLimitedUntil > now) {
@@ -67,7 +80,6 @@ export class GitCodeClient {
         },
       });
     }
-    this.auth = new GitCodeClientAuth(this, token);
   }
 
   /**
