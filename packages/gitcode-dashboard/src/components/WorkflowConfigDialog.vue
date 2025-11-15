@@ -88,7 +88,7 @@
               :model-value="key"
               placeholder="变量名"
               style="width: 200px"
-              @input="(val) => updateEnvKey(key, val)"
+              @input="(val: string) => updateEnvKey(key, val)"
             />
             <span class="env-separator">=</span>
             <el-input v-model="formData.env[key]" placeholder="变量值" style="flex: 1" clearable />

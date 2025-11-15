@@ -10,6 +10,8 @@ export const useActivityStore = defineStore('activity', () => {
   // 状态
   const activityList = ref<ActivityItem[]>([]);
   const loading = ref(false);
+  const loadingMore = ref(false);
+  const hasMore = ref(true);
   const filters = ref<ActivityFilterParams>({
     filter: 'all',
     page: 1,
@@ -43,26 +45,48 @@ export const useActivityStore = defineStore('activity', () => {
 
   /**
    * 获取活动列表
+   * @param append 是否追加到现有列表（用于无限滚动）
    */
-  const fetchActivityList = async () => {
+  const fetchActivityList = async (append = false) => {
     const selectedRepo = repoStore.selectedRepo;
     if (!selectedRepo) return;
 
     const { owner, repo } = selectedRepo;
     if (!owner || !repo) return;
 
-    loading.value = true;
+    if (append) {
+      loadingMore.value = true;
+    } else {
+      loading.value = true;
+    }
 
     try {
       const response = await getRepoEvents(owner, repo, filters.value);
       if (response.success && response.data) {
-        activityList.value = response.data.events.map(toActivityItem);
+        const newItems = response.data.events.map(toActivityItem);
+
+        if (append) {
+          activityList.value = [...activityList.value, ...newItems];
+        } else {
+          activityList.value = newItems;
+        }
+
+        // 判断是否还有更多数据
+        // 如果返回的数据少于请求的数量，说明没有更多数据了
+        hasMore.value = newItems.length >= (filters.value.per_page || 20);
       }
     } catch (error) {
       console.error('Failed to fetch activity list:', error);
-      activityList.value = [];
+      if (!append) {
+        activityList.value = [];
+      }
+      hasMore.value = false;
     } finally {
-      loading.value = false;
+      if (append) {
+        loadingMore.value = false;
+      } else {
+        loading.value = false;
+      }
     }
   };
 
@@ -71,6 +95,7 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const refresh = () => {
     filters.value.page = 1;
+    hasMore.value = true;
     fetchActivityList();
   };
 
@@ -79,6 +104,7 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const updateFilters = (newFilters: Partial<ActivityFilterParams>) => {
     filters.value = { ...filters.value, ...newFilters };
+    hasMore.value = true;
     fetchActivityList();
   };
 
@@ -88,6 +114,18 @@ export const useActivityStore = defineStore('activity', () => {
   const changePage = (page: number) => {
     filters.value.page = page;
     fetchActivityList();
+  };
+
+  /**
+   * 加载更多数据（无限滚动）
+   */
+  const loadMore = async () => {
+    if (loadingMore.value || !hasMore.value) {
+      return;
+    }
+
+    filters.value.page = (filters.value.page || 1) + 1;
+    await fetchActivityList(true);
   };
 
   // 监听仓库切换
@@ -105,10 +143,13 @@ export const useActivityStore = defineStore('activity', () => {
   return {
     activityList,
     loading,
+    loadingMore,
+    hasMore,
     filters,
     fetchActivityList,
     refresh,
     updateFilters,
     changePage,
+    loadMore,
   };
 });

@@ -46,26 +46,23 @@
           <ActivityCard :activity="activity" />
         </el-timeline-item>
       </el-timeline>
-    </div>
 
-    <!-- 分页 -->
-    <div v-if="activityStore.activityList.length > 0" class="pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="prev, pager, next, sizes"
-        :total="1000"
-        @current-change="handlePageChange"
-        @size-change="handleSizeChange"
-      />
+      <!-- 加载更多提示 -->
+      <div v-if="activityStore.activityList.length > 0" class="loading-more">
+        <el-text v-if="activityStore.loadingMore" type="info">
+          <el-icon class="is-loading"><Loading /></el-icon>
+          加载中...
+        </el-text>
+        <el-text v-else-if="!activityStore.hasMore" type="info"> 没有更多数据了 </el-text>
+      </div>
     </div>
   </el-card>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Refresh } from '@element-plus/icons-vue';
+import { Refresh, Loading } from '@element-plus/icons-vue';
+import { useInfiniteScroll } from '@vueuse/core';
 import { useActivityStore } from '@/store';
 import { useActivityTime } from './useActivityTime';
 import ActivityCard from './ActivityCard.vue';
@@ -73,10 +70,8 @@ import type { RepoEvent } from '@/types';
 
 const activityStore = useActivityStore();
 
-// 筛选和分页状态
+// 筛选状态
 const currentFilter = ref<string>('all');
-const currentPage = ref(1);
-const pageSize = ref(20);
 
 // 全局时间显示模式：所有时间戳统一显示
 const timeDisplayMode = ref<'relative' | 'absolute'>('relative');
@@ -126,19 +121,21 @@ const toggleTimeFormat = () => {
 // 处理筛选变化
 const handleFilterChange = (filter: string) => {
   activityStore.updateFilters({ filter: filter as any, page: 1 });
-  currentPage.value = 1;
 };
 
-// 处理页码变化
-const handlePageChange = (page: number) => {
-  activityStore.changePage(page);
-};
-
-// 处理每页数量变化
-const handleSizeChange = (size: number) => {
-  activityStore.updateFilters({ per_page: size, page: 1 });
-  currentPage.value = 1;
-};
+// 无限滚动
+useInfiniteScroll(
+  () => document.querySelector('.app-main') as HTMLElement | null,
+  () => {
+    if (!activityStore.loadingMore && activityStore.hasMore) {
+      activityStore.loadMore();
+    }
+  },
+  {
+    distance: 500, // 提前 500px 触发
+    interval: 100, // 节流间隔
+  },
+);
 
 // 初始化
 onMounted(() => {
@@ -200,11 +197,13 @@ onMounted(() => {
   text-decoration: none;
 }
 
-.pagination {
+.loading-more {
   display: flex;
   justify-content: center;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e4e7ed;
+  align-items: center;
+  padding: 20px;
+  text-align: center;
+  color: #909399;
+  font-size: 14px;
 }
 </style>
