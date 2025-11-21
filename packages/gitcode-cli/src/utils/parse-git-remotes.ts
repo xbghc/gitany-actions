@@ -1,12 +1,4 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
-export interface GitRemote {
-  name: string;
-  url: string;
-  fetch?: string;
-  isGitCode: boolean;
-}
+import simpleGit from 'simple-git';
 
 /**
  * Check if a URL belongs to GitCode platform
@@ -18,73 +10,40 @@ export function isGitCodeUrl(url: string): boolean {
 }
 
 /**
- * Parse .git/config file and extract all remote configurations
+ * Parse git remotes via simple-git
  * @param cwd - Current working directory (defaults to process.cwd())
  * @returns Array of git remotes with name, url, and optional fetch config
  */
-export function parseGitRemotes(cwd: string = process.cwd()): GitRemote[] {
-  const gitConfigPath = path.join(cwd, '.git', 'config');
+export async function parseGitRemotes(
+  cwd: string = process.cwd(),
+): Promise<Array<{ name: string; url: string; fetch?: string; isGitCode: boolean }>> {
+  try {
+    const git = simpleGit({ baseDir: cwd });
+    const isRepo = await git.checkIsRepo();
+    if (!isRepo) {
+      return [];
+    }
 
-  // If not in a git repository, return empty array
-  if (!fs.existsSync(gitConfigPath)) {
+    const remotes = await git.getRemotes(true);
+    return remotes.reduce<Array<{ name: string; url: string; fetch?: string; isGitCode: boolean }>>(
+      (parsed, remote) => {
+        const url = remote.refs.fetch || remote.refs.push;
+
+        if (url) {
+          parsed.push({
+            name: remote.name,
+            url,
+            fetch: remote.refs.fetch,
+            isGitCode: isGitCodeUrl(url),
+          });
+        }
+
+        return parsed;
+      },
+      [],
+    );
+  } catch {
+    // If git commands fail (e.g., not a repo), return empty
     return [];
   }
-
-  const content = fs.readFileSync(gitConfigPath, 'utf-8');
-  const lines = content.split('\n');
-
-  const remotes: GitRemote[] = [];
-  let currentRemote: Partial<GitRemote> | null = null;
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-
-    // Check for [remote "name"] section
-    const remoteMatch =
-      trimmed.match(/^\[remote\s+"([^"]+)"\]$/) || trimmed.match(/^\[remote\s+'([^']+)'\]$/);
-    if (remoteMatch) {
-      // Save previous remote if exists
-      if (currentRemote && currentRemote.name && currentRemote.url) {
-        remotes.push(currentRemote as GitRemote);
-      }
-      // Start new remote
-      currentRemote = { name: remoteMatch[1] };
-      continue;
-    }
-
-    // If we hit another section, save current remote and reset
-    if (trimmed.startsWith('[') && currentRemote) {
-      if (currentRemote.name && currentRemote.url) {
-        remotes.push(currentRemote as GitRemote);
-      }
-      currentRemote = null;
-      continue;
-    }
-
-    // Extract url and fetch from current remote section
-    if (currentRemote) {
-      const urlMatch = trimmed.match(/^url\s*=\s*(.+)$/);
-      if (urlMatch) {
-        currentRemote.url = urlMatch[1].trim();
-        continue;
-      }
-
-      const fetchMatch = trimmed.match(/^fetch\s*=\s*(.+)$/);
-      if (fetchMatch) {
-        currentRemote.fetch = fetchMatch[1].trim();
-        continue;
-      }
-    }
-  }
-
-  // Don't forget the last remote
-  if (currentRemote && currentRemote.name && currentRemote.url) {
-    remotes.push(currentRemote as GitRemote);
-  }
-
-  // Add isGitCode field to all remotes
-  return remotes.map((remote) => ({
-    ...remote,
-    isGitCode: isGitCodeUrl(remote.url),
-  }));
 }
