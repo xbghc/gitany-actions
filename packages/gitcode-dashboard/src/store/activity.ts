@@ -4,6 +4,13 @@ import { getRepoEvents } from '@/api';
 import type { ActivityItem, ActivityFilterParams, RepoEvent } from '@/types';
 import { useRepoStore } from './repo';
 
+interface CacheEntry {
+  data: RepoEvent[];
+  timestamp: number;
+}
+
+const TTL = 3 * 60 * 1000; // 3 minutes
+
 export const useActivityStore = defineStore('activity', () => {
   const repoStore = useRepoStore();
 
@@ -17,6 +24,27 @@ export const useActivityStore = defineStore('activity', () => {
     page: 1,
     per_page: 20,
   });
+
+  // 缓存
+  const cache = new Map<string, CacheEntry>();
+
+  /**
+   * 生成缓存 Key
+   */
+  const getCacheKey = (owner: string, repo: string, params: ActivityFilterParams) => {
+    // 确保参数顺序一致以保证缓存命中
+    const sortedParams = Object.keys(params)
+      .sort()
+      .reduce((obj, key) => {
+        const value = params[key as keyof ActivityFilterParams];
+        if (value !== undefined && value !== null) {
+          obj[key] = String(value);
+        }
+        return obj;
+      }, {} as Record<string, string>);
+    const queryString = new URLSearchParams(sortedParams).toString();
+    return `/api/repo/${owner}/${repo}/events?${queryString}`;
+  };
 
   /**
    * 将 RepoEvent 转换为 ActivityItem
@@ -44,6 +72,40 @@ export const useActivityStore = defineStore('activity', () => {
   };
 
   /**
+   * 查询活动列表（带缓存）
+   */
+  const queryActivityList = async (
+    owner: string,
+    repo: string,
+    params: ActivityFilterParams,
+  ): Promise<RepoEvent[]> => {
+    const key = getCacheKey(owner, repo, params);
+    const cached = cache.get(key);
+
+    // 检查缓存是否有效
+    if (cached && Date.now() - cached.timestamp < TTL) {
+      return cached.data;
+    }
+
+    try {
+      const response = await getRepoEvents(owner, repo, params);
+      if (response.success && response.data) {
+        // 写入缓存
+        cache.set(key, {
+          data: response.data.events,
+          timestamp: Date.now(),
+        });
+        return response.data.events;
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error('获取活动列表失败:', error);
+      }
+    }
+    return [];
+  };
+
+  /**
    * 获取活动列表
    * @param append 是否追加到现有列表（用于无限滚动）
    */
@@ -61,20 +123,18 @@ export const useActivityStore = defineStore('activity', () => {
     }
 
     try {
-      const response = await getRepoEvents(owner, repo, filters.value);
-      if (response.success && response.data) {
-        const newItems = response.data.events.map(toActivityItem);
+      const events = await queryActivityList(owner, repo, filters.value);
+      const newItems = events.map(toActivityItem);
 
-        if (append) {
-          activityList.value = [...activityList.value, ...newItems];
-        } else {
-          activityList.value = newItems;
-        }
-
-        // 判断是否还有更多数据
-        // 如果返回的数据少于请求的数量，说明没有更多数据了
-        hasMore.value = newItems.length >= (filters.value.per_page || 20);
+      if (append) {
+        activityList.value = [...activityList.value, ...newItems];
+      } else {
+        activityList.value = newItems;
       }
+
+      // 判断是否还有更多数据
+      // 如果返回的数据少于请求的数量，说明没有更多数据了
+      hasMore.value = newItems.length >= (filters.value.per_page || 20);
     } catch (error) {
       console.error('Failed to fetch activity list:', error);
       if (!append) {
@@ -146,6 +206,7 @@ export const useActivityStore = defineStore('activity', () => {
     loadingMore,
     hasMore,
     filters,
+    queryActivityList,
     fetchActivityList,
     refresh,
     updateFilters,

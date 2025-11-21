@@ -87,7 +87,7 @@
       <WorkflowLogViewer v-model:visible="logViewerVisible" :workflow-id="currentWorkflowId" />
 
       <!-- 分页 -->
-      <div class="pagination">
+      <div class="pagination" @mouseover="handlePaginationMouseOver">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -165,6 +165,21 @@ const handleRefresh = async () => {
 
 const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN');
+};
+
+const handlePaginationMouseOver = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  const nextBtn = target.closest('.btn-next');
+
+  if (nextBtn && !nextBtn.hasAttribute('disabled') && nextBtn.getAttribute('aria-disabled') !== 'true') {
+    const perPage = filters.value.per_page || 20;
+    const maxPage = Math.ceil(totalCount.value / perPage);
+    const nextPage = (filters.value.page || 1) + 1;
+
+    if (nextPage <= maxPage) {
+      prStore.queryPRList(nextPage);
+    }
+  }
 };
 
 /**
