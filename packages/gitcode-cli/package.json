@@ -48,7 +48,9 @@
     "@inquirer/prompts": "^7.10.0",
     "@xbghc/gitcode-api": "workspace:*",
     "commander": "^14.0.0",
-    "open": "^10.1.0"
+    "conf": "^15.0.2",
+    "open": "^10.1.0",
+    "simple-git": "^3.30.0"
   },
   "engines": {
     "node": ">=22.0.0"

@@ -28,11 +28,6 @@
           <el-form-item>
             <el-button :icon="RefreshRight" @click="handleRefresh">刷新</el-button>
           </el-form-item>
-          <el-form-item>
-            <span class="last-update-time"
-              >最后更新: {{ formatRelativeTime(lastCacheTimestamp) }}</span
-            >
-          </el-form-item>
         </el-form>
       </div>
 
@@ -76,7 +71,7 @@
       <EmptyState v-if="!loading && issueList.length === 0" description="暂无 Issue" />
 
       <!-- 分页 -->
-      <div class="pagination">
+      <div class="pagination" @mouseover="handlePaginationMouseOver">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -84,7 +79,6 @@
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleFilterChange"
-          @current-change="handlePageChange"
         />
       </div>
     </el-card>
@@ -129,15 +123,12 @@ import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import { ElMessage } from 'element-plus';
-import { formatRelativeTime } from '@/utils/timeFormatter';
 
 const issueStore = useIssueStore();
 const repoStore = useRepoStore();
 
-// 使用 storeToRefs 解构响应式状态
-const { issueList, loading, filters, issueCount, lastCacheTimestamp } = storeToRefs(issueStore);
-// 方法可以直接解构
-const { fetchIssueList, clearCache } = issueStore;
+const { issueList, loading, filters, issueCount } = storeToRefs(issueStore);
+const { fetchIssueList } = issueStore;
 
 // 由于 store 中已经监听了 selectedRepoId 的变化，会自动加载数据
 // 这里只需要提供手动刷新的功能
@@ -169,26 +160,16 @@ const totalCount = computed(() => {
 });
 
 /**
- * 换页处理
- */
-const handlePageChange = () => {
-  // fetchIssueList 会自动从缓存读取并显示，无需额外处理
-  // store 中的 watch 会自动触发 displayFromCache
-};
-
-/**
  * 筛选变化
  */
 const handleFilterChange = () => {
   filters.value.page = 1;
-  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 刷新按钮：清空缓存并重新获取
+ * 刷新按钮：重新获取数据
  */
 const handleRefresh = async () => {
-  await clearCache();
   await fetchIssueList();
 };
 
@@ -208,9 +189,8 @@ const handleCreateIssue = async () => {
     createForm.title = '';
     createForm.body = '';
 
-    // 创建后：清空缓存并重新获取
+    // 创建后：重新获取数据
     filters.value.page = 1;
-    await clearCache();
     await fetchIssueList();
   } catch (error) {
     ElMessage.error('创建 Issue 失败');
@@ -222,6 +202,21 @@ const handleCreateIssue = async () => {
 
 const formatTime = (time: string) => {
   return new Date(time).toLocaleString('zh-CN');
+};
+
+const handlePaginationMouseOver = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  const nextBtn = target.closest('.btn-next');
+
+  if (nextBtn && !nextBtn.hasAttribute('disabled') && nextBtn.getAttribute('aria-disabled') !== 'true') {
+    const perPage = filters.value.per_page || 20;
+    const maxPage = Math.ceil(totalCount.value / perPage);
+    const nextPage = (filters.value.page || 1) + 1;
+
+    if (nextPage <= maxPage) {
+      issueStore.queryIssueList(nextPage);
+    }
+  }
 };
 </script>
 

@@ -22,7 +22,7 @@ export function authCommand(): Command {
     .argument('<token>', 'Authentication token')
     .action(async (token) => {
       try {
-        await saveToken(token.trim());
+        saveToken(token.trim());
         console.log('Token saved successfully');
         console.log(`Config file: ${getConfigPath()}`);
       } catch (err) {
@@ -36,7 +36,7 @@ export function authCommand(): Command {
     .description('Remove authentication token')
     .action(async () => {
       try {
-        await removeToken();
+        removeToken();
         console.log('Token removed successfully');
       } catch (err) {
         console.error('Failed to remove token:', err);
@@ -176,7 +176,7 @@ export function authCommand(): Command {
         const tokenResponse = await oauth.exchangeCodeForToken(code.trim());
 
         // 9. 保存到配置文件
-        await saveOAuthToken({
+        saveOAuthToken({
           accessToken: tokenResponse.access_token,
           refreshToken: tokenResponse.refresh_token,
           expiresAt: Date.now() + tokenResponse.expires_in * 1000,
@@ -221,8 +221,8 @@ export function authCommand(): Command {
           return;
         }
 
-        await removeToken();
-        await removeOAuthToken();
+        removeToken();
+        removeOAuthToken();
 
         console.log('✓ 已登出');
         console.log(`Config file: ${getConfigPath()}`);

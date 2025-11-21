@@ -24,9 +24,10 @@
     }
   },
   "dependencies": {
-    "@xbghc/gitcode-cli": "workspace:*",
     "@xbghc/gitcode-api": "workspace:*",
+    "@xbghc/gitcode-cli": "workspace:*",
     "dockerode": "^4.0.8",
+    "superjson": "^2.2.5",
     "tar": "^7.4.3"
   },
   "devDependencies": {
