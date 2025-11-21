@@ -67,6 +67,9 @@ importers:
       dockerode:
         specifier: ^4.0.8
         version: 4.0.8
+      superjson:
+        specifier: ^2.2.5
+        version: 2.2.5
       tar:
         specifier: ^7.4.3
         version: 7.4.3
@@ -3127,6 +3130,13 @@ packages:
       }
     engines: { node: '>=12.13' }
 
+  copy-anything@4.0.5:
+    resolution:
+      {
+        integrity: sha512-7Vv6asjS4gMOuILabD3l739tsaxFQmC+a7pLZm02zyvs8p977bL3zEgq3yDk5rn9B0PbYgIv++jmHcuUab4RhA==,
+      }
+    engines: { node: '>=18' }
+
   cors@2.8.5:
     resolution:
       {
@@ -4188,6 +4198,13 @@ packages:
         integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==,
       }
     engines: { node: '>=12.13' }
+
+  is-what@5.5.0:
+    resolution:
+      {
+        integrity: sha512-oG7cgbmg5kLYae2N5IVd3jm2s+vldjxJzK1pcu9LfpGuQ93MQSzo0okvRna+7y5ifrD+20FE8FvjusyGaz14fw==,
+      }
+    engines: { node: '>=18' }
 
   is-windows@1.0.2:
     resolution:
@@ -5517,6 +5534,13 @@ packages:
     resolution:
       {
         integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==,
+      }
+    engines: { node: '>=16' }
+
+  superjson@2.2.5:
+    resolution:
+      {
+        integrity: sha512-zWPTX96LVsA/eVYnqOM2+ofcdPqdS1dAF1LN4TS2/MWuUpfitd9ctTa87wt4xrYnZnkLtS69xpBdSxVBP5Rm6w==,
       }
     engines: { node: '>=16' }
 
@@ -8081,6 +8105,10 @@ snapshots:
     dependencies:
       is-what: 4.1.16
 
+  copy-anything@4.0.5:
+    dependencies:
+      is-what: 5.5.0
+
   cors@2.8.5:
     dependencies:
       object-assign: 4.1.1
@@ -8752,6 +8780,8 @@ snapshots:
       better-path-resolve: 1.0.0
 
   is-what@4.1.16: {}
+
+  is-what@5.5.0: {}
 
   is-windows@1.0.2: {}
 
@@ -9474,6 +9504,10 @@ snapshots:
   superjson@2.2.2:
     dependencies:
       copy-anything: 3.0.5
+
+  superjson@2.2.5:
+    dependencies:
+      copy-anything: 4.0.5
 
   supports-color@7.2.0:
     dependencies:

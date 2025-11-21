@@ -1,8 +1,8 @@
 import type { GitCodeClient } from '@xbghc/gitcode-api';
+import type { SuperJSONValue } from 'superjson';
 import type { EventDataMap, EventName } from '../../types/events.js';
 import { getRepoStateDir } from '../../utils/index.js';
 import { FileStateStorage } from '../file-state-storage.js';
-import { createSmartSerializer, type StateSerializer } from '../state-serializer.js';
 import type { StateStorage } from '../state-storage.js';
 
 const DEFAULT_INTERVAL_SEC = 5;
@@ -41,15 +41,23 @@ export interface PollContext {
  * @param context - 轮询上下文
  * @param emit - 事件发射函数
  * @returns 新状态
+ *
+ * @remarks
+ * `TState` 约束为 `SuperJSONValue`，保证轮询函数与文件存储使用的 SuperJSON
+ * 序列化器兼容；依然保持泛型形态，以便按具体状态结构获得类型推断。
  */
-export type PollFn<TState> = (state: TState, context: PollContext, emit: EmitFn) => Promise<TState>;
+export type PollFn<TState extends SuperJSONValue> = (
+  state: TState,
+  context: PollContext,
+  emit: EmitFn,
+) => Promise<TState>;
 
 /**
  * 资源执行器 - 通用的轮询和状态管理
  *
  * @internal 内部使用，不导出到公共 API
  */
-export class ResourceRunner<TState> implements IResourceRunner {
+export class ResourceRunner<TState extends SuperJSONValue> implements IResourceRunner {
   private state: TState;
   private intervalId: ReturnType<typeof setInterval> | null = null;
   private readonly storage: StateStorage<TState>;
@@ -63,11 +71,10 @@ export class ResourceRunner<TState> implements IResourceRunner {
     private readonly context: PollContext,
     private readonly emitFn: EmitFn,
     intervalSec?: number,
-    serializer: StateSerializer<TState> = createSmartSerializer(),
   ) {
     this.intervalMs = 1000 * (intervalSec ?? DEFAULT_INTERVAL_SEC);
     this.storageKey = getRepoStateDir(context.url);
-    this.storage = new FileStateStorage(type, serializer);
+    this.storage = new FileStateStorage(type);
     this.state = this.loadState();
   }
 

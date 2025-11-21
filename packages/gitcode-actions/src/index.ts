@@ -18,8 +18,6 @@ export type {
 
 // Storage interfaces (Advanced usage)
 export type { StateStorage } from './watcher/state-storage.js';
-export type { StateSerializer } from './watcher/state-serializer.js';
-export { createSmartSerializer } from './watcher/state-serializer.js';
 export { FileStateStorage } from './watcher/file-state-storage.js';
 export { MemoryStateStorage } from './watcher/memory-state-storage.js';
 
