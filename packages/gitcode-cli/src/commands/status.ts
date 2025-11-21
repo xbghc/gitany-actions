@@ -1,10 +1,12 @@
 import { withClient } from '../utils/with-client.js';
-import { parseGitRemotes, type GitRemote } from '../utils/parse-git-remotes.js';
+import { parseGitRemotes } from '../utils/parse-git-remotes.js';
 import type { UserProfile } from '@xbghc/gitcode-api';
 
 interface StatusOptions {
   json?: boolean;
 }
+
+type GitRemote = Awaited<ReturnType<typeof parseGitRemotes>>[number];
 
 interface StatusOutput {
   user: {
@@ -23,7 +25,7 @@ export async function statusCommand(options: StatusOptions = {}): Promise<void> 
     const userProfile: UserProfile = await client.user.getProfile();
 
     // Try to get git remotes (will be empty if not in a git repo)
-    const remotes = parseGitRemotes();
+    const remotes = await parseGitRemotes();
 
     if (options.json) {
       // JSON output
