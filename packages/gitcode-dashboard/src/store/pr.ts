@@ -1,7 +1,7 @@
+import { getPRCount, getPRList } from '@/api';
+import type { PRFilterParams, PrCount, PullRequest } from '@/types';
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
-import type { PullRequest, PRFilterParams, PrCount } from '@/types';
-import { getPRList, getPRCount } from '@/api';
+import { computed, ref, watch } from 'vue';
 import { useRepoStore } from './repo';
 
 interface CacheEntry {
@@ -21,8 +21,13 @@ export const usePRStore = defineStore('pr', () => {
   // 缓存
   const cache = new Map<string, CacheEntry>();
 
-  // PR 数量统计
-  const prCount = ref<PrCount | null>(null);
+  // PR 数量统计缓存（按仓库缓存）
+  const prCountCache = ref(new Map<string, PrCount>());
+  const prCount = computed(() => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return null;
+    const key = `${repoStore.currentOwner}/${repoStore.currentRepo}`;
+    return prCountCache.value.get(key) ?? null;
+  });
   const countLoading = ref(false);
 
   // 筛选参数（默认 open 状态，降序）
@@ -41,13 +46,16 @@ export const usePRStore = defineStore('pr', () => {
     // 确保参数顺序一致以保证缓存命中
     const sortedParams = Object.keys(params)
       .sort()
-      .reduce((obj, key) => {
-        const value = params[key as keyof PRFilterParams];
-        if (value !== undefined && value !== null) {
-          obj[key] = String(value);
-        }
-        return obj;
-      }, {} as Record<string, string>);
+      .reduce(
+        (obj, key) => {
+          const value = params[key as keyof PRFilterParams];
+          if (value !== undefined && value !== null) {
+            obj[key] = String(value);
+          }
+          return obj;
+        },
+        {} as Record<string, string>,
+      );
     const queryString = new URLSearchParams(sortedParams).toString();
     return `/api/repo/${owner}/${repo}/pulls?${queryString}`;
   };
@@ -123,21 +131,21 @@ export const usePRStore = defineStore('pr', () => {
   // 获取 PR 数量统计
   const fetchPRCount = async () => {
     if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      prCount.value = null;
       return;
     }
 
+    const key = `${repoStore.currentOwner}/${repoStore.currentRepo}`;
     countLoading.value = true;
     try {
       const response = await getPRCount(repoStore.currentOwner, repoStore.currentRepo);
       if (response.data) {
-        prCount.value = response.data;
+        prCountCache.value.set(key, response.data);
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('获取 PR 数量失败:', error);
       }
-      prCount.value = null;
+      prCountCache.value.delete(key);
     } finally {
       countLoading.value = false;
     }
@@ -175,7 +183,6 @@ export const usePRStore = defineStore('pr', () => {
       if (newRepoId) {
         // 1. 立即清空旧数据
         prList.value = [];
-        prCount.value = null;
 
         // 2. 重置筛选条件为 open
         resetFilters();
@@ -188,7 +195,6 @@ export const usePRStore = defineStore('pr', () => {
         await fetchPRList();
       } else {
         prList.value = [];
-        prCount.value = null;
         loading.value = false;
       }
     },

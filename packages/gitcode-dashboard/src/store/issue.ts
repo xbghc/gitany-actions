@@ -1,7 +1,7 @@
+import { getIssueCount, getIssueList } from '@/api';
+import type { Issue, IssueCount, IssueFilterParams } from '@/types';
 import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
-import type { Issue, IssueFilterParams, IssueCount } from '@/types';
-import { getIssueList, getIssueCount } from '@/api';
+import { computed, ref, watch } from 'vue';
 import { useRepoStore } from './repo';
 
 interface CacheEntry {
@@ -21,8 +21,13 @@ export const useIssueStore = defineStore('issue', () => {
   // 缓存
   const cache = new Map<string, CacheEntry>();
 
-  // Issue 数量统计
-  const issueCount = ref<IssueCount | null>(null);
+  // Issue 数量统计缓存（按仓库缓存）
+  const issueCountCache = ref(new Map<string, IssueCount>());
+  const issueCount = computed(() => {
+    if (!repoStore.currentOwner || !repoStore.currentRepo) return null;
+    const key = `${repoStore.currentOwner}/${repoStore.currentRepo}`;
+    return issueCountCache.value.get(key) ?? null;
+  });
   const countLoading = ref(false);
 
   // 筛选参数（默认 open 状态，降序）
@@ -41,13 +46,16 @@ export const useIssueStore = defineStore('issue', () => {
     // 确保参数顺序一致以保证缓存命中
     const sortedParams = Object.keys(params)
       .sort()
-      .reduce((obj, key) => {
-        const value = params[key as keyof IssueFilterParams];
-        if (value !== undefined && value !== null) {
-          obj[key] = String(value);
-        }
-        return obj;
-      }, {} as Record<string, string>);
+      .reduce(
+        (obj, key) => {
+          const value = params[key as keyof IssueFilterParams];
+          if (value !== undefined && value !== null) {
+            obj[key] = String(value);
+          }
+          return obj;
+        },
+        {} as Record<string, string>,
+      );
     const queryString = new URLSearchParams(sortedParams).toString();
     return `/api/repo/${owner}/${repo}/issues?${queryString}`;
   };
@@ -123,21 +131,21 @@ export const useIssueStore = defineStore('issue', () => {
   // 获取 Issue 数量统计
   const fetchIssueCount = async () => {
     if (!repoStore.currentOwner || !repoStore.currentRepo) {
-      issueCount.value = null;
       return;
     }
 
+    const key = `${repoStore.currentOwner}/${repoStore.currentRepo}`;
     countLoading.value = true;
     try {
       const response = await getIssueCount(repoStore.currentOwner, repoStore.currentRepo);
       if (response.data) {
-        issueCount.value = response.data;
+        issueCountCache.value.set(key, response.data);
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('获取 Issue 数量失败:', error);
       }
-      issueCount.value = null;
+      issueCountCache.value.delete(key);
     } finally {
       countLoading.value = false;
     }
@@ -175,7 +183,6 @@ export const useIssueStore = defineStore('issue', () => {
       if (newRepoId) {
         // 1. 立即清空旧数据
         issueList.value = [];
-        issueCount.value = null;
 
         // 2. 重置筛选条件为 open
         resetFilters();
@@ -188,7 +195,6 @@ export const useIssueStore = defineStore('issue', () => {
         await fetchIssueList();
       } else {
         issueList.value = [];
-        issueCount.value = null;
         loading.value = false;
       }
     },
