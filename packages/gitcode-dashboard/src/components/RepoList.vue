@@ -11,6 +11,8 @@
         class="repo-item"
         :class="{ active: repo.id === repoStore.selectedRepoId }"
         @click="handleSelectRepo(repo.id)"
+        @mouseenter="handleMouseEnter(repo)"
+        @mouseleave="handleMouseLeave"
       >
         <div class="repo-info">
           <el-icon class="repo-icon"><Folder /></el-icon>
@@ -77,11 +79,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRepoStore } from '@/store';
+import { useRepoStore, useActivityStore } from '@/store';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Folder, Plus, Close } from '@element-plus/icons-vue';
 
 const repoStore = useRepoStore();
+const activityStore = useActivityStore();
 
 const showAddDialog = ref(false);
 const hoveredRepoId = ref<string | null>(null);
@@ -118,6 +121,20 @@ const handleRepoUrlChange = () => {
     addForm.owner = simpleMatch[1];
     addForm.repo = simpleMatch[2];
   }
+};
+
+const handleMouseEnter = (repo: { id: string; owner: string; repo: string }) => {
+  hoveredRepoId.value = repo.id;
+  // Prefetch activity list
+  // 使用当前筛选条件（但重置页码为 1），以匹配切换仓库后的请求行为
+  activityStore.queryActivityList(repo.owner, repo.repo, {
+    ...activityStore.filters,
+    page: 1,
+  });
+};
+
+const handleMouseLeave = () => {
+  hoveredRepoId.value = null;
 };
 
 const handleSelectRepo = (id: string) => {
