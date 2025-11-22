@@ -28,7 +28,7 @@
     </div>
 
     <!-- 活动时间轴 -->
-    <div v-loading="activityStore.loading" class="timeline-wrapper">
+    <div ref="timelineRef" v-loading="activityStore.loading" class="timeline-wrapper">
       <el-empty
         v-if="!activityStore.loading && activityStore.activityList.length === 0"
         description="暂无活动"
@@ -73,10 +73,17 @@ const activityStore = useActivityStore();
 // 筛选状态
 const currentFilter = ref<string>('all');
 
+// 滚动容器引用
+const timelineRef = ref<HTMLElement | null>(null);
+
 // 全局时间显示模式：所有时间戳统一显示
 const timeDisplayMode = ref<'relative' | 'absolute'>('relative');
 
-// 获取 timeline 节点颜色
+/**
+ * 获取 timeline 节点颜色
+ * @param activity - 活动事件对象
+ * @returns 对应的颜色代码
+ */
 const getTimelineColor = (activity: RepoEvent): string => {
   // Push 事件
   if (activity.action_name.toLowerCase().includes('push') && activity.push_data) {
@@ -94,7 +101,11 @@ const getTimelineColor = (activity: RepoEvent): string => {
   return '#909399'; // 灰色
 };
 
-// 格式化时间戳
+/**
+ * 格式化时间戳
+ * @param createdAt - 创建时间字符串
+ * @returns 格式化后的时间字符串
+ */
 const formatTimestamp = (createdAt: string): string => {
   if (timeDisplayMode.value === 'relative') {
     // 相对时间
@@ -113,19 +124,24 @@ const formatTimestamp = (createdAt: string): string => {
   }
 };
 
-// 切换时间格式（全局切换）
+/**
+ * 切换时间格式（全局切换）
+ */
 const toggleTimeFormat = () => {
   timeDisplayMode.value = timeDisplayMode.value === 'relative' ? 'absolute' : 'relative';
 };
 
-// 处理筛选变化
+/**
+ * 处理筛选变化
+ * @param filter - 筛选类型
+ */
 const handleFilterChange = (filter: string) => {
   activityStore.updateFilters({ filter: filter as any, page: 1 });
 };
 
 // 无限滚动
 useInfiniteScroll(
-  () => document.querySelector('.app-main') as HTMLElement | null,
+  timelineRef,
   () => {
     if (!activityStore.loadingMore && activityStore.hasMore) {
       activityStore.loadMore();

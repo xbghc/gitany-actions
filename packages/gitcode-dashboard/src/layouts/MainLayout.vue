@@ -179,6 +179,12 @@ onMounted(() => {
   flex-direction: column;
 }
 
+.content-tabs :deep(.el-tab-pane) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
