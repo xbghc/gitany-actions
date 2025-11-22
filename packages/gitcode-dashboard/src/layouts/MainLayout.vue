@@ -119,7 +119,7 @@ onMounted(() => {
 .app-main {
   background-color: #f5f5f5;
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
   height: 100%;
 }
 
@@ -136,6 +136,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background-color: #fff;
+  overflow: hidden;
 }
 
 .repo-header {
@@ -177,6 +178,12 @@ onMounted(() => {
   padding: 24px;
   display: flex;
   flex-direction: column;
+}
+
+.content-tabs :deep(.el-tab-pane) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .fade-enter-active,

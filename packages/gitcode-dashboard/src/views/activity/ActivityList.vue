@@ -28,7 +28,7 @@
     </div>
 
     <!-- 活动时间轴 -->
-    <div v-loading="activityStore.loading" class="timeline-wrapper">
+    <div ref="timelineRef" v-loading="activityStore.loading" class="timeline-wrapper">
       <el-empty
         v-if="!activityStore.loading && activityStore.activityList.length === 0"
         description="暂无活动"
@@ -123,9 +123,11 @@ const handleFilterChange = (filter: string) => {
   activityStore.updateFilters({ filter: filter as any, page: 1 });
 };
 
+const timelineRef = ref<HTMLElement | null>(null);
+
 // 无限滚动
 useInfiniteScroll(
-  () => document.querySelector('.app-main') as HTMLElement | null,
+  timelineRef,
   () => {
     if (!activityStore.loadingMore && activityStore.hasMore) {
       activityStore.loadMore();
