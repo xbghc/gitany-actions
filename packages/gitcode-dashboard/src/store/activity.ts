@@ -35,13 +35,16 @@ export const useActivityStore = defineStore('activity', () => {
     // 确保参数顺序一致以保证缓存命中
     const sortedParams = Object.keys(params)
       .sort()
-      .reduce((obj, key) => {
-        const value = params[key as keyof ActivityFilterParams];
-        if (value !== undefined && value !== null) {
-          obj[key] = String(value);
-        }
-        return obj;
-      }, {} as Record<string, string>);
+      .reduce(
+        (obj, key) => {
+          const value = params[key as keyof ActivityFilterParams];
+          if (value !== undefined && value !== null) {
+            obj[key] = String(value);
+          }
+          return obj;
+        },
+        {} as Record<string, string>,
+      );
     const queryString = new URLSearchParams(sortedParams).toString();
     return `/api/repo/${owner}/${repo}/events?${queryString}`;
   };
