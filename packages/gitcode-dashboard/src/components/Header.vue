@@ -83,7 +83,7 @@ const handleLogout = () => {
   right: 0;
   height: 50px;
   background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e4e7ed;
   z-index: 1000;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
