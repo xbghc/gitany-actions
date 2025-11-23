@@ -26,18 +26,8 @@
           </div>
         </div>
 
-        <el-tooltip
-          v-if="collapsed && (repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id)"
-          content="移除仓库"
-          placement="right"
-        >
-           <div class="delete-btn-wrapper" @click.stop="handleRemoveRepo(repo.id)">
-              <el-icon class="delete-icon-collapsed"><Close /></el-icon>
-           </div>
-        </el-tooltip>
-
         <el-button
-          v-else-if="!collapsed && (repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id)"
+          v-if="!collapsed && (repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id)"
           link
           type="danger"
           size="small"
@@ -337,20 +327,6 @@ const handleCancelAdd = () => {
 
 .delete-btn:hover {
   opacity: 1;
-}
-
-.delete-btn-wrapper {
-  position: absolute;
-  top: 0;
-  right: 0;
-  padding: 2px;
-}
-
-.delete-icon-collapsed {
-    font-size: 12px;
-    color: #f56c6c;
-    background: rgba(0,0,0,0.5);
-    border-radius: 50%;
 }
 
 .empty-state {
