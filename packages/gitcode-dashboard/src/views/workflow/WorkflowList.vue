@@ -58,13 +58,13 @@
 
           <el-table-column prop="createdAt" label="创建时间" width="180">
             <template #default="{ row }">
-              {{ formatTime(row.createdAt) }}
+              {{ formatRelativeTime(row.createdAt) }}
             </template>
           </el-table-column>
 
           <el-table-column prop="completedAt" label="完成时间" width="180">
             <template #default="{ row }">
-              {{ row.completedAt ? formatTime(row.completedAt) : '-' }}
+              {{ row.completedAt ? formatRelativeTime(row.completedAt) : '-' }}
             </template>
           </el-table-column>
 
@@ -185,6 +185,7 @@ import { useWorkflowLogStore } from '@/store/workflow-log';
 import type { WorkflowStatus, WorkflowConfig } from '@/types';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import WorkflowConfigDialog from '@/components/WorkflowConfigDialog.vue';
+import { formatRelativeTime } from '@/utils/timeFormatter';
 
 const workflowLogStore = useWorkflowLogStore();
 const configStore = useWorkflowConfigStore();
@@ -230,35 +231,6 @@ const getStatusText = (status: WorkflowStatus) => {
     case 'failed':
       return '失败';
   }
-};
-
-// TODO issue列表和pr列表有类似逻辑
-/**
- * 格式化时间
- */
-const formatTime = (time: string) => {
-  const date = new Date(time);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-
-  // 小于1分钟
-  if (diff < 60 * 1000) {
-    return '刚刚';
-  }
-  // 小于1小时
-  if (diff < 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 1000))} 分钟前`;
-  }
-  // 小于1天
-  if (diff < 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (60 * 60 * 1000))} 小时前`;
-  }
-  // 小于7天
-  if (diff < 7 * 24 * 60 * 60 * 1000) {
-    return `${Math.floor(diff / (24 * 60 * 60 * 1000))} 天前`;
-  }
-  // 否则显示完整时间
-  return date.toLocaleString('zh-CN');
 };
 
 /**

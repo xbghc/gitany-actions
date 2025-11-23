@@ -59,10 +59,12 @@
   },
   "dependencies": {
     "bottleneck": "^2.19.5",
+    "git-url-parse": "^16.1.0",
     "got": "^14.4.9",
     "zod": "^4.1.7"
   },
   "devDependencies": {
+    "@types/git-url-parse": "^16.0.2",
     "@vitest/ui": "^4.0.7",
     "vitest": "^4.0.7"
   }
