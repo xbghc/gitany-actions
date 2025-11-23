@@ -1,5 +1,5 @@
 <template>
-  <el-card class="activity-container">
+  <div class="activity-container">
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <el-select
@@ -28,7 +28,7 @@
     </div>
 
     <!-- 活动时间轴 -->
-    <div v-loading="activityStore.loading" class="timeline-wrapper">
+    <div ref="timelineWrapperRef" v-loading="activityStore.loading" class="timeline-wrapper">
       <el-empty
         v-if="!activityStore.loading && activityStore.activityList.length === 0"
         description="暂无活动"
@@ -56,7 +56,7 @@
         <el-text v-else-if="!activityStore.hasMore" type="info"> 没有更多数据了 </el-text>
       </div>
     </div>
-  </el-card>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -69,6 +69,9 @@ import ActivityCard from './ActivityCard.vue';
 import type { RepoEvent } from '@/types';
 
 const activityStore = useActivityStore();
+
+// timeline-wrapper 容器引用
+const timelineWrapperRef = ref<HTMLElement | null>(null);
 
 // 筛选状态
 const currentFilter = ref<string>('all');
@@ -125,7 +128,7 @@ const handleFilterChange = (filter: string) => {
 
 // 无限滚动
 useInfiniteScroll(
-  () => document.querySelector('.app-main') as HTMLElement | null,
+  timelineWrapperRef,
   () => {
     if (!activityStore.loadingMore && activityStore.hasMore) {
       activityStore.loadMore();
@@ -148,6 +151,11 @@ onMounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  overflow: hidden;
 }
 
 .toolbar {
@@ -168,6 +176,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 12px 0;
+  min-height: 0;
 }
 
 .activity-timeline {

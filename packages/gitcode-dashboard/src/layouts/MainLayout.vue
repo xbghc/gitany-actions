@@ -11,55 +11,45 @@
 
       <!-- 主内容区域 -->
       <el-main class="app-main">
-        <!-- 路由视图（用于详情页） -->
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <component :is="Component" v-if="Component" />
-          </transition>
-        </router-view>
+        <!-- 未选中仓库时的提示 -->
+        <div v-if="!repoStore.selectedRepo" class="welcome-state">
+          <el-empty description="请先在左侧添加并选择一个仓库" :image-size="200">
+            <template #image>
+              <el-icon :size="80" color="#909399"><FolderOpened /></el-icon>
+            </template>
+          </el-empty>
+        </div>
 
-        <!-- 未在详情页时显示主内容 -->
-        <div v-if="!isDetailPage">
-          <!-- 未选中仓库时的提示 -->
-          <div v-if="!repoStore.selectedRepo" class="welcome-state">
-            <el-empty description="请先在左侧添加并选择一个仓库" :image-size="200">
-              <template #image>
-                <el-icon :size="80" color="#909399"><FolderOpened /></el-icon>
-              </template>
-            </el-empty>
-          </div>
-
-          <!-- 选中仓库后显示内容 -->
-          <div v-else class="repo-content">
-            <!-- 仓库信息头部 -->
-            <div class="repo-header">
-              <div class="repo-title">
-                <el-icon :size="24" color="#1890ff"><Folder /></el-icon>
-                <h2>{{ repoStore.selectedRepo.owner }} / {{ repoStore.selectedRepo.repo }}</h2>
-              </div>
+        <!-- 选中仓库后显示内容 -->
+        <div v-else class="repo-content">
+          <!-- 仓库信息头部 -->
+          <div class="repo-header">
+            <div class="repo-title">
+              <el-icon :size="24" color="#1890ff"><Folder /></el-icon>
+              <h2>{{ repoStore.selectedRepo.owner }} / {{ repoStore.selectedRepo.repo }}</h2>
             </div>
-
-            <!-- Tab 切换 -->
-            <el-tabs v-model="activeTab" class="content-tabs">
-              <el-tab-pane name="activity">
-                <template #label>
-                  <span
-                    ><el-icon><Bell /></el-icon> 动态</span
-                  >
-                </template>
-                <ActivityList />
-              </el-tab-pane>
-              <el-tab-pane label="Issue" name="issue">
-                <IssueList />
-              </el-tab-pane>
-              <el-tab-pane label="Pull Request" name="pr">
-                <PRList />
-              </el-tab-pane>
-              <el-tab-pane label="Workflow" name="workflow">
-                <WorkflowList />
-              </el-tab-pane>
-            </el-tabs>
           </div>
+
+          <!-- Tab 切换 -->
+          <el-tabs v-model="activeTab" class="content-tabs">
+            <el-tab-pane name="activity">
+              <template #label>
+                <span
+                  ><el-icon><Bell /></el-icon> 动态</span
+                >
+              </template>
+              <ActivityList />
+            </el-tab-pane>
+            <el-tab-pane label="Issue" name="issue">
+              <IssueList />
+            </el-tab-pane>
+            <el-tab-pane label="Pull Request" name="pr">
+              <PRList />
+            </el-tab-pane>
+            <el-tab-pane label="Workflow" name="workflow">
+              <WorkflowList />
+            </el-tab-pane>
+          </el-tabs>
         </div>
       </el-main>
     </el-container>
@@ -67,8 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted } from 'vue';
 import { Folder, FolderOpened, Bell } from '@element-plus/icons-vue';
 import Header from '@/components/Header.vue';
 import RepoList from '@/components/RepoList.vue';
@@ -78,16 +67,10 @@ import PRList from '@/views/pr/PRList.vue';
 import WorkflowList from '@/views/workflow/WorkflowList.vue';
 import { useRepoStore, useAuthStore } from '@/store';
 
-const route = useRoute();
 const repoStore = useRepoStore();
 const authStore = useAuthStore();
 
 const activeTab = ref<'activity' | 'issue' | 'pr' | 'workflow'>('activity');
-
-// 判断是否在详情页
-const isDetailPage = computed(() => {
-  return route.name === 'PRDetail' || route.name === 'IssueDetail';
-});
 
 onMounted(() => {
   // 加载初始数据
@@ -119,7 +102,7 @@ onMounted(() => {
 .app-main {
   background-color: #f5f5f5;
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden;
   height: 100%;
 }
 
@@ -175,6 +158,12 @@ onMounted(() => {
   flex: 1;
   overflow-y: hidden;
   padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-tabs :deep(.el-tab-pane) {
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
