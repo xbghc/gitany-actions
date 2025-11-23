@@ -61,7 +61,7 @@
         </el-table-column>
         <el-table-column label="更新时间" width="180">
           <template #default="{ row }">
-            {{ formatTime(row.updated_at) }}
+            {{ formatRelativeTime(row.updated_at) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
@@ -111,6 +111,7 @@ import { triggerPRWorkflow } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import { formatRelativeTime } from '@/utils/timeFormatter';
 import WorkflowConfigSelector from '@/components/WorkflowConfigSelector.vue';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import type { PullRequest, WorkflowConfig } from '@/types';
@@ -161,10 +162,6 @@ const handleFilterChange = () => {
  */
 const handleRefresh = async () => {
   await fetchPRList();
-};
-
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN');
 };
 
 const handlePaginationMouseOver = (event: MouseEvent) => {
