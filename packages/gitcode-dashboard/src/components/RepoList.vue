@@ -1,7 +1,11 @@
 <template>
-  <div class="repo-list">
+  <div class="repo-list" :class="{ collapsed: collapsed }">
     <div class="repo-list-header">
-      <h3>仓库列表</h3>
+      <h3 v-show="!collapsed">仓库列表</h3>
+      <el-icon class="toggle-icon" @click="$emit('toggle')">
+        <Expand v-if="collapsed" />
+        <Fold v-else />
+      </el-icon>
     </div>
 
     <div class="repo-items">
@@ -16,13 +20,14 @@
       >
         <div class="repo-info">
           <el-icon class="repo-icon"><Folder /></el-icon>
-          <div class="repo-name">
+          <div v-show="!collapsed" class="repo-name">
             <div class="owner">{{ repo.owner }}</div>
             <div class="name">{{ repo.repo }}</div>
           </div>
         </div>
+
         <el-button
-          v-show="repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id"
+          v-if="!collapsed && (repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id)"
           link
           type="danger"
           size="small"
@@ -34,12 +39,22 @@
       </div>
 
       <div v-if="repoStore.repoList.length === 0" class="empty-state">
-        <el-empty description="暂无仓库" :image-size="80" />
+        <el-empty :description="collapsed ? '' : '暂无仓库'" :image-size="collapsed ? 40 : 80" />
       </div>
     </div>
 
     <div class="repo-list-footer">
+      <el-tooltip v-if="collapsed" content="添加仓库" placement="right">
+        <el-button
+          type="primary"
+          size="small"
+          :icon="Plus"
+          class="add-btn-collapsed"
+          @click="showAddDialog = true"
+        />
+      </el-tooltip>
       <el-button
+        v-else
         type="primary"
         size="small"
         :icon="Plus"
@@ -81,7 +96,15 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useRepoStore, useActivityStore } from '@/store';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Folder, Plus, Close } from '@element-plus/icons-vue';
+import { Folder, Plus, Close, Expand, Fold } from '@element-plus/icons-vue';
+
+defineProps<{
+  collapsed: boolean;
+}>();
+
+defineEmits<{
+  (e: 'toggle'): void;
+}>();
 
 const repoStore = useRepoStore();
 const activityStore = useActivityStore();
@@ -186,11 +209,21 @@ const handleCancelAdd = () => {
   display: flex;
   flex-direction: column;
   background-color: #001529;
+  transition: width 0.3s;
 }
 
 .repo-list-header {
-  padding: 16px;
+  height: 54px; /* Fix height to align with toggle */
+  padding: 0 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.repo-list.collapsed .repo-list-header {
+  justify-content: center;
+  padding: 0;
 }
 
 .repo-list-header h3 {
@@ -198,11 +231,25 @@ const handleCancelAdd = () => {
   font-size: 16px;
   font-weight: 600;
   color: #fff;
+  white-space: nowrap;
+}
+
+.toggle-icon {
+  font-size: 20px;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.toggle-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .repo-items {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px 0;
 }
 
@@ -216,6 +263,13 @@ const handleCancelAdd = () => {
   cursor: pointer;
   transition: all 0.2s;
   color: rgba(255, 255, 255, 0.65);
+  position: relative;
+}
+
+.repo-list.collapsed .repo-item {
+  justify-content: center;
+  padding: 12px 0;
+  margin: 4px 4px;
 }
 
 .repo-item:hover {
@@ -224,7 +278,7 @@ const handleCancelAdd = () => {
 }
 
 .repo-item.active {
-  background-color: #1890ff;
+  background-color: #409eff; /* Changed to match user image typical blue */
   color: #fff;
 }
 
@@ -234,6 +288,11 @@ const handleCancelAdd = () => {
   gap: 12px;
   flex: 1;
   min-width: 0;
+}
+
+.repo-list.collapsed .repo-info {
+  justify-content: center;
+  flex: 0;
 }
 
 .repo-icon {
@@ -276,9 +335,19 @@ const handleCancelAdd = () => {
   color: rgba(255, 255, 255, 0.45);
 }
 
+.repo-list.collapsed .empty-state {
+  padding: 24px 0;
+}
+
 .repo-list-footer {
   padding: 16px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+}
+
+.add-btn-collapsed {
+  width: 100%;
 }
 
 .form-hint {
