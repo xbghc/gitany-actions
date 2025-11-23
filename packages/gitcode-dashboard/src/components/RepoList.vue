@@ -1,7 +1,7 @@
 <template>
   <div class="repo-list" :class="{ collapsed: collapsed }">
     <div class="repo-list-header">
-      <h3 v-show="!collapsed">仓库列表</h3>
+      <h3 v-show="!collapsed">{{ t('repo.list_title') }}</h3>
       <el-icon class="toggle-icon" @click="$emit('toggle')">
         <Expand v-if="collapsed" />
         <Fold v-else />
@@ -39,12 +39,15 @@
       </div>
 
       <div v-if="repoStore.repoList.length === 0" class="empty-state">
-        <el-empty :description="collapsed ? '' : '暂无仓库'" :image-size="collapsed ? 40 : 80" />
+        <el-empty
+          :description="collapsed ? '' : t('repo.empty_list')"
+          :image-size="collapsed ? 40 : 80"
+        />
       </div>
     </div>
 
     <div class="repo-list-footer">
-      <el-tooltip v-if="collapsed" content="添加仓库" placement="right">
+      <el-tooltip v-if="collapsed" :content="t('repo.add_repo')" placement="right">
         <el-button
           type="primary"
           size="small"
@@ -61,32 +64,39 @@
         style="width: 100%"
         @click="showAddDialog = true"
       >
-        添加仓库
+        {{ t('repo.add_repo') }}
       </el-button>
     </div>
 
     <!-- 添加仓库对话框 -->
-    <el-dialog v-model="showAddDialog" title="添加仓库" width="450px" :close-on-click-modal="false">
+    <el-dialog
+      v-model="showAddDialog"
+      :title="t('repo.add_repo')"
+      width="450px"
+      :close-on-click-modal="false"
+    >
       <el-form :model="addForm" label-width="80px">
-        <el-form-item label="仓库地址" required>
+        <el-form-item :label="t('repo.url_label')" required>
           <el-input
             v-model="addForm.repoUrl"
-            placeholder="输入 owner/repo 或完整 URL"
+            :placeholder="t('repo.url_placeholder')"
             @input="handleRepoUrlChange"
           />
-          <div class="form-hint">例如: octocat/hello-world</div>
+          <div class="form-hint">{{ t('repo.url_example') }}</div>
         </el-form-item>
-        <el-divider>或分别输入</el-divider>
-        <el-form-item label="所有者">
-          <el-input v-model="addForm.owner" placeholder="所有者/组织名称" />
+        <el-divider>{{ t('repo.or_split') }}</el-divider>
+        <el-form-item :label="t('repo.owner_label')">
+          <el-input v-model="addForm.owner" :placeholder="t('repo.owner_placeholder')" />
         </el-form-item>
-        <el-form-item label="仓库名">
-          <el-input v-model="addForm.repo" placeholder="仓库名称" />
+        <el-form-item :label="t('repo.name_label')">
+          <el-input v-model="addForm.repo" :placeholder="t('repo.name_placeholder')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="handleCancelAdd">取消</el-button>
-        <el-button type="primary" :disabled="!isFormValid" @click="handleAddRepo"> 添加 </el-button>
+        <el-button @click="handleCancelAdd">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :disabled="!isFormValid" @click="handleAddRepo">
+          {{ t('repo.add_action') }}
+        </el-button>
       </template>
     </el-dialog>
   </div>
@@ -97,6 +107,7 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { useRepoStore, useActivityStore } from '@/store';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Folder, Plus, Close, Expand, Fold } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 
 defineProps<{
   collapsed: boolean;
@@ -106,6 +117,7 @@ defineEmits<{
   (e: 'toggle'): void;
 }>();
 
+const { t } = useI18n();
 const repoStore = useRepoStore();
 const activityStore = useActivityStore();
 
@@ -166,14 +178,14 @@ const handleSelectRepo = (id: string) => {
 
 const handleRemoveRepo = async (id: string) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个仓库吗？', '提示', {
+    await ElMessageBox.confirm(t('repo.confirm_delete'), t('common.tips'), {
       type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
     });
 
     repoStore.removeRepo(id);
-    ElMessage.success('删除成功');
+    ElMessage.success(t('common.delete_success'));
   } catch {
     // 用户取消删除
   }
@@ -181,14 +193,14 @@ const handleRemoveRepo = async (id: string) => {
 
 const handleAddRepo = () => {
   if (!isFormValid.value) {
-    ElMessage.warning('请输入完整的仓库信息');
+    ElMessage.warning(t('repo.input_full_info'));
     return;
   }
 
   const result = repoStore.addRepo(addForm.owner.trim(), addForm.repo.trim());
 
   if (result.success) {
-    ElMessage.success('添加成功');
+    ElMessage.success(t('common.add_success'));
     handleCancelAdd();
   } else {
     ElMessage.warning(result.message);

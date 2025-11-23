@@ -4,34 +4,36 @@
     <div class="toolbar">
       <el-select
         v-model="currentFilter"
-        placeholder="事件类型"
+        :placeholder="t('activity.type_placeholder')"
         style="width: 150px"
         @change="handleFilterChange"
       >
-        <el-option label="全部" value="all" />
-        <el-option label="Push" value="push" />
-        <el-option label="Merged" value="merged" />
-        <el-option label="Issue" value="issue" />
-        <el-option label="评论" value="comments" />
-        <el-option label="团队" value="team" />
-        <el-option label="项目" value="project" />
+        <el-option :label="t('activity.all')" value="all" />
+        <el-option :label="t('activity.push')" value="push" />
+        <el-option :label="t('activity.merged')" value="merged" />
+        <el-option :label="t('activity.issue')" value="issue" />
+        <el-option :label="t('activity.comments')" value="comments" />
+        <el-option :label="t('activity.team')" value="team" />
+        <el-option :label="t('activity.project')" value="project" />
       </el-select>
 
       <el-button :loading="activityStore.loading" @click="activityStore.refresh()">
         <template #icon>
           <el-icon><Refresh /></el-icon>
         </template>
-        刷新
+        {{ t('activity.refresh') }}
       </el-button>
 
-      <span class="filter-info"> 共 {{ activityStore.activityList.length }} 条活动 </span>
+      <span class="filter-info">
+        {{ t('activity.total_activities', { count: activityStore.activityList.length }) }}
+      </span>
     </div>
 
     <!-- 活动时间轴 -->
     <div ref="timelineWrapperRef" v-loading="activityStore.loading" class="timeline-wrapper">
       <el-empty
         v-if="!activityStore.loading && activityStore.activityList.length === 0"
-        description="暂无活动"
+        :description="t('activity.no_activity')"
       />
 
       <el-timeline v-else class="activity-timeline">
@@ -51,9 +53,11 @@
       <div v-if="activityStore.activityList.length > 0" class="loading-more">
         <el-text v-if="activityStore.loadingMore" type="info">
           <el-icon class="is-loading"><Loading /></el-icon>
-          加载中...
+          {{ t('activity.loading') }}
         </el-text>
-        <el-text v-else-if="!activityStore.hasMore" type="info"> 没有更多数据了 </el-text>
+        <el-text v-else-if="!activityStore.hasMore" type="info">
+          {{ t('activity.no_more') }}
+        </el-text>
       </div>
     </div>
   </div>
@@ -67,7 +71,9 @@ import { useActivityStore } from '@/store';
 import { useActivityTime } from './useActivityTime';
 import ActivityCard from './ActivityCard.vue';
 import type { RepoEvent } from '@/types';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const activityStore = useActivityStore();
 
 // timeline-wrapper 容器引用

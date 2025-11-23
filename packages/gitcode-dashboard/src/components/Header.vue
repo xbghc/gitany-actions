@@ -1,6 +1,19 @@
 <template>
   <div class="header">
     <div class="header-content">
+      <el-dropdown @command="handleLanguageChange">
+        <span class="language-selector">
+          {{ currentLanguage }}
+          <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+        </span>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="zh">中文</el-dropdown-item>
+            <el-dropdown-item command="en">English</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
       <a
         v-if="userStore.userProfile"
         :href="userStore.userProfile.html_url"
@@ -13,21 +26,34 @@
         </el-avatar>
         <span class="user-name">{{ userStore.displayName }}</span>
       </a>
-      <el-button size="small" type="danger" @click="handleLogout">注销</el-button>
+      <el-button size="small" type="danger" @click="handleLogout">{{
+        t('header.logout')
+      }}</el-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore, useUserStore } from '@/store';
 import { ElMessage } from 'element-plus';
-import { User } from '@element-plus/icons-vue';
+import { User, ArrowDown } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 
+const { t, locale } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
 const userStore = useUserStore();
+
+const currentLanguage = computed(() => {
+  return locale.value === 'zh' ? '中文' : 'English';
+});
+
+const handleLanguageChange = (lang: string) => {
+  locale.value = lang;
+  localStorage.setItem('language', lang);
+};
 
 onMounted(() => {
   authStore.loadToken();
@@ -42,7 +68,7 @@ const handleLogout = () => {
   userStore.clearUserProfile();
 
   // 提示用户
-  ElMessage.success('已注销');
+  ElMessage.success(t('header.logged_out'));
 
   // 跳转到登录页
   router.push('/login');
@@ -69,6 +95,18 @@ const handleLogout = () => {
   height: 100%;
   padding: 0 24px;
   gap: 16px;
+}
+
+.language-selector {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #606266;
+  font-size: 14px;
+}
+
+.language-selector:hover {
+  color: #409eff;
 }
 
 .user-info {
