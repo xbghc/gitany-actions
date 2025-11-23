@@ -13,18 +13,18 @@
       <el-tab-pane name="activity">
         <template #label>
           <span
-            ><el-icon><Bell /></el-icon> 动态</span
+            ><el-icon><Bell /></el-icon> {{ t('tabs.activity') }}</span
           >
         </template>
         <ActivityList />
       </el-tab-pane>
-      <el-tab-pane label="Issue" name="issue">
+      <el-tab-pane :label="t('tabs.issue')" name="issue">
         <IssueList />
       </el-tab-pane>
-      <el-tab-pane label="Pull Request" name="pr">
+      <el-tab-pane :label="t('tabs.pr')" name="pr">
         <PRList />
       </el-tab-pane>
-      <el-tab-pane label="Workflow" name="workflow">
+      <el-tab-pane :label="t('tabs.workflow')" name="workflow">
         <WorkflowList />
       </el-tab-pane>
     </el-tabs>
@@ -39,7 +39,9 @@ import IssueList from '@/views/issue/IssueList.vue';
 import PRList from '@/views/pr/PRList.vue';
 import WorkflowList from '@/views/workflow/WorkflowList.vue';
 import { useRepoStore } from '@/store';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const repoStore = useRepoStore();
 const activeTab = ref<'activity' | 'issue' | 'pr' | 'workflow'>('activity');
 </script>

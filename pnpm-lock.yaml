@@ -145,6 +145,9 @@ importers:
       vue:
         specifier: ^3.5.13
         version: 3.5.21(typescript@5.9.2)
+      vue-i18n:
+        specifier: ^11.2.1
+        version: 11.2.1(vue@3.5.21(typescript@5.9.2))
       vue-router:
         specifier: ^4.5.0
         version: 4.6.3(vue@3.5.21(typescript@5.9.2))
@@ -1547,6 +1550,27 @@ packages:
     peerDependenciesMeta:
       '@types/node':
         optional: true
+
+  '@intlify/core-base@11.2.1':
+    resolution:
+      {
+        integrity: sha512-2V1A4yaN9ElAnQ6ih3HHEc+jZ+sHV6BlQHjCsnIVlOotL5NCUgJElIxgUFiJs6zV4puoAq3hHuQIfWNp+J+8yQ==,
+      }
+    engines: { node: '>= 16' }
+
+  '@intlify/message-compiler@11.2.1':
+    resolution:
+      {
+        integrity: sha512-J2454D3Agg3Kvgaj14gxTleJU8/H06Sisz7C2BwiHF0/i5Soyfb5ySpwn8GCL6yscDbOGj6xM+lUe6gO6BFQyg==,
+      }
+    engines: { node: '>= 16' }
+
+  '@intlify/shared@11.2.1':
+    resolution:
+      {
+        integrity: sha512-O67LZM4dbfr70WCsZLW+g+pIXdgQ66laLVd/FicW7iYgP/RuH0X1FDGSh+Hr9Gou/8TeldUE6KmTGdLwX2ufIA==,
+      }
+    engines: { node: '>= 16' }
 
   '@isaacs/fs-minipass@4.0.1':
     resolution:
@@ -6187,6 +6211,15 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
 
+  vue-i18n@11.2.1:
+    resolution:
+      {
+        integrity: sha512-cc3Wx4eJZac9WMS8mxhfYiCipm9PBQ2Dz15piWYm7DwNcCehaKRgpolEdiqrjjT27T3Wijz3xJ7NeIc8ofIWAA==,
+      }
+    engines: { node: '>= 16' }
+    peerDependencies:
+      vue: ^3.0.0
+
   vue-router@4.6.3:
     resolution:
       {
@@ -7223,6 +7256,18 @@ snapshots:
   '@inquirer/type@3.0.10(@types/node@22.18.1)':
     optionalDependencies:
       '@types/node': 22.18.1
+
+  '@intlify/core-base@11.2.1':
+    dependencies:
+      '@intlify/message-compiler': 11.2.1
+      '@intlify/shared': 11.2.1
+
+  '@intlify/message-compiler@11.2.1':
+    dependencies:
+      '@intlify/shared': 11.2.1
+      source-map-js: 1.2.1
+
+  '@intlify/shared@11.2.1': {}
 
   '@isaacs/fs-minipass@4.0.1':
     dependencies:
@@ -10081,6 +10126,13 @@ snapshots:
       semver: 7.7.2
     transitivePeerDependencies:
       - supports-color
+
+  vue-i18n@11.2.1(vue@3.5.21(typescript@5.9.2)):
+    dependencies:
+      '@intlify/core-base': 11.2.1
+      '@intlify/shared': 11.2.1
+      '@vue/devtools-api': 6.6.4
+      vue: 3.5.21(typescript@5.9.2)
 
   vue-router@4.6.3(vue@3.5.21(typescript@5.9.2)):
     dependencies:

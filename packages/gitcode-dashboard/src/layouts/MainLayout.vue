@@ -6,17 +6,14 @@
     <el-container class="main-container">
       <!-- 左侧仓库列表 -->
       <el-aside :width="asideWidth" class="app-aside">
-        <RepoList
-          :collapsed="isRepoListCollapsed"
-          @toggle="toggleRepoList"
-        />
+        <RepoList :collapsed="isRepoListCollapsed" @toggle="toggleRepoList" />
       </el-aside>
 
       <!-- 主内容区域 -->
       <el-main class="app-main">
         <!-- 未选中仓库时的提示 -->
         <div v-if="!repoStore.selectedRepo" class="welcome-state">
-          <el-empty description="请先在左侧添加并选择一个仓库" :image-size="200">
+          <el-empty :description="t('repo.select_placeholder')" :image-size="200">
             <template #image>
               <el-icon :size="80" color="#909399"><FolderOpened /></el-icon>
             </template>
@@ -40,7 +37,9 @@ import Header from '@/components/Header.vue';
 import RepoList from '@/components/RepoList.vue';
 import RepoContent from '@/components/RepoContent.vue';
 import { useRepoStore, useAuthStore } from '@/store';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const repoStore = useRepoStore();
 const authStore = useAuthStore();
 
