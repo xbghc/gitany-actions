@@ -75,8 +75,9 @@ onMounted(() => {
 }
 
 .app-aside {
-  background-color: #001529;
-  color: #fff;
+  background-color: #ffffff;
+  border-right: 1px solid #e4e7ed;
+  color: #303133;
   height: 100%;
   transition: width 0.3s cubic-bezier(0.2, 0, 0, 1) 0s;
 }

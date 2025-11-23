@@ -220,14 +220,14 @@ const handleCancelAdd = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #001529;
+  background-color: transparent;
   transition: width 0.3s;
 }
 
 .repo-list-header {
   height: 54px; /* Fix height to align with toggle */
   padding: 0 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e4e7ed;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -242,20 +242,20 @@ const handleCancelAdd = () => {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: #303133;
   white-space: nowrap;
 }
 
 .toggle-icon {
   font-size: 20px;
-  color: #fff;
+  color: #606266;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
 }
 
 .toggle-icon:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #f5f7fa;
 }
 
 .repo-items {
@@ -274,7 +274,7 @@ const handleCancelAdd = () => {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.65);
+  color: #606266;
   position: relative;
 }
 
@@ -285,13 +285,13 @@ const handleCancelAdd = () => {
 }
 
 .repo-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background-color: #f5f7fa;
+  color: #303133;
 }
 
 .repo-item.active {
-  background-color: #409eff; /* Changed to match user image typical blue */
-  color: #fff;
+  background-color: #ecf5ff;
+  color: #409eff;
 }
 
 .repo-info {
@@ -344,7 +344,7 @@ const handleCancelAdd = () => {
 .empty-state {
   padding: 24px 16px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.45);
+  color: #909399;
 }
 
 .repo-list.collapsed .empty-state {
@@ -353,7 +353,7 @@ const handleCancelAdd = () => {
 
 .repo-list-footer {
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #e4e7ed;
   display: flex;
   justify-content: center;
 }
@@ -374,15 +374,15 @@ const handleCancelAdd = () => {
 }
 
 .repo-items::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
 }
 
 .repo-items::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #dcdfe6;
   border-radius: 3px;
 }
 
 .repo-items::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #c0c4cc;
 }
 </style>
