@@ -20,7 +20,7 @@
       >
         <div class="repo-info">
           <el-icon class="repo-icon"><Folder /></el-icon>
-          <div class="repo-name" v-show="!collapsed">
+          <div v-show="!collapsed" class="repo-name">
             <div class="owner">{{ repo.owner }}</div>
             <div class="name">{{ repo.repo }}</div>
           </div>
