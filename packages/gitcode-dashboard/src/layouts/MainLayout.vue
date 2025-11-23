@@ -5,8 +5,11 @@
 
     <el-container class="main-container">
       <!-- 左侧仓库列表 -->
-      <el-aside width="240px" class="app-aside">
-        <RepoList />
+      <el-aside :width="asideWidth" class="app-aside">
+        <RepoList
+          :collapsed="isRepoListCollapsed"
+          @toggle="toggleRepoList"
+        />
       </el-aside>
 
       <!-- 主内容区域 -->
@@ -31,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { FolderOpened } from '@element-plus/icons-vue';
 import Header from '@/components/Header.vue';
 import RepoList from '@/components/RepoList.vue';
@@ -40,6 +43,16 @@ import { useRepoStore, useAuthStore } from '@/store';
 
 const repoStore = useRepoStore();
 const authStore = useAuthStore();
+
+const isRepoListCollapsed = ref(false);
+
+const asideWidth = computed(() => {
+  return isRepoListCollapsed.value ? '64px' : '240px';
+});
+
+const toggleRepoList = () => {
+  isRepoListCollapsed.value = !isRepoListCollapsed.value;
+};
 
 onMounted(() => {
   // 加载初始数据
@@ -66,6 +79,7 @@ onMounted(() => {
   background-color: #001529;
   color: #fff;
   height: 100%;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1) 0s;
 }
 
 .app-main {
