@@ -3,8 +3,8 @@ import { withAuth } from '../middleware/auth.js';
 import { workflowService } from '../services/workflow-service.js';
 import { workflowConfigService } from '../services/workflow-config-service.js';
 import { workflowLogService } from '../services/workflow-log-service.js';
-import type { RegistryMirrorTestResult } from '../types/workflow.js';
-import { testRegistryMirror } from '../utils/docker-runner.js';
+// import type { RegistryMirrorTestResult } from '../types/workflow.js';
+// import { testRegistryMirror } from '../utils/docker-runner.js';
 import { createGitCodeClient } from '../utils/gitcode-client.js';
 
 export const workflowRouter: Router = Router();
@@ -248,88 +248,25 @@ workflowRouter.delete('/workflow/cleanup', (req: Request, res: Response) => {
 });
 
 /**
- * 测试单个Docker镜像源
- * POST /api/workflow/test-registry-mirror
- * Body: { mirror?, mirrorName?, testImage? }
+ * 测试单个Docker镜像源 - Not Supported on Server
  */
 workflowRouter.post('/workflow/test-registry-mirror', async (req: Request, res: Response) => {
-  try {
-    const { mirror, mirrorName, testImage } = req.body;
-
-    const result: RegistryMirrorTestResult = await testRegistryMirror(
-      mirror,
-      mirrorName,
-      testImage,
-    );
-
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    console.error('Failed to test registry mirror:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to test registry mirror',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+  res.status(501).json({
+    success: false,
+    error: 'Not Implemented',
+    message: 'Docker operations are no longer supported on the server. Please check your runner.',
+  });
 });
 
 /**
- * 测试所有预定义的Docker镜像源
- * GET /api/workflow/test-all-registry-mirrors?testImage=node:22-alpine
+ * 测试所有预定义的Docker镜像源 - Not Supported on Server
  */
 workflowRouter.get('/workflow/test-all-registry-mirrors', async (req: Request, res: Response) => {
-  try {
-    // 从query参数获取测试镜像，默认alpine:latest
-    const testImage = (req.query.testImage as string) || undefined;
-
-    // 预定义的镜像源列表（2025年可用）
-    const mirrors = [
-      { mirror: 'docker.m.daocloud.io', name: 'DaoCloud镜像源（推荐）' },
-      { mirror: 'docker.1panel.live', name: '1Panel镜像源' },
-      { mirror: 'docker.1ms.run', name: '1ms镜像源' },
-      { mirror: 'hub.rat.dev', name: 'Rat镜像源' },
-      { mirror: 'docker.xuanyuan.me', name: '轩辕镜像源' },
-      { mirror: '', name: 'Docker Hub（直连）' },
-    ];
-
-    // 并发测试所有镜像源
-    const results: RegistryMirrorTestResult[] = await Promise.all(
-      mirrors.map(({ mirror, name }) =>
-        testRegistryMirror(mirror, name, testImage).catch((error) => ({
-          success: false,
-          mirror,
-          mirrorName: name,
-          duration: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        })),
-      ),
-    );
-
-    // 按速度排序（成功的在前，失败的在后；成功的按速度降序）
-    results.sort((a, b) => {
-      if (a.success && !b.success) return -1;
-      if (!a.success && b.success) return 1;
-      if (a.success && b.success) {
-        return (b.speed || 0) - (a.speed || 0);
-      }
-      return 0;
-    });
-
-    res.json({
-      success: true,
-      data: results,
-    });
-  } catch (error) {
-    console.error('Failed to test all registry mirrors:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to test all registry mirrors',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+  res.status(501).json({
+    success: false,
+    error: 'Not Implemented',
+    message: 'Docker operations are no longer supported on the server. Please check your runner.',
+  });
 });
 
 /**

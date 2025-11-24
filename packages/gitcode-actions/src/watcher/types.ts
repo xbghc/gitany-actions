@@ -1,8 +1,15 @@
 import type { EventEmitter } from 'node:events';
-import type Docker from 'dockerode';
 import type { ListIssuesQuery, IssueCommentsQuery } from '@xbghc/gitcode-api';
 import type { EventName, EventDataMap } from '../types/events.js';
-import type { ContainerOptions } from '../container/types.js';
+
+export interface ContainerOptions {
+  /** Docker image to use. Defaults to `node:20`. */
+  image?: string;
+  /** Extra environment variables to provide to the container. */
+  env?: Record<string, string>;
+  /** Whether the container should automatically remove itself when stopped. */
+  autoRemove?: boolean;
+}
 
 /**
  * Watcher 接口
@@ -24,9 +31,6 @@ export interface Watcher extends EventEmitter {
   on<K extends EventName>(event: K, listener: (data: EventDataMap[K]) => void): this;
   once<K extends EventName>(event: K, listener: (data: EventDataMap[K]) => void): this;
   off<K extends EventName>(event: K, listener: (data: EventDataMap[K]) => void): this;
-
-  // 容器管理（PR 相关）
-  getContainers(): Map<number, Docker.Container>;
 
   // 状态清理
   clearState(resource?: 'pr' | 'issue'): Promise<void>;

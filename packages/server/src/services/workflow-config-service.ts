@@ -6,7 +6,7 @@ import type {
   WorkflowConfig,
   CreateWorkflowConfigRequest,
   UpdateWorkflowConfigRequest,
-} from '../types/workflow-config.js';
+} from '@xbghc/gitcode-actions';
 
 /**
  * Workflow 配置管理服务

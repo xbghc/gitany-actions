@@ -4,7 +4,7 @@ import { workflowConfigService } from '../services/workflow-config-service.js';
 import type {
   CreateWorkflowConfigRequest,
   UpdateWorkflowConfigRequest,
-} from '../types/workflow-config.js';
+} from '@xbghc/gitcode-actions';
 
 export const workflowConfigRouter: Router = Router();
 

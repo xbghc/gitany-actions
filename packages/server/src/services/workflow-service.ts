@@ -1,7 +1,6 @@
-import { exec } from '@xbghc/gitcode-actions';
 import type { GitCodeClient } from '@xbghc/gitcode-api';
 import { EventEmitter } from 'events';
-import type { WorkflowConfig } from '../types/workflow-config.js';
+import type { WorkflowConfig } from '@xbghc/gitcode-actions';
 import type {
   SSECompleteMessage,
   SSEErrorMessage,
@@ -10,15 +9,9 @@ import type {
   WorkflowResult,
   WorkflowStatus,
 } from '../types/workflow.js';
-import {
-  buildInitCommand,
-  checkDockerAvailable,
-  checkImageExists,
-  createAndStartContainer,
-  pullDockerImage,
-  removeContainer,
-} from '../utils/docker-runner.js';
 import { workflowLogService } from './workflow-log-service.js';
+import { runnerService } from './runner-service.js';
+import type { RunnerJob } from '@xbghc/gitcode-actions';
 
 /**
  * Workflow服务
@@ -88,26 +81,6 @@ export class WorkflowService {
   }
 
   /**
-   * 处理Docker基础设施错误
-   * - 向前端发送用户友好的消息
-   * - 在服务器日志记录完整的技术错误
-   */
-  private emitDockerInfraError(
-    workflowId: string,
-    step: string,
-    technicalError: string,
-    userMessage: string = '测试服务暂时不可用，请稍后重试或联系管理员',
-  ) {
-    // 服务器日志记录完整错误
-    console.error(`[Workflow ${workflowId}] Docker infrastructure error in step ${step}:`);
-    console.error(technicalError);
-
-    // 前端只看到用户友好消息
-    this.emitError(workflowId, step, userMessage);
-    this.updateStep(workflowId, step, 'failed', userMessage);
-  }
-
-  /**
    * 发送完成事件
    */
   private emitComplete(workflowId: string, status: WorkflowStatus) {
@@ -159,6 +132,49 @@ export class WorkflowService {
   }
 
   /**
+   * 处理Runner更新
+   */
+  public handleRunnerUpdate(
+    workflowId: string,
+    update: { status: string; logs?: string; error?: string; stepName?: string },
+  ) {
+    const workflow = this.workflows.get(workflowId);
+    if (!workflow) return;
+
+    const { status, logs, error, stepName } = update;
+
+    // 如果有具体的 stepName，更新该步骤
+    if (stepName) {
+      let wfStatus: WorkflowStatus = 'pending';
+      if (status === 'running') wfStatus = 'running';
+      if (status === 'success') wfStatus = 'success';
+      if (status === 'failed') wfStatus = 'failed';
+      // 注意：runner可能发送 pending 状态，这里主要是 running/success/failed
+
+      this.updateStep(workflowId, stepName, wfStatus, logs);
+    } else if (logs) {
+      // 无 stepName 的日志，暂时归入 generic log 或者忽略
+      // 这里可以尝试归入当前正在运行的 step
+      const runningStep = workflow.steps.find((s) => s.status === 'running');
+      if (runningStep) {
+        this.updateStep(workflowId, runningStep.name, 'running', logs);
+      }
+    }
+
+    if (error) {
+      this.emitError(workflowId, stepName || 'workflow', error);
+    }
+
+    // 如果是整个 workflow 完成
+    if (status === 'success' || status === 'failed') {
+      workflow.status = status;
+      workflow.completedAt = new Date().toISOString();
+      if (error) workflow.error = error;
+      this.emitComplete(workflowId, status as WorkflowStatus);
+    }
+  }
+
+  /**
    * 执行配置驱动的 PR Workflow
    * @param owner 仓库所有者
    * @param repo 仓库名
@@ -176,6 +192,16 @@ export class WorkflowService {
   ): Promise<string> {
     const workflowId = this.generateWorkflowId(owner, repo, prNumber);
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
+    // 获取 PR 信息以确定分支
+    let branch = '';
+    try {
+      const pr = await gitcodeClient.pr.get(repoUrl, prNumber);
+      branch = pr.head.ref;
+    } catch (error) {
+      console.error(`Failed to fetch PR #${prNumber} info:`, error);
+      throw new Error(`无法获取 PR #${prNumber} 信息，请检查网络或权限`);
+    }
 
     // 根据配置动态生成步骤列表
     const steps = [
@@ -207,271 +233,29 @@ export class WorkflowService {
 
     this.workflows.set(workflowId, workflow);
 
-    // 异步执行workflow
-    this.runConfigDrivenWorkflow(
+    // 将任务放入队列
+    const job: RunnerJob = {
+      id: workflowId,
       workflowId,
-      owner,
-      repo,
-      prNumber,
-      repoUrl,
-      config,
-      gitcodeClient,
-    ).catch((error) => {
-      console.error(`Workflow ${workflowId} failed:`, error);
-      workflow.status = 'failed';
-      workflow.error = error.message;
-      workflow.completedAt = new Date().toISOString();
-      this.emitError(workflowId, 'workflow', error.message);
-      this.emitComplete(workflowId, 'failed');
-    });
+      type: 'workflow',
+      payload: {
+        workflowId,
+        owner,
+        repo,
+        prNumber,
+        repoUrl,
+        branch,
+        config,
+        gitcodeToken: process.env.GITCODE_TOKEN,
+      },
+    };
+
+    runnerService.enqueueJob(job);
+
+    // 通知前端任务已排队
+    this.emitOutput(workflowId, 'fetch-pr', 'Job enqueued. Waiting for available runner...\n');
 
     return workflowId;
-  }
-
-  /**
-   * 配置驱动的 Workflow 执行（私有方法）
-   */
-  private async runConfigDrivenWorkflow(
-    workflowId: string,
-    owner: string,
-    repo: string,
-    prNumber: number,
-    repoUrl: string,
-    config: WorkflowConfig,
-    gitcodeClient: GitCodeClient,
-  ) {
-    const workflow = this.workflows.get(workflowId);
-    if (!workflow) throw new Error('Workflow not found');
-
-    workflow.status = 'running';
-    const containerName = `workflow-${workflowId}`;
-    let sourceBranch = '';
-
-    try {
-      // ========== 步骤 1: 获取 PR 信息 ==========
-      this.updateStep(workflowId, 'fetch-pr', 'running');
-      this.emitOutput(workflowId, 'fetch-pr', `正在获取 PR #${prNumber} 信息...\n`);
-
-      const pr = await gitcodeClient.pr.get(repoUrl, prNumber);
-
-      sourceBranch = pr.head.ref;
-      this.emitOutput(workflowId, 'fetch-pr', `找到 PR 分支: ${sourceBranch}\n`);
-
-      if (pr.state !== 'open') {
-        const errorMsg =
-          `PR #${prNumber} 状态为 "${pr.state}"，无法执行测试\n` +
-          `仅支持对打开状态（open）的 PR 进行测试。`;
-        throw new Error(errorMsg);
-      }
-
-      // 验证分支存在
-      try {
-        await gitcodeClient.repo.getBranch(owner, repo, sourceBranch);
-        this.emitOutput(workflowId, 'fetch-pr', `✓ 分支验证成功: ${sourceBranch}\n`);
-      } catch {
-        throw new Error(`分支验证失败: ${sourceBranch}`);
-      }
-
-      // 检查 Docker 环境
-      this.emitOutput(workflowId, 'fetch-pr', '正在检查 Docker 环境...\n');
-      const dockerCheck = await checkDockerAvailable();
-      if (!dockerCheck.available) {
-        throw new Error('Docker 环境不可用');
-      }
-
-      const baseImage = config.baseImage || 'node:22';
-      const registryMirror = config.registryMirror || 'docker.m.daocloud.io';
-
-      // 检查并拉取镜像
-      this.emitOutput(workflowId, 'fetch-pr', `正在检查镜像 ${baseImage}...\n`);
-      const imageExists = await checkImageExists(baseImage);
-
-      if (!imageExists) {
-        this.emitOutput(workflowId, 'fetch-pr', `⚠️  镜像不存在，开始拉取...\n`);
-        const pullResult = await pullDockerImage(baseImage, registryMirror, (text) => {
-          this.emitOutput(workflowId, 'fetch-pr', text);
-        });
-        if (!pullResult.success) {
-          throw new Error('镜像拉取失败');
-        }
-      }
-
-      // 创建容器
-      this.emitOutput(workflowId, 'fetch-pr', `正在创建容器 ${containerName}...\n`);
-      const createResult = await createAndStartContainer(containerName, baseImage, {
-        GITCODE_TOKEN: process.env.GITCODE_TOKEN || '',
-        ...config.env,
-      });
-
-      if (!createResult.success) {
-        throw new Error('容器创建失败');
-      }
-
-      this.updateStep(workflowId, 'fetch-pr', 'success');
-
-      // ========== 步骤 2: 执行 beforeAll 钩子 ==========
-      this.updateStep(workflowId, 'beforeAll', 'running');
-      this.emitOutput(workflowId, 'beforeAll', '正在执行前置钩子...\n');
-
-      const beforeAllCommand = config.beforeAll || buildInitCommand(repoUrl, sourceBranch);
-      const beforeAllResult = await exec(containerName, beforeAllCommand, {
-        timeout: config.timeout,
-        onOutput: (data) => {
-          this.emitOutput(workflowId, 'beforeAll', data);
-        },
-        // beforeAll 在容器根目录执行，负责创建 /workspace，所以不传 workDir
-      });
-
-      if (beforeAllResult.exitCode !== 0) {
-        throw new Error(
-          `beforeAll 执行失败，退出码: ${beforeAllResult.exitCode}\n${beforeAllResult.stdout}`,
-        );
-      }
-
-      this.updateStep(workflowId, 'beforeAll', 'success');
-
-      // ========== 步骤 3: 执行用户定义的 steps ==========
-      for (const step of config.steps) {
-        await this.executeStep(workflowId, containerName, step, config);
-      }
-
-      // ========== 步骤 4: 执行 afterAll 钩子 ==========
-      if (config.afterAll) {
-        this.updateStep(workflowId, 'afterAll', 'running');
-        this.emitOutput(workflowId, 'afterAll', '正在执行后置钩子...\n');
-
-        const afterAllResult = await exec(containerName, config.afterAll, {
-          workDir: '/workspace',
-          timeout: config.timeout,
-          onOutput: (data) => {
-            this.emitOutput(workflowId, 'afterAll', data);
-          },
-        });
-
-        if (afterAllResult.exitCode !== 0) {
-          throw new Error(
-            `afterAll 执行失败，退出码: ${afterAllResult.exitCode}\n${afterAllResult.stdout}`,
-          );
-        }
-
-        this.updateStep(workflowId, 'afterAll', 'success');
-      }
-
-      // 所有步骤完成
-      workflow.status = 'success';
-      workflow.completedAt = new Date().toISOString();
-      this.emitComplete(workflowId, 'success');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-      // 添加服务器日志，方便调试
-      console.error(`[Workflow ${workflowId}] Execution failed:`, error);
-
-      workflow.status = 'failed';
-      workflow.error = errorMessage;
-      workflow.completedAt = new Date().toISOString();
-
-      const runningStep = workflow.steps.find((s) => s.status === 'running');
-      if (runningStep) {
-        // 关键修复：先发送错误消息到前端
-        this.emitError(workflowId, runningStep.name, errorMessage);
-        // 再更新步骤状态
-        this.updateStep(workflowId, runningStep.name, 'failed', errorMessage);
-      } else {
-        // 如果没有运行中的步骤，说明是初始化阶段失败
-        this.emitError(workflowId, 'workflow', errorMessage);
-      }
-
-      this.emitComplete(workflowId, 'failed');
-    } finally {
-      // 清理容器
-      try {
-        await removeContainer(containerName);
-        console.log(`[Workflow ${workflowId}] Container ${containerName} removed`);
-      } catch (error) {
-        console.error(`[Workflow ${workflowId}] Failed to remove container:`, error);
-      }
-    }
-  }
-
-  /**
-   * 执行单个步骤（支持 retry、continueOnError、env、workDir、timeout）
-   */
-  private async executeStep(
-    workflowId: string,
-    containerName: string,
-    step: WorkflowConfig['steps'][0],
-    globalConfig: WorkflowConfig,
-  ) {
-    this.updateStep(workflowId, step.name, 'running');
-    this.emitOutput(workflowId, step.name, `开始执行步骤: ${step.name}\n`);
-
-    const retryCount = step.retry || 0;
-    const stepTimeout = step.timeout || globalConfig.timeout;
-    const workDir = step.workDir || '/workspace';
-
-    // 合并环境变量
-    const env = { ...globalConfig.env, ...step.env };
-    const envPrefix = Object.entries(env)
-      .map(([key, value]) => `${key}="${value}"`)
-      .join(' ');
-
-    // 构建命令：cd 到工作目录 + 设置环境变量 + 执行命令
-    const fullCommand = step.commands
-      .map((cmd) => {
-        const parts = [];
-        if (workDir) {
-          parts.push(`cd ${workDir}`);
-        }
-        if (envPrefix) {
-          parts.push(`export ${envPrefix}`);
-        }
-        parts.push(cmd);
-        return parts.join(' && ');
-      })
-      .join(' && ');
-
-    let lastError = '';
-    let attempt = 0;
-
-    // 重试逻辑
-    while (attempt <= retryCount) {
-      if (attempt > 0) {
-        const waitTime = Math.pow(2, attempt - 1) * 1000;
-        this.emitOutput(
-          workflowId,
-          step.name,
-          `重试 ${attempt}/${retryCount}，等待 ${waitTime}ms...\n`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, waitTime));
-      }
-
-      const result = await exec(containerName, fullCommand, {
-        workDir,
-        timeout: stepTimeout,
-        onOutput: (data) => {
-          this.emitOutput(workflowId, step.name, data);
-        },
-      });
-
-      if (result.exitCode === 0) {
-        this.updateStep(workflowId, step.name, 'success');
-        this.emitOutput(workflowId, step.name, `✓ 步骤完成\n`);
-        return;
-      }
-
-      lastError = `退出码: ${result.exitCode}\n${result.stdout}`;
-      attempt++;
-    }
-
-    // 所有重试失败
-    if (step.continueOnError) {
-      this.updateStep(workflowId, step.name, 'failed', lastError);
-      this.emitOutput(workflowId, step.name, `⚠️  步骤失败但继续执行: ${lastError}\n`);
-    } else {
-      this.updateStep(workflowId, step.name, 'failed', lastError);
-      throw new Error(`步骤 "${step.name}" 失败: ${lastError}`);
-    }
   }
 
   /**

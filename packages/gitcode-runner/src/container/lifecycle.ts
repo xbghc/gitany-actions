@@ -129,6 +129,28 @@ export async function removeContainersByLabels(labels: Record<string, string>): 
 }
 
 /**
+ * 创建原始容器（不包含克隆代码等逻辑）
+ * 用于底层操作
+ */
+export async function createRawContainer(options: {
+  image: string;
+  env?: string[];
+  labels?: Record<string, string>;
+}): Promise<import('dockerode').Container> {
+  const container = await docker.createContainer({
+    Image: options.image,
+    Cmd: ['sh', '-lc', 'tail -f /dev/null'],
+    Env: options.env,
+    User: 'node',
+    HostConfig: { AutoRemove: false },
+    Labels: options.labels,
+  });
+
+  await container.start();
+  return container;
+}
+
+/**
  * 清理所有 GitCode 管理的容器
  * 删除所有带有 'gitcode.managed=true' 标签的容器
  *
