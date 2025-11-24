@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { listCommand } from './list.js';
 import { createCommand } from './create.js';
+import { checkoutCommand } from './checkout.js';
 import { prSubCommand } from './settings.js';
 import { createPrCommentCommand } from './create-comment.js';
 import { prCommentsCommand } from './comments.js';
@@ -31,6 +32,14 @@ export function prCommand(): Command {
     .option('--issue <n>', 'Associate an issue number with the PR')
     .option('--json', 'Output created PR as JSON')
     .action(createCommand);
+
+  prProgram
+    .command('checkout')
+    .description('Check out a pull request in git')
+    .argument('<number>', 'Pull request number')
+    .argument('[url]', 'Repository URL')
+    .option('-b, --branch <branch-name>', 'Local branch name to use')
+    .action(checkoutCommand);
 
   // Comment command
   prProgram.addCommand(createPrCommentCommand());
