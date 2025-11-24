@@ -1,5 +1,4 @@
 import { GitCodeClient } from '@xbghc/gitcode-api';
-import type Docker from 'dockerode';
 import { EventEmitter } from 'node:events';
 import type { EventDataMap, EventName } from '../types/events.js';
 import { getInitialIssueState, pollIssues, type IssueState } from './internal/issue-poller.js';
@@ -19,9 +18,6 @@ export class Watcher extends EventEmitter implements IWatcher {
   private readonly options: WatchOptions;
   private readonly runners = new Map<string, IResourceRunner>();
   private running = false;
-
-  // PR 特定：容器管理
-  private readonly containerMap = new Map<number, Docker.Container>();
 
   // Notification 特定：轮询状态和定时器
   private notificationIntervalId?: NodeJS.Timeout;
@@ -190,13 +186,6 @@ export class Watcher extends EventEmitter implements IWatcher {
           : undefined,
       },
     };
-  }
-
-  /**
-   * 获取 PR 容器
-   */
-  getContainers(): Map<number, Docker.Container> {
-    return this.containerMap;
   }
 
   /**

@@ -1,8 +1,7 @@
 import type Docker from 'dockerode';
 import { collectForwardEnv, docker } from '../container/shared.js';
 import { prepareImage } from '../container/prepare-image.js';
-import { getDevContainer } from '../container/get-dev-container.js';
-import { createWorkspaceContainer } from '../container/create-workspace-container.js';
+import { createRawContainer } from '../container/lifecycle.js';
 import { verifySha } from '../executor/verify-sha.js';
 import { createApiCallScript } from './call-anthropic.js';
 import {
@@ -71,9 +70,6 @@ export async function chat(
   const sharedStepEnv = [...registryEnv, ...forwardedEnv];
 
   let container = options.container;
-  if (!container && sha === 'dev') {
-    container = await getDevContainer();
-  }
   const createdContainer = !container;
 
   try {
@@ -87,14 +83,10 @@ export async function chat(
         keepContainer = true;
       }
 
-      container = await createWorkspaceContainer({
-        docker,
+      container = await createRawContainer({
         image,
         env: [`REPO_URL=${repoUrl}`, `TARGET_SHA=${sha}`, ...sharedStepEnv],
         labels,
-        repoUrl: repoUrl,
-        branch: sha,
-        reusable: keepContainer,
       });
 
       try {

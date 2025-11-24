@@ -15,6 +15,7 @@ export {
   removeContainer,
   removeContainersByLabels,
   cleanupManagedContainers,
+  createRawContainer,
 } from './lifecycle.js';
 
 // 工作流 API
@@ -26,43 +27,6 @@ export type { ResetContainerOptions } from './reset.js';
 
 export { exec } from './exec.js';
 export type { ExecOptions, ExecResult } from './exec.js';
-
-// ==================== 旧 API（向后兼容） ====================
-
-/**
- * @deprecated 使用 createContainer() 代替
- */
-export { createPrContainer } from './create.js';
-
-/**
- * @deprecated 容器管理已重构，使用新的 API
- */
-export { ContainerCreationError, createWorkspaceContainer } from './create-workspace-container.js';
-
-/**
- * @deprecated 使用 getContainerById() 或 findContainers() 代替
- */
-export { getContainer, getContainerStatus } from './get.js';
-
-/**
- * @deprecated 容器管理已重构
- */
-export { getDevContainer } from './get-dev-container.js';
-
-/**
- * @deprecated 使用 removeContainer() 代替
- */
-export { removeContainer as removePrContainer } from './remove-container.js';
-
-/**
- * @deprecated 使用 resetContainer() 代替
- */
-export { resetContainer as resetPrContainer } from './reset-container.js';
-
-/**
- * @deprecated 使用 cleanupManagedContainers() 代替
- */
-export { cleanupPrContainers } from './cleanup.js';
 
 // ==================== 通用工具 ====================
 
