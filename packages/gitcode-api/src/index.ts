@@ -58,6 +58,7 @@ export type {
   PRCommentQueryOptions,
   PrCount,
   PullRequest,
+  PullRequestDetail,
 } from './api/pr/index.js';
 export { repoSchema, type Repo } from './api/repo/index.js';
 export { selfPermissionResponseSchema, selfPermissionUrl } from './api/repo/self-permission.js';
