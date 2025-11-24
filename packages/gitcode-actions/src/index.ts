@@ -22,5 +22,17 @@ export { FileStateStorage } from './watcher/file-state-storage.js';
 export { MemoryStateStorage } from './watcher/memory-state-storage.js';
 
 // Runner Types
-export * from './types/runner.js';
-export * from './types/workflow-config.js';
+export type {
+  Runner,
+  RunnerRegisterRequest,
+  RunnerRegisterResponse,
+  JobRequest,
+  RunnerJob,
+  JobUpdate,
+} from './types/runner.js';
+export type {
+  WorkflowConfigStep,
+  WorkflowConfig,
+  CreateWorkflowConfigRequest,
+  UpdateWorkflowConfigRequest,
+} from './types/workflow-config.js';
