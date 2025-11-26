@@ -6,7 +6,7 @@ import {
   executor,
   StepExecutionError as ContainerStepExecutionError,
 } from '../executor/container-executor.js';
-import { createWorkspaceContainer } from '../container/create-workspace-container.js';
+import { createRawContainer } from '../container/lifecycle.js';
 import { ImagePullError, prepareImage, type ImagePullStatus } from '../container/prepare-image.js';
 import { docker } from '../container/shared.js';
 import type { TestShaBuildOptions, TestShaBuildResult } from '../container/types.js';
@@ -67,8 +67,7 @@ export async function testShaBuild(
     result.diagnostics.dockerAvailable = true;
     result.diagnostics.imagePullStatus = imageStatus;
 
-    container = await createWorkspaceContainer({
-      docker,
+    container = await createRawContainer({
       image: imageName,
       env,
     });

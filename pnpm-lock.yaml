@@ -64,19 +64,9 @@ importers:
       '@xbghc/gitcode-cli':
         specifier: workspace:*
         version: link:../gitcode-cli
-      dockerode:
-        specifier: ^4.0.8
-        version: 4.0.8
       superjson:
         specifier: ^2.2.5
         version: 2.2.5
-      tar:
-        specifier: ^7.4.3
-        version: 7.4.3
-    devDependencies:
-      '@types/dockerode':
-        specifier: ^3.3.43
-        version: 3.3.43
 
   packages/gitcode-api:
     dependencies:
@@ -188,6 +178,46 @@ importers:
       vue-tsc:
         specifier: ^2.2.0
         version: 2.2.12(typescript@5.9.2)
+
+  packages/gitcode-runner:
+    dependencies:
+      '@xbghc/gitcode-actions':
+        specifier: workspace:*
+        version: link:../gitcode-actions
+      '@xbghc/gitcode-api':
+        specifier: workspace:*
+        version: link:../gitcode-api
+      chalk:
+        specifier: ^5.3.0
+        version: 5.6.2
+      commander:
+        specifier: ^13.0.0
+        version: 13.1.0
+      dockerode:
+        specifier: ^4.0.8
+        version: 4.0.8
+      got:
+        specifier: ^14.4.9
+        version: 14.4.9
+      superjson:
+        specifier: ^2.2.5
+        version: 2.2.5
+      tar:
+        specifier: ^7.4.3
+        version: 7.4.3
+    devDependencies:
+      '@types/dockerode':
+        specifier: ^3.3.43
+        version: 3.3.43
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.18.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.20.5
+      typescript:
+        specifier: ^5.7.3
+        version: 5.9.2
 
   packages/server:
     dependencies:
@@ -3026,6 +3056,13 @@ packages:
       }
     engines: { node: '>=10' }
 
+  chalk@5.6.2:
+    resolution:
+      {
+        integrity: sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==,
+      }
+    engines: { node: ^12.17.0 || ^14.13 || >=16.0.0 }
+
   character-entities-html4@2.1.0:
     resolution:
       {
@@ -3131,6 +3168,13 @@ packages:
         integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==,
       }
 
+  commander@13.1.0:
+    resolution:
+      {
+        integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==,
+      }
+    engines: { node: '>=18' }
+
   commander@14.0.0:
     resolution:
       {
@@ -3202,13 +3246,6 @@ packages:
         integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==,
       }
     engines: { node: '>= 0.6' }
-
-  copy-anything@3.0.5:
-    resolution:
-      {
-        integrity: sha512-yCEafptTtb4bk7GLEQoM8KVJpxAfdBJYaXyzQEgQQQgYrZiDp8SJmGKlYza6CYjEDNstAdNdKA3UuoULlEbS6w==,
-      }
-    engines: { node: '>=12.13' }
 
   copy-anything@4.0.5:
     resolution:
@@ -4316,13 +4353,6 @@ packages:
         integrity: sha512-2AT6j+gXe/1ueqbW6fLZJiIw3F8iXGJtt0yDrZaBhAZEG1raiTxKWU+IPqMCzQAXOUCKdA4UDMgacKH25XG2Cw==,
       }
     engines: { node: '>=4' }
-
-  is-what@4.1.16:
-    resolution:
-      {
-        integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==,
-      }
-    engines: { node: '>=12.13' }
 
   is-what@5.5.0:
     resolution:
@@ -5704,13 +5734,6 @@ packages:
       {
         integrity: sha512-zOh9jPYI+xrNOyisSelgym4tolKTJCQd5GBhK0+0xJvcYDcwlOoxF/rnFKQ2KRZknXSG9jWAp66fwP6AxN9STg==,
       }
-
-  superjson@2.2.2:
-    resolution:
-      {
-        integrity: sha512-5JRxVqC8I8NuOUjzBbvVJAKNM8qoVuH0O77h4WInc/qC2q5IreqKxYwgkga3PfA22OayK2ikceb/B26dztPl+Q==,
-      }
-    engines: { node: '>=16' }
 
   superjson@2.2.5:
     resolution:
@@ -7932,7 +7955,7 @@ snapshots:
       mitt: 3.0.1
       perfect-debounce: 1.0.0
       speakingurl: 14.0.1
-      superjson: 2.2.2
+      superjson: 2.2.5
 
   '@vue/devtools-kit@8.0.3':
     dependencies:
@@ -7942,7 +7965,7 @@ snapshots:
       mitt: 3.0.1
       perfect-debounce: 2.0.0
       speakingurl: 14.0.1
-      superjson: 2.2.2
+      superjson: 2.2.5
 
   '@vue/devtools-shared@7.7.7':
     dependencies:
@@ -8271,6 +8294,8 @@ snapshots:
       ansi-styles: 4.3.0
       supports-color: 7.2.0
 
+  chalk@5.6.2: {}
+
   character-entities-html4@2.1.0: {}
 
   character-entities-legacy@3.0.0: {}
@@ -8326,6 +8351,8 @@ snapshots:
 
   comma-separated-tokens@2.0.3: {}
 
+  commander@13.1.0: {}
+
   commander@14.0.0: {}
 
   commander@14.0.2: {}
@@ -8359,10 +8386,6 @@ snapshots:
   cookie-signature@1.0.6: {}
 
   cookie@0.7.1: {}
-
-  copy-anything@3.0.5:
-    dependencies:
-      is-what: 4.1.16
 
   copy-anything@4.0.5:
     dependencies:
@@ -9062,8 +9085,6 @@ snapshots:
   is-subdir@1.2.0:
     dependencies:
       better-path-resolve: 1.0.0
-
-  is-what@4.1.16: {}
 
   is-what@5.5.0: {}
 
@@ -9807,10 +9828,6 @@ snapshots:
       stubborn-utils: 1.0.2
 
   stubborn-utils@1.0.2: {}
-
-  superjson@2.2.2:
-    dependencies:
-      copy-anything: 3.0.5
 
   superjson@2.2.5:
     dependencies:

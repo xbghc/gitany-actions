@@ -21,86 +21,22 @@ export type { StateStorage } from './watcher/state-storage.js';
 export { FileStateStorage } from './watcher/file-state-storage.js';
 export { MemoryStateStorage } from './watcher/memory-state-storage.js';
 
-// ===== Container Management =====
-// New API (recommended)
-export {
-  createContainer,
-  getContainerById,
-  findContainers,
-  getContainerInfo,
-  startContainer,
-  stopContainer,
-  removeContainer,
-  removeContainersByLabels,
-  cleanupManagedContainers,
-  prepare,
-  resetContainer,
-  exec,
-} from './container/index.js';
+// Runner Types
 export type {
-  CreateContainerConfig,
-  CreateContainerResult,
-  ContainerInfo,
-  PrepareTarget,
-  ResetContainerOptions,
-  ExecOptions,
-  ExecResult,
-} from './container/index.js';
-
-// Legacy API (deprecated)
-export {
-  cleanupPrContainers,
-  ContainerCreationError,
-  copyToContainer,
-  CopyToContainerError,
-  createPrContainer,
-  createWorkspaceContainer,
-  getContainer,
-  getContainerStatus,
-  ImagePullError,
-  prepareImage,
-} from './container/index.js';
+  Runner,
+  RunnerRegisterRequest,
+  RunnerRegisterResponse,
+  JobRequest,
+  RunnerJob,
+  WorkflowJob,
+  ChatJob,
+  JobUpdate,
+  WorkflowJobPayload,
+  ChatJobPayload,
+} from './types/runner.js';
 export type {
-  ContainerOptions,
-  CopyToContainerOptions,
-  ImagePullStatus,
-} from './container/index.js';
-
-// ===== Container Command Execution =====
-export {
-  checkProjectFiles,
-  collectDiagnostics,
-  ContainerExecutor,
-  DiagnosticsCollectionError,
-  execCommand,
-  executor,
-  ExecutorChain,
-  verifySha,
-} from './executor/index.js';
-export type {
-  CheckOptions,
-  CheckStepResult,
-  ExecuteOptions,
-  ExecuteResult,
-  ExecutionContext,
-  ExecutionHandle,
-  ExecutionResult,
-  ExecutorOptions,
-  ProjectCheckResult,
-  ProjectDiagnostics,
-  StepOptions,
-  StepResult as ContainerStepResult,
-  StepExecutionError as ContainerStepExecutionError,
-  VerifyOptions,
-  VerifyResult,
-} from './executor/index.js';
-
-// ===== Workflows =====
-export { chat, createApiCallScript, testShaBuild } from './workflows/index.js';
-export type {
-  ChatOptions,
-  ChatResult,
-  CreateApiCallScriptOptions,
-  TestShaBuildOptions,
-  TestShaBuildResult,
-} from './workflows/index.js';
+  WorkflowConfigStep,
+  WorkflowConfig,
+  CreateWorkflowConfigRequest,
+  UpdateWorkflowConfigRequest,
+} from './types/workflow-config.js';

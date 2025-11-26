@@ -1,5 +1,4 @@
 import type { Issue, IssueComment, Notification, PRComment, PullRequest } from '@xbghc/gitcode-api';
-import type Docker from 'dockerode';
 
 /**
  * 基础事件数据接口
@@ -30,29 +29,6 @@ export interface IssueEventData extends BaseEventData {
 export interface IssueCommentEventData extends BaseEventData {
   issue: Issue;
   comment: IssueComment;
-}
-
-/**
- * 容器相关事件
- */
-export interface ContainerCreatedEventData extends BaseEventData {
-  container: Docker.Container;
-  pr: PullRequest;
-}
-
-export interface ContainerRemovedEventData extends BaseEventData {
-  prId: number;
-}
-
-export interface ContainerListedEventData extends BaseEventData {
-  containerId: string;
-  containerName: string;
-  prId: number;
-}
-
-export interface ContainerCleanupRemovedEventData extends BaseEventData {
-  id: string;
-  state: string;
 }
 
 /**
@@ -129,18 +105,6 @@ export interface NotificationCommentLoadFailedEventData extends BaseEventData {
 }
 
 /**
- * 容器清理事件
- */
-export interface ContainerCleanupStartedEventData extends BaseEventData {
-  count: number;
-}
-
-export interface ContainerCleanupRemoveFailedEventData extends BaseEventData {
-  error: unknown;
-  id: string;
-}
-
-/**
  * 事件数据类型映射
  */
 export interface EventDataMap {
@@ -152,10 +116,6 @@ export interface EventDataMap {
 
   // Issue 事件
   'issue:comment:created': IssueCommentEventData;
-
-  // 容器事件
-  'container:created': ContainerCreatedEventData;
-  'container:removed': ContainerRemovedEventData;
 
   // Watcher 生命周期事件
   'watcher:poll:start': WatcherPollStartEventData;
@@ -178,13 +138,6 @@ export interface EventDataMap {
   'notification:mark-read:failed': NotificationMarkReadFailedEventData;
   'notification:url:parse:failed': NotificationUrlParseFailedEventData;
   'notification:comment:load:failed': NotificationCommentLoadFailedEventData;
-
-  // 容器清理事件
-  'container:cleanup:started': ContainerCleanupStartedEventData;
-  'container:cleanup:listed': ContainerListedEventData;
-  'container:cleanup:removed': ContainerCleanupRemovedEventData;
-  'container:cleanup:stale:removed': ContainerCleanupRemovedEventData;
-  'container:cleanup:remove:failed': ContainerCleanupRemoveFailedEventData;
 }
 
 /**

@@ -26,13 +26,9 @@
   "dependencies": {
     "@xbghc/gitcode-api": "workspace:*",
     "@xbghc/gitcode-cli": "workspace:*",
-    "dockerode": "^4.0.8",
-    "superjson": "^2.2.5",
-    "tar": "^7.4.3"
+    "superjson": "^2.2.5"
   },
-  "devDependencies": {
-    "@types/dockerode": "^3.3.43"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=22.0.0"
   }
