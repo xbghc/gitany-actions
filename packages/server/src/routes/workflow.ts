@@ -202,7 +202,7 @@ workflowRouter.delete('/workflow/cleanup', (req: Request, res: Response) => {
 /**
  * 测试单个Docker镜像源 - Not Supported on Server
  */
-workflowRouter.post('/workflow/test-registry-mirror', async (_req: Request, res: Response) => {
+workflowRouter.post('/workflow/test-registry-mirror', (_req: Request, res: Response) => {
   res.status(501).json({
     success: false,
     error: 'Not Implemented',
@@ -213,7 +213,7 @@ workflowRouter.post('/workflow/test-registry-mirror', async (_req: Request, res:
 /**
  * 测试所有预定义的Docker镜像源 - Not Supported on Server
  */
-workflowRouter.get('/workflow/test-all-registry-mirrors', async (_req: Request, res: Response) => {
+workflowRouter.get('/workflow/test-all-registry-mirrors', (_req: Request, res: Response) => {
   res.status(501).json({
     success: false,
     error: 'Not Implemented',
