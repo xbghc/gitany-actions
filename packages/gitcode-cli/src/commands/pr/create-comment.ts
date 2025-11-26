@@ -3,7 +3,7 @@ import { parseGitUrl } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 interface CreatePrCommentOptions {
@@ -47,7 +47,7 @@ export async function createPrCommentAction(
   let repoUrl = '';
   await withClient(
     async (client) => {
-      repoUrl = await resolveRepoUrl(options.repo);
+      repoUrl = await resolveGitCodeRepoUrl(options.repo);
 
       // 解析仓库URL获取 owner/repo（复用通用解析器）
       const parsed = parseGitUrl(repoUrl);

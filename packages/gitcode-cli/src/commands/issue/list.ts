@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 import type { Issue } from '@xbghc/gitcode-api';
 
@@ -8,7 +8,7 @@ export async function listCommand(
 ): Promise<void> {
   await withClient(
     async (client) => {
-      const repoUrl = await resolveRepoUrl(url);
+      const repoUrl = await resolveGitCodeRepoUrl(url);
       const issues: Issue[] = await client.issue.list(repoUrl, {
         state: options.state as 'open' | 'closed' | 'all' | undefined,
         labels: options.label,

@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 import { parseGitUrl, type NotificationQuery } from '@xbghc/gitcode-api';
 
@@ -12,7 +12,7 @@ export async function notificationsCommand(
   options: NotificationsOptions = {},
 ): Promise<void> {
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(url);
+    const repoUrl = await resolveGitCodeRepoUrl(url);
     const parsed = parseGitUrl(repoUrl);
 
     if (!parsed) {

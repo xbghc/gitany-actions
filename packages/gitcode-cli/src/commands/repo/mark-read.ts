@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 
@@ -22,7 +22,7 @@ export async function markNotificationsReadCommand(
       ids = idsOrEmpty;
     } else {
       // 否则第一个参数是 ID，从 git config 读取 URL
-      repoUrl = await resolveRepoUrl(undefined);
+      repoUrl = await resolveGitCodeRepoUrl(undefined);
       ids = [urlOrFirstId, ...idsOrEmpty];
     }
 

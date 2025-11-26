@@ -1,5 +1,5 @@
 import { type CreatePullBody } from '@xbghc/gitcode-api';
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 export async function createCommand(
@@ -24,7 +24,7 @@ export async function createCommand(
   }
 
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(url);
+    const repoUrl = await resolveGitCodeRepoUrl(url);
     const created = await client.pr.create(repoUrl, body);
 
     const pr = created;

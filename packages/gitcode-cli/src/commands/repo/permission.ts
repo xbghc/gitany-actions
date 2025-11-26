@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 import { extractRepoRoleFromSelfPermission } from '@xbghc/gitcode-api';
 
@@ -11,7 +11,7 @@ export async function permissionCommand(
   options: PermissionOptions = {},
 ): Promise<void> {
   await withClient(async (client) => {
-    const repoUrl = await resolveRepoUrl(url);
+    const repoUrl = await resolveGitCodeRepoUrl(url);
 
     if (options.json) {
       // 获取完整权限数据

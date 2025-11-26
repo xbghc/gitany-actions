@@ -2,7 +2,7 @@ import type { GitCodeClient, PullRequestDetail } from '@xbghc/gitcode-api';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import { simpleGit, SimpleGit } from 'simple-git';
 import { parseGitRemotes } from '../../utils/parse-git-remotes.js';
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 interface CheckoutOptions {
@@ -144,7 +144,7 @@ export async function checkoutCommand(
   urlArg?: string,
   options: CheckoutOptions = {},
 ): Promise<void> {
-  const repoUrl = await resolveRepoUrl(urlArg);
+  const repoUrl = await resolveGitCodeRepoUrl(urlArg);
   const prId = parseInt(prNumber, 10);
 
   if (isNaN(prId)) {
