@@ -175,7 +175,10 @@ export class JobExecutor {
     if (result.exitCode !== 0) {
       if (options.continueOnError) {
         // Log failure but continue
-        await this.logOutput(jobId, `Step ${stepName} failed with exit code ${result.exitCode} (ignored)\n`);
+        await this.logOutput(
+          jobId,
+          `Step ${stepName} failed with exit code ${result.exitCode} (ignored)\n`,
+        );
       } else {
         await this.client.updateJob(jobId, { stepName, status: 'failed' });
         throw new Error(`Step ${stepName} failed with exit code ${result.exitCode}`);
