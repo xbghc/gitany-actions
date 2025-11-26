@@ -2,6 +2,41 @@ import pinoHttp from 'pino-http';
 import type { IncomingMessage, ServerResponse } from 'http';
 import { logger, generateRequestId } from '../utils/logger.js';
 
+// 敏感参数名列表（不记录这些参数的值）
+const SENSITIVE_PARAMS = [
+  'token',
+  'access_token',
+  'refresh_token',
+  'password',
+  'secret',
+  'api_key',
+  'apikey',
+  'authorization',
+  'auth',
+  'code', // OAuth code
+  'state', // OAuth state
+];
+
+/**
+ * 过滤敏感查询参数
+ */
+function sanitizeQuery(query: unknown): Record<string, unknown> | undefined {
+  if (!query || typeof query !== 'object') {
+    return undefined;
+  }
+
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(query as Record<string, unknown>)) {
+    if (SENSITIVE_PARAMS.some((param) => key.toLowerCase().includes(param))) {
+      sanitized[key] = '[REDACTED]';
+    } else {
+      sanitized[key] = value;
+    }
+  }
+
+  return Object.keys(sanitized).length > 0 ? sanitized : undefined;
+}
+
 /**
  * HTTP 请求日志中间件
  *
@@ -56,7 +91,7 @@ export const requestLogger = pinoHttp.default({
       id: req.id,
       method: req.method,
       url: req.url,
-      query: req.query,
+      query: sanitizeQuery(req.query),
       // 不记录完整的 headers，只记录必要的
       headers: {
         host: (req.headers as Record<string, unknown>)?.host,
