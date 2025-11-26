@@ -8,6 +8,7 @@ import { prCommand } from './commands/pr/index.js';
 import { repoCommand } from './commands/repo/index.js';
 import { userCommand } from './commands/user/index.js';
 import { statusCommand } from './commands/status.js';
+import { completionCommand } from './commands/completion.js';
 
 const program = new Command();
 
@@ -53,5 +54,8 @@ program.addCommand(userCommand());
 
 // issue command
 program.addCommand(issueCommand());
+
+// completion command
+program.addCommand(completionCommand());
 
 program.parse();
