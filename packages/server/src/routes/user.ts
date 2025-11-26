@@ -2,6 +2,8 @@ import { Router, type Request, type Response } from 'express';
 import { withAuth } from '../middleware/auth.js';
 import { createGitCodeClient } from '../utils/gitcode-client.js';
 import { isValidGitCodeImageUrl } from '../constants/allowed-domains.js';
+import { logger } from '../utils/logger.js';
+import { ValidationError, ExternalServiceError } from '../errors/index.js';
 
 export const userRouter: Router = Router();
 
@@ -12,9 +14,9 @@ export const userRouter: Router = Router();
 userRouter.get(
   '/user',
   withAuth(async (_req, res, token) => {
-    try {
-      const client = createGitCodeClient(token);
+    const client = createGitCodeClient(token);
 
+    try {
       const userProfile = await client.user.getProfile();
 
       res.json({
@@ -22,12 +24,8 @@ userRouter.get(
         data: userProfile,
       });
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch user profile',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ error }, 'Failed to fetch user profile');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch user profile', error as Error);
     }
   }),
 );
@@ -37,25 +35,17 @@ userRouter.get(
  * GET /api/avatar-proxy?url=https://cdn-img.gitcode.com/...
  */
 userRouter.get('/avatar-proxy', async (req: Request, res: Response) => {
+  const avatarUrl = req.query.url as string;
+
+  if (!avatarUrl) {
+    throw new ValidationError('Missing avatar URL');
+  }
+
+  if (!isValidGitCodeImageUrl(avatarUrl)) {
+    throw new ValidationError('Invalid avatar URL domain');
+  }
+
   try {
-    const avatarUrl = req.query.url as string;
-
-    if (!avatarUrl) {
-      res.status(400).json({
-        success: false,
-        error: 'Missing avatar URL',
-      });
-      return;
-    }
-
-    if (!isValidGitCodeImageUrl(avatarUrl)) {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid avatar URL domain',
-      });
-      return;
-    }
-
     const response = await fetch(avatarUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -64,11 +54,11 @@ userRouter.get('/avatar-proxy', async (req: Request, res: Response) => {
     });
 
     if (!response.ok) {
-      res.status(response.status).json({
-        success: false,
-        error: 'Failed to fetch avatar',
-      });
-      return;
+      logger.warn({ avatarUrl, status: response.status }, 'Failed to fetch avatar from upstream');
+      throw new ExternalServiceError(
+        'Avatar Service',
+        `Failed to fetch avatar: ${response.status}`,
+      );
     }
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
@@ -78,11 +68,10 @@ userRouter.get('/avatar-proxy', async (req: Request, res: Response) => {
     const buffer = await response.arrayBuffer();
     res.send(Buffer.from(buffer));
   } catch (error) {
-    console.error('Avatar proxy error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to proxy avatar',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    if (error instanceof ExternalServiceError) {
+      throw error;
+    }
+    logger.error({ avatarUrl, error }, 'Avatar proxy error');
+    throw new ExternalServiceError('Avatar Service', 'Failed to proxy avatar', error as Error);
   }
 });
