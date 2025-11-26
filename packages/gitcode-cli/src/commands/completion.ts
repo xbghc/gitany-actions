@@ -1,5 +1,10 @@
 import { Command } from 'commander';
-import { bashCompletion, zshCompletion, fishCompletion } from '../completions/index.js';
+import {
+  bashCompletion,
+  zshCompletion,
+  fishCompletion,
+  powershellCompletion,
+} from '../completions/index.js';
 
 export function completionCommand(): Command {
   const completionProgram = new Command('completion').description(
@@ -41,6 +46,22 @@ export function completionCommand(): Command {
       console.log('\n# To install:');
       console.log('#   gitcode completion fish > ~/.config/fish/completions/gitcode.fish');
       console.log('# Completions will be available in new fish sessions');
+    });
+
+  completionProgram
+    .command('powershell')
+    .alias('pwsh')
+    .description('Generate PowerShell completion script')
+    .action(() => {
+      console.log(powershellCompletion);
+      console.log('\n# To install, add to your PowerShell profile:');
+      console.log('#   gitcode completion powershell >> $PROFILE');
+      console.log('#');
+      console.log('# Or save to a file and dot-source it:');
+      console.log('#   gitcode completion powershell > gitcode-completion.ps1');
+      console.log('#   . ./gitcode-completion.ps1');
+      console.log('#');
+      console.log('# Restart PowerShell for changes to take effect');
     });
 
   return completionProgram;
