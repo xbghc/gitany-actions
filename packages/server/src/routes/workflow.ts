@@ -134,17 +134,14 @@ workflowRouter.get('/workflow/:workflowId/stream', (req: Request, res: Response)
     }
   });
 
-  // 客户端断开连接时清理
-  req.on('close', () => {
-    unsubscribe();
-  });
-
   // 发送心跳，防止连接超时
   const heartbeatInterval = setInterval(() => {
     res.write(': heartbeat\n\n');
   }, 15000);
 
+  // 客户端断开连接时清理
   req.on('close', () => {
+    unsubscribe();
     clearInterval(heartbeatInterval);
   });
 });
