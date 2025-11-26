@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import pino from 'pino';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -37,9 +38,10 @@ export const logger = pino({
 
 /**
  * 生成请求 ID
+ * 使用 crypto.randomUUID() 生成标准 UUID v4
  */
 export function generateRequestId(): string {
-  return `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 9)}`;
+  return randomUUID();
 }
 
 /**
