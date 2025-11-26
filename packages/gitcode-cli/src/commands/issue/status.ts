@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { parseGitUrl } from '@xbghc/gitcode-api';
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 interface StatusOptions {
@@ -32,7 +32,7 @@ export async function statusAction(urlArg?: string, options: StatusOptions = {})
         }
       }
     } else {
-      const url = await resolveRepoUrl(urlArg);
+      const url = await resolveGitCodeRepoUrl(urlArg);
       const parsed = parseGitUrl(url);
       if (parsed) {
         owner = parsed.owner;

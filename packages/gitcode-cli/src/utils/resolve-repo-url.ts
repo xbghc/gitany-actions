@@ -1,4 +1,5 @@
 import { simpleGit } from 'simple-git';
+import { isGitCodeUrl } from './parse-git-remotes.js';
 
 /**
  * Normalize repository URL input
@@ -68,4 +69,29 @@ export async function resolveRepoUrl(
 
     throw new Error('Failed to resolve repository URL');
   }
+}
+
+/**
+ * Resolve and validate GitCode repository URL
+ * - If url is provided, normalize and return it
+ * - Otherwise, read from .git/config in cwd
+ * - Validates that the URL is from GitCode platform
+ * @throws Error if the repository is not from GitCode
+ */
+export async function resolveGitCodeRepoUrl(
+  url?: string,
+  options: { cwd?: string } = {},
+): Promise<string> {
+  const repoUrl = await resolveRepoUrl(url, options);
+
+  if (!isGitCodeUrl(repoUrl)) {
+    console.error('错误：当前仓库不是 GitCode 仓库\n');
+    console.error(`检测到的远程仓库: ${repoUrl}`);
+    console.error('gitcode CLI 仅支持 GitCode 平台的仓库（gitcode.com）\n');
+    console.error('如需操作 GitHub 仓库，请使用 GitHub CLI (gh)');
+    console.error('如需操作 GitLab 仓库，请使用 GitLab CLI (glab)');
+    process.exit(1);
+  }
+
+  return repoUrl;
 }
