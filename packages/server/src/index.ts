@@ -5,6 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 import { repoRouter } from './routes/repo.js';
 import { prRouter } from './routes/pr.js';
 import { issueRouter } from './routes/issue.js';
@@ -23,6 +24,8 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json') as { name: string; version: string };
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +62,8 @@ app.use(
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
+    name: pkg.name,
+    version: pkg.version,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
   });
