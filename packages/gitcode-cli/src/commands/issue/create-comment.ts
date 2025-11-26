@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import * as fs from 'fs';
 import { withClient } from '../../utils/with-client.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 
 interface CreateCommentOptions {
   body?: string;
@@ -17,8 +18,8 @@ export async function createCommentAction(
 ) {
   await withClient(async (client) => {
     // 处理 --repo 标志和解析 issue 参数
-    let owner: string;
-    let repo: string;
+    let owner: string | undefined;
+    let repo: string | undefined;
     let issueNumber: number;
 
     if (options.repo) {
@@ -53,11 +54,24 @@ export async function createCommentAction(
           repo = parts[1];
           issueNumber = parseInt(parts[2], 10);
         } else {
-          throw new Error(
-            'Invalid issue format. Use OWNER/REPO/NUMBER or https://gitcode.com/OWNER/REPO/issues/NUMBER',
-          );
+          // 只提供了 issue number，自动检测仓库
+          issueNumber = parseInt(issueArg, 10);
         }
       }
+    }
+
+    // 自动检测仓库（从 git remote origin 获取）
+    if (!owner || !repo) {
+      const repoUrl = await resolveGitCodeRepoUrl();
+      const parsed = parseGitUrl(repoUrl);
+      if (parsed) {
+        owner = parsed.owner;
+        repo = parsed.repo;
+      }
+    }
+
+    if (!owner || !repo) {
+      throw new Error('无法检测仓库信息，请在 git 仓库目录下运行或使用 --repo OWNER/REPO 指定');
     }
 
     if (isNaN(issueNumber)) {

@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { formatAssignees } from './helpers.js';
 
 export interface CreateOptions {
@@ -253,10 +254,18 @@ export function createCommand(): Command {
           }
         }
 
+        // 自动检测仓库（从 git remote origin 获取）
         if (!ownerArg || !repoArg) {
-          throw new Error(
-            'Repository owner and name are required. Use --repo OWNER/REPO or provide as arguments',
-          );
+          const repoUrl = await resolveGitCodeRepoUrl();
+          const parsed = parseGitUrl(repoUrl);
+          if (parsed) {
+            ownerArg = parsed.owner;
+            repoArg = parsed.repo;
+          }
+        }
+
+        if (!ownerArg || !repoArg) {
+          throw new Error('无法检测仓库信息，请在 git 仓库目录下运行或使用 --repo OWNER/REPO 指定');
         }
 
         await createAction(ownerArg, repoArg, titleArg || optionsToUse.title, optionsToUse);
