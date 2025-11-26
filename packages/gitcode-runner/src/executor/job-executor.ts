@@ -1,4 +1,4 @@
-import type { RunnerJob, WorkflowConfig } from '@xbghc/gitcode-actions';
+import type { RunnerJob, WorkflowConfig, WorkflowJob } from '@xbghc/gitcode-actions';
 import type Docker from 'dockerode';
 import { RunnerClient } from '../runner-client.js';
 import { docker } from '../container/shared.js';
@@ -33,7 +33,7 @@ export class JobExecutor {
    * Executes a workflow job.
    * @param job - The workflow job to execute.
    */
-  private async executeWorkflow(job: RunnerJob) {
+  private async executeWorkflow(job: WorkflowJob) {
     const { repoUrl, branch, config, gitcodeToken } = job.payload;
     const {
       steps: configSteps,

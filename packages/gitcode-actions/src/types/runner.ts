@@ -24,12 +24,39 @@ export interface JobRequest {
   token: string;
 }
 
-export interface RunnerJob {
+export interface WorkflowJobPayload {
+  workflowId?: string;
+  owner?: string;
+  repo?: string;
+  prNumber?: number;
+  repoUrl: string;
+  branch: string;
+  config: unknown; // WorkflowConfig
+  gitcodeToken?: string;
+}
+
+export interface ChatJobPayload {
+  prompt: string;
+  repoUrl?: string;
+  context?: unknown;
+}
+
+interface RunnerJobBase {
   id: string;
   workflowId: string;
-  type: 'workflow' | 'chat';
-  payload: any;
 }
+
+export interface WorkflowJob extends RunnerJobBase {
+  type: 'workflow';
+  payload: WorkflowJobPayload;
+}
+
+export interface ChatJob extends RunnerJobBase {
+  type: 'chat';
+  payload: ChatJobPayload;
+}
+
+export type RunnerJob = WorkflowJob | ChatJob;
 
 export interface JobUpdate {
   runnerId: string;

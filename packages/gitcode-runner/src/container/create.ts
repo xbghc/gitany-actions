@@ -1,5 +1,3 @@
-import type { PullRequest } from '@xbghc/gitcode-api';
-import { toGitUrl } from '@xbghc/gitcode-api';
 import type Docker from 'dockerode';
 
 import { executor } from '../executor/container-executor.js';

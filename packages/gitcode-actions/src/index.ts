@@ -28,7 +28,11 @@ export type {
   RunnerRegisterResponse,
   JobRequest,
   RunnerJob,
+  WorkflowJob,
+  ChatJob,
   JobUpdate,
+  WorkflowJobPayload,
+  ChatJobPayload,
 } from './types/runner.js';
 export type {
   WorkflowConfigStep,

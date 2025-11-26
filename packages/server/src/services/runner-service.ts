@@ -87,7 +87,7 @@ export class RunnerService {
   // Cleanup old runners (e.g. no heartbeat for 5 mins)
   cleanupRunners(maxAge = 5 * 60 * 1000) {
     const now = Date.now();
-    for (const [id, runner] of this.runners.entries()) {
+    for (const [_id, runner] of this.runners.entries()) {
       const lastSeen = new Date(runner.lastSeen).getTime();
       if (now - lastSeen > maxAge) {
         // Mark as offline instead of deleting?
