@@ -31,6 +31,8 @@
     "express": "^4.21.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "pino": "^9.6.0",
+    "pino-http": "^10.4.0",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
   },

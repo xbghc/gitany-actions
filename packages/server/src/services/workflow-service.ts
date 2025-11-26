@@ -12,6 +12,7 @@ import type {
 import { workflowLogService } from './workflow-log-service.js';
 import { runnerService } from './runner-service.js';
 import type { RunnerJob } from '@xbghc/gitcode-actions';
+import { logger } from '../utils/logger.js';
 
 /**
  * Workflow服务
@@ -96,7 +97,7 @@ export class WorkflowService {
     const workflow = this.workflows.get(workflowId);
     if (workflow) {
       workflowLogService.saveWorkflowLog(workflow).catch((error) => {
-        console.error(`Failed to save workflow log ${workflowId}:`, error);
+        logger.error({ workflowId, error }, 'Failed to save workflow log');
       });
     }
   }
@@ -199,7 +200,7 @@ export class WorkflowService {
       const pr = await gitcodeClient.pr.get(repoUrl, prNumber);
       branch = pr.head.ref;
     } catch (error) {
-      console.error(`Failed to fetch PR #${prNumber} info:`, error);
+      logger.error({ owner, repo, prNumber, error }, 'Failed to fetch PR info');
       throw new Error(`无法获取 PR #${prNumber} 信息，请检查网络或权限`);
     }
 

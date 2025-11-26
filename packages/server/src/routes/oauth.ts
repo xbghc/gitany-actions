@@ -1,5 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { OAuthService } from '../services/oauth-service.js';
+import { logger } from '../utils/logger.js';
+import { ValidationError, ServiceUnavailableError, ExternalServiceError } from '../errors/index.js';
 
 export const oauthRouter: Router = Router();
 
@@ -9,7 +11,10 @@ let oauthService: OAuthService | null = null;
 try {
   oauthService = new OAuthService();
 } catch (error) {
-  console.warn('OAuth service not configured:', error instanceof Error ? error.message : error);
+  logger.warn(
+    { error: error instanceof Error ? error.message : error },
+    'OAuth service not configured',
+  );
 }
 
 /**
@@ -17,16 +22,13 @@ try {
  * GET /api/oauth/authorize-url
  */
 oauthRouter.get('/oauth/authorize-url', (_req: Request, res: Response) => {
-  try {
-    if (!oauthService) {
-      res.status(503).json({
-        success: false,
-        error: 'OAuth service not configured',
-        message: 'Please set GITCODE_OAUTH_CLIENT_ID and GITCODE_OAUTH_CLIENT_SECRET',
-      });
-      return;
-    }
+  if (!oauthService) {
+    throw new ServiceUnavailableError(
+      'OAuth service not configured. Please set GITCODE_OAUTH_CLIENT_ID and GITCODE_OAUTH_CLIENT_SECRET',
+    );
+  }
 
+  try {
     const { url, state } = oauthService.getAuthorizationUrl();
 
     res.json({
@@ -34,12 +36,8 @@ oauthRouter.get('/oauth/authorize-url', (_req: Request, res: Response) => {
       data: { url, state },
     });
   } catch (error) {
-    console.error('Failed to generate authorization URL:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to generate authorization URL',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error({ error }, 'Failed to generate authorization URL');
+    throw new ExternalServiceError('OAuth', 'Failed to generate authorization URL', error as Error);
   }
 });
 
@@ -49,38 +47,29 @@ oauthRouter.get('/oauth/authorize-url', (_req: Request, res: Response) => {
  * Body: { code: string, state?: string }
  */
 oauthRouter.post('/oauth/token', async (req: Request, res: Response) => {
+  if (!oauthService) {
+    throw new ServiceUnavailableError(
+      'OAuth service not configured. Please set GITCODE_OAUTH_CLIENT_ID and GITCODE_OAUTH_CLIENT_SECRET',
+    );
+  }
+
+  const { code } = req.body;
+
+  if (!code) {
+    throw new ValidationError('Missing authorization code');
+  }
+
   try {
-    if (!oauthService) {
-      res.status(503).json({
-        success: false,
-        error: 'OAuth service not configured',
-        message: 'Please set GITCODE_OAUTH_CLIENT_ID and GITCODE_OAUTH_CLIENT_SECRET',
-      });
-      return;
-    }
-
-    const { code } = req.body;
-
-    if (!code) {
-      res.status(400).json({
-        success: false,
-        error: 'Missing authorization code',
-      });
-      return;
-    }
-
     const tokenResponse = await oauthService.exchangeCodeForToken(code);
+
+    logger.info('OAuth token exchanged successfully');
 
     res.json({
       success: true,
       data: tokenResponse,
     });
   } catch (error) {
-    console.error('Failed to exchange token:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to exchange token',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error({ error }, 'Failed to exchange token');
+    throw new ExternalServiceError('OAuth', 'Failed to exchange token', error as Error);
   }
 });

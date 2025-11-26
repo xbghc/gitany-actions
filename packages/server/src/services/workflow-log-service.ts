@@ -7,6 +7,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import type { WorkflowResult, WorkflowLogMeta } from '../types/workflow.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * WorkflowLogService类
@@ -129,7 +130,7 @@ class WorkflowLogService {
           const workflow: WorkflowResult = JSON.parse(content);
           logs.push(this.toLogMeta(workflow));
         } catch (error) {
-          console.error(`Failed to read log file ${file}:`, error);
+          logger.warn({ file, error }, 'Failed to read log file, skipping corrupted file');
           // 跳过损坏的文件
         }
       }

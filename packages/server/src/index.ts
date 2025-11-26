@@ -14,8 +14,10 @@ import { workflowConfigRouter } from './routes/workflow-config.js';
 import { runnerRoutes } from './routes/runner.js';
 import { userRouter } from './routes/user.js';
 import { oauthRouter } from './routes/oauth.js';
-import { errorHandler } from './middleware/error-handler.js';
+import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { avatarTransformerMiddleware } from './middleware/avatar-transformer.js';
+import { requestLogger } from './middleware/request-logger.js';
+import { logger } from './utils/logger.js';
 
 dotenv.config();
 
@@ -31,6 +33,9 @@ const swaggerDocument = YAML.load(join(__dirname, 'swagger.yaml'));
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Request logging
+app.use(requestLogger);
 
 // Avatar URL transformer - must be before routes to intercept res.json()
 app.use(avatarTransformerMiddleware);
@@ -52,7 +57,11 @@ app.use(
 
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
 });
 
 // Routes
@@ -66,10 +75,24 @@ app.use('/api', workflowRouter);
 app.use('/api', workflowConfigRouter);
 app.use('/api/runners', runnerRoutes);
 
+// 404 handler
+app.use(notFoundHandler);
+
 // Error handling
 app.use(errorHandler);
 
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`API Documentation available at http://localhost:${PORT}/api-docs`);
+  logger.info({ port: PORT }, `Server started on http://localhost:${PORT}`);
+  logger.info({ docs: `http://localhost:${PORT}/api-docs` }, 'API Documentation available');
+});
+
+// 处理未捕获的异常
+process.on('uncaughtException', (error) => {
+  logger.fatal({ error }, 'Uncaught exception');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.error({ reason }, 'Unhandled rejection');
 });

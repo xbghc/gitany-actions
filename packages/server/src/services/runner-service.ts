@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import type { Runner, RunnerJob } from '@xbghc/gitcode-actions';
+import { logger } from '../utils/logger.js';
 
 export class RunnerService {
   private runners = new Map<string, Runner>();
@@ -40,7 +41,7 @@ export class RunnerService {
   }
 
   enqueueJob(job: RunnerJob) {
-    console.log(`[RunnerService] Job enqueued: ${job.id} (Workflow: ${job.workflowId})`);
+    logger.info({ jobId: job.id, workflowId: job.workflowId }, 'Job enqueued');
     this.jobQueue.push(job);
   }
 
@@ -58,7 +59,7 @@ export class RunnerService {
       runner.status = 'busy';
       runner.currentJobId = job.id;
       this.assignments.set(runnerId, job.id);
-      console.log(`[RunnerService] Job ${job.id} assigned to runner ${runner.name} (${runnerId})`);
+      logger.info({ jobId: job.id, runnerName: runner.name, runnerId }, 'Job assigned to runner');
       return job;
     }
 

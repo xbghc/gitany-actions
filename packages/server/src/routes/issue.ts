@@ -2,6 +2,8 @@ import type { ListIssuesQuery } from '@xbghc/gitcode-api';
 import { Router } from 'express';
 import { withAuth } from '../middleware/auth.js';
 import { createGitCodeClient } from '../utils/gitcode-client.js';
+import { logger } from '../utils/logger.js';
+import { ValidationError, ExternalServiceError } from '../errors/index.js';
 
 export const issueRouter: Router = Router();
 
@@ -12,20 +14,20 @@ export const issueRouter: Router = Router();
 issueRouter.get(
   '/repo/:owner/:repo/issues',
   withAuth(async (req, res, token) => {
+    const { owner, repo } = req.params;
+    const { state, page, per_page, sort, labels } = req.query;
+
+    const client = createGitCodeClient(token);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
+    const query: ListIssuesQuery = {};
+    if (state) query.state = state as 'all' | 'open' | 'closed';
+    if (page) query.page = Number(page);
+    if (per_page) query.per_page = Number(per_page);
+    if (sort) query.sort = sort as 'created' | 'updated' | 'comments';
+    if (labels) query.labels = labels as string;
+
     try {
-      const { owner, repo } = req.params;
-      const { state, page, per_page, sort, labels } = req.query;
-
-      const client = createGitCodeClient(token);
-      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
-
-      const query: ListIssuesQuery = {};
-      if (state) query.state = state as 'all' | 'open' | 'closed';
-      if (page) query.page = Number(page);
-      if (per_page) query.per_page = Number(per_page);
-      if (sort) query.sort = sort as 'created' | 'updated' | 'comments';
-      if (labels) query.labels = labels as string;
-
       const issues = await client.issue.list(repoUrl, query);
 
       res.json({
@@ -33,12 +35,8 @@ issueRouter.get(
         data: issues,
       });
     } catch (error) {
-      console.error('Failed to fetch issues:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch issues',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, query, error }, 'Failed to fetch issues');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch issues', error as Error);
     }
   }),
 );
@@ -53,101 +51,101 @@ issueRouter.get(
 issueRouter.get(
   '/repo/:owner/:repo/issues/count',
   withAuth(async (req, res, token) => {
+    const { owner, repo } = req.params;
+
+    const client = createGitCodeClient(token);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
+    // 探测各个状态的Issue数量
+    const countResult = {
+      all: 0,
+      opened: 0,
+      closed: 0,
+    };
+
+    // 三阶段探测：指数搜索 → 二分查找 → 直接获取最后一页
+    const probeCount = async (state: 'all' | 'open' | 'closed'): Promise<number> => {
+      // 第一阶段：指数级探测，快速确定范围（100, 1000, 10000）
+      // 从 100 开始，因为 per_page 最大支持 100
+      let lower = 0;
+      let upper = 100;
+
+      while (upper <= 10000) {
+        try {
+          const issues = await client.issue.list(repoUrl, {
+            state,
+            page: upper,
+            per_page: 1,
+          });
+
+          if (issues.length === 0) {
+            // 该页无数据，范围确定在 [lower, upper) 之间
+            break;
+          } else {
+            // 该页有数据，继续探测更大范围
+            lower = upper;
+            upper *= 10; // 100 → 1000 → 10000
+          }
+        } catch {
+          break;
+        }
+      }
+
+      // 限制上限
+      if (upper > 10000) {
+        upper = 10000;
+      }
+
+      // 第二阶段：如果区间小于100，直接获取最后一页确定准确数量
+      if (upper - lower < 100) {
+        // 计算这个区间所在的页码（假设 per_page=100）
+        const pageNum = Math.floor(lower / 100) + 1;
+        const baseCount = (pageNum - 1) * 100;
+
+        try {
+          const issues = await client.issue.list(repoUrl, {
+            state,
+            page: pageNum,
+            per_page: 100,
+          });
+
+          // 返回基数 + 这一页的数量
+          return baseCount + issues.length;
+        } catch {
+          // 如果请求失败，回退到二分查找
+        }
+      }
+
+      // 第三阶段：区间较大时使用二分查找
+      let left = lower;
+      let right = upper;
+      let count = lower;
+
+      while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+
+        try {
+          const issues = await client.issue.list(repoUrl, {
+            state,
+            page: mid,
+            per_page: 1,
+          });
+
+          if (issues.length > 0) {
+            count = mid;
+            left = mid + 1;
+          } else {
+            right = mid - 1;
+          }
+        } catch {
+          break;
+        }
+      }
+
+      return count;
+    };
+
     try {
-      const { owner, repo } = req.params;
-
-      const client = createGitCodeClient(token);
-      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
-
-      // 探测各个状态的Issue数量
-      const countResult = {
-        all: 0,
-        opened: 0,
-        closed: 0,
-      };
-
-      // 三阶段探测：指数搜索 → 二分查找 → 直接获取最后一页
-      const probeCount = async (state: 'all' | 'open' | 'closed'): Promise<number> => {
-        // 第一阶段：指数级探测，快速确定范围（100, 1000, 10000）
-        // 从 100 开始，因为 per_page 最大支持 100
-        let lower = 0;
-        let upper = 100;
-
-        while (upper <= 10000) {
-          try {
-            const issues = await client.issue.list(repoUrl, {
-              state,
-              page: upper,
-              per_page: 1,
-            });
-
-            if (issues.length === 0) {
-              // 该页无数据，范围确定在 [lower, upper) 之间
-              break;
-            } else {
-              // 该页有数据，继续探测更大范围
-              lower = upper;
-              upper *= 10; // 100 → 1000 → 10000
-            }
-          } catch {
-            break;
-          }
-        }
-
-        // 限制上限
-        if (upper > 10000) {
-          upper = 10000;
-        }
-
-        // 第二阶段：如果区间小于100，直接获取最后一页确定准确数量
-        if (upper - lower < 100) {
-          // 计算这个区间所在的页码（假设 per_page=100）
-          const pageNum = Math.floor(lower / 100) + 1;
-          const baseCount = (pageNum - 1) * 100;
-
-          try {
-            const issues = await client.issue.list(repoUrl, {
-              state,
-              page: pageNum,
-              per_page: 100,
-            });
-
-            // 返回基数 + 这一页的数量
-            return baseCount + issues.length;
-          } catch {
-            // 如果请求失败，回退到二分查找
-          }
-        }
-
-        // 第三阶段：区间较大时使用二分查找
-        let left = lower;
-        let right = upper;
-        let count = lower;
-
-        while (left <= right) {
-          const mid = Math.floor((left + right) / 2);
-
-          try {
-            const issues = await client.issue.list(repoUrl, {
-              state,
-              page: mid,
-              per_page: 1,
-            });
-
-            if (issues.length > 0) {
-              count = mid;
-              left = mid + 1;
-            } else {
-              right = mid - 1;
-            }
-          } catch {
-            break;
-          }
-        }
-
-        return count;
-      };
-
       // 并行探测所有状态
       const [allCount, openCount, closedCount] = await Promise.all([
         probeCount('all'),
@@ -165,12 +163,8 @@ issueRouter.get(
         note: 'Accurate count via exponential + binary search (通过指数探测和二分查找获取的准确数量，最多支持10000个)',
       });
     } catch (error) {
-      console.error('Failed to probe issue count:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to probe issue count',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, error }, 'Failed to probe issue count');
+      throw new ExternalServiceError('GitCode', 'Failed to probe issue count', error as Error);
     }
   }),
 );
@@ -182,12 +176,12 @@ issueRouter.get(
 issueRouter.get(
   '/repo/:owner/:repo/issues/:number',
   withAuth(async (req, res, token) => {
+    const { owner, repo, number } = req.params;
+
+    const client = createGitCodeClient(token);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
     try {
-      const { owner, repo, number } = req.params;
-
-      const client = createGitCodeClient(token);
-      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
-
       const issue = await client.issue.get(repoUrl, Number(number));
 
       res.json({
@@ -195,12 +189,8 @@ issueRouter.get(
         data: issue,
       });
     } catch (error) {
-      console.error('Failed to fetch issue details:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch issue details',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, issueNumber: number, error }, 'Failed to fetch issue details');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch issue details', error as Error);
     }
   }),
 );
@@ -212,20 +202,16 @@ issueRouter.get(
 issueRouter.post(
   '/repo/:owner/:repo/issues',
   withAuth(async (req, res, token) => {
+    const { owner, repo } = req.params;
+    const { title, body, labels, assignees } = req.body;
+
+    if (!title) {
+      throw new ValidationError('Issue title is required');
+    }
+
+    const client = createGitCodeClient(token);
+
     try {
-      const { owner, repo } = req.params;
-      const { title, body, labels, assignees } = req.body;
-
-      if (!title) {
-        res.status(400).json({
-          success: false,
-          error: 'Issue title is required',
-        });
-        return;
-      }
-
-      const client = createGitCodeClient(token);
-
       const issue = await client.issue.create({
         owner,
         body: {
@@ -237,17 +223,15 @@ issueRouter.post(
         },
       });
 
+      logger.info({ owner, repo, issueId: issue.id }, 'Issue created');
+
       res.json({
         success: true,
         data: issue,
       });
     } catch (error) {
-      console.error('Failed to create issue:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to create issue',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, title, error }, 'Failed to create issue');
+      throw new ExternalServiceError('GitCode', 'Failed to create issue', error as Error);
     }
   }),
 );
@@ -259,13 +243,13 @@ issueRouter.post(
 issueRouter.patch(
   '/repo/:owner/:repo/issues/:number',
   withAuth(async (req, res, token) => {
+    const { owner, repo, number } = req.params;
+    const { title, body, state, labels, assignees } = req.body;
+
+    const client = createGitCodeClient(token);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
     try {
-      const { owner, repo, number } = req.params;
-      const { title, body, state, labels, assignees } = req.body;
-
-      const client = createGitCodeClient(token);
-      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
-
       const issue = await client.issue.update(repoUrl, Number(number), {
         title,
         body,
@@ -274,17 +258,15 @@ issueRouter.patch(
         assignee: assignees, // Note: API uses 'assignee' (singular) for input
       });
 
+      logger.info({ owner, repo, issueNumber: number }, 'Issue updated');
+
       res.json({
         success: true,
         data: issue,
       });
     } catch (error) {
-      console.error('Failed to update issue:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update issue',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, issueNumber: number, error }, 'Failed to update issue');
+      throw new ExternalServiceError('GitCode', 'Failed to update issue', error as Error);
     }
   }),
 );
@@ -296,12 +278,12 @@ issueRouter.patch(
 issueRouter.get(
   '/repo/:owner/:repo/issues/:number/comments',
   withAuth(async (req, res, token) => {
+    const { owner, repo, number } = req.params;
+
+    const client = createGitCodeClient(token);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
     try {
-      const { owner, repo, number } = req.params;
-
-      const client = createGitCodeClient(token);
-      const repoUrl = `https://gitcode.com/${owner}/${repo}`;
-
       const comments = await client.issue.comments(repoUrl, Number(number));
 
       res.json({
@@ -309,12 +291,8 @@ issueRouter.get(
         data: comments,
       });
     } catch (error) {
-      console.error('Failed to fetch issue comments:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch issue comments',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, issueNumber: number, error }, 'Failed to fetch issue comments');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch issue comments', error as Error);
     }
   }),
 );
@@ -326,20 +304,16 @@ issueRouter.get(
 issueRouter.post(
   '/repo/:owner/:repo/issues/:number/comments',
   withAuth(async (req, res, token) => {
+    const { owner, repo, number } = req.params;
+    const { body } = req.body;
+
+    if (!body) {
+      throw new ValidationError('Comment body is required');
+    }
+
+    const client = createGitCodeClient(token);
+
     try {
-      const { owner, repo, number } = req.params;
-      const { body } = req.body;
-
-      if (!body) {
-        res.status(400).json({
-          success: false,
-          error: 'Comment body is required',
-        });
-        return;
-      }
-
-      const client = createGitCodeClient(token);
-
       const comment = await client.issue.createComment({
         owner,
         repo,
@@ -347,17 +321,15 @@ issueRouter.post(
         body: { body },
       });
 
+      logger.info({ owner, repo, issueNumber: number }, 'Issue comment created');
+
       res.json({
         success: true,
         data: comment,
       });
     } catch (error) {
-      console.error('Failed to create issue comment:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to create issue comment',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, issueNumber: number, error }, 'Failed to create issue comment');
+      throw new ExternalServiceError('GitCode', 'Failed to create issue comment', error as Error);
     }
   }),
 );
