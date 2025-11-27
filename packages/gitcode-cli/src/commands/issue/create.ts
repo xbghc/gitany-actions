@@ -138,6 +138,7 @@ export async function createAction(
 
     const issue: CreatedIssue = await client.issue.create({
       owner,
+      repo,
       body,
     });
 

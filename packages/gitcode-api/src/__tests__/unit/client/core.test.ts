@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GitCodeClient } from '../../../client/core.js';
 import { GitCodeClientAuth } from '../../../client/auth/index.js';
 import { GitCodeClientPr } from '../../../client/pr/index.js';
@@ -216,6 +216,47 @@ describe('GitCodeClient', () => {
     it('自定义实例应该保持引用', () => {
       const { mockGot } = createMockGot();
 
+      const client = new GitCodeClient('test-token', mockGot);
+
+      expect(client.http).toBe(mockGot);
+    });
+  });
+
+  describe('GitCodeClientOptions', () => {
+    it('应该接受选项对象作为第二个参数', () => {
+      const { mockGot } = createMockGot();
+
+      const client = new GitCodeClient('test-token', { http: mockGot });
+
+      expect(client.http).toBe(mockGot);
+    });
+
+    it('应该支持 onUnauthorized 回调', () => {
+      const onUnauthorized = vi.fn();
+
+      const client = new GitCodeClient('test-token', { onUnauthorized });
+
+      // 验证客户端创建成功
+      expect(client).toBeDefined();
+      expect(client.http).toBeDefined();
+    });
+
+    it('应该同时支持 http 和 onUnauthorized', () => {
+      const { mockGot } = createMockGot();
+      const onUnauthorized = vi.fn();
+
+      const client = new GitCodeClient('test-token', {
+        http: mockGot,
+        onUnauthorized,
+      });
+
+      expect(client.http).toBe(mockGot);
+    });
+
+    it('应该向后兼容 Got 实例作为第二个参数', () => {
+      const { mockGot } = createMockGot();
+
+      // 旧的 API：直接传 Got 实例
       const client = new GitCodeClient('test-token', mockGot);
 
       expect(client.http).toBe(mockGot);

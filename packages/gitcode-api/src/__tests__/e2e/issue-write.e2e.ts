@@ -10,16 +10,15 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { parseGitUrl } from '../../../utils/index.js';
-import type { GitCodeClient } from '../../../client/core.js';
+import { parseGitUrl } from '../../utils/index.js';
+import type { GitCodeClient } from '../../client/core.js';
 import {
   TEST_WRITE_REPO_URL,
   skipIfNoWriteAccess,
   createTestClient,
   generateTestIdentifier,
-  withRetry,
   sleep,
-} from './setup.js';
+} from './helpers.js';
 
 describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
   let client: GitCodeClient;
@@ -52,11 +51,9 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
     if (createdIssueNumber && client) {
       try {
         console.log(`Cleaning up: closing Issue #${createdIssueNumber}`);
-        await withRetry(() =>
-          client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
-            state: 'closed',
-          }),
-        );
+        await client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
+          state: 'close',
+        });
         console.log(`Issue #${createdIssueNumber} closed successfully`);
       } catch (error) {
         console.warn(`Failed to cleanup Issue #${createdIssueNumber}:`, error);
@@ -70,16 +67,14 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
       const title = `${testId} - Test Issue`;
       const body = 'This is a test issue created by E2E tests.\n\nPlease ignore.';
 
-      const issue = await withRetry(() =>
-        client.issue.create({
-          owner,
-          body: {
-            repo,
-            title,
-            body,
-          },
-        }),
-      );
+      const issue = await client.issue.create({
+        owner,
+        repo,
+        body: {
+          title,
+          body,
+        },
+      });
 
       expect(issue).toBeDefined();
       expect(issue.title).toBe(title);
@@ -98,9 +93,7 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
         return;
       }
 
-      const issue = await withRetry(() =>
-        client.issue.get(TEST_WRITE_REPO_URL, createdIssueNumber!),
-      );
+      const issue = await client.issue.get(TEST_WRITE_REPO_URL, createdIssueNumber!);
 
       expect(issue).toBeDefined();
       expect(parseInt(String(issue.number), 10)).toBe(createdIssueNumber);
@@ -117,11 +110,9 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
 
       const newTitle = `${generateTestIdentifier()} - Updated Title`;
 
-      const updated = await withRetry(() =>
-        client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
-          title: newTitle,
-        }),
-      );
+      const updated = await client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
+        title: newTitle,
+      });
 
       expect(updated).toBeDefined();
       expect(updated.title).toBe(newTitle);
@@ -135,11 +126,9 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
 
       const newBody = 'Updated body content from E2E tests.';
 
-      const updated = await withRetry(() =>
-        client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
-          body: newBody,
-        }),
-      );
+      const updated = await client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
+        body: newBody,
+      });
 
       expect(updated).toBeDefined();
       expect(updated.body).toBe(newBody);
@@ -155,14 +144,12 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
 
       const commentBody = `${generateTestIdentifier()}\n\nTest comment from E2E tests.`;
 
-      const comment = await withRetry(() =>
-        client.issue.createComment({
-          owner,
-          repo,
-          number: createdIssueNumber!,
-          body: { body: commentBody },
-        }),
-      );
+      const comment = await client.issue.createComment({
+        owner,
+        repo,
+        number: createdIssueNumber!,
+        body: { body: commentBody },
+      });
 
       expect(comment).toBeDefined();
       expect(comment.id).toBeDefined();
@@ -180,9 +167,7 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
         return;
       }
 
-      const comments = await withRetry(() =>
-        client.issue.comments(TEST_WRITE_REPO_URL, createdIssueNumber!),
-      );
+      const comments = await client.issue.comments(TEST_WRITE_REPO_URL, createdIssueNumber!);
 
       expect(comments).toBeDefined();
       expect(Array.isArray(comments)).toBe(true);
@@ -205,14 +190,12 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
       const updatedBody = `${generateTestIdentifier()}\n\nUpdated comment from E2E tests.`;
 
       // API 返回空响应，只需确保不抛出错误
-      await withRetry(() =>
-        client.issue.updateComment({
-          owner,
-          repo,
-          id: createdCommentId!,
-          body: { body: updatedBody },
-        }),
-      );
+      await client.issue.updateComment({
+        owner,
+        repo,
+        id: createdCommentId!,
+        body: { body: updatedBody },
+      });
     });
   });
 
@@ -223,23 +206,19 @@ describe.skipIf(skipIfNoWriteAccess())('Issue 写操作 E2E 测试', () => {
         return;
       }
 
-      // 关闭 Issue
-      const closed = await withRetry(() =>
-        client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
-          state: 'closed',
-        }),
-      );
+      // 关闭 Issue (GitCode 使用 'close' 而不是 'closed')
+      const closed = await client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
+        state: 'close',
+      });
       expect(closed.state).toBe('closed');
 
       // 等待一下确保状态更新
       await sleep(1000);
 
-      // 重新打开 Issue
-      const reopened = await withRetry(() =>
-        client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
-          state: 'open',
-        }),
-      );
+      // 重新打开 Issue (GitCode 使用 'reopen' 而不是 'open')
+      const reopened = await client.issue.update(TEST_WRITE_REPO_URL, createdIssueNumber!, {
+        state: 'reopen',
+      });
       expect(reopened.state).toBe('open');
     });
   });

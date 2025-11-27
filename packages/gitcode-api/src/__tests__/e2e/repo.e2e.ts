@@ -12,7 +12,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { GitCodeClient } from '../../client/index.js';
 import { parseGitUrl } from '../../utils/index.js';
-import { waitIfRateLimited, withRetry } from './helpers.js';
+import { sleep } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
 const TEST_REPO_URL = 'https://gitcode.com/xbghc/gitcode-demo';
@@ -31,12 +31,12 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
   });
 
   beforeEach(async () => {
-    await waitIfRateLimited(client);
+    await sleep(200); // 避免触发速率限制
   });
 
   describe('client.repo.getSettings()', () => {
     it('应该获取仓库设置', async () => {
-      const settings = await withRetry(() => client.repo.getSettings(owner, repo), client);
+      const settings = await client.repo.getSettings(owner, repo);
 
       // 结构由 Zod schema 保证，这里仅验证调用成功
       expect(settings).toBeDefined();
@@ -45,7 +45,7 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getBranches()', () => {
     it('应该获取所有分支列表', async () => {
-      const branches = await withRetry(() => client.repo.getBranches(owner, repo), client);
+      const branches = await client.repo.getBranches(owner, repo);
 
       expect(Array.isArray(branches)).toBe(true);
       expect(branches.length).toBeGreaterThan(0); // 业务规则：仓库至少有一个分支
@@ -54,7 +54,7 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getBranch()', () => {
     it('应该获取指定分支详情', async () => {
-      const branch = await withRetry(() => client.repo.getBranch(owner, repo, 'main'), client);
+      const branch = await client.repo.getBranch(owner, repo, 'main');
 
       // 验证获取的分支名称正确（业务逻辑）
       expect(branch.name).toBe('main');
@@ -63,7 +63,7 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getCommits()', () => {
     it('应该获取提交历史', async () => {
-      const commits = await withRetry(() => client.repo.getCommits(owner, repo), client);
+      const commits = await client.repo.getCommits(owner, repo);
 
       expect(Array.isArray(commits)).toBe(true);
       expect(commits.length).toBeGreaterThan(0); // 业务规则：仓库至少有一次提交
@@ -72,7 +72,7 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getContributors()', () => {
     it('应该获取贡献者列表', async () => {
-      const contributors = await withRetry(() => client.repo.getContributors(owner, repo), client);
+      const contributors = await client.repo.getContributors(owner, repo);
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(contributors)).toBe(true);
@@ -81,10 +81,7 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getSelfRepoPermission()', () => {
     it('应该获取当前用户的仓库权限', async () => {
-      const permission = await withRetry(
-        () => client.repo.getSelfRepoPermission(TEST_REPO_URL),
-        client,
-      );
+      const permission = await client.repo.getSelfRepoPermission(TEST_REPO_URL);
 
       // 结构由 Zod schema 保证，这里仅验证调用成功
       expect(permission).toBeDefined();
@@ -93,10 +90,7 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getSelfRepoPermissionRole()', () => {
     it('应该提取用户角色', async () => {
-      const role = await withRetry(
-        () => client.repo.getSelfRepoPermissionRole(TEST_REPO_URL),
-        client,
-      );
+      const role = await client.repo.getSelfRepoPermissionRole(TEST_REPO_URL);
 
       // 验证用户角色在合法范围内（业务规则）
       expect(['owner', 'admin', 'write', 'read']).toContain(role);
@@ -105,23 +99,14 @@ describe.skipIf(!hasToken)('Repo 模块 E2E 测试', () => {
 
   describe('client.repo.getNotifications()', () => {
     it('应该获取通知列表', async () => {
-      const notifications = await withRetry(
-        () => client.repo.getNotifications(owner, repo),
-        client,
-      );
+      const notifications = await client.repo.getNotifications(owner, repo);
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(notifications.list)).toBe(true);
     });
 
     it('应该支持 unread 参数过滤', async () => {
-      const unreadNotifications = await withRetry(
-        () =>
-          client.repo.getNotifications(owner, repo, {
-            unread: true,
-          }),
-        client,
-      );
+      const unreadNotifications = await client.repo.getNotifications(owner, repo, { unread: true });
 
       expect(Array.isArray(unreadNotifications.list)).toBe(true);
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// API 返回空响应
-export const updatedIssueCommentSchema = z.null();
+// API 可能返回空字符串或 null
+export const updatedIssueCommentSchema = z.union([z.null(), z.literal('')]);
 
 export type UpdatedIssueComment = z.infer<typeof updatedIssueCommentSchema>;
 

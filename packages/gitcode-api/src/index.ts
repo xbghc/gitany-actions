@@ -79,7 +79,7 @@ export {
 } from './api/user/index.js';
 export { GitCodeClientAuth } from './client/auth/index.js';
 export { OAuthClient } from './client/auth/oauth.js';
-export { GitCodeClient } from './client/index.js';
+export { GitCodeClient, type GitCodeClientOptions } from './client/index.js';
 export { extractRepoRoleFromSelfPermission } from './client/repo/permission.js';
 export type { RepoRole } from './types/repo-role.js';
 export * from './utils/index.js';

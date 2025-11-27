@@ -11,7 +11,7 @@
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { GitCodeClient } from '../../client/index.js';
-import { withRetry, waitIfRateLimited } from './helpers.js';
+import { sleep } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
 
@@ -23,12 +23,12 @@ describe.skipIf(!hasToken)('User 模块 E2E 测试', () => {
   });
 
   beforeEach(async () => {
-    await waitIfRateLimited(client);
+    await sleep(200); // 避免触发速率限制
   });
 
   describe('client.user.getProfile()', () => {
     it('应该获取当前用户资料', async () => {
-      const profile = await withRetry(() => client.user.getProfile(), client);
+      const profile = await client.user.getProfile();
 
       // 验证用户名非空（业务规则）
       expect(profile.login.length).toBeGreaterThan(0);

@@ -15,7 +15,7 @@ export async function reopenAction(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
 
-      const issue = await client.issue.update(repoUrl, issueNumber, { state: 'open' });
+      const issue = await client.issue.update(repoUrl, issueNumber, { state: 'reopen' });
 
       if (options.json) {
         console.log(JSON.stringify(issue, null, 2));

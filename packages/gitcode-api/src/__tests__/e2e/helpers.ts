@@ -1,77 +1,95 @@
 /**
  * E2E 测试辅助函数
+ *
+ * 运行前提：
+ * - 设置 GITCODE_TOKEN 环境变量
+ * - 可选：设置 GITCODE_TEST_WRITE_REPO_URL 环境变量（用于写操作测试）
  */
-import type { GitCodeClient } from '../../client/index.js';
-import { isHttpError } from '../../client/http-error.js';
+import { GitCodeClient } from '../../client/index.js';
+
+// ================== 环境变量与配置 ==================
 
 /**
- * 带 429 重试的 API 调用包装器
- *
- * @param fn - 要执行的 API 调用函数
- * @param client - GitCodeClient 实例
- * @param maxRetries - 最大重试次数（默认 3）
- * @returns API 调用结果
- *
- * @example
- * const prs = await withRetry(
- *   () => client.pr.list(url),
- *   client
- * );
+ * GitCode Token
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  client: GitCodeClient,
-  maxRetries = 3,
-): Promise<T> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      // 检查是否处于限流状态
-      if (client.isRateLimited()) {
-        const waitTime = client.getRateLimitWaitTime();
-        console.warn(`⚠️ Rate limited, waiting ${waitTime}s before attempt ${attempt + 1}...`);
-        await sleep(waitTime * 1000);
-      }
+export const GITCODE_TOKEN = process.env.GITCODE_TOKEN;
 
-      // 执行 API 调用
-      return await fn();
-    } catch (error) {
-      const is429 = isHttpError(error) && error.response?.statusCode === 429;
+/**
+ * 测试仓库 URL（用于写操作测试）
+ */
+export const TEST_WRITE_REPO_URL =
+  process.env.GITCODE_TEST_WRITE_REPO_URL || 'https://gitcode.com/xbghc/gitcode-api-test';
 
-      if (is429 && attempt < maxRetries - 1) {
-        const waitTime = client.getRateLimitWaitTime() || 5; // 默认等待 5 秒
-        console.warn(`⚠️ Got 429, retry ${attempt + 1}/${maxRetries - 1} after ${waitTime}s...`);
-        await sleep(waitTime * 1000);
-      } else {
-        // 非 429 错误或已达最大重试次数，直接抛出
-        throw error;
-      }
-    }
-  }
+// ================== 测试条件检查 ==================
 
-  throw new Error('Max retries exceeded');
+/**
+ * 检查是否可以运行写操作测试
+ *
+ * 需要同时满足：
+ * 1. 有 GITCODE_TOKEN
+ * 2. 有 GITCODE_TEST_WRITE_REPO_URL
+ *
+ * @returns true 表示可以运行写操作测试
+ */
+export function canRunWriteTests(): boolean {
+  return !!(GITCODE_TOKEN && process.env.GITCODE_TEST_WRITE_REPO_URL);
 }
+
+/**
+ * 用于 describe.skipIf 的辅助函数
+ *
+ * @returns true 表示应该跳过测试
+ */
+export function skipIfNoWriteAccess(): boolean {
+  if (!canRunWriteTests()) {
+    console.log('跳过写操作测试：需要设置 GITCODE_TOKEN 和 GITCODE_TEST_WRITE_REPO_URL 环境变量');
+    return true;
+  }
+  return false;
+}
+
+// ================== 客户端创建 ==================
+
+/**
+ * 创建测试客户端
+ *
+ * @returns GitCodeClient 实例
+ */
+export function createTestClient(): GitCodeClient {
+  if (!GITCODE_TOKEN) {
+    throw new Error('GITCODE_TOKEN is required for E2E tests');
+  }
+  return new GitCodeClient(GITCODE_TOKEN);
+}
+
+// ================== 测试工具函数 ==================
 
 /**
  * 等待指定毫秒数
  */
-function sleep(ms: number): Promise<void> {
+export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
- * 在测试前检查并等待限流结束
+ * 生成唯一的测试标识符
  *
- * @param client - GitCodeClient 实例
+ * 用于标记测试创建的资源，便于识别和清理
  *
- * @example
- * beforeEach(async () => {
- *   await waitIfRateLimited(client);
- * });
+ * @returns 格式为 "[E2E Test] YYYY-MM-DD HH:mm:ss.SSS" 的字符串
  */
-export async function waitIfRateLimited(client: GitCodeClient): Promise<void> {
-  if (client.isRateLimited()) {
-    const waitTime = client.getRateLimitWaitTime();
-    console.warn(`⚠️ Rate limited, waiting ${waitTime}s before test...`);
-    await sleep(waitTime * 1000 + 100); // 额外等待 100ms 确保完全恢复
-  }
+export function generateTestIdentifier(): string {
+  const now = new Date();
+  const timestamp = now.toISOString().replace('T', ' ').replace('Z', '');
+  return `[E2E Test] ${timestamp}`;
+}
+
+/**
+ * 检查标题是否是测试创建的
+ *
+ * @param title - 资源标题
+ * @returns true 表示是测试创建的资源
+ */
+export function isTestResource(title: string): boolean {
+  return title.startsWith('[E2E Test]');
 }

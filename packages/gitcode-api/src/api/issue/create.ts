@@ -1,6 +1,6 @@
 /**
  * Issues - Create
- * Endpoint: POST /api/v5/repos/{owner}/issues
+ * Endpoint: POST /api/v5/repos/{owner}/{repo}/issues
  */
 
 import { z } from 'zod';
@@ -42,6 +42,8 @@ export interface CreateIssueBody {
 export type CreateIssueParams = {
   /** Repository owner (user or organization). */
   owner: string;
+  /** Repository name. */
+  repo: string;
   /** Issue data. */
   body: CreateIssueBody;
 };
@@ -64,16 +66,18 @@ export const createdIssueSchema = z.object({
     })
     .optional(),
   assignees: z.array(userSummarySchema).default([]),
-  repository: z.object({
-    id: z.number(),
-    full_name: z.string(),
-    human_name: z.string(),
-    path: z.string(),
-    name: z.string(),
-    url: z.string(),
-    assigner: z.record(z.string(), z.unknown()).optional(),
-    paas: z.string().optional(),
-  }),
+  repository: z
+    .object({
+      id: z.number(),
+      full_name: z.string(),
+      human_name: z.string(),
+      path: z.string(),
+      name: z.string(),
+      url: z.string(),
+      assigner: z.record(z.string(), z.unknown()).optional(),
+      paas: z.string().optional(),
+    })
+    .optional(),
   created_at: z.string(),
   updated_at: z.string(),
   labels: z
@@ -90,9 +94,9 @@ export const createdIssueSchema = z.object({
   issue_type: z.string().optional(),
   issue_state_detail: z
     .object({
-      title: z.string(),
-      serial: z.number(),
-      id: z.number(),
+      title: z.string().optional(),
+      serial: z.number().optional(),
+      id: z.number().optional(),
     })
     .optional(),
   issue_type_detail: z
@@ -112,6 +116,6 @@ export type CreatedIssue = z.infer<typeof createdIssueSchema>;
 /**
  * Builds the request path for creating an issue.
  */
-export function createIssueUrl(owner: string): string {
-  return `${API_BASE}/repos/${encodeURIComponent(owner)}/issues`;
+export function createIssueUrl(owner: string, repo: string): string {
+  return `${API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`;
 }

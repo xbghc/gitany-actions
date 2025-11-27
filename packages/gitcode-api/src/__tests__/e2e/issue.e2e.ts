@@ -11,7 +11,7 @@
  */
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { GitCodeClient } from '../../client/index.js';
-import { withRetry, waitIfRateLimited } from './helpers.js';
+import { sleep } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
 const TEST_REPO_URL = 'https://gitcode.com/xbghc/gitcode-actions';
@@ -24,29 +24,20 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
   });
 
   beforeEach(async () => {
-    await waitIfRateLimited(client);
+    await sleep(200); // 避免触发速率限制
   });
 
   describe('client.issue.list()', () => {
     it('应该获取真实的 Issue 列表', async () => {
-      const issues = await withRetry(
-        () => client.issue.list(TEST_REPO_URL, { state: 'all' }),
-        client,
-      );
+      const issues = await client.issue.list(TEST_REPO_URL, { state: 'all' });
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(issues)).toBe(true);
     });
 
     it('应该支持状态过滤', async () => {
-      const openIssues = await withRetry(
-        () => client.issue.list(TEST_REPO_URL, { state: 'open' }),
-        client,
-      );
-      const closedIssues = await withRetry(
-        () => client.issue.list(TEST_REPO_URL, { state: 'closed' }),
-        client,
-      );
+      const openIssues = await client.issue.list(TEST_REPO_URL, { state: 'open' });
+      const closedIssues = await client.issue.list(TEST_REPO_URL, { state: 'closed' });
 
       expect(Array.isArray(openIssues)).toBe(true);
       expect(Array.isArray(closedIssues)).toBe(true);
@@ -61,15 +52,11 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
     });
 
     it('应该支持分页参数', async () => {
-      const page1 = await withRetry(
-        () =>
-          client.issue.list(TEST_REPO_URL, {
-            state: 'all',
-            page: 1,
-            per_page: 5,
-          }),
-        client,
-      );
+      const page1 = await client.issue.list(TEST_REPO_URL, {
+        state: 'all',
+        page: 1,
+        per_page: 5,
+      });
 
       expect(Array.isArray(page1)).toBe(true);
       expect(page1.length).toBeLessThanOrEqual(5);
@@ -79,10 +66,7 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
   describe('client.issue.get()', () => {
     it('应该根据 number 获取 Issue 详情', async () => {
       // 先获取一个 Issue
-      const issues = await withRetry(
-        () => client.issue.list(TEST_REPO_URL, { state: 'all' }),
-        client,
-      );
+      const issues = await client.issue.list(TEST_REPO_URL, { state: 'all' });
 
       if (issues.length === 0) {
         console.warn('⚠️ 测试仓库没有 Issue，跳过详情测试');
@@ -90,7 +74,7 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
       }
 
       const issueNumber = Number(issues[0].number);
-      const issue = await withRetry(() => client.issue.get(TEST_REPO_URL, issueNumber), client);
+      const issue = await client.issue.get(TEST_REPO_URL, issueNumber);
 
       // 验证 Issue number 匹配（业务逻辑）
       expect(Number(issue.number)).toBe(issueNumber);
@@ -99,10 +83,7 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
 
   describe('client.issue.comments()', () => {
     it('应该获取 Issue 的评论列表', async () => {
-      const issues = await withRetry(
-        () => client.issue.list(TEST_REPO_URL, { state: 'all' }),
-        client,
-      );
+      const issues = await client.issue.list(TEST_REPO_URL, { state: 'all' });
 
       if (issues.length === 0) {
         console.warn('⚠️ 测试仓库没有 Issue，跳过评论测试');
@@ -110,10 +91,7 @@ describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
       }
 
       const issueNumber = Number(issues[0].number);
-      const comments = await withRetry(
-        () => client.issue.comments(TEST_REPO_URL, issueNumber),
-        client,
-      );
+      const comments = await client.issue.comments(TEST_REPO_URL, issueNumber);
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(comments)).toBe(true);

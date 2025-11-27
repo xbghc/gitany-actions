@@ -17,7 +17,7 @@ export async function createIssue(
   client: GitCodeClient,
   params: CreateIssueParams,
 ): Promise<CreatedIssue> {
-  const url = createIssueUrl(params.owner);
+  const url = createIssueUrl(params.owner, params.repo);
   const response = await client.http
     .post(url, {
       json: params.body,

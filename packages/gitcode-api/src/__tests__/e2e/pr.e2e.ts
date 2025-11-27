@@ -11,7 +11,7 @@
  */
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { GitCodeClient } from '../../client/index.js';
-import { waitIfRateLimited, withRetry } from './helpers.js';
+import { sleep } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
 
@@ -26,12 +26,12 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
   });
 
   beforeEach(async () => {
-    await waitIfRateLimited(client);
+    await sleep(200); // 避免触发速率限制
   });
 
   describe('client.pr.list()', () => {
     it('应该获取真实的 PR 列表', async () => {
-      const prs = await withRetry(() => client.pr.list(TEST_REPO_URL, { state: 'all' }), client);
+      const prs = await client.pr.list(TEST_REPO_URL, { state: 'all' });
 
       // 验证返回的是数组
       expect(Array.isArray(prs)).toBe(true);
@@ -41,14 +41,8 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
     });
 
     it('应该支持状态过滤', async () => {
-      const openPrs = await withRetry(
-        () => client.pr.list(TEST_REPO_URL, { state: 'open' }),
-        client,
-      );
-      const closedPrs = await withRetry(
-        () => client.pr.list(TEST_REPO_URL, { state: 'closed' }),
-        client,
-      );
+      const openPrs = await client.pr.list(TEST_REPO_URL, { state: 'open' });
+      const closedPrs = await client.pr.list(TEST_REPO_URL, { state: 'closed' });
 
       expect(Array.isArray(openPrs)).toBe(true);
       expect(Array.isArray(closedPrs)).toBe(true);
@@ -63,15 +57,7 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
     });
 
     it('应该支持分页参数', async () => {
-      const page1 = await withRetry(
-        () =>
-          client.pr.list(TEST_REPO_URL, {
-            state: 'all',
-            page: 1,
-            per_page: 5,
-          }),
-        client,
-      );
+      const page1 = await client.pr.list(TEST_REPO_URL, { state: 'all', page: 1, per_page: 5 });
 
       expect(Array.isArray(page1)).toBe(true);
       expect(page1.length).toBeLessThanOrEqual(5);
@@ -80,7 +66,7 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
 
   describe('client.pr.count()', () => {
     it('应该返回 PR 数量统计', async () => {
-      const count = await withRetry(() => client.pr.count(TEST_REPO_URL), client);
+      const count = await client.pr.count(TEST_REPO_URL);
 
       // 验证数量统计逻辑正确（业务规则）
       expect(count.opened).toBeGreaterThanOrEqual(0);
@@ -92,7 +78,7 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
   describe('client.pr.comments()', () => {
     it('应该获取 PR 的评论列表', async () => {
       // 首先获取一个 PR
-      const prs = await withRetry(() => client.pr.list(TEST_REPO_URL, { state: 'all' }), client);
+      const prs = await client.pr.list(TEST_REPO_URL, { state: 'all' });
 
       if (prs.length === 0) {
         console.warn('⚠️ 测试仓库没有 PR，跳过评论测试');
@@ -100,7 +86,7 @@ describe.skipIf(!hasToken)('PR 模块 E2E 测试', () => {
       }
 
       const prNumber = prs[0].number;
-      const comments = await withRetry(() => client.pr.comments(TEST_REPO_URL, prNumber), client);
+      const comments = await client.pr.comments(TEST_REPO_URL, prNumber);
 
       // 验证返回的是数组，结构由 Zod schema 保证
       expect(Array.isArray(comments)).toBe(true);

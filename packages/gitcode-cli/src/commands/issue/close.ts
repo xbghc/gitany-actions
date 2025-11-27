@@ -15,7 +15,7 @@ export async function closeAction(
     async (client) => {
       const { issueNumber, repoUrl } = await resolveIssueContext(issueNumberArg, urlArg, options);
 
-      const issue = await client.issue.update(repoUrl, issueNumber, { state: 'closed' });
+      const issue = await client.issue.update(repoUrl, issueNumber, { state: 'close' });
 
       if (options.json) {
         console.log(JSON.stringify(issue, null, 2));

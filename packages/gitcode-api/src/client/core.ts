@@ -6,6 +6,39 @@ import { GitCodeClientPr } from './pr/index.js';
 import { GitCodeClientRepo } from './repo/index.js';
 import { GitCodeClientUser } from './user/index.js';
 
+/**
+ * GitCodeClient 选项
+ */
+export interface GitCodeClientOptions {
+  /** 自定义 got 实例 */
+  http?: Got;
+  /** 当 API 返回 401 时的回调函数 */
+  onUnauthorized?: () => void;
+}
+
+/**
+ * 检查参数是否为 Got 实例
+ * Got 实例是一个带有 get/post/extend 方法的可调用对象
+ * 也支持 mock Got 实例（不可调用但有这些方法）
+ */
+function isGotInstance(obj: unknown): obj is Got {
+  if (!obj || typeof obj !== 'object') {
+    return false;
+  }
+
+  const maybeGot = obj as Record<string, unknown>;
+
+  // Got 实例应该有这些核心方法
+  return (
+    typeof maybeGot.get === 'function' &&
+    typeof maybeGot.post === 'function' &&
+    typeof maybeGot.extend === 'function' &&
+    // 区分 Got 实例和选项对象：选项对象有 http 或 onUnauthorized 属性
+    !('http' in maybeGot) &&
+    !('onUnauthorized' in maybeGot)
+  );
+}
+
 export class GitCodeClient {
   public readonly http: Got;
   pr = new GitCodeClientPr(this);
@@ -20,7 +53,33 @@ export class GitCodeClient {
    */
   private rateLimitedUntil: number = 0;
 
-  constructor(token?: string, customHttp?: Got) {
+  /** 401 回调函数 */
+  private onUnauthorized?: () => void;
+
+  /**
+   * 创建 GitCode API 客户端
+   * @param token - 认证 token（PAT 或 OAuth access token）
+   * @param optionsOrHttp - 选项对象或自定义 got 实例（向后兼容）
+   */
+  constructor(token?: string, optionsOrHttp?: GitCodeClientOptions | Got) {
+    // 解析参数（向后兼容）
+    let customHttp: Got | undefined;
+    let options: GitCodeClientOptions = {};
+
+    if (optionsOrHttp) {
+      if (isGotInstance(optionsOrHttp)) {
+        // 向后兼容：第二个参数是 Got 实例
+        customHttp = optionsOrHttp;
+      } else {
+        // 新格式：第二个参数是选项对象
+        options = optionsOrHttp;
+        customHttp = options.http;
+      }
+    }
+
+    // 保存回调
+    this.onUnauthorized = options.onUnauthorized;
+
     // 先初始化 auth（在配置 http 之前）
     this.auth = new GitCodeClientAuth(this, token);
 
@@ -28,10 +87,15 @@ export class GitCodeClient {
       // 使用外部传入的 got 实例
       this.http = customHttp;
     } else {
-      // 创建默认的 got 实例，包含 OAuth 支持和 rate limiting 处理
+      // 创建默认的 got 实例，包含 OAuth 支持、rate limiting 和自动重试
       this.http = got.extend({
         headers: {
           accept: 'application/json',
+        },
+        retry: {
+          limit: 3,
+          statusCodes: [408, 429, 500, 502, 503, 504],
+          methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
         },
         hooks: {
           beforeRequest: [
@@ -74,6 +138,12 @@ export class GitCodeClient {
                   console.warn(`[GitCode API] Rate limited. Retry after ${delaySeconds}s`);
                 }
               }
+
+              // 检查是否 401 未授权
+              if (response.statusCode === 401 && this.onUnauthorized) {
+                this.onUnauthorized();
+              }
+
               return response;
             },
           ],

@@ -214,8 +214,8 @@ issueRouter.post(
     try {
       const issue = await client.issue.create({
         owner,
+        repo,
         body: {
-          repo,
           title,
           body,
           labels,
