@@ -1,6 +1,6 @@
 {
   "name": "@xbghc/gitcode-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "CLI for GitCode.",
   "type": "module",
   "bin": {

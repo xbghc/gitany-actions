@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2] - 2025-11-27
+
 ### Added
 
 - Notification API support for repositories
@@ -48,5 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ESM module support
 - Support for Node.js 22+
 
-[unreleased]: https://github.com/xbghc/gitcode-actions/compare/v0.0.1...HEAD
-[0.0.1]: https://github.com/xbghc/gitcode-actions/releases/tag/v0.0.1
+[unreleased]: https://github.com/xbghc/gitcode-actions/compare/gitcode-api-v0.0.2...HEAD
+[0.0.2]: https://github.com/xbghc/gitcode-actions/compare/gitcode-api-v0.0.1...gitcode-api-v0.0.2
+[0.0.1]: https://github.com/xbghc/gitcode-actions/releases/tag/gitcode-api-v0.0.1

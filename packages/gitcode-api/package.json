@@ -1,6 +1,6 @@
 {
   "name": "@xbghc/gitcode-api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "TypeScript client library for GitCode API with type-safe wrappers for users, repositories, pull requests, and issues.",
   "type": "module",
   "main": "dist/index.js",
