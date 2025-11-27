@@ -1,15 +1,15 @@
-name: Nightly E2E Tests
+name: Weekly E2E Tests
 
 on:
   schedule:
-    # 每天凌晨 2 点（UTC）运行
-    - cron: '0 2 * * *'
+    # 每周一凌晨 2 点（UTC）运行
+    - cron: '0 2 * * 1'
 
   # 支持手动触发
   workflow_dispatch:
 
 jobs:
-  # 检查最近 24 小时是否有提交
+  # 检查最近一周是否有提交
   check-commits:
     runs-on: ubuntu-latest
     outputs:
@@ -21,24 +21,24 @@ jobs:
         with:
           fetch-depth: 0 # 获取完整历史，必需！
 
-      - name: Check for commits in last 24 hours
+      - name: Check for commits in last 7 days
         id: check
         run: |
-          # 获取最近 24 小时的提交
-          COMMITS=$(git rev-list --after='24 hours ago' HEAD)
+          # 获取最近 7 天的提交
+          COMMITS=$(git rev-list --after='7 days ago' HEAD)
           COUNT=$(echo "$COMMITS" | grep -c . || echo "0")
 
           if [ "$COUNT" -gt 0 ]; then
             echo "has_commits=true" >> $GITHUB_OUTPUT
             echo "count=$COUNT" >> $GITHUB_OUTPUT
-            echo "✅ Found $COUNT commit(s) in last 24 hours"
+            echo "✅ Found $COUNT commit(s) in last 7 days"
             echo ""
             echo "Recent commits:"
-            git log --oneline --since='24 hours ago'
+            git log --oneline --since='7 days ago'
           else
             echo "has_commits=false" >> $GITHUB_OUTPUT
             echo "count=0" >> $GITHUB_OUTPUT
-            echo "ℹ️ No commits in last 24 hours, E2E tests will be skipped"
+            echo "ℹ️ No commits in last 7 days, E2E tests will be skipped"
           fi
 
   # E2E 测试（只在有最近提交或手动触发时运行）
@@ -69,10 +69,16 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Run E2E Tests
+      - name: Run E2E Tests (read-only)
         env:
           GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
         run: pnpm --filter @xbghc/gitcode-api test:e2e
+
+      - name: Run E2E Tests (write operations)
+        env:
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+          GITCODE_TEST_WRITE_REPO_URL: https://gitcode.com/xbghc/gitcode-actions
+        run: pnpm --filter @xbghc/gitcode-api test:e2e:write
 
       - name: Notify on failure
         if: failure()
@@ -87,7 +93,7 @@ jobs:
               body: `
               ## E2E 测试失败
 
-              **提交数量（最近 24 小时）**: ${{ needs.check-commits.outputs.commit_count }}
+              **提交数量（最近 7 天）**: ${{ needs.check-commits.outputs.commit_count }}
               **触发方式**: ${{ github.event_name == 'workflow_dispatch' && '手动触发' || '定时任务' }}
 
               定时 E2E 测试检测到问题，可能原因：
@@ -113,7 +119,7 @@ jobs:
     steps:
       - name: Log skip reason
         run: |
-          echo "ℹ️ Nightly E2E tests skipped - no commits in last 24 hours"
+          echo "ℹ️ Weekly E2E tests skipped - no commits in last 7 days"
           echo "This is expected behavior to save CI resources"
           echo ""
           echo "To run tests manually, use workflow_dispatch trigger"

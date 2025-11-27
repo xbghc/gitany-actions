@@ -10,13 +10,13 @@ dotenv.config();
 function getToken() {
   if (process.env.GITCODE_TOKEN) return process.env.GITCODE_TOKEN;
 
-  const configPath = join(homedir(), '.gitcode', 'config.json');
+  const configPath = join(homedir(), '.config', 'gitcode', 'config.json');
   if (existsSync(configPath)) {
     const config = JSON.parse(readFileSync(configPath, 'utf-8'));
     if (config.token) return config.token;
   }
 
-  throw new Error('未找到 GITCODE_TOKEN (检查环境变量、.env 或 ~/.gitcode/config.json)');
+  throw new Error('未找到 GITCODE_TOKEN (检查环境变量、.env 或 ~/.config/gitcode/config.json)');
 }
 
 const url = process.argv[2];

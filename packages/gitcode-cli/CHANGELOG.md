@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pull Request commands (`pr list`, `pr create`, `pr info`)
 - Issue commands (`issue list`, `issue view`, `issue edit`, `issue close`, `issue reopen`, `issue create`, `issue comment`)
 - URL parsing command (`parse`)
-- Configuration file support (`~/.gitcode/config.json`)
+- Configuration file support (`~/.config/gitcode/config.json`)
 - Token priority: environment variable > config file
 - JSON output format support for most commands
 - Comprehensive error handling

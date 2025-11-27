@@ -85,7 +85,7 @@ gitcode parse
 
 ##### gitcode auth set-token &lt;token&gt;
 
-保存认证令牌到本地配置文件（`~/.gitcode/config.json`）。
+保存认证令牌到本地配置文件（`~/.config/gitcode/config.json`）。
 
 ```bash
 gitcode auth set-token your_gitcode_token_here
@@ -585,7 +585,7 @@ gitcode user namespace
 **令牌读取优先级：**
 
 1. 环境变量 `GITCODE_TOKEN`（最高优先级）
-2. 配置文件 `~/.gitcode/config.json`
+2. 配置文件 `~/.config/gitcode/config.json`
 
 推荐使用 `gitcode auth set-token` 命令保存令牌到配置文件，仅在临时使用或 CI/CD 环境中使用环境变量。
 
@@ -618,7 +618,7 @@ NODE_OPTIONS="--env-file=.env" gitcode pr list
 
 ## 本地存储路径
 
-CLI 将认证信息保存到：`~/.gitcode/config.json`
+CLI 将认证信息保存到：`~/.config/gitcode/config.json`
 
 配置文件格式：
 

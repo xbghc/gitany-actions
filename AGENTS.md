@@ -36,4 +36,4 @@ Commits: imperative mood, scoped, and logically grouped. When behavior changes i
 
 ## Security & Configuration Tips
 
-Never commit secrets. Use `.env` (e.g., `GITCODE_TOKEN`, `GITCODE_API_BASE`). The CLI stores auth at `~/.gitcode/config.json`. Prefer clarity over backward compatibility per project guidance.
+Never commit secrets. Use `.env` (e.g., `GITCODE_TOKEN`, `GITCODE_API_BASE`). The CLI stores auth at `~/.config/gitcode/config.json`. Prefer clarity over backward compatibility per project guidance.

@@ -323,7 +323,7 @@ $ gitcode pr list https://gitcode.com/myorg/myrepo --json
 
 ### 配置文件
 
-配置文件存储在 `~/.gitcode/config.json`：
+配置文件存储在 `~/.config/gitcode/config.json`：
 
 ```json
 {

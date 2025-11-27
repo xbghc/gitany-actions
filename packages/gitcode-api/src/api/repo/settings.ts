@@ -105,7 +105,7 @@ export const repoEventsSchema = z.object({
         .optional(),
       project: z
         .object({
-          main_repository_language: z.array(z.any()),
+          main_repository_language: z.array(z.unknown()),
           star_count: z.number(),
           forks_count: z.number(),
           develop_mode: z.string(),

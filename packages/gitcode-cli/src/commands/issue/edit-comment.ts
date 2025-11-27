@@ -1,8 +1,8 @@
-import { Command } from 'commander';
 import { parseGitUrl } from '@xbghc/gitcode-api';
+import { Command } from 'commander';
 import * as fs from 'fs';
-import { withClient } from '../../utils/with-client.js';
 import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
+import { withClient } from '../../utils/with-client.js';
 
 interface EditCommentOptions {
   body?: string;
@@ -59,14 +59,14 @@ export async function editCommentAction(commentIdArg: string, options: EditComme
     const comment = await client.issue.updateComment({
       owner,
       repo,
-      comment_id,
+      id: comment_id,
       body: { body: finalBody },
     });
 
     if (options.json) {
       console.log(JSON.stringify(comment, null, 2));
     } else {
-      console.log(`✅ Comment ${comment.id} updated successfully.`);
+      console.log(`✅ Comment ${comment_id} updated successfully.`);
     }
   }, 'Failed to edit comment');
 }

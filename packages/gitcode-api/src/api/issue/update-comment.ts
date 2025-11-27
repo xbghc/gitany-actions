@@ -1,15 +1,14 @@
 import { z } from 'zod';
 
-// Note: The actual response for an updated comment is not documented.
-// This schema is a reasonable assumption based on the 'create' response.
-export const updatedIssueCommentSchema = z.any(); // 返回空值，忽略结果
+// API 返回空响应
+export const updatedIssueCommentSchema = z.null();
 
 export type UpdatedIssueComment = z.infer<typeof updatedIssueCommentSchema>;
 
 export interface UpdateIssueCommentParams {
   owner: string;
   repo: string;
-  comment_id: number;
+  id: number;
   body: {
     body: string;
   };

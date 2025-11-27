@@ -23,7 +23,7 @@ export async function updateIssueComment(
   client: GitCodeClient,
   params: UpdateIssueCommentParams,
 ): Promise<UpdatedIssueComment> {
-  const url = updateIssueCommentUrl(params.owner, params.repo, params.comment_id);
+  const url = updateIssueCommentUrl(params.owner, params.repo, params.id);
   const response = await client.http
     .patch(url, {
       json: params.body,

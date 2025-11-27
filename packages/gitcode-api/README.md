@@ -118,7 +118,7 @@ const comments = await client.issue.comments('https://gitcode.com/owner/repo', 1
 // 环境变量
 process.env.GITCODE_TOKEN = 'your-token';
 
-// 配置文件存储在 ~/.gitcode/config.json
+// 配置文件存储在 ~/.config/gitcode/config.json
 ```
 
 ### 调试

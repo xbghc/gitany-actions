@@ -51,7 +51,7 @@ pnpm build
 gitcode parse https://gitcode.com/owner/repo.git
 
 # 授权管理
-gitcode auth set-token <token>    # 保存令牌到 ~/.gitcode/config.json
+gitcode auth set-token <token>    # 保存令牌到 ~/.config/gitcode/config.json
 gitcode auth status                # 查看认证状态
 gitcode auth remove-token          # 删除已保存的令牌
 
@@ -157,7 +157,7 @@ const result2 = await chat(repoUrl, prompt, {
 **CLI 认证**（推荐）：
 
 ```bash
-gitcode auth set-token <token>  # 保存到 ~/.gitcode/config.json
+gitcode auth set-token <token>  # 保存到 ~/.config/gitcode/config.json
 gitcode auth status             # 查看认证状态
 ```
 
@@ -171,7 +171,7 @@ NODE_ENV=development            # 开发环境（自动启用 HTTP 调试日志�
 ANTHROPIC_API_KEY=sk-ant-xxx    # AI 评论助手所需的 Claude API 密钥
 ```
 
-**令牌读取优先级**：环境变量 > 配置文件（`~/.gitcode/config.json`）
+**令牌读取优先级**：环境变量 > 配置文件（`~/.config/gitcode/config.json`）
 
 自动化与 CLI 默认使用 `~/.gitcode` 目录存储本地状态（watcher 状态、配置文件等，容器标签以 `gitcode.*` 前缀标识）。
 
