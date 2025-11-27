@@ -14,7 +14,7 @@ import { GitCodeClient } from '../../client/index.js';
 import { sleep } from './helpers.js';
 
 const hasToken = !!process.env.GITCODE_TOKEN;
-const TEST_REPO_URL = 'https://gitcode.com/xbghc/gitcode-actions';
+const TEST_REPO_URL = 'https://gitcode.com/xbghc/gitcode-demo';
 
 describe.skipIf(!hasToken)('Issue 模块 E2E 测试', () => {
   let client: GitCodeClient;

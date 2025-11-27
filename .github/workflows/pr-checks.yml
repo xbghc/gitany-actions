@@ -32,6 +32,8 @@ jobs:
         run: pnpm build
 
       - name: Test
+        env:
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
         run: pnpm --filter @xbghc/gitcode-api test
 
       - name: Type Check

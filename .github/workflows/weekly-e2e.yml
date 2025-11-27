@@ -56,12 +56,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8
+          version: 10
 
       - name: Install dependencies
         run: pnpm install
@@ -69,16 +69,10 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Run E2E Tests (read-only)
+      - name: Run E2E Tests
         env:
           GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
         run: pnpm --filter @xbghc/gitcode-api test:e2e
-
-      - name: Run E2E Tests (write operations)
-        env:
-          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
-          GITCODE_TEST_WRITE_REPO_URL: https://gitcode.com/xbghc/gitcode-actions
-        run: pnpm --filter @xbghc/gitcode-api test:e2e:write
 
       - name: Notify on failure
         if: failure()

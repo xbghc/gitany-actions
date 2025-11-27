@@ -6,7 +6,6 @@
  *
  * 运行前提：
  * - 设置 GITCODE_TOKEN 环境变量
- * - 设置 GITCODE_TEST_WRITE_REPO_URL 环境变量
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';

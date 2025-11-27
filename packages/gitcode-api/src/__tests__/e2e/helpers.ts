@@ -3,7 +3,6 @@
  *
  * 运行前提：
  * - 设置 GITCODE_TOKEN 环境变量
- * - 可选：设置 GITCODE_TEST_WRITE_REPO_URL 环境变量（用于写操作测试）
  */
 import { GitCodeClient } from '../../client/index.js';
 
@@ -15,24 +14,21 @@ import { GitCodeClient } from '../../client/index.js';
 export const GITCODE_TOKEN = process.env.GITCODE_TOKEN;
 
 /**
- * 测试仓库 URL（用于写操作测试）
+ * 测试仓库 URL（用于所有测试，包括写操作）
  */
-export const TEST_WRITE_REPO_URL =
-  process.env.GITCODE_TEST_WRITE_REPO_URL || 'https://gitcode.com/xbghc/gitcode-api-test';
+export const TEST_WRITE_REPO_URL = 'https://gitcode.com/xbghc/gitcode-demo';
 
 // ================== 测试条件检查 ==================
 
 /**
  * 检查是否可以运行写操作测试
  *
- * 需要同时满足：
- * 1. 有 GITCODE_TOKEN
- * 2. 有 GITCODE_TEST_WRITE_REPO_URL
+ * 需要满足：有 GITCODE_TOKEN
  *
  * @returns true 表示可以运行写操作测试
  */
 export function canRunWriteTests(): boolean {
-  return !!(GITCODE_TOKEN && process.env.GITCODE_TEST_WRITE_REPO_URL);
+  return !!GITCODE_TOKEN;
 }
 
 /**
@@ -42,7 +38,7 @@ export function canRunWriteTests(): boolean {
  */
 export function skipIfNoWriteAccess(): boolean {
   if (!canRunWriteTests()) {
-    console.log('跳过写操作测试：需要设置 GITCODE_TOKEN 和 GITCODE_TEST_WRITE_REPO_URL 环境变量');
+    console.log('跳过写操作测试：需要设置 GITCODE_TOKEN 环境变量');
     return true;
   }
   return false;
