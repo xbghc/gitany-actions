@@ -3,52 +3,40 @@
  *
  */
 
-export { IssueWatcher, watchIssues } from './watcher/issue.js';
-export type { WatchIssueOptions } from './watcher/issue.js';
-export { PullRequestWatcher, watchPullRequest } from './watcher/pr.js';
-export type { WatchPullRequestOptions } from './watcher/pr.js';
+// Event types
+export type { EventDataMap, EventName } from './types/events.js';
 
-export { defaultPromptBuilder, runAiMentionsOnce, watchAiMentions } from './ai-mentions/index.js';
+// ============ Watchers (New API) ============
+export { watch } from './watcher/index.js';
 export type {
-  AiMentionContext,
-  AiMentionReply,
-  AiMentionSource,
-  AiMentionWatcherHandle,
-  BuildAiMentionPrompt,
-  BuildAiMentionReplyBody,
-  WatchAiMentionsOptions,
-} from './ai-mentions/index.js';
-export {
-  chat,
-  checkoutSha,
-  checkProjectFiles,
-  cleanupPrContainers,
-  cloneRepo,
-  collectDiagnostics,
-  ContainerCreationError,
-  copyToContainer,
-  CopyToContainerError,
-  createPrContainer,
-  createWorkspaceContainer,
-  DiagnosticsCollectionError,
-  executeStep,
-  getContainer,
-  getContainerStatus,
-  ImagePullError,
-  installCli,
-  installClaudeCli,
-  installDependencies,
-  installGitcodeCli,
-  prepareImage,
-  removeContainer,
-  resetContainer,
-  StepExecutionError,
-  testShaBuild,
-  verifySha,
-} from './container/index.js';
+  Watcher,
+  WatchOptions,
+  PrWatchConfig,
+  IssueWatchConfig,
+  WatcherStatus,
+} from './watcher/types.js';
+
+// Storage interfaces (Advanced usage)
+export type { StateStorage } from './watcher/state-storage.js';
+export { FileStateStorage } from './watcher/file-state-storage.js';
+export { MemoryStateStorage } from './watcher/memory-state-storage.js';
+
+// Runner Types
 export type {
-  ChatOptions,
-  ChatResult,
-  CopyToContainerOptions,
-  ProjectCheckResult,
-} from './container/index.js';
+  Runner,
+  RunnerRegisterRequest,
+  RunnerRegisterResponse,
+  JobRequest,
+  RunnerJob,
+  WorkflowJob,
+  ChatJob,
+  JobUpdate,
+  WorkflowJobPayload,
+  ChatJobPayload,
+} from './types/runner.js';
+export type {
+  WorkflowConfigStep,
+  WorkflowConfig,
+  CreateWorkflowConfigRequest,
+  UpdateWorkflowConfigRequest,
+} from './types/workflow-config.js';

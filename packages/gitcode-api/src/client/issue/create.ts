@@ -2,9 +2,10 @@
  * Create Issue - Client Implementation
  */
 
-import type { GitcodeClient } from '../core.js';
 import type { CreateIssueParams, CreatedIssue } from '../../api/issue/create.js';
 import { createIssueUrl, createdIssueSchema } from '../../api/issue/create.js';
+import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
 /**
  * Creates a new issue in a repository.
@@ -13,18 +14,15 @@ import { createIssueUrl, createdIssueSchema } from '../../api/issue/create.js';
  * @returns Promise resolving to the created issue
  */
 export async function createIssue(
-  client: GitcodeClient,
+  client: GitCodeClient,
   params: CreateIssueParams,
 ): Promise<CreatedIssue> {
-  const url = createIssueUrl(params.owner);
-  const response = await client.request(url, 'POST', {
-    json: params.body,
-  });
+  const url = createIssueUrl(params.owner, params.repo);
+  const response = await client.http
+    .post(url, {
+      json: params.body,
+    })
+    .json();
 
-  const result = createdIssueSchema.safeParse(response);
-  if (!result.success) {
-    throw new Error(`Invalid issue response: ${result.error.message}`);
-  }
-
-  return result.data;
+  return parseApiResponse(createdIssueSchema, response, { endpoint: url, method: 'POST' });
 }

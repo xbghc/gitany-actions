@@ -11,7 +11,12 @@
       <div class="filters">
         <el-form :inline="true">
           <el-form-item label="状态">
-            <el-select v-model="filters.state" placeholder="选择状态" style="width: 120px" @change="handleFilterChange">
+            <el-select
+              v-model="filters.state"
+              placeholder="选择状态"
+              style="width: 120px"
+              @change="handleFilterChange"
+            >
               <el-option label="全部" value="all" />
               <el-option label="Open" value="open" />
               <el-option label="Closed" value="closed" />
@@ -25,11 +30,7 @@
       </div>
 
       <!-- PR 列表 -->
-      <el-table
-        v-loading="loading"
-        :data="prList"
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="prList" style="width: 100%">
         <el-table-column prop="number" label="编号" width="80" />
         <el-table-column label="标题" min-width="300">
           <template #default="{ row }">
@@ -58,18 +59,14 @@
             <UserAvatar :user="row.user" :show-name="true" />
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="180">
+        <el-table-column label="更新时间" width="180">
           <template #default="{ row }">
-            {{ formatTime(row.created_at) }}
+            {{ formatRelativeTime(row.updated_at) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }">
-            <el-button
-              :icon="Promotion"
-              size="small"
-              @click="handleRunTest(row)"
-            >
+            <el-button :icon="Promotion" size="small" @click="handleRunTest(row)">
               运行测试
             </el-button>
           </template>
@@ -78,17 +75,19 @@
 
       <EmptyState v-if="!loading && prList.length === 0" description="暂无 PR" />
 
-      <!-- Workflow 测试对话框 -->
-      <WorkflowDialog
-        v-model="workflowDialogVisible"
-        :pr-number="selectedPR?.number || 0"
+      <!-- 配置选择对话框 -->
+      <WorkflowConfigSelector
+        v-model:visible="configSelectorVisible"
         :owner="selectedPR?.owner || ''"
         :repo="selectedPR?.repo || ''"
-        @success="handleWorkflowSuccess"
+        @select="handleConfigSelected"
       />
 
+      <!-- Workflow 日志查看器 -->
+      <WorkflowLogViewer v-model:visible="logViewerVisible" :workflow-id="currentWorkflowId" />
+
       <!-- 分页 -->
-      <div class="pagination">
+      <div class="pagination" @mouseover="handlePaginationMouseOver">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -96,7 +95,6 @@
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleFilterChange"
-          @current-change="handlePageChange"
         />
       </div>
     </el-card>
@@ -107,13 +105,16 @@
 import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RefreshRight, Promotion } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import { usePRStore, useRepoStore } from '@/store';
+import { triggerPRWorkflow } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import WorkflowDialog from '@/components/WorkflowDialog.vue';
-import type { PullRequest } from '@/types';
+import { formatRelativeTime } from '@/utils/timeFormatter';
+import WorkflowConfigSelector from '@/components/WorkflowConfigSelector.vue';
+import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
+import type { PullRequest, WorkflowConfig } from '@/types';
 
 const prStore = usePRStore();
 const repoStore = useRepoStore();
@@ -122,11 +123,15 @@ const repoStore = useRepoStore();
 const { prList, loading, filters, prCount } = storeToRefs(prStore);
 const { selectedRepoId } = storeToRefs(repoStore);
 // 方法可以直接解构
-const { fetchPRList, clearCache } = prStore;
+const { fetchPRList } = prStore;
 
-// Workflow 对话框
-const workflowDialogVisible = ref(false);
+// 配置选择对话框
+const configSelectorVisible = ref(false);
 const selectedPR = ref<PullRequest & { owner?: string; repo?: string }>();
+
+// Workflow 日志查看器
+const logViewerVisible = ref(false);
+const currentWorkflowId = ref('');
 
 // 计算当前筛选状态下的 PR 总数
 const totalCount = computed(() => {
@@ -145,39 +150,41 @@ const totalCount = computed(() => {
   }
 });
 
-// 由于 store 中已经监听了 selectedRepoId 的变化，会自动加载数据
-// 这里只需要提供手动刷新的功能
-
-/**
- * 换页处理
- */
-const handlePageChange = () => {
-  // fetchPRList 会自动从缓存读取并显示，无需额外处理
-  // store 中的 watch 会自动触发 displayFromCache
-};
-
 /**
  * 筛选变化
  */
 const handleFilterChange = () => {
   filters.value.page = 1;
-  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 刷新按钮：清空缓存并重新获取
+ * 刷新按钮：重新获取数据
  */
 const handleRefresh = async () => {
-  await clearCache();
   await fetchPRList();
 };
 
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN');
+const handlePaginationMouseOver = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  const nextBtn = target.closest('.btn-next');
+
+  if (
+    nextBtn &&
+    !nextBtn.hasAttribute('disabled') &&
+    nextBtn.getAttribute('aria-disabled') !== 'true'
+  ) {
+    const perPage = filters.value.per_page || 20;
+    const maxPage = Math.ceil(totalCount.value / perPage);
+    const nextPage = (filters.value.page || 1) + 1;
+
+    if (nextPage <= maxPage) {
+      prStore.queryPRList(nextPage);
+    }
+  }
 };
 
 /**
- * 运行测试
+ * 运行测试 - 打开配置选择对话框
  */
 const handleRunTest = (pr: PullRequest) => {
   if (!selectedRepoId.value) {
@@ -194,18 +201,70 @@ const handleRunTest = (pr: PullRequest) => {
     repo,
   };
 
-  workflowDialogVisible.value = true;
+  configSelectorVisible.value = true;
 };
 
 /**
- * 测试成功回调
+ * 配置选择完成 - 触发 workflow
  */
-const handleWorkflowSuccess = () => {
-  ElMessage.success('测试通过！');
+const handleConfigSelected = async (configId: string, config: WorkflowConfig) => {
+  if (!selectedPR.value) return;
+
+  const { owner, repo, number } = selectedPR.value;
+
+  if (!owner || !repo) {
+    ElMessage.error('无法获取仓库信息');
+    return;
+  }
+
+  try {
+    // 触发 workflow
+    const response = await triggerPRWorkflow(number, {
+      owner,
+      repo,
+      configId,
+    });
+
+    if (response.data) {
+      currentWorkflowId.value = response.data.workflowId;
+
+      // 显示通知
+      ElNotification.success({
+        title: `PR #${number} 测试已启动`,
+        message: `使用配置: ${config.name}`,
+        duration: 3000,
+      });
+
+      // 自动打开日志查看器
+      logViewerVisible.value = true;
+    }
+  } catch (error) {
+    console.error('触发 workflow 失败:', error);
+    ElMessage.error('启动测试失败');
+  }
 };
 </script>
 
 <style scoped>
+.pr-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-list :deep(.el-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pr-list :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -236,5 +295,10 @@ const handleWorkflowSuccess = () => {
   margin-top: 24px;
   display: flex;
   justify-content: flex-end;
+}
+
+.last-update-time {
+  color: #909399;
+  font-size: 14px;
 }
 </style>

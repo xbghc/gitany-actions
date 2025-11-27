@@ -20,11 +20,11 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  user: undefined,
   size: 32,
   showName: false,
 });
 
-// 计算头像 URL，如果为空则返回 undefined（避免请求无效 URL）
 const avatarUrl = computed(() => {
   return props.user?.avatar_url || undefined;
 });

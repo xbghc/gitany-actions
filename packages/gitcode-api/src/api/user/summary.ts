@@ -10,4 +10,3 @@ export const userSummarySchema = z.object({
 });
 
 export type UserSummary = z.infer<typeof userSummarySchema>;
-

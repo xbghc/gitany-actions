@@ -11,10 +11,7 @@ import { statusCommand } from './commands/status.js';
 
 const program = new Command();
 
-program
-  .name('gitcode')
-  .description('tools for GitCode')
-  .version('0.1.0');
+program.name('gitcode').description('tools for GitCode').version('0.1.0');
 
 // status command
 program

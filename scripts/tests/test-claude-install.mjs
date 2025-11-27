@@ -8,7 +8,10 @@
 
 import Docker from '../../packages/gitcode-actions/node_modules/dockerode/lib/docker.js';
 import { createLogger } from '../../packages/shared/dist/index.js';
-import { createWorkspaceContainer, installClaudeCli } from '../../packages/gitcode-actions/dist/index.js';
+import {
+  createWorkspaceContainer,
+  installClaudeCli,
+} from '../../packages/gitcode-actions/dist/index.js';
 
 function envBoolean(name, defaultValue) {
   const raw = process.env[name];

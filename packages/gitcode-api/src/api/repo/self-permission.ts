@@ -23,19 +23,11 @@ export type SelfPermissionParams = {
 import { z } from 'zod';
 
 export const roleInfoSchema = z.object({
-  /** Role unique id. */
-  id: z.number(),
-  /** Role display name. */
+  role_uuid: z.string(),
   name: z.string(),
-  /** Localized role name. */
   cn_name: z.string().optional(),
-  /** Optional code/identifier. */
-  code: z.string().optional(),
-  /** Optional role type/category (e.g., owner, maintainer). */
-  type: z.string().optional(),
-  /** Description if provided. */
-  description: z.string().nullable().optional(),
-  // 省略部分内容
+  roles_type: z.number(),
+  access_level: z.number().optional(),
 });
 
 export type RoleInfo = z.infer<typeof roleInfoSchema>;

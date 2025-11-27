@@ -28,8 +28,14 @@ export interface UpdateIssueBody {
   milestone?: number;
   /** Replace labels with the provided list. */
   labels?: Array<string | number>;
-  /** Update issue state. */
-  state?: 'open' | 'closed';
+  /**
+   * Update issue state.
+   * - 'close': Close the issue
+   * - 'reopen': Reopen the issue
+   *
+   * ⚠️ Note: GitCode uses 'close'/'reopen' (not 'closed'/'open')
+   */
+  state?: 'close' | 'reopen';
 }
 
 /**

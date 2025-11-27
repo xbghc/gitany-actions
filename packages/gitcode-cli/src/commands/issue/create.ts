@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { formatAssignees } from './helpers.js';
 
 export interface CreateOptions {
@@ -104,14 +105,16 @@ export async function createAction(
     if (options.assignee) {
       const assignees = Array.isArray(options.assignee) ? options.assignee : [options.assignee];
       // 处理 @me 特殊值
-      const processedAssignees = assignees.map((a) => {
-        if (a === '@me') {
-          // 在真实环境中，这里应该获取当前用户信息
-          console.log('Note: @me assignment will be implemented in future versions');
-          return null;
-        }
-        return a;
-      }).filter((a): a is string => a !== null);
+      const processedAssignees = assignees
+        .map((a) => {
+          if (a === '@me') {
+            // 在真实环境中，这里应该获取当前用户信息
+            console.log('Note: @me assignment will be implemented in future versions');
+            return null;
+          }
+          return a;
+        })
+        .filter((a): a is string => a !== null);
 
       if (processedAssignees.length > 0) {
         // 将数组合并为逗号分隔的字符串
@@ -135,6 +138,7 @@ export async function createAction(
 
     const issue: CreatedIssue = await client.issue.create({
       owner,
+      repo,
       body,
     });
 
@@ -251,10 +255,18 @@ export function createCommand(): Command {
           }
         }
 
+        // 自动检测仓库（从 git remote origin 获取）
         if (!ownerArg || !repoArg) {
-          throw new Error(
-            'Repository owner and name are required. Use --repo OWNER/REPO or provide as arguments',
-          );
+          const repoUrl = await resolveGitCodeRepoUrl();
+          const parsed = parseGitUrl(repoUrl);
+          if (parsed) {
+            ownerArg = parsed.owner;
+            repoArg = parsed.repo;
+          }
+        }
+
+        if (!ownerArg || !repoArg) {
+          throw new Error('无法检测仓库信息，请在 git 仓库目录下运行或使用 --repo OWNER/REPO 指定');
         }
 
         await createAction(ownerArg, repoArg, titleArg || optionsToUse.title, optionsToUse);

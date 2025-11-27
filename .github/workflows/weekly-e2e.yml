@@ -1,0 +1,119 @@
+name: Weekly E2E Tests
+
+on:
+  schedule:
+    # 每周一凌晨 2 点（UTC）运行
+    - cron: '0 2 * * 1'
+
+  # 支持手动触发
+  workflow_dispatch:
+
+jobs:
+  # 检查最近一周是否有提交
+  check-commits:
+    runs-on: ubuntu-latest
+    outputs:
+      has_recent_commits: ${{ steps.check.outputs.has_commits }}
+      commit_count: ${{ steps.check.outputs.count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史，必需！
+
+      - name: Check for commits in last 7 days
+        id: check
+        run: |
+          # 获取最近 7 天的提交
+          COMMITS=$(git rev-list --after='7 days ago' HEAD)
+          COUNT=$(echo "$COMMITS" | grep -c . || echo "0")
+
+          if [ "$COUNT" -gt 0 ]; then
+            echo "has_commits=true" >> $GITHUB_OUTPUT
+            echo "count=$COUNT" >> $GITHUB_OUTPUT
+            echo "✅ Found $COUNT commit(s) in last 7 days"
+            echo ""
+            echo "Recent commits:"
+            git log --oneline --since='7 days ago'
+          else
+            echo "has_commits=false" >> $GITHUB_OUTPUT
+            echo "count=0" >> $GITHUB_OUTPUT
+            echo "ℹ️ No commits in last 7 days, E2E tests will be skipped"
+          fi
+
+  # E2E 测试（只在有最近提交或手动触发时运行）
+  e2e-test:
+    needs: check-commits
+    # 条件：有最近提交 OR 手动触发
+    if: |
+      needs.check-commits.outputs.has_recent_commits == 'true' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run E2E Tests
+        env:
+          GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+        run: pnpm --filter @xbghc/gitcode-api test:e2e
+
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: '⚠️ GitCode API E2E Tests Failed',
+              body: `
+              ## E2E 测试失败
+
+              **提交数量（最近 7 天）**: ${{ needs.check-commits.outputs.commit_count }}
+              **触发方式**: ${{ github.event_name == 'workflow_dispatch' && '手动触发' || '定时任务' }}
+
+              定时 E2E 测试检测到问题，可能原因：
+              - GitCode API 发生了破坏性变化
+              - API 响应格式与预期不符
+              - 网络或认证问题
+
+              **检查详情**: ${context.payload.repository.html_url}/actions/runs/${context.runId}
+
+              请尽快检查并修复。
+              `,
+              labels: ['testing', 'api', 'e2e']
+            });
+
+  # 跳过通知（仅在定时任务且无新提交时运行）
+  notify-skipped:
+    needs: check-commits
+    if: |
+      always() &&
+      needs.check-commits.outputs.has_recent_commits == 'false' &&
+      github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log skip reason
+        run: |
+          echo "ℹ️ Weekly E2E tests skipped - no commits in last 7 days"
+          echo "This is expected behavior to save CI resources"
+          echo ""
+          echo "To run tests manually, use workflow_dispatch trigger"

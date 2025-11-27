@@ -45,11 +45,16 @@ export async function editAction(
         finalBody = readBodyFromFile(options.bodyFile).trim();
       }
 
+      // 用户输入 open/closed，需要转换为 API 需要的 reopen/close
       const normalizedState = options.state?.toLowerCase();
-      if (normalizedState && normalizedState !== 'open' && normalizedState !== 'closed') {
+      let state: 'close' | 'reopen' | undefined;
+      if (normalizedState === 'open') {
+        state = 'reopen';
+      } else if (normalizedState === 'closed') {
+        state = 'close';
+      } else if (normalizedState) {
         throw new Error('State must be either "open" or "closed"');
       }
-      const state = normalizedState as 'open' | 'closed' | undefined;
 
       const updateBody: UpdateIssueBody = {};
       if (options.title !== undefined) {
@@ -114,7 +119,7 @@ export async function editAction(
 
       if (state) {
         console.log(
-          `\nℹ️  You can reopen or close the issue anytime using: gitcode issue ${state === 'open' ? 'close' : 'reopen'} ${issue.number}`,
+          `\nℹ️  You can reopen or close the issue anytime using: gitcode issue ${state === 'reopen' ? 'close' : 'reopen'} ${issue.number}`,
         );
       }
     },

@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 import { ElMessage } from 'element-plus';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+const baseURL = import.meta.env.VITE_API_BASE_URL || '';
 
 // 创建 axios 实例
 const request: AxiosInstance = axios.create({
@@ -25,7 +25,7 @@ request.interceptors.request.use(
   (error) => {
     console.error('请求错误:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 响应拦截器
@@ -82,7 +82,7 @@ request.interceptors.response.use(
 
     ElMessage.error(errorMsg);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 封装请求方法

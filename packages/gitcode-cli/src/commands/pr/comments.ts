@@ -1,5 +1,5 @@
 import type { PRComment, PRCommentQueryOptions } from '@xbghc/gitcode-api';
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { withClient } from '../../utils/with-client.js';
 
 function isPrCommentType(
@@ -22,7 +22,7 @@ export async function prCommentsCommand(
 
   await withClient(
     async (client) => {
-      const repoUrl = await resolveRepoUrl(url);
+      const repoUrl = await resolveGitCodeRepoUrl(url);
       const comments: PRComment[] = await client.pr.comments(repoUrl, n, {
         page: options.page ? Number(options.page) : undefined,
         per_page: options.perPage ? Number(options.perPage) : undefined,

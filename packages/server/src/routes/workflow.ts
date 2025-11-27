@@ -1,9 +1,11 @@
 import { Router, type Request, type Response } from 'express';
-import type { WorkflowConfig, RegistryMirrorTestResult } from '../types/workflow.js';
-import { workflowService } from '../services/workflow-service.js';
 import { withAuth } from '../middleware/auth.js';
-import { createGitcodeClient } from '../utils/gitcode-client.js';
-import { testRegistryMirror } from '../utils/docker-runner.js';
+import { workflowService } from '../services/workflow-service.js';
+import { workflowConfigService } from '../services/workflow-config-service.js';
+import { workflowLogService } from '../services/workflow-log-service.js';
+import { createGitCodeClient } from '../utils/gitcode-client.js';
+import { logger } from '../utils/logger.js';
+import { ValidationError, NotFoundError, InternalError } from '../errors/index.js';
 
 export const workflowRouter: Router = Router();
 
@@ -14,56 +16,45 @@ export const workflowRouter: Router = Router();
 workflowRouter.post(
   '/workflow/pr/:number',
   withAuth(async (req, res, token) => {
+    const { number } = req.params;
+    const prNumber = Number(number);
+
+    if (isNaN(prNumber) || prNumber <= 0) {
+      throw new ValidationError('Invalid PR number');
+    }
+
+    const { owner, repo, configId } = req.body;
+
+    if (!owner || !repo) {
+      throw new ValidationError('owner and repo are required');
+    }
+
+    // 强制要求 configId
+    if (!configId) {
+      throw new ValidationError('configId is required', { field: 'configId' });
+    }
+
+    // 从指定仓库的配置列表中查找
+    const configs = await workflowConfigService.listByRepo(owner, repo);
+    const config = configs.find((c) => c.id === configId);
+
+    if (!config) {
+      throw new NotFoundError('Configuration', configId);
+    }
+
+    const client = createGitCodeClient(token);
+
     try {
-      const { number } = req.params;
-      const prNumber = Number(number);
-
-      if (isNaN(prNumber) || prNumber <= 0) {
-        res.status(400).json({
-          success: false,
-          error: 'Invalid PR number',
-        });
-        return;
-      }
-
-      const { owner, repo, packageManager, buildCommand, lintCommand, baseImage, timeout } =
-        req.body;
-
-      if (!owner || !repo) {
-        res.status(400).json({
-          success: false,
-          error: 'owner and repo are required',
-        });
-        return;
-      }
-
-      // 验证packageManager
-      if (packageManager && !['npm', 'pnpm', 'yarn'].includes(packageManager)) {
-        res.status(400).json({
-          success: false,
-          error: 'packageManager must be one of: npm, pnpm, yarn',
-        });
-        return;
-      }
-
-      const config: WorkflowConfig = {
-        packageManager,
-        buildCommand,
-        lintCommand,
-        baseImage,
-        timeout,
-      };
-
-      const client = createGitcodeClient(token);
-
-      // 执行workflow（异步）
-      const workflowId = await workflowService.executePrWorkflow(
+      // 执行配置驱动的 workflow
+      const workflowId = await workflowService.executeConfigDrivenWorkflow(
         owner,
         repo,
         prNumber,
         config,
         client,
       );
+
+      logger.info({ owner, repo, prNumber, workflowId }, 'Workflow started');
 
       res.json({
         success: true,
@@ -73,12 +64,8 @@ workflowRouter.post(
         },
       });
     } catch (error) {
-      console.error('Failed to start workflow:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to start workflow',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      });
+      logger.error({ owner, repo, prNumber, configId, error }, 'Failed to start workflow');
+      throw new InternalError('Failed to start workflow', error as Error);
     }
   }),
 );
@@ -91,21 +78,13 @@ workflowRouter.get('/workflow/:workflowId/stream', (req: Request, res: Response)
   const { workflowId } = req.params;
 
   if (!workflowId) {
-    res.status(400).json({
-      success: false,
-      error: 'workflowId is required',
-    });
-    return;
+    throw new ValidationError('workflowId is required');
   }
 
   // 检查workflow是否存在
   const workflow = workflowService.getWorkflowStatus(workflowId);
   if (!workflow) {
-    res.status(404).json({
-      success: false,
-      error: 'Workflow not found',
-    });
-    return;
+    throw new NotFoundError('Workflow', workflowId);
   }
 
   // 设置SSE响应头
@@ -121,14 +100,20 @@ workflowRouter.get('/workflow/:workflowId/stream', (req: Request, res: Response)
   if (workflow.status === 'success' || workflow.status === 'failed') {
     // 发送所有步骤
     for (const step of workflow.steps) {
-      res.write(`event: step\ndata: ${JSON.stringify({ name: step.name, status: step.status })}\n\n`);
+      res.write(
+        `event: step\ndata: ${JSON.stringify({ name: step.name, status: step.status })}\n\n`,
+      );
       if (step.output) {
-        res.write(`event: output\ndata: ${JSON.stringify({ step: step.name, text: step.output })}\n\n`);
+        res.write(
+          `event: output\ndata: ${JSON.stringify({ step: step.name, text: step.output })}\n\n`,
+        );
       }
     }
 
     // 发送完成消息
-    res.write(`event: complete\ndata: ${JSON.stringify({ workflowId, status: workflow.status })}\n\n`);
+    res.write(
+      `event: complete\ndata: ${JSON.stringify({ workflowId, status: workflow.status })}\n\n`,
+    );
     res.end();
     return;
   }
@@ -149,17 +134,14 @@ workflowRouter.get('/workflow/:workflowId/stream', (req: Request, res: Response)
     }
   });
 
-  // 客户端断开连接时清理
-  req.on('close', () => {
-    unsubscribe();
-  });
-
   // 发送心跳，防止连接超时
   const heartbeatInterval = setInterval(() => {
     res.write(': heartbeat\n\n');
   }, 15000);
 
+  // 客户端断开连接时清理
   req.on('close', () => {
+    unsubscribe();
     clearInterval(heartbeatInterval);
   });
 });
@@ -169,40 +151,22 @@ workflowRouter.get('/workflow/:workflowId/stream', (req: Request, res: Response)
  * GET /api/workflow/:workflowId
  */
 workflowRouter.get('/workflow/:workflowId', (req: Request, res: Response) => {
-  try {
-    const { workflowId } = req.params;
+  const { workflowId } = req.params;
 
-    if (!workflowId) {
-      res.status(400).json({
-        success: false,
-        error: 'workflowId is required',
-      });
-      return;
-    }
-
-    const workflow = workflowService.getWorkflowStatus(workflowId);
-
-    if (!workflow) {
-      res.status(404).json({
-        success: false,
-        error: 'Workflow not found',
-        message: `Workflow ${workflowId} does not exist or has been cleaned up`,
-      });
-      return;
-    }
-
-    res.json({
-      success: true,
-      data: workflow,
-    });
-  } catch (error) {
-    console.error('Failed to get workflow status:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get workflow status',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+  if (!workflowId) {
+    throw new ValidationError('workflowId is required');
   }
+
+  const workflow = workflowService.getWorkflowStatus(workflowId);
+
+  if (!workflow) {
+    throw new NotFoundError('Workflow', workflowId);
+  }
+
+  res.json({
+    success: true,
+    data: workflow,
+  });
 });
 
 /**
@@ -211,11 +175,13 @@ workflowRouter.get('/workflow/:workflowId', (req: Request, res: Response) => {
  * 这是一个管理接口，可用于定期清理
  */
 workflowRouter.delete('/workflow/cleanup', (req: Request, res: Response) => {
-  try {
-    const { maxAge } = req.query;
-    const maxAgeMs = maxAge ? Number(maxAge) : undefined;
+  const { maxAge } = req.query;
+  const maxAgeMs = maxAge ? Number(maxAge) : undefined;
 
+  try {
     const deletedCount = workflowService.cleanupOldWorkflows(maxAgeMs);
+
+    logger.info({ deletedCount, maxAgeMs }, 'Workflows cleaned up');
 
     res.json({
       success: true,
@@ -225,92 +191,142 @@ workflowRouter.delete('/workflow/cleanup', (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Failed to cleanup workflows:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to cleanup workflows',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
+    logger.error({ maxAgeMs, error }, 'Failed to cleanup workflows');
+    throw new InternalError('Failed to cleanup workflows', error as Error);
   }
 });
 
 /**
- * 测试单个Docker镜像源
- * POST /api/workflow/test-registry-mirror
- * Body: { mirror?, mirrorName?, testImage? }
+ * 测试单个Docker镜像源 - Not Supported on Server
  */
-workflowRouter.post('/workflow/test-registry-mirror', async (req: Request, res: Response) => {
-  try {
-    const { mirror, mirrorName, testImage } = req.body;
-
-    const result: RegistryMirrorTestResult = await testRegistryMirror(mirror, mirrorName, testImage);
-
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    console.error('Failed to test registry mirror:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to test registry mirror',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+workflowRouter.post('/workflow/test-registry-mirror', (_req: Request, res: Response) => {
+  res.status(501).json({
+    success: false,
+    error: 'Not Implemented',
+    message: 'Docker operations are no longer supported on the server. Please check your runner.',
+  });
 });
 
 /**
- * 测试所有预定义的Docker镜像源
- * GET /api/workflow/test-all-registry-mirrors?testImage=node:22-alpine
+ * 测试所有预定义的Docker镜像源 - Not Supported on Server
  */
-workflowRouter.get('/workflow/test-all-registry-mirrors', async (req: Request, res: Response) => {
-  try {
-    // 从query参数获取测试镜像，默认alpine:latest
-    const testImage = (req.query.testImage as string) || undefined;
+workflowRouter.get('/workflow/test-all-registry-mirrors', (_req: Request, res: Response) => {
+  res.status(501).json({
+    success: false,
+    error: 'Not Implemented',
+    message: 'Docker operations are no longer supported on the server. Please check your runner.',
+  });
+});
 
-    // 预定义的镜像源列表（2025年可用）
-    const mirrors = [
-      { mirror: 'docker.m.daocloud.io', name: 'DaoCloud镜像源（推荐）' },
-      { mirror: 'docker.1panel.live', name: '1Panel镜像源' },
-      { mirror: 'docker.1ms.run', name: '1ms镜像源' },
-      { mirror: 'hub.rat.dev', name: 'Rat镜像源' },
-      { mirror: 'docker.xuanyuan.me', name: '轩辕镜像源' },
-      { mirror: '', name: 'Docker Hub（直连）' },
-    ];
+/**
+ * 列出指定仓库的所有 workflow
+ * GET /api/workflows/:owner/:repo
+ */
+workflowRouter.get(
+  '/workflows/:owner/:repo',
+  withAuth(async (req, res) => {
+    const { owner, repo } = req.params;
 
-    // 并发测试所有镜像源
-    const results: RegistryMirrorTestResult[] = await Promise.all(
-      mirrors.map(({ mirror, name }) =>
-        testRegistryMirror(mirror, name, testImage).catch((error) => ({
-          success: false,
-          mirror,
-          mirrorName: name,
-          duration: 0,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        })),
-      ),
-    );
+    try {
+      const workflows = workflowService.listByRepo(owner, repo);
 
-    // 按速度排序（成功的在前，失败的在后；成功的按速度降序）
-    results.sort((a, b) => {
-      if (a.success && !b.success) return -1;
-      if (!a.success && b.success) return 1;
-      if (a.success && b.success) {
-        return (b.speed || 0) - (a.speed || 0);
+      res.json({
+        success: true,
+        data: {
+          workflows,
+          count: workflows.length,
+        },
+      });
+    } catch (error) {
+      logger.error({ owner, repo, error }, 'Failed to list workflows');
+      throw new InternalError('Failed to list workflows', error as Error);
+    }
+  }),
+);
+
+/**
+ * 获取workflow历史日志列表
+ * GET /api/repos/:owner/:repo/workflows/logs
+ */
+workflowRouter.get(
+  '/repos/:owner/:repo/workflows/logs',
+  withAuth(async (req, res) => {
+    const { owner, repo } = req.params;
+
+    try {
+      const result = await workflowLogService.listWorkflowLogs(owner, repo);
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error) {
+      logger.error({ owner, repo, error }, 'Failed to list workflow logs');
+      throw new InternalError('Failed to list workflow logs', error as Error);
+    }
+  }),
+);
+
+/**
+ * 获取单个workflow的完整数据
+ * GET /api/repos/:owner/:repo/workflows/logs/:id
+ */
+workflowRouter.get(
+  '/repos/:owner/:repo/workflows/logs/:id',
+  withAuth(async (req, res) => {
+    const { owner, repo, id } = req.params;
+
+    try {
+      const workflow = await workflowLogService.getWorkflowLog(owner, repo, id);
+
+      if (!workflow) {
+        throw new NotFoundError('Workflow log', id);
       }
-      return 0;
-    });
 
-    res.json({
-      success: true,
-      data: results,
-    });
-  } catch (error) {
-    console.error('Failed to test all registry mirrors:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to test all registry mirrors',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
+      res.json({
+        success: true,
+        data: workflow,
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      logger.error({ owner, repo, logId: id, error }, 'Failed to get workflow log');
+      throw new InternalError('Failed to get workflow log', error as Error);
+    }
+  }),
+);
+
+/**
+ * 删除workflow日志
+ * DELETE /api/repos/:owner/:repo/workflows/logs/:id
+ */
+workflowRouter.delete(
+  '/repos/:owner/:repo/workflows/logs/:id',
+  withAuth(async (req, res) => {
+    const { owner, repo, id } = req.params;
+
+    try {
+      const deleted = await workflowLogService.deleteWorkflowLog(owner, repo, id);
+
+      if (!deleted) {
+        throw new NotFoundError('Workflow log', id);
+      }
+
+      logger.info({ owner, repo, logId: id }, 'Workflow log deleted');
+
+      res.json({
+        success: true,
+        data: {
+          message: `Workflow log deleted: ${id}`,
+        },
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      logger.error({ owner, repo, logId: id, error }, 'Failed to delete workflow log');
+      throw new InternalError('Failed to delete workflow log', error as Error);
+    }
+  }),
+);

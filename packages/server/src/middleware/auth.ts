@@ -6,11 +6,7 @@ import type { Request, Response } from 'express';
  * - res: Express Response 对象
  * - token: 已验证的 GitCode Token
  */
-type AuthenticatedHandler = (
-  req: Request,
-  res: Response,
-  token: string
-) => void | Promise<void>;
+type AuthenticatedHandler = (req: Request, res: Response, token: string) => void | Promise<void>;
 
 /**
  * 从请求中提取 GitCode Token
@@ -18,9 +14,9 @@ type AuthenticatedHandler = (
 function extractToken(req: Request): string | null {
   // 从请求头获取 TOKEN（支持多种格式）
   const token =
-    req.headers['x-gitcode-token'] as string ||
+    (req.headers['x-gitcode-token'] as string) ||
     req.headers['authorization']?.replace(/^Bearer\s+/i, '') ||
-    req.headers['x-auth-token'] as string;
+    (req.headers['x-auth-token'] as string);
 
   return token || null;
 }
@@ -36,7 +32,7 @@ function extractToken(req: Request): string | null {
  *
  * @example
  * router.get('/path', withAuth(async (req, res, token) => {
- *   const client = createGitcodeClient(token);
+ *   const client = createGitCodeClient(token);
  *   // ...
  * }));
  */
@@ -52,7 +48,8 @@ export function withAuth(handler: AuthenticatedHandler) {
       if (isProduction) {
         res.status(401).json({
           error: 'Unauthorized',
-          message: 'GitCode token is required. Please provide token in request header: X-GitCode-Token or Authorization',
+          message:
+            'GitCode token is required. Please provide token in request header: X-GitCode-Token or Authorization',
         });
         return;
       }

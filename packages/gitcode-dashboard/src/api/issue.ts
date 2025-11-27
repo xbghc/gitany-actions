@@ -39,7 +39,7 @@ export const updateIssue = (
   owner: string,
   repo: string,
   number: number,
-  params: UpdateIssueParams
+  params: UpdateIssueParams,
 ) => {
   return http.patch<ApiResponse<Issue>>(`/api/repo/${owner}/${repo}/issues/${number}`, params);
 };
@@ -49,7 +49,7 @@ export const updateIssue = (
  */
 export const getIssueComments = (owner: string, repo: string, number: number) => {
   return http.get<ApiResponse<IssueComment[]>>(
-    `/api/repo/${owner}/${repo}/issues/${number}/comments`
+    `/api/repo/${owner}/${repo}/issues/${number}/comments`,
   );
 };
 
@@ -59,7 +59,7 @@ export const getIssueComments = (owner: string, repo: string, number: number) =>
 export const createIssueComment = (owner: string, repo: string, number: number, body: string) => {
   return http.post<ApiResponse<IssueComment>>(
     `/api/repo/${owner}/${repo}/issues/${number}/comments`,
-    { body }
+    { body },
   );
 };
 

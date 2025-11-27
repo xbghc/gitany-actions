@@ -19,7 +19,7 @@ export const webhookSchema = z.object({
   created_at: z.string(),
   last_response: z
     .object({
-      code: z.any().nullable(),
+      code: z.unknown().nullable(),
       status: z.string(),
       message: z.string(),
     })

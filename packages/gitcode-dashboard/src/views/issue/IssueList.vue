@@ -14,7 +14,12 @@
       <div class="filters">
         <el-form :inline="true">
           <el-form-item label="状态">
-            <el-select v-model="filters.state" placeholder="选择状态" style="width: 120px" @change="handleFilterChange">
+            <el-select
+              v-model="filters.state"
+              placeholder="选择状态"
+              style="width: 120px"
+              @change="handleFilterChange"
+            >
               <el-option label="全部" value="all" />
               <el-option label="Open" value="open" />
               <el-option label="Closed" value="closed" />
@@ -27,11 +32,7 @@
       </div>
 
       <!-- Issue 列表 -->
-      <el-table
-        v-loading="loading"
-        :data="issueList"
-        style="width: 100%"
-      >
+      <el-table v-loading="loading" :data="issueList">
         <el-table-column prop="number" label="编号" width="80" />
         <el-table-column label="标题" min-width="300">
           <template #default="{ row }">
@@ -60,9 +61,9 @@
             <UserAvatar :user="row.user" :show-name="true" />
           </template>
         </el-table-column>
-        <el-table-column label="创建时间" width="180">
+        <el-table-column label="更新时间" width="180">
           <template #default="{ row }">
-            {{ formatTime(row.created_at) }}
+            {{ formatRelativeTime(row.updated_at) }}
           </template>
         </el-table-column>
       </el-table>
@@ -70,7 +71,7 @@
       <EmptyState v-if="!loading && issueList.length === 0" description="暂无 Issue" />
 
       <!-- 分页 -->
-      <div class="pagination">
+      <div class="pagination" @mouseover="handlePaginationMouseOver">
         <el-pagination
           v-model:current-page="filters.page"
           v-model:page-size="filters.per_page"
@@ -78,7 +79,6 @@
           :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleFilterChange"
-          @current-change="handlePageChange"
         />
       </div>
     </el-card>
@@ -122,15 +122,14 @@ import { createIssue } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import { formatRelativeTime } from '@/utils/timeFormatter';
 import { ElMessage } from 'element-plus';
 
 const issueStore = useIssueStore();
 const repoStore = useRepoStore();
 
-// 使用 storeToRefs 解构响应式状态
 const { issueList, loading, filters, issueCount } = storeToRefs(issueStore);
-// 方法可以直接解构
-const { fetchIssueList, clearCache } = issueStore;
+const { fetchIssueList } = issueStore;
 
 // 由于 store 中已经监听了 selectedRepoId 的变化，会自动加载数据
 // 这里只需要提供手动刷新的功能
@@ -162,26 +161,16 @@ const totalCount = computed(() => {
 });
 
 /**
- * 换页处理
- */
-const handlePageChange = () => {
-  // fetchIssueList 会自动从缓存读取并显示，无需额外处理
-  // store 中的 watch 会自动触发 displayFromCache
-};
-
-/**
  * 筛选变化
  */
 const handleFilterChange = () => {
   filters.value.page = 1;
-  // store 中的 watch 会自动触发 displayFromCache
 };
 
 /**
- * 刷新按钮：清空缓存并重新获取
+ * 刷新按钮：重新获取数据
  */
 const handleRefresh = async () => {
-  await clearCache();
   await fetchIssueList();
 };
 
@@ -201,23 +190,57 @@ const handleCreateIssue = async () => {
     createForm.title = '';
     createForm.body = '';
 
-    // 创建后：清空缓存并重新获取
+    // 创建后：重新获取数据
     filters.value.page = 1;
-    await clearCache();
     await fetchIssueList();
   } catch (error) {
     ElMessage.error('创建 Issue 失败');
+    console.error('创建 Issue 失败:', error);
   } finally {
     creating.value = false;
   }
 };
 
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN');
+const handlePaginationMouseOver = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  const nextBtn = target.closest('.btn-next');
+
+  if (
+    nextBtn &&
+    !nextBtn.hasAttribute('disabled') &&
+    nextBtn.getAttribute('aria-disabled') !== 'true'
+  ) {
+    const perPage = filters.value.per_page || 20;
+    const maxPage = Math.ceil(totalCount.value / perPage);
+    const nextPage = (filters.value.page || 1) + 1;
+
+    if (nextPage <= maxPage) {
+      issueStore.queryIssueList(nextPage);
+    }
+  }
 };
 </script>
 
 <style scoped>
+.issue-list {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-list :deep(.el-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-list :deep(.el-card__body) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -248,5 +271,10 @@ const formatTime = (time: string) => {
   margin-top: 24px;
   display: flex;
   justify-content: flex-end;
+}
+
+.last-update-time {
+  color: #909399;
+  font-size: 14px;
 }
 </style>

@@ -1,171 +1,85 @@
 # GitCode Actions
 
-GitCode Actions 是一个基于 pnpm 的 TypeScript monorepo，围绕 GitCode 平台提供 API 客户端、命令行工具、自动化工作流、容器工具链以及配套服务。代码与文档通过 VitePress 维护，默认使用 Node.js 22 运行时。
+GitCode 平台的开发者工具集 — API 客户端、命令行工具、自动化工作流
+
+## 快速体验
+
+```bash
+# 安装 CLI
+npm i -g @xbghc/gitcode-cli
+
+# 设置认证
+gitcode auth set-token YOUR_TOKEN
+
+# 在任意 GitCode 仓库目录下
+gitcode pr checkout 42                        # 一键切到 PR 分支
+gitcode issue create -t "Bug: 登录失败"       # 快速创建 Issue
+gitcode pr list                               # 自动识别当前仓库
+```
 
 ## 核心包
 
-| 包 | 说明 |
-| --- | --- |
-| `@xbghc/gitcode-api` | 强类型的 GitCode REST 客户端，封装用户、仓库、PR、Issue 等模块并提供响应缓存与重试策略。 |
-| `@xbghc/gitcode-cli` | `gitcode` 命令行工具，支持认证、仓库/PR/Issue 查询与评论等交互式操作。 |
-| `@xbghc/gitcode-actions` | 事件监听、容器编排与 AI 评论助手工具集，可用于构建自动化工作流。 |
-| `@xbghc/gitcode-actions-server` | 基于 Express 的后端服务，对外暴露 GitCode API 转发与自动化能力。 |
-| `@xbghc/gitcode-dashboard` | Vue 3 管理面板，封装 GitCode 仓库与 Issue 的可视化操作界面。 |
+| 包                                                     | 用途                               |
+| ------------------------------------------------------ | ---------------------------------- |
+| [`@xbghc/gitcode-api`](./packages/gitcode-api)         | 强类型 REST 客户端，支持缓存与重试 |
+| [`@xbghc/gitcode-cli`](./packages/gitcode-cli)         | 命令行工具，类似 `gh` 的体验       |
+| [`@xbghc/gitcode-actions`](./packages/gitcode-actions) | 事件监听、容器编排、AI 助手        |
 
-## 环境要求
-
-- Node.js 22（可通过 `.nvmrc` 对齐版本要求）
-- pnpm 10（workspace 使用 `pnpm@10.15.0`）
-- Docker（`@xbghc/gitcode-actions` 的容器函数依赖 `dockerode` 与宿主 Docker daemon）
-- GitCode 访问令牌（用于 API 与 CLI 调用）
-
-## 快速开始
-
-```bash
-# 克隆仓库
-git clone <repository-url>
-cd gitcode-actions
-
-# 安装依赖
-pnpm install
-
-# 构建所有包
-pnpm build
-```
-
-常用 workspace 脚本：
-
-- `pnpm dev`：并行启动各包的开发模式
-- `pnpm lint` / `pnpm format`：ESLint 与 Prettier 检查
-- `pnpm clean`：清理各包的构建产物
-- `pnpm docs:dev | docs:build | docs:preview`：VitePress 文档调试、构建与预览
-- `pnpm dev:core` / `pnpm dev:server` / `pnpm dev:dashboard`：聚焦核心自动化、后端或前端开发
-- `pnpm d` / `pnpm d:git` / `pnpm d:docker`：构建后分别启动 GitCode、Git、Docker 集成演示脚本
-
-## CLI 速览
-
-`@xbghc/gitcode-cli` 在构建后提供 `gitcode` 可执行文件：
-
-```bash
-# 解析仓库 URL，输出结构化信息
-gitcode parse https://gitcode.com/owner/repo.git
-
-# 授权管理
-gitcode auth set-token <token>    # 保存令牌到 ~/.gitcode/config.json
-gitcode auth status                # 查看认证状态
-gitcode auth remove-token          # 删除已保存的令牌
-
-# 使用环境变量令牌（临时方式）
-GITCODE_TOKEN=your-token gitcode user show
-GITCODE_TOKEN=your-token gitcode user namespace
-
-# 仓库权限与信息
-gitcode repo permission https://gitcode.com/owner/repo.git
-GITCODE_TOKEN=... gitcode repo info branches owner repo
-GITCODE_TOKEN=... gitcode repo info webhooks owner repo
-
-# Pull Request 操作
-gitcode pr list https://gitcode.com/owner/repo --state all
-GITCODE_TOKEN=... gitcode pr create https://gitcode.com/owner/repo --title "新特性" --head feature-branch
-GITCODE_TOKEN=... gitcode pr info settings owner repo
-GITCODE_TOKEN=... gitcode pr comments 12 https://gitcode.com/owner/repo --commentType pr_comment
-
-# Issue 操作
-gitcode issue list https://gitcode.com/owner/repo --state closed
-GITCODE_TOKEN=... gitcode issue create owner repo --title "Bug" --body "重现步骤"
-GITCODE_TOKEN=... gitcode issue comment 42 --repo owner/repo "感谢反馈！"
-```
-
-CLI 底层通过 `GitcodeClient` 发起请求，并在出错时提供统一的错误处理与 JSON 输出选项。
-
-## API 客户端示例
+## API 客户端
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 
-const profile = await client.user.getProfile();
-const namespace = await client.user.getNamespace();
-
-const repoSettings = await client.repo.getSettings('owner', 'repo');
-const contributors = await client.repo.getContributors('owner', 'repo');
-const prCount = await client.pr.count('https://gitcode.com/owner/repo');
-const issues = await client.issue.list('https://gitcode.com/owner/repo', { state: 'open' });
+// 模块化 API
+const issues = await client.issue.list(repoUrl, { state: 'open' });
+const pr = await client.pr.create(repoUrl, { title: '新功能', head: 'feature' });
+await client.repo.getNotifications('owner', 'repo');
 ```
 
-客户端模块化导出，可单独访问 `client.repo`, `client.pr`, `client.issue`, `client.user` 与 `client.auth`，并对响应执行 Zod 校验和 ETag 缓存。
-
-## 自动化与容器工具
-
-`@xbghc/gitcode-actions` 聚焦构建自动化：
-
-- 事件监听：`watchPullRequest` 与 `watchIssues` 会持久化状态到 `~/.gitcode/watchers`，支持 `start()`、`stop()` 与单次 `runOnce()`。
-- AI 评论助手：`watchAiMentions` / `runAiMentionsOnce` 监听 `@AI` 等提及，结合 `defaultPromptBuilder` 与 `chat` 自动回复。
-- 容器工具链：提供 `createPrContainer`、`createWorkspaceContainer`、`testShaBuild`、`copyToContainer`、`collectDiagnostics` 等函数，用于拉起 PR 隔离环境、执行构建、采集日志并清理容器。
+## 自动化工作流
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
-import { watchPullRequest, watchAiMentions, createPrContainer } from '@xbghc/gitcode-actions';
+import { watchPullRequest } from '@xbghc/gitcode-actions';
 
-const client = new GitcodeClient(process.env.GITCODE_TOKEN!);
-
-watchPullRequest(client, 'https://gitcode.com/owner/repo', {
-  intervalSec: 10,
-  onOpen: (pr) => console.log(`PR #${pr.number} opened: ${pr.title}`),
-  onComment: (pr, comment) => console.log(`PR #${pr.number} 评论: ${comment.body}`),
-  container: { image: 'node:22-bookworm' },
+// 监听 PR 事件
+watchPullRequest(client, repoUrl, {
+  onOpen: (pr) => console.log(`PR #${pr.number} opened`),
+  onComment: (pr, comment) => handleComment(comment),
+  container: { image: 'node:22' }, // 可选：容器化执行
 }).start();
-
-watchAiMentions(client, 'https://gitcode.com/owner/repo', {
-  mention: '@AI',
-  chatOptions: { sha: 'dev', keepContainer: false },
-});
-
-await createPrContainer('https://gitcode.com/owner/repo', { id: 1, number: 12 } as any, {
-  image: 'node:22-bookworm',
-  env: { NODE_ENV: 'test' },
-});
 ```
 
-## 服务与前端
+## 开发
 
-- **Server**：`packages/server` 提供 Express 路由（Issue、PR、Repo 等），整合 GitCode Token 中间件并内置 Swagger 文档输出，支持 `.env` 配置与 `pnpm --filter @xbghc/gitcode-actions-server dev` 启动。
-- **Dashboard**：`packages/gitcode-dashboard` 基于 Vue 3 + Element Plus，调用 API 客户端实现仓库概览、Issue 与 PR 管理，可通过 `pnpm --filter @xbghc/gitcode-dashboard dev` 启动。
-
-## 环境与认证
-
-**CLI 认证**（推荐）：
 ```bash
-gitcode auth set-token <token>  # 保存到 ~/.gitcode/config.json
-gitcode auth status             # 查看认证状态
+# 环境要求：Node.js 22+, pnpm 10+
+
+pnpm install    # 安装依赖
+pnpm build      # 构建所有包
+pnpm test       # 运行测试
+pnpm docs:dev   # 启动文档站点
 ```
 
-**环境变量配置**（临时或 CI/CD 环境）：
+## 认证配置
+
 ```bash
-GITCODE_TOKEN=your-token        # 认证令牌（优先级高于配置文件）
-GITCODE_API_BASE=https://gitcode.com/api/v5
-GITCODE_AUTH_STYLE=bearer
-GITCODE_HTTP_DEBUG=1            # 可选：输出请求调试信息
+# 方式一：CLI 保存（推荐）
+gitcode auth set-token <token>
+
+# 方式二：环境变量
+export GITCODE_TOKEN=your-token
 ```
 
-**令牌读取优先级**：环境变量 > 配置文件（`~/.gitcode/config.json`）
+Token 获取：[GitCode 个人设置 → 访问令牌](https://gitcode.com/profile/personal_access_tokens)
 
-自动化与 CLI 默认使用 `~/.gitcode` 目录存储本地状态（watcher 状态、配置文件等，容器标签以 `gitany.*` 前缀标识）。
+## 链接
 
-## 文档与规范
+- [CLI 完整文档](./docs/gitcode-cli/index.md)
+- [API 参考](./docs/gitcode-api/index.md)
+- [贡献指南](./docs/contributing.md)
 
-- 项目文档位于 `docs/`，使用 VitePress (`pnpm docs:*`) 构建。
-- 提交前会运行 `scripts/check-docs-updated.mjs`，要求 `packages/gitcode-api` 与 `packages/gitcode-cli` 的变更同步更新对应文档，可通过 `SKIP_DOCS_CHECK=1` 暂时跳过（不推荐）。
-- 统一代码风格：ESLint + Prettier，TypeScript 采用 `tsconfig.base.json` 中的严格配置。
-
-## 贡献指南
-
-1. Fork 仓库并创建分支（`git checkout -b feature/awesome`）。
-2. 开发过程中保持文档同步，必要时更新 `docs/*`。
-3. 提交前运行 `pnpm lint`、`pnpm build`，并根据包需求运行额外测试或脚本。
-4. 通过 Pull Request 提交，并附带操作日志或截图（若涉及 CLI/UI 变更）。
-
-## 许可证
+## License
 
 MIT

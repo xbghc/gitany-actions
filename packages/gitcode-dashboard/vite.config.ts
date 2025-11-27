@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import vueDevTools from 'vite-plugin-vue-devtools';
 
 export default defineConfig({
   plugins: [
@@ -17,6 +18,7 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
       dts: 'src/components.d.ts',
     }),
+    vueDevTools(),
   ],
   resolve: {
     alias: {

@@ -1,6 +1,6 @@
 {
   "name": "@xbghc/gitcode-actions",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "GitCode Actions - Automated workflows and GitHub Actions for GitCode platform",
   "type": "module",
   "main": "dist/index.js",
@@ -24,16 +24,11 @@
     }
   },
   "dependencies": {
-    "@xbghc/gitcode-cli": "workspace:*",
     "@xbghc/gitcode-api": "workspace:*",
-    "dockerode": "^4.0.8",
-    "tar": "^7.4.3",
-    "pino": "^9.0.0",
-    "pino-pretty": "^11.0.0"
+    "@xbghc/gitcode-cli": "workspace:*",
+    "superjson": "^2.2.5"
   },
-  "devDependencies": {
-    "@types/dockerode": "^3.3.43"
-  },
+  "devDependencies": {},
   "engines": {
     "node": ">=22.0.0"
   }

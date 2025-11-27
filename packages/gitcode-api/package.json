@@ -1,6 +1,6 @@
 {
   "name": "@xbghc/gitcode-api",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "TypeScript client library for GitCode API with type-safe wrappers for users, repositories, pull requests, and issues.",
   "type": "module",
   "main": "dist/index.js",
@@ -14,6 +14,13 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
     "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run src/__tests__/unit src/utils",
+    "test:e2e": "vitest run src/__tests__/e2e",
+    "test:all": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
     "prepublishOnly": "pnpm build && pnpm typecheck"
   },
   "exports": {
@@ -36,13 +43,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/xbghc/gitany-actions.git",
+    "url": "https://github.com/xbghc/gitcode-actions.git",
     "directory": "packages/gitcode-api"
   },
   "bugs": {
-    "url": "https://github.com/xbghc/gitany-actions/issues"
+    "url": "https://github.com/xbghc/gitcode-actions/issues"
   },
-  "homepage": "https://github.com/xbghc/gitany-actions#readme",
+  "homepage": "https://github.com/xbghc/gitcode-actions#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -51,7 +58,14 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "bottleneck": "^2.19.5",
+    "git-url-parse": "^16.1.0",
     "got": "^14.4.9",
     "zod": "^4.1.7"
+  },
+  "devDependencies": {
+    "@types/git-url-parse": "^16.0.2",
+    "@vitest/ui": "^4.0.7",
+    "vitest": "^4.0.7"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@xbghc/workspace",
   "private": true,
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b",
   "workspaces": [
     "packages/*"
   ],
@@ -11,16 +11,18 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm --filter @xbghc/gitcode-api test",
     "clean": "pnpm -r clean",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "dev:core": "pnpm --filter @xbghc/gitcode-actions dev",
-    "dev:server": "pnpm --filter @xbghc/gitcode-actions-server dev",
-    "dev:dashboard": "pnpm --filter @xbghc/gitcode-dashboard dev",
+    "backend": "pnpm --filter @xbghc/gitcode-actions-server dev",
+    "frontend": "pnpm --filter @xbghc/gitcode-dashboard dev",
     "verify": "node ./scripts/verify-env.mjs",
     "publish:dry-run": "node ./scripts/publish.mjs --dry-run",
-    "publish:packages": "node ./scripts/publish.mjs"
+    "publish:packages": "node ./scripts/publish.mjs",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
@@ -30,10 +32,23 @@
     "dotenv": "^17.2.2",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-vue": "^10.5.1",
     "globals": "^16.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "vitepress": "^1.6.4"
+    "vitepress": "^1.6.4",
+    "vue-eslint-parser": "^10.2.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,vue}": [
+      "eslint",
+      "prettier --check"
+    ],
+    "*.{json,md,yaml,yml}": [
+      "prettier --check"
+    ]
   }
 }

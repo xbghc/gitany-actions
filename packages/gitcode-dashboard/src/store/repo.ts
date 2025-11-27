@@ -107,6 +107,18 @@ export const useRepoStore = defineStore('repo', () => {
       }
     }
 
+    // 如果没有仓库数据，添加默认仓库
+    if (repoList.value.length === 0) {
+      const defaultRepos = [
+        { owner: 'xbghc', repo: 'gitcode-actions' },
+        { owner: 'DevCloudFE', repo: 'MateChat' },
+      ];
+
+      defaultRepos.forEach(({ owner, repo }) => {
+        addRepo(owner, repo);
+      });
+    }
+
     const savedSelectedId = localStorage.getItem(SELECTED_REPO_KEY);
     if (savedSelectedId && repoList.value.some((r) => r.id === savedSelectedId)) {
       selectedRepoId.value = savedSelectedId;
@@ -114,37 +126,6 @@ export const useRepoStore = defineStore('repo', () => {
       // 如果没有选中的仓库，默认选中第一个
       selectedRepoId.value = repoList.value[0].id;
     }
-  };
-
-  // 兼容旧版本：从旧的 localStorage 数据迁移
-  const migrateFromOldStorage = () => {
-    const oldOwner = localStorage.getItem('current_owner');
-    const oldRepo = localStorage.getItem('current_repo');
-
-    if (oldOwner && oldRepo && repoList.value.length === 0) {
-      addRepo(oldOwner, oldRepo);
-      // 清除旧数据
-      localStorage.removeItem('current_owner');
-      localStorage.removeItem('current_repo');
-    }
-  };
-
-  // 向后兼容：setCurrentRepo
-  const setCurrentRepo = (owner: string, repo: string) => {
-    const id = generateRepoId(owner, repo);
-    const existingRepo = repoList.value.find((r) => r.id === id);
-
-    if (existingRepo) {
-      selectRepo(id);
-    } else {
-      addRepo(owner, repo);
-    }
-  };
-
-  // 从 localStorage 恢复（向后兼容）
-  const restoreFromStorage = () => {
-    loadRepos();
-    migrateFromOldStorage();
   };
 
   return {
@@ -161,9 +142,5 @@ export const useRepoStore = defineStore('repo', () => {
     selectRepo,
     loadRepos,
     saveRepos,
-
-    // 兼容旧版本
-    setCurrentRepo,
-    restoreFromStorage,
   };
 });

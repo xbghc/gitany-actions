@@ -1,33 +1,17 @@
-import {
-  userProfileSchema,
-  userProfileUrl,
-  userNamespaceSchema,
-  userNamespaceUrl,
-  type UserProfile,
-  type UserNamespace,
-} from '../../api/user/index.js';
-import type { GitcodeClient } from '../core.js';
+import { userProfileSchema, userProfileUrl, type UserProfile } from '../../api/user/index.js';
+import type { GitCodeClient } from '../core.js';
+import { parseApiResponse } from '../parser.js';
 
-export async function getUserProfile(client: GitcodeClient): Promise<UserProfile> {
+export async function getUserProfile(client: GitCodeClient): Promise<UserProfile> {
   const url = userProfileUrl();
-  const data = await client.request<unknown>(url, 'GET', {});
-  return userProfileSchema.parse(data);
+  const data = await client.http.get(url).json();
+  return parseApiResponse(userProfileSchema, data, { endpoint: url, method: 'GET' });
 }
 
-export async function getUserNamespace(client: GitcodeClient): Promise<UserNamespace> {
-  const url = userNamespaceUrl();
-  const data = await client.request<unknown>(url, 'GET', {});
-  return userNamespaceSchema.parse(data);
-}
-
-export class GitcodeClientUser {
-  constructor(private client: GitcodeClient) {}
+export class GitCodeClientUser {
+  constructor(private client: GitCodeClient) {}
 
   async getProfile(): Promise<UserProfile> {
     return await getUserProfile(this.client);
-  }
-
-  async getNamespace(): Promise<UserNamespace> {
-    return await getUserNamespace(this.client);
   }
 }

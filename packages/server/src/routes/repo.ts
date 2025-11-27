@@ -1,7 +1,9 @@
+import type { ListIssuesQuery, ListPullsQuery } from '@xbghc/gitcode-api';
 import { Router } from 'express';
-import type { ListPullsQuery, ListIssuesQuery } from '@xbghc/gitcode-api';
 import { withAuth } from '../middleware/auth.js';
-import { createGitcodeClient } from '../utils/gitcode-client.js';
+import { createGitCodeClient } from '../utils/gitcode-client.js';
+import { logger } from '../utils/logger.js';
+import { ValidationError, ExternalServiceError } from '../errors/index.js';
 
 export const repoRouter: Router = Router();
 
@@ -9,18 +11,18 @@ export const repoRouter: Router = Router();
  * 获取仓库的 PR 列表
  * POST /api/pulls
  */
-repoRouter.post('/pulls', withAuth(async (req, res, token) => {
-  try {
+repoRouter.post(
+  '/pulls',
+  withAuth(async (req, res, token) => {
     const { owner, repo, state, page, per_page, sort, direction, head, base } = req.body;
 
     // 验证必需参数
     if (!owner || !repo) {
-      res.status(400).json({ error: 'owner and repo are required' });
-      return;
+      throw new ValidationError('owner and repo are required');
     }
 
     // 使用用户提供的 token 创建客户端
-    const client = createGitcodeClient(token);
+    const client = createGitCodeClient(token);
 
     // 构造仓库 URL
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
@@ -35,40 +37,39 @@ repoRouter.post('/pulls', withAuth(async (req, res, token) => {
     if (head) query.head = head;
     if (base) query.base = base;
 
-    // 调用 GitCode API
-    const pulls = await client.pr.list(repoUrl, query);
+    try {
+      // 调用 GitCode API
+      const pulls = await client.pr.list(repoUrl, query);
 
-    res.json({
-      owner,
-      repo,
-      total: pulls.length,
-      data: pulls,
-    });
-  } catch (error) {
-    console.error('Failed to fetch pull requests:', error);
-    res.status(500).json({
-      error: 'Failed to fetch pull requests',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+      res.json({
+        owner,
+        repo,
+        total: pulls.length,
+        data: pulls,
+      });
+    } catch (error) {
+      logger.error({ owner, repo, query, error }, 'Failed to fetch pull requests');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch pull requests', error as Error);
+    }
+  }),
+);
 
 /**
  * 获取仓库的 Issue 列表
  * POST /api/issues
  */
-repoRouter.post('/issues', withAuth(async (req, res, token) => {
-  try {
+repoRouter.post(
+  '/issues',
+  withAuth(async (req, res, token) => {
     const { owner, repo, state, page, per_page, sort, labels } = req.body;
 
     // 验证必需参数
     if (!owner || !repo) {
-      res.status(400).json({ error: 'owner and repo are required' });
-      return;
+      throw new ValidationError('owner and repo are required');
     }
 
     // 使用用户提供的 token 创建客户端
-    const client = createGitcodeClient(token);
+    const client = createGitCodeClient(token);
 
     // 构造仓库 URL
     const repoUrl = `https://gitcode.com/${owner}/${repo}`;
@@ -81,20 +82,19 @@ repoRouter.post('/issues', withAuth(async (req, res, token) => {
     if (sort) query.sort = sort;
     if (labels) query.labels = labels;
 
-    // 调用 GitCode API
-    const issues = await client.issue.list(repoUrl, query);
+    try {
+      // 调用 GitCode API
+      const issues = await client.issue.list(repoUrl, query);
 
-    res.json({
-      owner,
-      repo,
-      total: issues.length,
-      data: issues,
-    });
-  } catch (error) {
-    console.error('Failed to fetch issues:', error);
-    res.status(500).json({
-      error: 'Failed to fetch issues',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}));
+      res.json({
+        owner,
+        repo,
+        total: issues.length,
+        data: issues,
+      });
+    } catch (error) {
+      logger.error({ owner, repo, query, error }, 'Failed to fetch issues');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch issues', error as Error);
+    }
+  }),
+);

@@ -1,4 +1,4 @@
-import { resolveRepoUrl } from '../../utils/resolve-repo-url.js';
+import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
 import { isObjectLike, type IssueUser } from '@xbghc/gitcode-api';
 
 export const colors = {
@@ -27,7 +27,7 @@ export async function resolveIssueContext(
   }
 
   const repoInput = options.repo ?? urlArg;
-  const repoUrl = await resolveRepoUrl(repoInput);
+  const repoUrl = await resolveGitCodeRepoUrl(repoInput);
   return { issueNumber, repoUrl };
 }
 

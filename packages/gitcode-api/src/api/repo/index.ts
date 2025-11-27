@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { userSummarySchema } from '../user/summary.js';
 
 export const repoSchema = z.object({
   id: z.number(),
@@ -7,13 +8,14 @@ export const repoSchema = z.object({
   path: z.string(),
   name: z.string(),
   description: z.string().optional(),
-  owner: z.any().nullable(),
+  owner: userSummarySchema.optional(),
   html_url: z.string(),
 });
 
 export type Repo = z.infer<typeof repoSchema>;
 
-export * from './settings.js';
-export * from './files.js';
 export * from './commits.js';
+export * from './files.js';
+export * from './notifications.js';
+export * from './settings.js';
 export * from './webhooks.js';

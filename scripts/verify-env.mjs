@@ -8,7 +8,7 @@
 // - SKIP_GITCODE: 设置为 "true" 时跳过 GitCode 检查
 
 import { execSync } from 'node:child_process';
-import { GitcodeClient } from '../packages/gitcode-api/dist/index.js';
+import { GitCodeClient } from '../packages/gitcode-api/dist/index.js';
 
 function envBoolean(name, defaultValue = false) {
   const raw = process.env[name];
@@ -109,7 +109,7 @@ async function checkGitCode() {
   console.log('\n🔑 检查 GitCode 认证...');
 
   try {
-    const client = new GitcodeClient();
+    const client = new GitCodeClient();
 
     // 检查 token 配置
     const token = await client.auth.token();
@@ -168,11 +168,7 @@ async function main() {
   ];
 
   for (const check of checks) {
-    const status = check.skipped
-      ? '⏭️  跳过'
-      : check.result
-        ? '✅ 通过'
-        : '❌ 失败';
+    const status = check.skipped ? '⏭️  跳过' : check.result ? '✅ 通过' : '❌ 失败';
     console.log(`${check.name.padEnd(15)} ${status}`);
     if (!check.skipped && !check.result) {
       allPassed = false;

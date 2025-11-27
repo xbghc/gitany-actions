@@ -1,7 +1,11 @@
 <template>
-  <div class="repo-list">
+  <div class="repo-list" :class="{ collapsed: collapsed }">
     <div class="repo-list-header">
-      <h3>仓库列表</h3>
+      <h3 v-show="!collapsed">{{ t('repo.list_title') }}</h3>
+      <el-icon class="toggle-icon" @click="$emit('toggle')">
+        <Expand v-if="collapsed" />
+        <Fold v-else />
+      </el-icon>
     </div>
 
     <div class="repo-items">
@@ -11,16 +15,19 @@
         class="repo-item"
         :class="{ active: repo.id === repoStore.selectedRepoId }"
         @click="handleSelectRepo(repo.id)"
+        @mouseenter="handleMouseEnter(repo)"
+        @mouseleave="handleMouseLeave"
       >
         <div class="repo-info">
           <el-icon class="repo-icon"><Folder /></el-icon>
-          <div class="repo-name">
+          <div v-show="!collapsed" class="repo-name">
             <div class="owner">{{ repo.owner }}</div>
             <div class="name">{{ repo.repo }}</div>
           </div>
         </div>
+
         <el-button
-          v-show="repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id"
+          v-if="!collapsed && (repo.id === repoStore.selectedRepoId || hoveredRepoId === repo.id)"
           link
           type="danger"
           size="small"
@@ -32,43 +39,63 @@
       </div>
 
       <div v-if="repoStore.repoList.length === 0" class="empty-state">
-        <el-empty description="暂无仓库" :image-size="80" />
+        <el-empty
+          :description="collapsed ? '' : t('repo.empty_list')"
+          :image-size="collapsed ? 40 : 80"
+        />
       </div>
     </div>
 
     <div class="repo-list-footer">
-      <el-button type="primary" size="small" :icon="Plus" @click="showAddDialog = true" style="width: 100%">
-        添加仓库
+      <el-tooltip v-if="collapsed" :content="t('repo.add_repo')" placement="right">
+        <el-button
+          type="primary"
+          size="small"
+          :icon="Plus"
+          class="add-btn-collapsed"
+          @click="showAddDialog = true"
+        />
+      </el-tooltip>
+      <el-button
+        v-else
+        type="primary"
+        size="small"
+        :icon="Plus"
+        style="width: 100%"
+        @click="showAddDialog = true"
+      >
+        {{ t('repo.add_repo') }}
       </el-button>
     </div>
 
     <!-- 添加仓库对话框 -->
-    <el-dialog v-model="showAddDialog" title="添加仓库" width="450px" :close-on-click-modal="false">
+    <el-dialog
+      v-model="showAddDialog"
+      :title="t('repo.add_repo')"
+      width="450px"
+      :close-on-click-modal="false"
+    >
       <el-form :model="addForm" label-width="80px">
-        <el-form-item label="仓库地址" required>
+        <el-form-item :label="t('repo.url_label')" required>
           <el-input
             v-model="addForm.repoUrl"
-            placeholder="输入 owner/repo 或完整 URL"
+            :placeholder="t('repo.url_placeholder')"
             @input="handleRepoUrlChange"
           />
-          <div class="form-hint">例如: octocat/hello-world</div>
+          <div class="form-hint">{{ t('repo.url_example') }}</div>
         </el-form-item>
-        <el-divider>或分别输入</el-divider>
-        <el-form-item label="所有者">
-          <el-input v-model="addForm.owner" placeholder="所有者/组织名称" />
+        <el-divider>{{ t('repo.or_split') }}</el-divider>
+        <el-form-item :label="t('repo.owner_label')">
+          <el-input v-model="addForm.owner" :placeholder="t('repo.owner_placeholder')" />
         </el-form-item>
-        <el-form-item label="仓库名">
-          <el-input v-model="addForm.repo" placeholder="仓库名称" />
+        <el-form-item :label="t('repo.name_label')">
+          <el-input v-model="addForm.repo" :placeholder="t('repo.name_placeholder')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="handleCancelAdd">取消</el-button>
-        <el-button
-          type="primary"
-          @click="handleAddRepo"
-          :disabled="!isFormValid"
-        >
-          添加
+        <el-button @click="handleCancelAdd">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :disabled="!isFormValid" @click="handleAddRepo">
+          {{ t('repo.add_action') }}
         </el-button>
       </template>
     </el-dialog>
@@ -77,11 +104,22 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRepoStore } from '@/store';
+import { useRepoStore, useActivityStore } from '@/store';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Folder, Plus, Close } from '@element-plus/icons-vue';
+import { Folder, Plus, Close, Expand, Fold } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 
+defineProps<{
+  collapsed: boolean;
+}>();
+
+defineEmits<{
+  (e: 'toggle'): void;
+}>();
+
+const { t } = useI18n();
 const repoStore = useRepoStore();
+const activityStore = useActivityStore();
 
 const showAddDialog = ref(false);
 const hoveredRepoId = ref<string | null>(null);
@@ -105,7 +143,7 @@ const handleRepoUrlChange = () => {
   const input = addForm.repoUrl.trim();
 
   // 尝试从 URL 中提取 owner/repo
-  const urlMatch = input.match(/(?:https?:\/\/)?(?:www\.)?gitcode\.com\/([^\/]+)\/([^\/]+)/i);
+  const urlMatch = input.match(/(?:https?:\/\/)?(?:www\.)?gitcode\.com\/([^/]+)\/([^/]+)/i);
   if (urlMatch) {
     addForm.owner = urlMatch[1];
     addForm.repo = urlMatch[2].replace(/\.git$/, '');
@@ -113,11 +151,25 @@ const handleRepoUrlChange = () => {
   }
 
   // 尝试直接解析 owner/repo 格式
-  const simpleMatch = input.match(/^([^\/\s]+)\/([^\/\s]+)$/);
+  const simpleMatch = input.match(/^([^/\s]+)\/([^/\s]+)$/);
   if (simpleMatch) {
     addForm.owner = simpleMatch[1];
     addForm.repo = simpleMatch[2];
   }
+};
+
+const handleMouseEnter = (repo: { id: string; owner: string; repo: string }) => {
+  hoveredRepoId.value = repo.id;
+  // Prefetch activity list
+  // 使用当前筛选条件（但重置页码为 1），以匹配切换仓库后的请求行为
+  activityStore.queryActivityList(repo.owner, repo.repo, {
+    ...activityStore.filters,
+    page: 1,
+  });
+};
+
+const handleMouseLeave = () => {
+  hoveredRepoId.value = null;
 };
 
 const handleSelectRepo = (id: string) => {
@@ -126,14 +178,14 @@ const handleSelectRepo = (id: string) => {
 
 const handleRemoveRepo = async (id: string) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个仓库吗？', '提示', {
+    await ElMessageBox.confirm(t('repo.confirm_delete'), t('common.tips'), {
       type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
     });
 
     repoStore.removeRepo(id);
-    ElMessage.success('删除成功');
+    ElMessage.success(t('common.delete_success'));
   } catch {
     // 用户取消删除
   }
@@ -141,14 +193,14 @@ const handleRemoveRepo = async (id: string) => {
 
 const handleAddRepo = () => {
   if (!isFormValid.value) {
-    ElMessage.warning('请输入完整的仓库信息');
+    ElMessage.warning(t('repo.input_full_info'));
     return;
   }
 
   const result = repoStore.addRepo(addForm.owner.trim(), addForm.repo.trim());
 
   if (result.success) {
-    ElMessage.success('添加成功');
+    ElMessage.success(t('common.add_success'));
     handleCancelAdd();
   } else {
     ElMessage.warning(result.message);
@@ -168,24 +220,48 @@ const handleCancelAdd = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: #001529;
+  background-color: transparent;
+  transition: width 0.3s;
 }
 
 .repo-list-header {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 54px; /* Fix height to align with toggle */
+  padding: 0 16px;
+  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.repo-list.collapsed .repo-list-header {
+  justify-content: center;
+  padding: 0;
 }
 
 .repo-list-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: #303133;
+  white-space: nowrap;
+}
+
+.toggle-icon {
+  font-size: 20px;
+  color: #606266;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.toggle-icon:hover {
+  background-color: #f5f7fa;
 }
 
 .repo-items {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px 0;
 }
 
@@ -198,17 +274,24 @@ const handleCancelAdd = () => {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
-  color: rgba(255, 255, 255, 0.65);
+  color: #606266;
+  position: relative;
+}
+
+.repo-list.collapsed .repo-item {
+  justify-content: center;
+  padding: 12px 0;
+  margin: 4px 4px;
 }
 
 .repo-item:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background-color: #f5f7fa;
+  color: #303133;
 }
 
 .repo-item.active {
-  background-color: #1890ff;
-  color: #fff;
+  background-color: #ecf5ff;
+  color: #409eff;
 }
 
 .repo-info {
@@ -217,6 +300,11 @@ const handleCancelAdd = () => {
   gap: 12px;
   flex: 1;
   min-width: 0;
+}
+
+.repo-list.collapsed .repo-info {
+  justify-content: center;
+  flex: 0;
 }
 
 .repo-icon {
@@ -256,12 +344,22 @@ const handleCancelAdd = () => {
 .empty-state {
   padding: 24px 16px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.45);
+  color: #909399;
+}
+
+.repo-list.collapsed .empty-state {
+  padding: 24px 0;
 }
 
 .repo-list-footer {
   padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: center;
+}
+
+.add-btn-collapsed {
+  width: 100%;
 }
 
 .form-hint {
@@ -276,15 +374,15 @@ const handleCancelAdd = () => {
 }
 
 .repo-items::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: transparent;
 }
 
 .repo-items::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: #dcdfe6;
   border-radius: 3px;
 }
 
 .repo-items::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: #c0c4cc;
 }
 </style>

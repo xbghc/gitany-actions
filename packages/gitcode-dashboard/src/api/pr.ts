@@ -1,11 +1,5 @@
 import { http } from './request';
-import type {
-  PullRequest,
-  PRComment,
-  PRFilterParams,
-  ApiResponse,
-  PrCount,
-} from '@/types';
+import type { PullRequest, PRComment, PRFilterParams, ApiResponse, PrCount } from '@/types';
 
 /**
  * 获取 PR 列表
@@ -27,19 +21,16 @@ export const getPRDetail = (owner: string, repo: string, number: number) => {
  * 获取 PR 评论列表
  */
 export const getPRComments = (owner: string, repo: string, number: number) => {
-  return http.get<ApiResponse<PRComment[]>>(
-    `/api/repo/${owner}/${repo}/pulls/${number}/comments`
-  );
+  return http.get<ApiResponse<PRComment[]>>(`/api/repo/${owner}/${repo}/pulls/${number}/comments`);
 };
 
 /**
  * 添加 PR 评论
  */
 export const createPRComment = (owner: string, repo: string, number: number, body: string) => {
-  return http.post<ApiResponse<PRComment>>(
-    `/api/repo/${owner}/${repo}/pulls/${number}/comments`,
-    { body }
-  );
+  return http.post<ApiResponse<PRComment>>(`/api/repo/${owner}/${repo}/pulls/${number}/comments`, {
+    body,
+  });
 };
 
 /**
@@ -49,7 +40,7 @@ export const updatePRState = (
   owner: string,
   repo: string,
   number: number,
-  state: 'open' | 'closed'
+  state: 'open' | 'closed',
 ) => {
   return http.patch<ApiResponse<PullRequest>>(`/api/repo/${owner}/${repo}/pulls/${number}`, {
     state,
@@ -60,10 +51,7 @@ export const updatePRState = (
  * 合并 PR
  */
 export const mergePR = (owner: string, repo: string, number: number) => {
-  return http.put<ApiResponse<PullRequest>>(
-    `/api/repo/${owner}/${repo}/pulls/${number}/merge`,
-    {}
-  );
+  return http.put<ApiResponse<PullRequest>>(`/api/repo/${owner}/${repo}/pulls/${number}/merge`, {});
 };
 
 /**

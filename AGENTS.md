@@ -3,12 +3,13 @@
 ## Project Structure & Module Organization
 
 Monorepo managed with `pnpm` workspaces. Code lives in `packages/*`:
+
 - `packages/gitcode-api` — core API client.
 - `packages/gitcode-cli` — CLI (`gitcode`).
 - `packages/gitcode-actions` — automation/workflows.
 - `packages/server` — backend server.
 - `packages/gitcode-dashboard` — web UI.
-Docs mirror packages in `docs/*` (e.g., `docs/gitcode-cli`). Shared config at root: `tsconfig.base.json`, `eslint.config.cjs`, `prettier.config.cjs`, `pnpm-workspace.yaml`. Utility scripts in `scripts/`. Git hooks live under `.husky` when configured.
+  Docs mirror packages in `docs/*` (e.g., `docs/gitcode-cli`). Shared config at root: `tsconfig.base.json`, `eslint.config.cjs`, `prettier.config.cjs`, `pnpm-workspace.yaml`. Utility scripts in `scripts/`. Git hooks live under `.husky` when configured.
 
 ## Build, Test, and Development Commands
 
@@ -35,4 +36,4 @@ Commits: imperative mood, scoped, and logically grouped. When behavior changes i
 
 ## Security & Configuration Tips
 
-Never commit secrets. Use `.env` (e.g., `GITCODE_TOKEN`, `GITCODE_API_BASE`). The CLI stores auth at `~/.gitany/gitcode/config.json`. Prefer clarity over backward compatibility per project guidance.
+Never commit secrets. Use `.env` (e.g., `GITCODE_TOKEN`, `GITCODE_API_BASE`). The CLI stores auth at `~/.config/gitcode/config.json`. Prefer clarity over backward compatibility per project guidance.

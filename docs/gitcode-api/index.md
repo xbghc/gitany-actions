@@ -7,15 +7,15 @@ title: GitCode API 工具库
 封装了访问 [GitCode REST API](https://docs.gitcode.com/docs/apis/) 所需的客户端、类型定义与 URL 构建工具，并附带常用的仓库地址解析与查询参数处理函数。
 
 - **包路径**：`packages/gitcode-api`
-- **导出形式**：ESM（`import { GitcodeClient } from '@xbghc/gitcode-api'`）
+- **导出形式**：ESM（`import { GitCodeClient } from '@xbghc/gitcode-api'`）
 
 ## 快速开始
 
 ```ts
-import { GitcodeClient } from '@xbghc/gitcode-api';
+import { GitCodeClient } from '@xbghc/gitcode-api';
 
 // 构造函数可直接接收 token（默认会读取 GITCODE_TOKEN 环境变量）
-const client = new GitcodeClient(process.env.GITCODE_TOKEN);
+const client = new GitCodeClient(process.env.GITCODE_TOKEN);
 
 // 也可以稍后通过 auth 模块设置
 client.auth.setToken('your-token');
@@ -33,14 +33,14 @@ const profile = await client.user.getProfile();
 - `options.json`：发送 JSON 请求体；如需原始体，可使用 `options.body`。
 - `options.retry`：控制 `got` 的重试策略（默认继承全局配置并追加 `POST`/`PUT` 重试支持）。
 - 内置 ETag 缓存，会在返回 `304` 时复用上次结果；可通过 `isNotModified(result)` 判断复用命中。
-- 设置环境变量 `GITCODE_HTTP_DEBUG=1` 可打印请求/响应日志，`GITCODE_HTTP_DEBUG_SHOW_SECRETS=1` 会取消 Header 脱敏。
+- 在开发环境 (`NODE_ENV=development`) 下自动打印请求/响应日志，授权头始终脱敏保护。
 
 ## 主要导出
 
 ### 客户端
 
-- `GitcodeClient`：带 `pr`、`issue`、`repo`、`user` 子模块以及 `auth` 管理器的核心客户端。
-- `GitcodeClientAuth`：轻量认证容器，提供 `setToken()` 与 `token()`，默认读取 `GITCODE_TOKEN`。
+- `GitCodeClient`：带 `pr`、`issue`、`repo`、`user` 子模块以及 `auth` 管理器的核心客户端。
+- `GitCodeClientAuth`：轻量认证容器，提供 `setToken()` 与 `token()`，默认读取 `GITCODE_TOKEN`。
 
 ### 工具函数
 
@@ -56,8 +56,9 @@ const profile = await client.user.getProfile();
 
 - PR：`listPullsUrl`、`createPullUrl`、`prCommentsUrl`、`pullRequestSettingsUrl`、`createPrCommentUrl`、`prCountUrl` 等。
 - Issue：`listIssuesUrl`、`issueCommentsUrl`、`createIssueUrl`、`createIssueCommentUrl`、`getIssueUrl`、`updateIssueUrl` 等。
-- Repo：`repoSettingsUrl`、`repoEventsUrl`、`contributorsUrl`、`branchesUrl`、`commitsUrl`、`fileBlobUrl`、`compareUrl`、`webhooksUrl` 等。
+- Repo：`repoSettingsUrl`、`repoEventsUrl`、`contributorsUrl`、`branchesUrl`、`commitsUrl`、`fileBlobUrl`、`compareUrl`、`webhooksUrl`、`notificationsUrl` 等。
 - User：`userProfileUrl`、`userNamespaceUrl`。
+- Notification：`notificationSchema`、`notificationsResponseSchema`。
 
 ### 类型定义（节选）
 
@@ -66,6 +67,7 @@ const profile = await client.user.getProfile();
 - Repo：`RepoSettings`、`RepoEvents`、`Contributors`、`Branch`、`Branches`、`Commits`、`FileBlob`、`Compare`、`Webhook`、`Webhooks`。
 - User：`UserProfile`、`UserNamespace`、`UserSummary`。
 - 权限：`SelfPermissionResponse`、`RoleInfo`、`PermissionPoint`、`ResourceNode`、`RepoRole`。
+- Notification：`Notification`、`NotificationActor`、`NotificationsResponse`、`NotificationQuery`、`MarkNotificationsReadParams`。
 
 ## 模块概览
 
@@ -74,16 +76,56 @@ const profile = await client.user.getProfile();
 - `client.repo`：仓库权限、设置、事件流、贡献者、分支、提交、文件内容与 Webhook。详见《[仓库 API](./repo.md)》。
 - `client.user`：获取当前登录用户资料与命名空间信息。详见《[用户 API](./user.md)》。
 
+## 测试系统
+
+本包包含完善的测试系统，采用最小化测试策略：
+
+- **单元测试**: 100% 覆盖工具函数，运行时间 <1 秒
+- **E2E 测试**: 验证真实 API，定时运行监控 API 变化
+
+详见《[测试系统](./testing.md)》。
+
 ## 认证与环境变量
 
 - `GITCODE_TOKEN`：默认读取的访问令牌，可通过 `client.auth.setToken()` 动态覆盖。
-- `GITCODE_HTTP_DEBUG`：值为 `1/true/on/debug` 时输出调试日志。
-- `GITCODE_HTTP_DEBUG_SHOW_SECRETS`：调试日志中保留授权头。
+- `NODE_ENV`：设置为 `development` 时自动输出 HTTP 调试日志。
 
 客户端使用 `Bearer` 头部发送 Token；未提供 Token 时，将以匿名方式访问公开资源。
 
+## Rate Limiting（限流处理）
+
+GitCodeClient 内置了自动 rate limiting 处理机制：
+
+```ts
+const client = new GitCodeClient(token);
+
+// 自动处理 429 响应
+try {
+  const data = await client.pr.list(url);
+} catch (error) {
+  // 如果触发限流，后续请求会自动等待
+}
+
+// 查询限流状态
+if (client.isRateLimited()) {
+  const waitTime = client.getRateLimitWaitTime();
+  console.log(`需要等待 ${waitTime} 秒`);
+}
+```
+
+**工作原理**:
+
+1. 当 API 返回 `429 Too Many Requests` 时，自动解析 `Retry-After` 响应头
+2. 设置全局限流标志，阻止后续请求
+3. 在限流期间发起的请求会立即抛出 429 错误（无需等待网络往返）
+4. 定时器到期后自动恢复正常
+
+**注意**: 如果使用自定义 `got` 实例（`new GitCodeClient(token, customHttp)`），需要自行实现 rate limiting。
+
 ## 变更记录
 
+- **2025-11-05**：新增测试系统（单元测试 + E2E 测试），内置 429 Rate Limiting 自动处理机制。
+- **2025-11-04**：新增仓库通知 API（`getNotifications`、`markNotificationsRead`）。
 - **2025-09-17**：HTTP 层迁移至 `got`，新增 ETag 缓存、重试与调试日志；请求选项重命名为 `searchParams`/`json`。
 - **2025-09-13**：补全仓库、PR、Issue 相关 API，并以 Zod 校验响应；新增 `client.issue.update()`、`client.pr.createComment()`、`client.pr.count()` 等封装。
 - **2025-09-12**：新增 Issue 读写接口与命名空间 API，`parseGitUrl`/`toGitUrl` 暴露给外部使用。
