@@ -9,5 +9,6 @@ packages/*/src/**/*.d.ts
 packages/*/src/**/*.d.ts.map
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+docs/api-reference/
 local_tests/
 CLAUDE.md
