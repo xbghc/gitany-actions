@@ -5,6 +5,7 @@ import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
 import vueDevTools from 'vite-plugin-vue-devtools';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
@@ -19,6 +20,11 @@ export default defineConfig({
       dts: 'src/components.d.ts',
     }),
     vueDevTools(),
+    visualizer({
+      open: false,
+      filename: 'stats.html',
+      gzipSize: true,
+    }),
   ],
   resolve: {
     alias: {
