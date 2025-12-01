@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { parseApiResponse } from '../../../client/parser.js';
+import { parseApiResponse, safeParseApiResponse } from '../../../client/parser.js';
 import { ApiValidationError } from '../../../client/errors.js';
 import {
   simpleSchema,
@@ -330,6 +330,201 @@ describe('parseApiResponse', () => {
             endpoint: 'test/endpoint',
           },
         ),
+      ).toThrow(ApiValidationError);
+    });
+  });
+});
+
+describe('safeParseApiResponse', () => {
+  describe('成功解析', () => {
+    it('应该返回 success: true 和验证后的数据', () => {
+      const result = safeParseApiResponse(simpleSchema, validSimpleData, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(validSimpleData);
+      }
+    });
+
+    it('应该返回正确的类型（类型守卫测试）', () => {
+      const result = safeParseApiResponse(simpleSchema, validSimpleData, {
+        endpoint: 'test/endpoint',
+      });
+
+      if (result.success) {
+        // TypeScript 应该推断出 result.data 的类型
+        const id: number = result.data.id;
+        const name: string = result.data.name;
+        expect(typeof id).toBe('number');
+        expect(typeof name).toBe('string');
+      } else {
+        expect.fail('Expected success');
+      }
+    });
+
+    it('应该处理复杂嵌套对象', () => {
+      const result = safeParseApiResponse(nestedSchema, validNestedData, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(validNestedData);
+      }
+    });
+
+    it('应该处理数组类型', () => {
+      const arraySchema = z.array(simpleSchema);
+      const arrayData = [validSimpleData, { ...validSimpleData, id: 2, name: 'Test 2' }];
+
+      const result = safeParseApiResponse(arraySchema, arrayData, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual(arrayData);
+        expect(result.data).toHaveLength(2);
+      }
+    });
+  });
+
+  describe('验证失败', () => {
+    it('应该返回 success: false 和 ApiValidationError（不抛出异常）', () => {
+      const result = safeParseApiResponse(simpleSchema, invalidSimpleData_wrongIdType, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBeInstanceOf(ApiValidationError);
+      }
+    });
+
+    it('应该在必需字段缺失时返回失败结果', () => {
+      const result = safeParseApiResponse(simpleSchema, invalidSimpleData_missingName, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBeInstanceOf(ApiValidationError);
+      }
+    });
+
+    it('错误应该包含正确的上下文信息', () => {
+      const result = safeParseApiResponse(simpleSchema, invalidSimpleData_wrongIdType, {
+        endpoint: 'repos/owner/repo/pulls',
+        method: 'GET',
+        params: { state: 'open' },
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.context.endpoint).toBe('repos/owner/repo/pulls');
+        expect(result.error.context.method).toBe('GET');
+        expect(result.error.context.params).toEqual({ state: 'open' });
+      }
+    });
+
+    it('错误应该包含原始数据用于调试', () => {
+      const result = safeParseApiResponse(simpleSchema, invalidSimpleData_wrongIdType, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.context.data).toEqual(invalidSimpleData_wrongIdType);
+      }
+    });
+
+    it('应该能通过错误方法获取详细信息', () => {
+      const result = safeParseApiResponse(simpleSchema, invalidSimpleData_wrongIdType, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(typeof result.error.getSummary()).toBe('string');
+        expect(typeof result.error.getIssues).toBe('function');
+        expect(typeof result.error.getFieldErrors).toBe('function');
+      }
+    });
+  });
+
+  describe('边界情况', () => {
+    it('应该处理 null 数据', () => {
+      const nullableSchema = z.null();
+
+      const result = safeParseApiResponse(nullableSchema, null, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBeNull();
+      }
+    });
+
+    it('应该拒绝意外的 null 数据', () => {
+      const result = safeParseApiResponse(simpleSchema, null, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('应该拒绝 undefined 数据', () => {
+      const result = safeParseApiResponse(simpleSchema, undefined, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('应该处理空数组', () => {
+      const arraySchema = z.array(simpleSchema);
+
+      const result = safeParseApiResponse(arraySchema, [], {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toEqual([]);
+      }
+    });
+  });
+
+  describe('与 parseApiResponse 的一致性', () => {
+    it('成功时两者应该返回相同的数据', () => {
+      const safeResult = safeParseApiResponse(simpleSchema, validSimpleData, {
+        endpoint: 'test/endpoint',
+      });
+      const directResult = parseApiResponse(simpleSchema, validSimpleData, {
+        endpoint: 'test/endpoint',
+      });
+
+      expect(safeResult.success).toBe(true);
+      if (safeResult.success) {
+        expect(safeResult.data).toEqual(directResult);
+      }
+    });
+
+    it('失败时 safeParseApiResponse 不应抛出异常', () => {
+      // safeParseApiResponse 不应该抛出异常
+      const safeResult = safeParseApiResponse(simpleSchema, invalidSimpleData_wrongIdType, {
+        endpoint: 'test/endpoint',
+      });
+      expect(safeResult.success).toBe(false);
+
+      // parseApiResponse 应该抛出异常
+      expect(() =>
+        parseApiResponse(simpleSchema, invalidSimpleData_wrongIdType, {
+          endpoint: 'test/endpoint',
+        }),
       ).toThrow(ApiValidationError);
     });
   });

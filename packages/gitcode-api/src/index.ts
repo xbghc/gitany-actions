@@ -133,6 +133,9 @@ export type {
 export { ApiValidationError, type ApiValidationContext } from './client/errors.js';
 import { ApiValidationError } from './client/errors.js';
 
+// 安全解析 API 响应（不抛出异常）
+export { safeParseApiResponse, type ApiParseResult } from './client/parser.js';
+
 /**
  * 类型守卫：检查错误是否为 ApiValidationError
  *
