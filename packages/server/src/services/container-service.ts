@@ -3,6 +3,14 @@ import { PassThrough } from 'node:stream';
 import { logger } from '../utils/logger.js';
 
 /**
+ * Container 的 modem 类型扩展
+ * @types/dockerode 没有正确声明 Container.modem，但运行时它存在
+ */
+type ContainerWithModem = Docker.Container & {
+  modem: Docker['modem'];
+};
+
+/**
  * 命令执行选项
  */
 export interface ExecOptions {
@@ -161,9 +169,8 @@ export class ContainerService {
       }
     });
 
-    // Demux stream
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modem = (container as any).modem;
+    // Demux stream (分离 stdout/stderr)
+    const modem = (container as ContainerWithModem).modem;
     if (modem?.demuxStream) {
       modem.demuxStream(stream, stdoutStream, stderrStream);
     } else {
