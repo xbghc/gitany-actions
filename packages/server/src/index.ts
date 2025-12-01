@@ -12,13 +12,13 @@ import { issueRouter } from './routes/issue.js';
 import { eventsRouter } from './routes/events.js';
 import { workflowRouter } from './routes/workflow.js';
 import { workflowConfigRouter } from './routes/workflow-config.js';
-import { runnerRoutes } from './routes/runner.js';
 import { userRouter } from './routes/user.js';
 import { oauthRouter } from './routes/oauth.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { avatarTransformerMiddleware } from './middleware/avatar-transformer.js';
 import { requestLogger } from './middleware/request-logger.js';
 import { logger } from './utils/logger.js';
+import { dockerNodeService } from './services/docker-node-service.js';
 
 dotenv.config();
 
@@ -78,7 +78,6 @@ app.use('/api', issueRouter);
 app.use('/api', eventsRouter);
 app.use('/api', workflowRouter);
 app.use('/api', workflowConfigRouter);
-app.use('/api/runners', runnerRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
@@ -87,9 +86,19 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
-  logger.info({ port: PORT }, `Server started on http://localhost:${PORT}`);
-  logger.info({ docs: `http://localhost:${PORT}/api-docs` }, 'API Documentation available');
+async function start() {
+  // 初始化 Docker 节点
+  await dockerNodeService.initialize();
+
+  app.listen(PORT, () => {
+    logger.info({ port: PORT }, `Server started on http://localhost:${PORT}`);
+    logger.info({ docs: `http://localhost:${PORT}/api-docs` }, 'API Documentation available');
+  });
+}
+
+start().catch((error) => {
+  logger.fatal({ error }, 'Failed to start server');
+  process.exit(1);
 });
 
 // 处理未捕获的异常

@@ -42,7 +42,39 @@ PORT=3000
 
 # GitCode API Base URL（可选）
 GITCODE_API_BASE=https://gitcode.com/api/v5
+
+# Docker 节点配置（用于 Workflow 执行）
+# 格式:
+#   - 本机: name (只有名称，使用本机 Docker socket)
+#   - 远程: name:host:port
+# 例如:
+#   DOCKER_NODES=local                      # 本机
+#   DOCKER_NODES=remote:192.168.1.100:2375  # 远程
+#   DOCKER_NODES=local,remote:192.168.1.100:2375  # 混合
+DOCKER_NODES=local
 ```
+
+### Docker 节点配置
+
+Server 通过远程 Docker API 执行 Workflow 任务。需要在目标机器上配置 Docker daemon 监听 TCP：
+
+```bash
+# 在 Docker 主机上编辑 /etc/docker/daemon.json
+{
+  "hosts": ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"]
+}
+
+# 重启 Docker
+sudo systemctl restart docker
+```
+
+然后在 Server 的环境变量中配置：
+
+```bash
+DOCKER_NODES=node1:192.168.1.100:2375
+```
+
+> **安全提示**：Docker Remote API 默认无认证。建议仅在可信内网使用，或配置防火墙限制访问来源。
 
 ## 开发
 
@@ -243,7 +275,15 @@ packages/server/
 │   ├── index.ts                  # 服务器入口
 │   ├── swagger.yaml              # OpenAPI 规范文档
 │   ├── routes/
-│   │   └── repo.ts               # 仓库数据查询路由
+│   │   ├── repo.ts               # 仓库数据查询路由
+│   │   ├── workflow.ts           # Workflow 执行路由
+│   │   └── workflow-config.ts    # Workflow 配置路由
+│   ├── services/
+│   │   ├── docker-node-service.ts    # Docker 节点管理
+│   │   ├── container-service.ts      # 容器操作封装
+│   │   ├── job-executor-service.ts   # 任务执行引擎
+│   │   ├── workflow-service.ts       # Workflow 服务
+│   │   └── workflow-config-service.ts # Workflow 配置服务
 │   ├── middleware/
 │   │   ├── auth.ts               # 认证中间件
 │   │   └── error-handler.ts      # 错误处理中间件
@@ -258,9 +298,11 @@ packages/server/
 ## 依赖关系
 
 - `@xbghc/gitcode-api`: GitCode API 客户端
+- `@xbghc/gitcode-actions`: 共享类型和工具
 - `express`: Web 框架
 - `cors`: CORS 中间件
 - `dotenv`: 环境变量管理
+- `dockerode`: Docker Remote API 客户端
 - `swagger-ui-express`: Swagger UI 集成
 - `yamljs`: YAML 解析器
 

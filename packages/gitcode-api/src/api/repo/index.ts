@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { userSummarySchema } from '../user/summary.js';
 
 export const repoSchema = z.object({
-  id: z.number(),
+  id: z.number().optional(),
   full_name: z.string(),
-  human_name: z.string(),
+  human_name: z.string().optional(),
   path: z.string(),
   name: z.string(),
   description: z.string().optional(),
