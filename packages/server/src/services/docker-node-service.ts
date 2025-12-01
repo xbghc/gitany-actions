@@ -3,24 +3,6 @@ import { randomUUID } from 'crypto';
 import { logger } from '../utils/logger.js';
 
 /**
- * Docker 节点配置
- */
-export interface DockerNodeConfig {
-  /** 节点名称 */
-  name: string;
-  /** Docker daemon 地址 */
-  host: string;
-  /** Docker daemon 端口 */
-  port: number;
-  /** TLS 配置（可选，局域网可不用） */
-  tls?: {
-    ca: string;
-    cert: string;
-    key: string;
-  };
-}
-
-/**
  * Docker 节点信息
  */
 export interface DockerNode {
@@ -37,46 +19,103 @@ export interface DockerNode {
 }
 
 /**
+ * 解析环境变量中的 Docker 节点配置
+ *
+ * 格式: DOCKER_NODES=name1:host1:port1,name2:host2:port2
+ * 例如: DOCKER_NODES=local:192.168.1.100:2375,remote:192.168.1.101:2375
+ */
+function parseDockerNodesEnv(): Array<{ name: string; host: string; port: number }> {
+  const envValue = process.env.DOCKER_NODES;
+  if (!envValue) {
+    return [];
+  }
+
+  const nodes: Array<{ name: string; host: string; port: number }> = [];
+
+  for (const nodeStr of envValue.split(',')) {
+    const parts = nodeStr.trim().split(':');
+    if (parts.length !== 3) {
+      logger.warn({ nodeStr }, 'Invalid DOCKER_NODES entry, expected format: name:host:port');
+      continue;
+    }
+
+    const [name, host, portStr] = parts;
+    const port = parseInt(portStr, 10);
+
+    if (isNaN(port)) {
+      logger.warn({ nodeStr }, 'Invalid port in DOCKER_NODES entry');
+      continue;
+    }
+
+    nodes.push({ name, host, port });
+  }
+
+  return nodes;
+}
+
+/**
  * Docker 节点服务
- * 管理远程 Docker daemon 连接
+ * 从环境变量读取配置，管理远程 Docker daemon 连接
  */
 export class DockerNodeService {
   private nodes = new Map<string, DockerNode>();
+  private initialized = false;
 
   /**
-   * 注册一个 Docker 节点
+   * 初始化：从环境变量加载 Docker 节点
+   * 应该在服务启动时调用一次
    */
-  async register(config: DockerNodeConfig): Promise<DockerNode> {
+  async initialize(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    const configs = parseDockerNodesEnv();
+
+    if (configs.length === 0) {
+      logger.warn(
+        'No DOCKER_NODES configured. Set DOCKER_NODES=name:host:port to enable job execution.',
+      );
+      this.initialized = true;
+      return;
+    }
+
+    for (const config of configs) {
+      try {
+        await this.addNode(config.name, config.host, config.port);
+        logger.info(
+          { name: config.name, host: config.host, port: config.port },
+          'Docker node connected',
+        );
+      } catch (error) {
+        logger.error(
+          { name: config.name, host: config.host, port: config.port, error },
+          'Failed to connect to Docker node',
+        );
+      }
+    }
+
+    this.initialized = true;
+    const stats = this.getStats();
+    logger.info({ stats }, 'Docker nodes initialized');
+  }
+
+  /**
+   * 添加一个 Docker 节点（内部使用）
+   */
+  private async addNode(name: string, host: string, port: number): Promise<DockerNode> {
     const id = randomUUID();
 
-    // 创建 Docker 客户端
-    const dockerOptions: Docker.DockerOptions = {
-      host: config.host,
-      port: config.port,
-    };
-
-    if (config.tls) {
-      dockerOptions.ca = config.tls.ca;
-      dockerOptions.cert = config.tls.cert;
-      dockerOptions.key = config.tls.key;
-    }
-
-    const client = new Docker(dockerOptions);
+    const client = new Docker({ host, port });
 
     // 测试连接
-    try {
-      await client.ping();
-    } catch (error) {
-      throw new Error(
-        `无法连接到 Docker 节点 ${config.host}:${config.port}: ${error instanceof Error ? error.message : error}`,
-      );
-    }
+    await client.ping();
 
     const node: DockerNode = {
       id,
-      name: config.name,
-      host: config.host,
-      port: config.port,
+      name,
+      host,
+      port,
       status: 'online',
       lastSeen: new Date().toISOString(),
       activeJobs: 0,
@@ -84,21 +123,7 @@ export class DockerNodeService {
     };
 
     this.nodes.set(id, node);
-    logger.info({ nodeId: id, name: config.name, host: config.host }, 'Docker node registered');
-
     return node;
-  }
-
-  /**
-   * 移除一个 Docker 节点
-   */
-  unregister(nodeId: string): boolean {
-    const node = this.nodes.get(nodeId);
-    if (!node) return false;
-
-    this.nodes.delete(nodeId);
-    logger.info({ nodeId, name: node.name }, 'Docker node unregistered');
-    return true;
   }
 
   /**
@@ -110,7 +135,7 @@ export class DockerNodeService {
     let minJobs = Infinity;
 
     for (const node of this.nodes.values()) {
-      if (node.status === 'online' && node.activeJobs < minJobs) {
+      if (node.status !== 'offline' && node.activeJobs < minJobs) {
         bestNode = node;
         minJobs = node.activeJobs;
       }

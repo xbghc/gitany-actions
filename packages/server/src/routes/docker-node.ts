@@ -5,48 +5,6 @@ import { logger } from '../utils/logger.js';
 const router: Router = Router();
 
 /**
- * 注册 Docker 节点
- * POST /api/docker-nodes
- */
-router.post('/', async (req, res) => {
-  try {
-    const { name, host, port, tls } = req.body;
-
-    if (!name || !host || !port) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required fields: name, host, port',
-      });
-    }
-
-    const node = await dockerNodeService.register({
-      name,
-      host,
-      port,
-      tls,
-    });
-
-    // 返回时不包含 client 实例
-    res.json({
-      success: true,
-      data: {
-        id: node.id,
-        name: node.name,
-        host: node.host,
-        port: node.port,
-        status: node.status,
-      },
-    });
-  } catch (error) {
-    logger.error({ error }, 'Failed to register Docker node');
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-});
-
-/**
  * 获取所有 Docker 节点
  * GET /api/docker-nodes
  */
@@ -104,25 +62,6 @@ router.get('/:id', (req, res) => {
       lastSeen: node.lastSeen,
       activeJobs: node.activeJobs,
     },
-  });
-});
-
-/**
- * 删除 Docker 节点
- * DELETE /api/docker-nodes/:id
- */
-router.delete('/:id', (req, res) => {
-  const success = dockerNodeService.unregister(req.params.id);
-
-  if (!success) {
-    return res.status(404).json({
-      success: false,
-      error: 'Node not found',
-    });
-  }
-
-  res.json({
-    success: true,
   });
 });
 
