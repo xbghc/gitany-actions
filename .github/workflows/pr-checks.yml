@@ -41,3 +41,6 @@ jobs:
 
       - name: Lint
         run: pnpm lint
+
+      - name: Verify API Documentation
+        run: pnpm docs:check

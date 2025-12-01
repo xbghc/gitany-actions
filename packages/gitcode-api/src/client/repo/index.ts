@@ -293,13 +293,47 @@ export async function getPullRequestSettings(
   });
 }
 
+/**
+ * GitCode 仓库客户端模块
+ *
+ * 提供仓库相关的操作，包括权限查询、设置管理、分支操作、提交历史、Webhook 管理等功能。
+ *
+ * @example
+ * ```typescript
+ * const client = new GitCodeClient(token);
+ *
+ * // 获取仓库权限
+ * const role = await client.repo.getSelfRepoPermissionRole(repoUrl);
+ *
+ * // 获取分支列表
+ * const branches = await client.repo.getBranches('owner', 'repo');
+ *
+ * // 获取提交历史
+ * const commits = await client.repo.getCommits('owner', 'repo');
+ *
+ * // 比较两个分支
+ * const diff = await client.repo.compare('owner', 'repo', 'main', 'feature');
+ * ```
+ */
 export class GitCodeClientRepo {
   constructor(private client: GitCodeClient) {}
 
+  /**
+   * 获取当前用户在指定仓库的完整权限信息
+   *
+   * @param url - 仓库地址
+   * @returns 完整的权限响应，包含角色和具体权限点
+   */
   async getSelfRepoPermission(url: string): Promise<SelfPermissionResponse> {
     return await getSelfRepoPermission(this.client, url);
   }
 
+  /**
+   * 获取当前用户在指定仓库的角色
+   *
+   * @param url - 仓库地址
+   * @returns 用户角色（admin、maintainer、developer、reporter、guest）
+   */
   async getSelfRepoPermissionRole(url: string): Promise<RepoRole> {
     return await getSelfRepoPermissionRole(this.client, url);
   }

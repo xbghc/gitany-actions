@@ -16,6 +16,7 @@ export {
   issueSchema,
   listIssuesResponseSchema,
   listIssuesUrl,
+  updatedIssueCommentSchema,
   updatedIssueSchema,
   updateIssueUrl,
 } from './api/issue/index.js';
@@ -38,14 +39,18 @@ export type {
   UpdatedIssue,
   UpdatedIssueComment,
   UpdateIssueBody,
+  UpdateIssueCommentParams,
   UpdateIssueParams,
 } from './api/issue/index.js';
 export {
   createPullUrl,
+  createdPrCommentSchema,
   listPullsResponseSchema,
   listPullsUrl,
   prCommentSchema,
   prCommentsUrl,
+  prCountSchema,
+  pullRequestDetailSchema,
   pullRequestSchema,
 } from './api/pr/index.js';
 export type {
@@ -61,7 +66,12 @@ export type {
   PullRequestDetail,
 } from './api/pr/index.js';
 export { repoSchema, type Repo } from './api/repo/index.js';
-export { selfPermissionResponseSchema, selfPermissionUrl } from './api/repo/self-permission.js';
+export {
+  permissionPointSchema,
+  roleInfoSchema,
+  selfPermissionResponseSchema,
+  selfPermissionUrl,
+} from './api/repo/self-permission.js';
 export type {
   PermissionPoint,
   ResourceNode,
@@ -80,6 +90,10 @@ export {
 export { GitCodeClientAuth } from './client/auth/index.js';
 export { OAuthClient } from './client/auth/oauth.js';
 export { GitCodeClient, type GitCodeClientOptions } from './client/index.js';
+export { GitCodeClientPr } from './client/pr/index.js';
+export { GitCodeClientIssue } from './client/issue/index.js';
+export { GitCodeClientRepo } from './client/repo/index.js';
+export { GitCodeClientUser } from './client/user/index.js';
 export { extractRepoRoleFromSelfPermission } from './client/repo/permission.js';
 export type { RepoRole } from './types/repo-role.js';
 export * from './utils/index.js';
@@ -102,9 +116,27 @@ export type {
 
 // 新的仓库相关类型导出
 export {
+  branchesUrl,
+  commitSchema,
+  commitsUrl,
+  compareSchema,
+  compareUrl,
+  contributorsSchema,
+  contributorsUrl,
+  fileBlobSchema,
+  fileBlobUrl,
+  notificationActorSchema,
   notificationSchema,
   notificationsResponseSchema,
   notificationsUrl,
+  pullRequestSettingsSchema,
+  pullRequestSettingsUrl,
+  repoEventsSchema,
+  repoEventsUrl,
+  repoSettingsSchema,
+  repoSettingsUrl,
+  webhookSchema,
+  webhooksUrl,
 } from './api/repo/index.js';
 export type {
   Branches,
