@@ -3,12 +3,17 @@ import { PassThrough } from 'node:stream';
 import { logger } from '../utils/logger.js';
 
 /**
- * Container 的 modem 类型扩展
- * @types/dockerode 没有正确声明 Container.modem，但运行时它存在
+ * 检查 container 是否有 modem.demuxStream 方法
  */
-type ContainerWithModem = Docker.Container & {
-  modem: Docker['modem'];
-};
+function hasModemDemux(
+  container: Docker.Container,
+): container is Docker.Container & { modem: { demuxStream: Docker['modem']['demuxStream'] } } {
+  return (
+    'modem' in container &&
+    container.modem != null &&
+    typeof (container.modem as Docker['modem']).demuxStream === 'function'
+  );
+}
 
 /**
  * 命令执行选项
@@ -170,9 +175,8 @@ export class ContainerService {
     });
 
     // Demux stream (分离 stdout/stderr)
-    const modem = (container as ContainerWithModem).modem;
-    if (modem?.demuxStream) {
-      modem.demuxStream(stream, stdoutStream, stderrStream);
+    if (hasModemDemux(container)) {
+      container.modem.demuxStream(stream, stdoutStream, stderrStream);
     } else {
       stream.pipe(stdoutStream);
     }
