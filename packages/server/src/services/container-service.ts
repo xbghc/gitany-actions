@@ -102,11 +102,11 @@ export class ContainerService {
     const envList = Object.entries(env).map(([k, v]) => `${k}=${v}`);
 
     // 创建容器
+    // 使用 root 用户运行，确保对 /workspace 目录有写权限
     const container = await docker.createContainer({
       Image: image,
       Cmd: ['sh', '-lc', 'tail -f /dev/null'],
       Env: envList,
-      User: 'node',
       WorkingDir: '/workspace',
       HostConfig: { AutoRemove: false },
       Labels: {
