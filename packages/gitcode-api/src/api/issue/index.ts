@@ -16,3 +16,4 @@ export { issueDetailSchema, getIssueUrl } from './get.js';
 export type { UpdateIssueBody, UpdateIssueParams, UpdatedIssue } from './update.js';
 export { updateIssueUrl, updatedIssueSchema } from './update.js';
 export type { UpdateIssueCommentParams, UpdatedIssueComment } from './update-comment.js';
+export { updatedIssueCommentSchema } from './update-comment.js';
