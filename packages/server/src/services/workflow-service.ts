@@ -10,8 +10,7 @@ import type {
   WorkflowStatus,
 } from '../types/workflow.js';
 import { workflowLogService } from './workflow-log-service.js';
-import { runnerService } from './runner-service.js';
-import type { RunnerJob } from '@xbghc/gitcode-actions';
+import { jobExecutorService } from './job-executor-service.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -133,49 +132,6 @@ export class WorkflowService {
   }
 
   /**
-   * 处理Runner更新
-   */
-  public handleRunnerUpdate(
-    workflowId: string,
-    update: { status: string; logs?: string; error?: string; stepName?: string },
-  ) {
-    const workflow = this.workflows.get(workflowId);
-    if (!workflow) return;
-
-    const { status, logs, error, stepName } = update;
-
-    // 如果有具体的 stepName，更新该步骤
-    if (stepName) {
-      let wfStatus: WorkflowStatus = 'pending';
-      if (status === 'running') wfStatus = 'running';
-      if (status === 'success') wfStatus = 'success';
-      if (status === 'failed') wfStatus = 'failed';
-      // 注意：runner可能发送 pending 状态，这里主要是 running/success/failed
-
-      this.updateStep(workflowId, stepName, wfStatus, logs);
-    } else if (logs) {
-      // 无 stepName 的日志，暂时归入 generic log 或者忽略
-      // 这里可以尝试归入当前正在运行的 step
-      const runningStep = workflow.steps.find((s) => s.status === 'running');
-      if (runningStep) {
-        this.updateStep(workflowId, runningStep.name, 'running', logs);
-      }
-    }
-
-    if (error) {
-      this.emitError(workflowId, stepName || 'workflow', error);
-    }
-
-    // 如果是整个 workflow 完成
-    if (status === 'success' || status === 'failed') {
-      workflow.status = status;
-      workflow.completedAt = new Date().toISOString();
-      if (error) workflow.error = error;
-      this.emitComplete(workflowId, status as WorkflowStatus);
-    }
-  }
-
-  /**
    * 执行配置驱动的 PR Workflow
    * @param owner 仓库所有者
    * @param repo 仓库名
@@ -234,29 +190,69 @@ export class WorkflowService {
 
     this.workflows.set(workflowId, workflow);
 
-    // 将任务放入队列
-    const job: RunnerJob = {
-      id: workflowId,
-      workflowId,
-      type: 'workflow',
-      payload: {
-        workflowId,
-        owner,
-        repo,
-        prNumber,
-        repoUrl,
-        branch,
-        config,
-        gitcodeToken: process.env.GITCODE_TOKEN,
-      },
-    };
-
-    runnerService.enqueueJob(job);
-
-    // 通知前端任务已排队
-    this.emitOutput(workflowId, 'fetch-pr', 'Job enqueued. Waiting for available runner...\n');
+    // 直接执行任务（异步，不阻塞返回）
+    this.executeJob(workflowId, repoUrl, branch, config).catch((error) => {
+      logger.error({ workflowId, error }, 'Job execution failed');
+    });
 
     return workflowId;
+  }
+
+  /**
+   * 执行任务
+   * @internal
+   */
+  private async executeJob(
+    workflowId: string,
+    repoUrl: string,
+    branch: string,
+    config: WorkflowConfig,
+  ): Promise<void> {
+    const workflow = this.workflows.get(workflowId);
+    if (!workflow) return;
+
+    workflow.status = 'running';
+
+    try {
+      await jobExecutorService.execute(
+        {
+          workflowId,
+          repoUrl,
+          branch,
+          config,
+          gitcodeToken: process.env.GITCODE_TOKEN,
+        },
+        {
+          onStepStart: (stepName) => {
+            this.updateStep(workflowId, stepName, 'running');
+          },
+          onStepOutput: (stepName, output) => {
+            this.updateStep(workflowId, stepName, 'running', output);
+            this.emitOutput(workflowId, stepName, output);
+          },
+          onStepSuccess: (stepName) => {
+            this.updateStep(workflowId, stepName, 'success');
+          },
+          onStepFailed: (stepName, error) => {
+            this.updateStep(workflowId, stepName, 'failed');
+            this.emitError(workflowId, stepName, error);
+          },
+        },
+      );
+
+      // 任务成功
+      workflow.status = 'success';
+      workflow.completedAt = new Date().toISOString();
+      this.emitComplete(workflowId, 'success');
+    } catch (error) {
+      // 任务失败
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      workflow.status = 'failed';
+      workflow.completedAt = new Date().toISOString();
+      workflow.error = errorMsg;
+      this.emitError(workflowId, 'workflow', errorMsg);
+      this.emitComplete(workflowId, 'failed');
+    }
   }
 
   /**

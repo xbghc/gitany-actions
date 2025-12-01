@@ -12,7 +12,7 @@ import { issueRouter } from './routes/issue.js';
 import { eventsRouter } from './routes/events.js';
 import { workflowRouter } from './routes/workflow.js';
 import { workflowConfigRouter } from './routes/workflow-config.js';
-import { runnerRoutes } from './routes/runner.js';
+import dockerNodeRouter from './routes/docker-node.js';
 import { userRouter } from './routes/user.js';
 import { oauthRouter } from './routes/oauth.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
@@ -78,7 +78,7 @@ app.use('/api', issueRouter);
 app.use('/api', eventsRouter);
 app.use('/api', workflowRouter);
 app.use('/api', workflowConfigRouter);
-app.use('/api/runners', runnerRoutes);
+app.use('/api/docker-nodes', dockerNodeRouter);
 
 // 404 handler
 app.use(notFoundHandler);
