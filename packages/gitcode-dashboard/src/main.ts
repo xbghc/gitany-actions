@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import ElementPlus from 'element-plus';
+// Element Plus 组件通过 unplugin-vue-components 按需自动导入
+// 样式仍需全局引入
 import 'element-plus/dist/index.css';
 import 'element-plus/theme-chalk/dark/css-vars.css';
 
@@ -13,7 +14,6 @@ const pinia = createPinia();
 
 app.use(pinia);
 app.use(router);
-app.use(ElementPlus);
 app.use(i18n);
 
 app.mount('#app');
