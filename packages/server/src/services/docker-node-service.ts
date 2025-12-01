@@ -21,33 +21,49 @@ export interface DockerNode {
 /**
  * 解析环境变量中的 Docker 节点配置
  *
- * 格式: DOCKER_NODES=name1:host1:port1,name2:host2:port2
- * 例如: DOCKER_NODES=local:192.168.1.100:2375,remote:192.168.1.101:2375
+ * 支持两种格式:
+ * 1. 本机: name (只有名称，使用本机 Docker socket)
+ * 2. 远程: name:host:port
+ *
+ * 例如:
+ * - DOCKER_NODES=local                     # 本机
+ * - DOCKER_NODES=remote:192.168.1.100:2375 # 远程
+ * - DOCKER_NODES=local,remote:192.168.1.100:2375  # 混合
  */
-function parseDockerNodesEnv(): Array<{ name: string; host: string; port: number }> {
+function parseDockerNodesEnv(): Array<{
+  name: string;
+  host?: string;
+  port?: number;
+  socketPath?: string;
+}> {
   const envValue = process.env.DOCKER_NODES;
   if (!envValue) {
     return [];
   }
 
-  const nodes: Array<{ name: string; host: string; port: number }> = [];
+  const nodes: Array<{ name: string; host?: string; port?: number; socketPath?: string }> = [];
 
   for (const nodeStr of envValue.split(',')) {
-    const parts = nodeStr.trim().split(':');
-    if (parts.length !== 3) {
-      logger.warn({ nodeStr }, 'Invalid DOCKER_NODES entry, expected format: name:host:port');
-      continue;
+    const trimmed = nodeStr.trim();
+    const parts = trimmed.split(':');
+
+    if (parts.length === 1) {
+      // 本机 Docker: 只有名称
+      nodes.push({ name: parts[0], socketPath: '/var/run/docker.sock' });
+    } else if (parts.length === 3) {
+      // 远程 Docker: name:host:port
+      const [name, host, portStr] = parts;
+      const port = parseInt(portStr, 10);
+
+      if (isNaN(port)) {
+        logger.warn({ nodeStr }, 'Invalid port in DOCKER_NODES entry');
+        continue;
+      }
+
+      nodes.push({ name, host, port });
+    } else {
+      logger.warn({ nodeStr }, 'Invalid DOCKER_NODES entry, expected: name or name:host:port');
     }
-
-    const [name, host, portStr] = parts;
-    const port = parseInt(portStr, 10);
-
-    if (isNaN(port)) {
-      logger.warn({ nodeStr }, 'Invalid port in DOCKER_NODES entry');
-      continue;
-    }
-
-    nodes.push({ name, host, port });
   }
 
   return nodes;
@@ -82,16 +98,12 @@ export class DockerNodeService {
 
     for (const config of configs) {
       try {
-        await this.addNode(config.name, config.host, config.port);
-        logger.info(
-          { name: config.name, host: config.host, port: config.port },
-          'Docker node connected',
-        );
+        await this.addNode(config);
+        const location = config.socketPath || `${config.host}:${config.port}`;
+        logger.info({ name: config.name, location }, 'Docker node connected');
       } catch (error) {
-        logger.error(
-          { name: config.name, host: config.host, port: config.port, error },
-          'Failed to connect to Docker node',
-        );
+        const location = config.socketPath || `${config.host}:${config.port}`;
+        logger.error({ name: config.name, location, error }, 'Failed to connect to Docker node');
       }
     }
 
@@ -103,19 +115,27 @@ export class DockerNodeService {
   /**
    * 添加一个 Docker 节点（内部使用）
    */
-  private async addNode(name: string, host: string, port: number): Promise<DockerNode> {
+  private async addNode(config: {
+    name: string;
+    host?: string;
+    port?: number;
+    socketPath?: string;
+  }): Promise<DockerNode> {
     const id = randomUUID();
 
-    const client = new Docker({ host, port });
+    // 创建 Docker 客户端：本机用 socketPath，远程用 host:port
+    const client = config.socketPath
+      ? new Docker({ socketPath: config.socketPath })
+      : new Docker({ host: config.host, port: config.port });
 
     // 测试连接
     await client.ping();
 
     const node: DockerNode = {
       id,
-      name,
-      host,
-      port,
+      name: config.name,
+      host: config.host || 'local',
+      port: config.port || 0,
       status: 'online',
       lastSeen: new Date().toISOString(),
       activeJobs: 0,

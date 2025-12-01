@@ -44,9 +44,14 @@ PORT=3000
 GITCODE_API_BASE=https://gitcode.com/api/v5
 
 # Docker 节点配置（用于 Workflow 执行）
-# 格式: name:host:port，多个节点用逗号分隔
-# 例如: DOCKER_NODES=local:192.168.1.100:2375,remote:192.168.1.101:2375
-DOCKER_NODES=local:192.168.1.100:2375
+# 格式:
+#   - 本机: name (只有名称，使用本机 Docker socket)
+#   - 远程: name:host:port
+# 例如:
+#   DOCKER_NODES=local                      # 本机
+#   DOCKER_NODES=remote:192.168.1.100:2375  # 远程
+#   DOCKER_NODES=local,remote:192.168.1.100:2375  # 混合
+DOCKER_NODES=local
 ```
 
 ### Docker 节点配置
