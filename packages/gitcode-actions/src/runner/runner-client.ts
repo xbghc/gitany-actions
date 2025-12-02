@@ -1,5 +1,5 @@
 import got from 'got';
-import type { RunnerRegisterResponse, RunnerJob, JobUpdate } from '@xbghc/gitcode-actions';
+import type { RunnerRegisterResponse, RunnerJob, JobUpdate } from '../types/runner.js';
 
 export class RunnerClient {
   private baseUrl: string;

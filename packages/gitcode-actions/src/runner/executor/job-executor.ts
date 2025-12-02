@@ -1,4 +1,5 @@
-import type { RunnerJob, WorkflowConfig, WorkflowJob } from '@xbghc/gitcode-actions';
+import type { RunnerJob, WorkflowJob } from '../../types/runner.js';
+import type { WorkflowConfig } from '../../types/workflow-config.js';
 import type Docker from 'dockerode';
 import { RunnerClient } from '../runner-client.js';
 import { docker } from '../container/shared.js';

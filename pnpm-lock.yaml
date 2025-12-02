@@ -73,9 +73,28 @@ importers:
       '@xbghc/gitcode-cli':
         specifier: workspace:*
         version: link:../gitcode-cli
+      chalk:
+        specifier: ^5.3.0
+        version: 5.6.2
+      commander:
+        specifier: ^13.0.0
+        version: 13.1.0
+      dockerode:
+        specifier: ^4.0.8
+        version: 4.0.8
+      got:
+        specifier: ^14.4.9
+        version: 14.4.9
       superjson:
         specifier: ^2.2.5
         version: 2.2.5
+      tar:
+        specifier: ^7.4.3
+        version: 7.4.3
+    devDependencies:
+      '@types/dockerode':
+        specifier: ^3.3.43
+        version: 3.3.43
 
   packages/gitcode-api:
     dependencies:
@@ -190,46 +209,6 @@ importers:
       vue-tsc:
         specifier: ^2.2.0
         version: 2.2.12(typescript@5.9.2)
-
-  packages/gitcode-runner:
-    dependencies:
-      '@xbghc/gitcode-actions':
-        specifier: workspace:*
-        version: link:../gitcode-actions
-      '@xbghc/gitcode-api':
-        specifier: workspace:*
-        version: link:../gitcode-api
-      chalk:
-        specifier: ^5.3.0
-        version: 5.6.2
-      commander:
-        specifier: ^13.0.0
-        version: 13.1.0
-      dockerode:
-        specifier: ^4.0.8
-        version: 4.0.8
-      got:
-        specifier: ^14.4.9
-        version: 14.4.9
-      superjson:
-        specifier: ^2.2.5
-        version: 2.2.5
-      tar:
-        specifier: ^7.4.3
-        version: 7.4.3
-    devDependencies:
-      '@types/dockerode':
-        specifier: ^3.3.43
-        version: 3.3.43
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.18.1
-      tsx:
-        specifier: ^4.19.2
-        version: 4.20.5
-      typescript:
-        specifier: ^5.7.3
-        version: 5.9.2
 
   packages/server:
     dependencies:

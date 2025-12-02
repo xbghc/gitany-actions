@@ -5,11 +5,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "gitcode-runner": "dist/runner/cli.js"
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "dev:runner": "tsx watch src/runner/cli.ts",
     "build": "tsc -b",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist tsconfig.tsbuildinfo",
@@ -21,14 +25,25 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./runner": {
+      "types": "./dist/runner/index.d.ts",
+      "import": "./dist/runner/index.js"
     }
   },
   "dependencies": {
     "@xbghc/gitcode-api": "workspace:*",
     "@xbghc/gitcode-cli": "workspace:*",
-    "superjson": "^2.2.5"
+    "chalk": "^5.3.0",
+    "commander": "^13.0.0",
+    "dockerode": "^4.0.8",
+    "got": "^14.4.9",
+    "superjson": "^2.2.5",
+    "tar": "^7.4.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/dockerode": "^3.3.43"
+  },
   "engines": {
     "node": ">=22.0.0"
   }
