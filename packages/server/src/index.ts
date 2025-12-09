@@ -2,7 +2,8 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import YAML from 'yamljs';
+import { parse as parseYaml } from 'yaml';
+import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
@@ -31,7 +32,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Load Swagger document
-const swaggerDocument = YAML.load(join(__dirname, 'swagger.yaml'));
+const swaggerDocument = parseYaml(readFileSync(join(__dirname, 'swagger.yaml'), 'utf8'));
 
 // Middleware
 app.use(cors());

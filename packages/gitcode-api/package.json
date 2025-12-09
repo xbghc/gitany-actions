@@ -64,7 +64,6 @@
     "zod": "^4.1.7"
   },
   "devDependencies": {
-    "@types/git-url-parse": "^16.0.2",
     "@vitest/ui": "^4.0.7",
     "vitest": "^4.0.7"
   }
