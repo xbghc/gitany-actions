@@ -73,3 +73,36 @@ oauthRouter.post('/oauth/token', async (req: Request, res: Response) => {
     throw new ExternalServiceError('OAuth', 'Failed to exchange token', error as Error);
   }
 });
+
+/**
+ * 刷新过期的 access token
+ * POST /api/oauth/refresh
+ * Body: { refresh_token: string }
+ */
+oauthRouter.post('/oauth/refresh', async (req: Request, res: Response) => {
+  if (!oauthService) {
+    throw new ServiceUnavailableError(
+      'OAuth service not configured. Please set GITCODE_OAUTH_CLIENT_ID and GITCODE_OAUTH_CLIENT_SECRET',
+    );
+  }
+
+  const { refresh_token } = req.body;
+
+  if (!refresh_token) {
+    throw new ValidationError('Missing refresh token');
+  }
+
+  try {
+    const tokenResponse = await oauthService.refreshAccessToken(refresh_token);
+
+    logger.info('OAuth token refreshed successfully');
+
+    res.json({
+      success: true,
+      data: tokenResponse,
+    });
+  } catch (error) {
+    logger.error({ error }, 'Failed to refresh token');
+    throw new ExternalServiceError('OAuth', 'Failed to refresh token', error as Error);
+  }
+});

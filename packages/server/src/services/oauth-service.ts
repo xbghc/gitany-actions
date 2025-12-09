@@ -52,4 +52,13 @@ export class OAuthService {
   async exchangeCodeForToken(code: string) {
     return await this.oauthClient.exchangeCodeForToken(code);
   }
+
+  /**
+   * 刷新过期的 access token
+   * @param refreshToken - 之前获取的 refresh_token
+   * @returns 新的 OAuth token 响应
+   */
+  async refreshAccessToken(refreshToken: string) {
+    return await this.oauthClient.refreshAccessToken(refreshToken);
+  }
 }
