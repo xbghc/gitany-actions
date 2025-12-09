@@ -70,7 +70,7 @@ import { useInfiniteScroll } from '@vueuse/core';
 import { useActivityStore } from '@/store';
 import { useActivityTime } from './useActivityTime';
 import ActivityCard from './ActivityCard.vue';
-import type { RepoEvent } from '@/types';
+import type { ActivityItem } from '@/types';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -86,10 +86,14 @@ const currentFilter = ref<string>('all');
 const timeDisplayMode = ref<'relative' | 'absolute'>('relative');
 
 // 获取 timeline 节点颜色
-const getTimelineColor = (activity: RepoEvent): string => {
+const getTimelineColor = (activity: ActivityItem): string => {
   // Push 事件
   if (activity.action_name.toLowerCase().includes('push') && activity.push_data) {
     return '#2196f3'; // 蓝色
+  }
+  // 每日下载汇总
+  if (activity.isDailyDownloadSummary) {
+    return '#9c27b0'; // 紫色
   }
   // Download 事件
   if (activity.action === 31 && activity.target_type === 'Repository' && activity.title === 'zip') {

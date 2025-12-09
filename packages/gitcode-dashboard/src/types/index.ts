@@ -536,6 +536,28 @@ export interface ActivityFilterParams {
   per_page?: number;
 }
 
+/** 单个下载记录（用于汇总展示） */
+export interface DownloadRecord {
+  /** 下载用户 */
+  author: RepoEventAuthor;
+  /** 下载时间 */
+  created_at: string;
+}
+
+/** 每日下载汇总 */
+export interface DailyDownloadSummary {
+  /** 日期（YYYY-MM-DD） */
+  date: string;
+  /** 是否为今天 */
+  isToday: boolean;
+  /** 下载总次数 */
+  totalCount: number;
+  /** 下载用户数（去重） */
+  uniqueUserCount: number;
+  /** 下载记录列表 */
+  records: DownloadRecord[];
+}
+
 /** 统一的活动项类型（用于前端展示） */
 export interface ActivityItem extends RepoEvent {
   /** 唯一标识（用于 v-for key） */
@@ -544,4 +566,8 @@ export interface ActivityItem extends RepoEvent {
   icon?: string;
   /** 事件类型颜色 */
   color?: string;
+  /** 是否为每日下载汇总 */
+  isDailyDownloadSummary?: boolean;
+  /** 每日下载汇总数据 */
+  dailyDownloadSummary?: DailyDownloadSummary;
 }
