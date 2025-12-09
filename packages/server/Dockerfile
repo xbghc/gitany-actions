@@ -10,8 +10,8 @@ RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 
 # Copy dependent packages
-COPY packages/api ./packages/api
-COPY packages/actions ./packages/actions
+COPY packages/gitcode-api ./packages/gitcode-api
+COPY packages/gitcode-actions ./packages/gitcode-actions
 COPY packages/server ./packages/server
 
 # Install dependencies
