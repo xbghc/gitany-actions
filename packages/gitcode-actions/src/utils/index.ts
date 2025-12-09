@@ -54,3 +54,14 @@ export function getRepoStateDir(url: string): string {
 
   return path.join(gitcodeBaseDir(), 'repos', safeName);
 }
+
+/** Build init command for cloning repository */
+export function buildInitCommand(repoUrl: string, branch: string): string {
+  const commands: string[] = [];
+  commands.push(
+    `echo "=== Cloning repository and checking out branch ${branch} ===" && git clone --branch ${branch} ${repoUrl} /workspace`,
+  );
+  commands.push('cd /workspace');
+  commands.push('echo "=== Initialization completed ==="');
+  return commands.join(' && ');
+}
