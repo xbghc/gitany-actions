@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@xbghc/gitcode-api": "workspace:*",
-    "@xbghc/gitcode-cli": "workspace:*",
     "dockerode": "^4.0.8",
     "got": "^14.4.9",
     "superjson": "^2.2.5",

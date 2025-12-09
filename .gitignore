@@ -10,7 +10,5 @@ packages/*/src/**/*.d.ts.map
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 docs/api-reference/
-local_tests/
-CLAUDE.md
 # Bundle analyzer output
 stats.html
