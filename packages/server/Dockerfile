@@ -41,10 +41,10 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Copy built packages
-COPY --from=builder /app/packages/api/dist ./packages/api/dist
-COPY --from=builder /app/packages/api/package.json ./packages/api/
-COPY --from=builder /app/packages/actions/dist ./packages/actions/dist
-COPY --from=builder /app/packages/actions/package.json ./packages/actions/
+COPY --from=builder /app/packages/gitcode-api/dist ./packages/gitcode-api/dist
+COPY --from=builder /app/packages/gitcode-api/package.json ./packages/gitcode-api/
+COPY --from=builder /app/packages/gitcode-actions/dist ./packages/gitcode-actions/dist
+COPY --from=builder /app/packages/gitcode-actions/package.json ./packages/gitcode-actions/
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/server/package.json ./packages/server/
 
