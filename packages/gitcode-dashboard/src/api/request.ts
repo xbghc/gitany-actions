@@ -2,6 +2,8 @@ import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse 
 import { ElMessage } from 'element-plus';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '';
+const TOKEN_KEY = 'gitcode_token';
+const REFRESH_TOKEN_KEY = 'gitcode_refresh_token';
 
 // 创建 axios 实例
 const request: AxiosInstance = axios.create({
@@ -16,7 +18,7 @@ const request: AxiosInstance = axios.create({
 request.interceptors.request.use(
   (config) => {
     // 可以在这里添加 token 等认证信息
-    const token = localStorage.getItem('gitcode_token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -48,7 +50,7 @@ const handleTokenRefresh = async (config: AxiosRequestConfig) => {
     }
 
     try {
-      const refreshToken = localStorage.getItem('gitcode_refresh_token');
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
@@ -67,9 +69,9 @@ const handleTokenRefresh = async (config: AxiosRequestConfig) => {
 
       if (data.success && data.data) {
         const { access_token, refresh_token } = data.data;
-        localStorage.setItem('gitcode_token', access_token);
+        localStorage.setItem(TOKEN_KEY, access_token);
         if (refresh_token) {
-          localStorage.setItem('gitcode_refresh_token', refresh_token);
+          localStorage.setItem(REFRESH_TOKEN_KEY, refresh_token);
         }
 
         // 重试队列中的请求
@@ -90,8 +92,8 @@ const handleTokenRefresh = async (config: AxiosRequestConfig) => {
       console.error('Token refresh failed:', refreshError);
       isRefreshing = false;
       requests = [];
-      localStorage.removeItem('gitcode_token');
-      localStorage.removeItem('gitcode_refresh_token');
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
       window.location.href = '/login';
       return Promise.reject(refreshError);
     }
@@ -140,21 +142,21 @@ request.interceptors.response.use(
         case 401:
           // 使用 WeakSet 检查防止死循环
           if (config && retriedRequests.has(config)) {
-            localStorage.removeItem('gitcode_token');
-            localStorage.removeItem('gitcode_refresh_token');
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(REFRESH_TOKEN_KEY);
             window.location.href = '/login';
             return Promise.reject(error);
           }
 
           // 如果是 401，尝试刷新 token
-          const refreshToken = localStorage.getItem('gitcode_refresh_token');
+          const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
 
           if (refreshToken) {
             return handleTokenRefresh(config);
           } else {
             // 没有 refresh token，直接跳转登录
-            localStorage.removeItem('gitcode_token');
-            localStorage.removeItem('gitcode_refresh_token');
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(REFRESH_TOKEN_KEY);
             window.location.href = '/login';
           }
           break;
