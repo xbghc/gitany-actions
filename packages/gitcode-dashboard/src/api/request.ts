@@ -31,7 +31,11 @@ request.interceptors.request.use(
 );
 
 let isRefreshing = false;
-let requests: Array<(token: string) => void> = [];
+interface PendingRequest {
+  resolve: (token: string) => void;
+  reject: (error: any) => void;
+}
+let requests: PendingRequest[] = [];
 // 使用 WeakSet 记录已重试的请求配置，避免修改原始 config 对象
 const retriedRequests = new WeakSet<AxiosRequestConfig>();
 
@@ -41,13 +45,13 @@ const retriedRequests = new WeakSet<AxiosRequestConfig>();
  * @returns Promise
  */
 const handleTokenRefresh = async (config: AxiosRequestConfig) => {
+  // 无论是否正在刷新，首先标记当前请求已尝试刷新，防止死循环
+  if (config) {
+    retriedRequests.add(config);
+  }
+
   if (!isRefreshing) {
     isRefreshing = true;
-
-    // 标记为正在重试
-    if (config) {
-      retriedRequests.add(config);
-    }
 
     try {
       const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
@@ -75,7 +79,7 @@ const handleTokenRefresh = async (config: AxiosRequestConfig) => {
         }
 
         // 重试队列中的请求
-        requests.forEach((cb) => cb(access_token));
+        requests.forEach((req) => req.resolve(access_token));
         requests = [];
         isRefreshing = false;
 
@@ -90,8 +94,12 @@ const handleTokenRefresh = async (config: AxiosRequestConfig) => {
       }
     } catch (refreshError) {
       console.error('Token refresh failed:', refreshError);
-      isRefreshing = false;
+
+      // 拒绝队列中的所有请求
+      requests.forEach((req) => req.reject(refreshError));
       requests = [];
+
+      isRefreshing = false;
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       window.location.href = '/login';
@@ -99,13 +107,19 @@ const handleTokenRefresh = async (config: AxiosRequestConfig) => {
     }
   } else {
     // 正在刷新，将请求加入队列
-    return new Promise((resolve) => {
-      requests.push((token) => {
-        if (config && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
-          resolve(request(config));
-        } else {
-            resolve(Promise.reject('Config invalid'));
+    return new Promise((resolve, reject) => {
+      requests.push({
+        resolve: (token) => {
+          if (config && config.headers) {
+            config.headers.Authorization = `Bearer ${token}`;
+            resolve(request(config));
+          } else {
+             // 理论上不应该发生，但为了类型安全
+             reject(new Error('Config invalid during retry'));
+          }
+        },
+        reject: (err) => {
+          reject(err);
         }
       });
     });
