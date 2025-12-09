@@ -304,7 +304,7 @@ packages/server/
 - `dotenv`: 环境变量管理
 - `dockerode`: Docker Remote API 客户端
 - `swagger-ui-express`: Swagger UI 集成
-- `yamljs`: YAML 解析器
+- `yaml`: YAML 解析器
 
 ## 使用示例
 
