@@ -3,6 +3,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Use China npm mirror
+ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
+
 # Enable pnpm via corepack (built into Node.js)
 RUN corepack enable
 
