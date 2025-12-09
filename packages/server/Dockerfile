@@ -48,8 +48,8 @@ COPY --from=builder /app/packages/gitcode-actions/package.json ./packages/gitcod
 COPY --from=builder /app/packages/server/dist ./packages/server/dist
 COPY --from=builder /app/packages/server/package.json ./packages/server/
 
-# Install production dependencies only
-RUN pnpm install --frozen-lockfile --prod
+# Install production dependencies only (ignore scripts to skip husky)
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
 WORKDIR /app/packages/server
 
