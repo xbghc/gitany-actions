@@ -31,6 +31,83 @@ request.interceptors.request.use(
 let isRefreshing = false;
 let requests: Array<(token: string) => void> = [];
 
+/**
+ * 刷新 Token 逻辑
+ * @param config 失败请求的配置
+ * @returns Promise
+ */
+const handleTokenRefresh = async (config: AxiosRequestConfig) => {
+  if (!isRefreshing) {
+    isRefreshing = true;
+    // 标记为正在重试，防止死循环
+    if (config) {
+      // @ts-ignore: AxiosRequestConfig custom property
+      config._retry = true;
+    }
+
+    try {
+      const refreshToken = localStorage.getItem('gitcode_refresh_token');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      // 使用一个新的 axios 实例来刷新 token，避免死循环
+      // 注意：这里不能使用 request 实例，否则会进入拦截器死循环
+      const { data } = await axios.post(
+        `${baseURL}/api/oauth/refresh`,
+        { refresh_token: refreshToken },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      if (data.success && data.data) {
+        const { access_token, refresh_token } = data.data;
+        localStorage.setItem('gitcode_token', access_token);
+        if (refresh_token) {
+          localStorage.setItem('gitcode_refresh_token', refresh_token);
+        }
+
+        // 重试队列中的请求
+        requests.forEach((cb) => cb(access_token));
+        requests = [];
+        isRefreshing = false;
+
+        // 重试当前请求
+        if (config && config.headers) {
+          config.headers.Authorization = `Bearer ${access_token}`;
+          return request(config);
+        }
+        return Promise.resolve();
+      } else {
+        throw new Error('Refresh token failed');
+      }
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      isRefreshing = false;
+      requests = [];
+      localStorage.removeItem('gitcode_token');
+      localStorage.removeItem('gitcode_refresh_token');
+      window.location.href = '/login';
+      return Promise.reject(refreshError);
+    }
+  } else {
+    // 正在刷新，将请求加入队列
+    return new Promise((resolve) => {
+      requests.push((token) => {
+        if (config && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+          resolve(request(config));
+        } else {
+            resolve(Promise.reject('Config invalid'));
+        }
+      });
+    });
+  }
+};
+
 // 响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -60,7 +137,7 @@ request.interceptors.response.use(
       switch (response.status) {
         case 401:
           // 加上 config._retry 判断，防止死循环
-          if (config._retry) {
+          if (config && config._retry) {
             localStorage.removeItem('gitcode_token');
             localStorage.removeItem('gitcode_refresh_token');
             window.location.href = '/login';
@@ -71,58 +148,7 @@ request.interceptors.response.use(
           const refreshToken = localStorage.getItem('gitcode_refresh_token');
 
           if (refreshToken) {
-            if (!isRefreshing) {
-              isRefreshing = true;
-              config._retry = true;
-
-              try {
-                // 使用一个新的 axios 实例来刷新 token，避免死循环
-                const { data } = await axios.post(
-                  `${baseURL}/api/oauth/refresh`,
-                  { refresh_token: refreshToken },
-                  {
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                  },
-                );
-
-                if (data.success && data.data) {
-                  const { access_token, refresh_token } = data.data;
-                  localStorage.setItem('gitcode_token', access_token);
-                  if (refresh_token) {
-                    localStorage.setItem('gitcode_refresh_token', refresh_token);
-                  }
-
-                  // 重试队列中的请求
-                  requests.forEach((cb) => cb(access_token));
-                  requests = [];
-                  isRefreshing = false;
-
-                  // 重试当前请求
-                  config.headers.Authorization = `Bearer ${access_token}`;
-                  return request(config);
-                } else {
-                  throw new Error('Refresh token failed');
-                }
-              } catch (refreshError) {
-                console.error('Token refresh failed:', refreshError);
-                isRefreshing = false;
-                requests = [];
-                localStorage.removeItem('gitcode_token');
-                localStorage.removeItem('gitcode_refresh_token');
-                window.location.href = '/login';
-                return Promise.reject(refreshError);
-              }
-            } else {
-              // 正在刷新，将请求加入队列
-              return new Promise((resolve) => {
-                requests.push((token) => {
-                  config.headers.Authorization = `Bearer ${token}`;
-                  resolve(request(config));
-                });
-              });
-            }
+            return handleTokenRefresh(config);
           } else {
             // 没有 refresh token，直接跳转登录
             localStorage.removeItem('gitcode_token');
