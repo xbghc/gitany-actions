@@ -41,8 +41,7 @@ export type {
   UpdateWorkflowConfigRequest,
 } from './types/workflow-config.js';
 
-// ============ Runner Module ============
-// Container Management
+// ============ Container Management ============
 export {
   createContainer,
   getContainerById,
@@ -61,7 +60,7 @@ export {
   CopyToContainerError,
   ImagePullError,
   prepareImage,
-} from './runner/container/index.js';
+} from './container/index.js';
 export type {
   CreateContainerConfig,
   CreateContainerResult,
@@ -73,9 +72,9 @@ export type {
   ContainerOptions,
   CopyToContainerOptions,
   ImagePullStatus,
-} from './runner/container/index.js';
+} from './container/index.js';
 
-// Container Command Execution
+// ============ Executor ============
 export {
   checkProjectFiles,
   collectDiagnostics,
@@ -85,7 +84,7 @@ export {
   executor,
   ExecutorChain,
   verifySha,
-} from './runner/executor/index.js';
+} from './executor/index.js';
 export type {
   CheckOptions,
   CheckStepResult,
@@ -102,18 +101,14 @@ export type {
   StepExecutionError as ContainerStepExecutionError,
   VerifyOptions,
   VerifyResult,
-} from './runner/executor/index.js';
+} from './executor/index.js';
 
-// Workflows
-export { chat, createApiCallScript, testShaBuild } from './runner/workflows/index.js';
+// ============ Workflows ============
+export { chat, createApiCallScript, testShaBuild } from './workflows/index.js';
 export type {
   ChatOptions,
   ChatResult,
   CreateApiCallScriptOptions,
   TestShaBuildOptions,
   TestShaBuildResult,
-} from './runner/workflows/index.js';
-
-// Runner Client & Executor
-export { RunnerClient } from './runner/runner-client.js';
-export { JobExecutor } from './runner/executor/job-executor.js';
+} from './workflows/index.js';
