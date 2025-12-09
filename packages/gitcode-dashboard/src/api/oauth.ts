@@ -49,6 +49,23 @@ export async function getAuthorizationUrl(): Promise<AuthorizationUrlData> {
 }
 
 /**
+ * 刷新 Access Token
+ * @param refreshToken - Refresh Token
+ * @returns Token 响应
+ */
+export async function refreshToken(refreshToken: string): Promise<OAuthTokenData> {
+  const response = (await request.post('/api/oauth/refresh', {
+    refresh_token: refreshToken,
+  })) as ApiResponse<OAuthTokenData>;
+
+  if (!response.success || !response.data) {
+    throw new Error(response.message || response.error || 'Failed to refresh token');
+  }
+
+  return response.data;
+}
+
+/**
  * 使用授权码换取 access token
  * @param code - 授权码
  * @param state - state 参数（可选）

@@ -28,6 +28,9 @@ request.interceptors.request.use(
   },
 );
 
+let isRefreshing = false;
+let requests: Array<(token: string) => void> = [];
+
 // 响应拦截器
 request.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -48,39 +51,113 @@ request.interceptors.response.use(
     ElMessage.error(errorMsg);
     return Promise.reject(new Error(errorMsg));
   },
-  (error) => {
+  async (error) => {
     // 处理 HTTP 错误
-    const { response } = error;
+    const { response, config } = error;
     let errorMsg = '网络请求失败';
 
     if (response) {
       switch (response.status) {
         case 401:
-          errorMsg = '未授权，请重新登录';
-          // 可以在这里处理登录跳转
+          // 加上 config._retry 判断，防止死循环
+          if (config._retry) {
+            localStorage.removeItem('gitcode_token');
+            localStorage.removeItem('gitcode_refresh_token');
+            window.location.href = '/login';
+            return Promise.reject(error);
+          }
+
+          // 如果是 401，尝试刷新 token
+          const refreshToken = localStorage.getItem('gitcode_refresh_token');
+
+          if (refreshToken) {
+            if (!isRefreshing) {
+              isRefreshing = true;
+              config._retry = true;
+
+              try {
+                // 使用一个新的 axios 实例来刷新 token，避免死循环
+                const { data } = await axios.post(
+                  `${baseURL}/api/oauth/refresh`,
+                  { refresh_token: refreshToken },
+                  {
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  },
+                );
+
+                if (data.success && data.data) {
+                  const { access_token, refresh_token } = data.data;
+                  localStorage.setItem('gitcode_token', access_token);
+                  if (refresh_token) {
+                    localStorage.setItem('gitcode_refresh_token', refresh_token);
+                  }
+
+                  // 重试队列中的请求
+                  requests.forEach((cb) => cb(access_token));
+                  requests = [];
+                  isRefreshing = false;
+
+                  // 重试当前请求
+                  config.headers.Authorization = `Bearer ${access_token}`;
+                  return request(config);
+                } else {
+                  throw new Error('Refresh token failed');
+                }
+              } catch (refreshError) {
+                console.error('Token refresh failed:', refreshError);
+                isRefreshing = false;
+                requests = [];
+                localStorage.removeItem('gitcode_token');
+                localStorage.removeItem('gitcode_refresh_token');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+              }
+            } else {
+              // 正在刷新，将请求加入队列
+              return new Promise((resolve) => {
+                requests.push((token) => {
+                  config.headers.Authorization = `Bearer ${token}`;
+                  resolve(request(config));
+                });
+              });
+            }
+          } else {
+            // 没有 refresh token，直接跳转登录
+            localStorage.removeItem('gitcode_token');
+            localStorage.removeItem('gitcode_refresh_token');
+            window.location.href = '/login';
+          }
           break;
         case 403:
           errorMsg = '拒绝访问';
+          ElMessage.error(errorMsg);
           break;
         case 404:
           errorMsg = '请求资源不存在';
+          ElMessage.error(errorMsg);
           break;
         case 500:
           errorMsg = '服务器错误';
+          ElMessage.error(errorMsg);
           break;
         case 503:
           errorMsg = '服务不可用';
+          ElMessage.error(errorMsg);
           break;
         default:
           errorMsg = response.data?.message || response.data?.error || errorMsg;
+          ElMessage.error(errorMsg);
       }
     } else if (error.code === 'ECONNABORTED') {
       errorMsg = '请求超时';
+      ElMessage.error(errorMsg);
     } else if (error.message === 'Network Error') {
       errorMsg = '网络连接失败';
+      ElMessage.error(errorMsg);
     }
 
-    ElMessage.error(errorMsg);
     return Promise.reject(error);
   },
 );
