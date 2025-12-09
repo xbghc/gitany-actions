@@ -30,6 +30,6 @@ export default defineConfig({
     hookTimeout: 10000,
 
     // E2E 测试单独配置
-    pool: 'forks', // 使用进程池隔离测试
+    pool: 'threads', // 使用线程池（WSL2 下 forks 模式容易超时）
   },
 });
