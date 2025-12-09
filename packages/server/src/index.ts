@@ -2,54 +2,71 @@ import express, { type Request, type Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
-import { parse as parseYaml } from 'yaml';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { createRequire } from 'module';
-import { repoRouter } from './routes/repo.js';
-import { prRouter } from './routes/pr.js';
-import { issueRouter } from './routes/issue.js';
-import { eventsRouter } from './routes/events.js';
-import { workflowRouter } from './routes/workflow.js';
-import { workflowConfigRouter } from './routes/workflow-config.js';
-import { userRouter } from './routes/user.js';
-import { oauthRouter } from './routes/oauth.js';
+import { createExpressEndpoints } from '@ts-rest/express';
+
+// 契约和 handlers
+import {
+  prContract,
+  issueContract,
+  workflowContract,
+  workflowConfigContract,
+  userContract,
+  eventsContract,
+  oauthContract,
+} from './contracts/index.js';
+import {
+  prHandler,
+  issueHandler,
+  workflowHandler,
+  workflowConfigHandler,
+  userHandler,
+  eventsHandler,
+  oauthHandler,
+} from './handlers/index.js';
+
+// OpenAPI 生成
+import { generateOpenAPISpec } from './openapi/generator.js';
+
+// 特殊路由（SSE、二进制响应等）
+import { sseRouter } from './routes/sse.js';
+
+// 中间件
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { avatarTransformerMiddleware } from './middleware/avatar-transformer.js';
 import { requestLogger } from './middleware/request-logger.js';
+
+// 服务
 import { logger } from './utils/logger.js';
 import { dockerNodeService } from './services/docker-node-service.js';
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json') as { name: string; version: string };
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Load Swagger document
-const swaggerDocument = parseYaml(readFileSync(join(__dirname, 'swagger.yaml'), 'utf8'));
+// 生成 OpenAPI 文档
+const swaggerDocument = generateOpenAPISpec();
 
-// Middleware
+// 基础中间件
 app.use(cors());
 app.use(express.json());
 
-// Request logging
+// 请求日志
 app.use(requestLogger);
 
-// Avatar URL transformer - must be before routes to intercept res.json()
+// Avatar URL 转换器
 app.use(avatarTransformerMiddleware);
 
-// Root path - redirect to API docs
+// 根路径重定向到 API 文档
 app.get('/', (_req: Request, res: Response) => {
   res.redirect('/api-docs');
 });
 
-// API Documentation
+// Swagger UI
 app.use(
   '/api-docs',
   swaggerUi.serve,
@@ -59,7 +76,7 @@ app.use(
   }),
 );
 
-// Health check
+// 健康检查
 app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
@@ -70,23 +87,29 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
-// Routes
-app.use('/api', oauthRouter);
-app.use('/api', userRouter);
-app.use('/api', repoRouter);
-app.use('/api', prRouter);
-app.use('/api', issueRouter);
-app.use('/api', eventsRouter);
-app.use('/api', workflowRouter);
-app.use('/api', workflowConfigRouter);
+// 特殊路由（SSE、avatar-proxy）- 必须在 ts-rest 路由之前
+app.use('/api', sseRouter);
 
-// 404 handler
+// 注册 ts-rest 路由
+// @ts-expect-error - ts-rest handler types are complex
+createExpressEndpoints(prContract, prHandler, app);
+// @ts-expect-error - ts-rest handler types are complex
+createExpressEndpoints(issueContract, issueHandler, app);
+// @ts-expect-error - ts-rest handler types are complex
+createExpressEndpoints(workflowContract, workflowHandler, app);
+createExpressEndpoints(workflowConfigContract, workflowConfigHandler, app);
+createExpressEndpoints(userContract, userHandler, app);
+// @ts-expect-error - ts-rest Express req.query type conflict with ParsedQs
+createExpressEndpoints(eventsContract, eventsHandler, app);
+createExpressEndpoints(oauthContract, oauthHandler, app);
+
+// 404 处理
 app.use(notFoundHandler);
 
-// Error handling
+// 错误处理
 app.use(errorHandler);
 
-// Start server
+// 启动服务器
 async function start() {
   // 初始化 Docker 节点
   await dockerNodeService.initialize();
