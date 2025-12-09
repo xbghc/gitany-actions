@@ -1,7 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { getRepoEvents } from '@/api';
-import type { ActivityItem, ActivityFilterParams, RepoEvent } from '@/types';
+import type {
+  ActivityItem,
+  ActivityFilterParams,
+  RepoEvent,
+  DailyDownloadSummary,
+  DownloadRecord,
+} from '@/types';
 import { useRepoStore } from './repo';
 
 interface CacheEntry {
@@ -47,6 +53,100 @@ export const useActivityStore = defineStore('activity', () => {
       );
     const queryString = new URLSearchParams(sortedParams).toString();
     return `/api/repo/${owner}/${repo}/events?${queryString}`;
+  };
+
+  /**
+   * 判断是否为下载事件
+   */
+  const isDownloadEvent = (event: RepoEvent): boolean => {
+    return event.action === 31 && event.target_type === 'Repository' && event.title === 'zip';
+  };
+
+  /**
+   * 获取日期字符串 (YYYY-MM-DD)
+   */
+  const getDateString = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toISOString().split('T')[0];
+  };
+
+  /**
+   * 判断是否为今天
+   */
+  const isToday = (dateStr: string): boolean => {
+    const today = new Date().toISOString().split('T')[0];
+    return dateStr === today;
+  };
+
+  /**
+   * 按天合并下载事件
+   * 返回：{ 非下载事件列表, 每日下载汇总Map }
+   */
+  const groupDownloadsByDay = (
+    events: RepoEvent[],
+  ): {
+    nonDownloadEvents: RepoEvent[];
+    dailySummaries: Map<string, DailyDownloadSummary>;
+  } => {
+    const nonDownloadEvents: RepoEvent[] = [];
+    const dailySummaries = new Map<string, DailyDownloadSummary>();
+
+    for (const event of events) {
+      if (!isDownloadEvent(event)) {
+        nonDownloadEvents.push(event);
+        continue;
+      }
+
+      // 下载事件按天分组
+      const dateStr = getDateString(event.created_at);
+      const record: DownloadRecord = {
+        author: event.author,
+        created_at: event.created_at,
+      };
+
+      if (dailySummaries.has(dateStr)) {
+        const summary = dailySummaries.get(dateStr)!;
+        summary.totalCount++;
+        summary.records.push(record);
+      } else {
+        dailySummaries.set(dateStr, {
+          date: dateStr,
+          isToday: isToday(dateStr),
+          totalCount: 1,
+          uniqueUserCount: 0, // 稍后计算
+          records: [record],
+        });
+      }
+    }
+
+    // 计算每日独立用户数
+    for (const summary of dailySummaries.values()) {
+      const uniqueUsers = new Set(summary.records.map((r) => r.author.id));
+      summary.uniqueUserCount = uniqueUsers.size;
+      // 按时间倒序排序记录
+      summary.records.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+    }
+
+    return { nonDownloadEvents, dailySummaries };
+  };
+
+  /**
+   * 创建每日下载汇总的 ActivityItem
+   */
+  const createDailySummaryItem = (
+    summary: DailyDownloadSummary,
+    baseEvent: RepoEvent,
+  ): ActivityItem => {
+    return {
+      ...baseEvent,
+      id: `daily-download-${summary.date}`,
+      isDailyDownloadSummary: true,
+      dailyDownloadSummary: summary,
+      icon: '📥',
+      color: '#9c27b0',
+    };
   };
 
   /**
@@ -127,7 +227,32 @@ export const useActivityStore = defineStore('activity', () => {
 
     try {
       const events = await queryActivityList(owner, repo, filters.value);
-      const newItems = events.map(toActivityItem);
+
+      // 按天分组下载事件
+      const { nonDownloadEvents, dailySummaries } = groupDownloadsByDay(events);
+
+      // 转换非下载事件为 ActivityItem
+      const nonDownloadItems = nonDownloadEvents.map(toActivityItem);
+
+      // 创建每日下载汇总项，设置虚拟时间为当天最后时刻（确保排在当天其他事件之后）
+      const summaryItems: ActivityItem[] = [];
+      for (const [date, summary] of dailySummaries) {
+        // 使用第一条下载记录作为基础事件
+        const firstDownloadEvent = events.find(
+          (e) => isDownloadEvent(e) && getDateString(e.created_at) === date,
+        );
+        if (firstDownloadEvent) {
+          const summaryItem = createDailySummaryItem(summary, firstDownloadEvent);
+          // 设置虚拟时间为当天 00:00:00（排序时会排在当天其他事件之后）
+          summaryItem.created_at = `${date}T00:00:00.000Z`;
+          summaryItems.push(summaryItem);
+        }
+      }
+
+      // 合并并按时间倒序排序（最新的在前面）
+      const newItems = [...nonDownloadItems, ...summaryItems].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
 
       if (append) {
         activityList.value = [...activityList.value, ...newItems];
@@ -137,7 +262,7 @@ export const useActivityStore = defineStore('activity', () => {
 
       // 判断是否还有更多数据
       // 如果返回的数据少于请求的数量，说明没有更多数据了
-      hasMore.value = newItems.length >= (filters.value.per_page || 20);
+      hasMore.value = events.length >= (filters.value.per_page || 20);
     } catch (error) {
       console.error('Failed to fetch activity list:', error);
       if (!append) {

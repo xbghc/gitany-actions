@@ -28,6 +28,47 @@
       </div>
     </template>
 
+    <!-- 每日下载汇总 -->
+    <template v-else-if="isDailyDownloadSummary">
+      <div class="daily-download-summary">
+        <div class="summary-header" @click.stop="toggleExpanded">
+          <div class="summary-left">
+            <el-icon class="download-icon" :size="18"><Download /></el-icon>
+            <span class="summary-date">{{ summaryDateText }}</span>
+            <span class="summary-text"
+              >下载 <strong> {{ dailySummary?.totalCount }} </strong> 次</span
+            >
+          </div>
+          <div class="summary-right">
+            <el-icon class="expand-icon" :class="{ expanded: isExpanded }"><ArrowDown /></el-icon>
+          </div>
+        </div>
+        <el-collapse-transition>
+          <div v-show="isExpanded" class="download-records">
+            <div
+              v-for="(record, index) in dailySummary?.records"
+              :key="index"
+              class="download-record"
+            >
+              <img
+                v-if="record.author.avatar_url"
+                :src="record.author.avatar_url"
+                :alt="record.author.name"
+                class="record-avatar"
+              />
+              <span v-else class="record-avatar-placeholder">{{
+                record.author.name.charAt(0)
+              }}</span>
+              <a :href="record.author.web_url" target="_blank" class="record-author" @click.stop>
+                {{ record.author.name }}
+              </a>
+              <span class="record-time">{{ formatRecordTime(record.created_at) }}</span>
+            </div>
+          </div>
+        </el-collapse-transition>
+      </div>
+    </template>
+
     <!-- MergeRequest 事件内容 -->
     <template v-else-if="isMergeRequestEvent">
       <div class="mr-header">
@@ -71,13 +112,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { ChatDotRound, Right, Download } from '@element-plus/icons-vue';
-import type { RepoEvent } from '@/types';
+import { computed, ref } from 'vue';
+import { ChatDotRound, Right, Download, ArrowDown } from '@element-plus/icons-vue';
+import type { ActivityItem } from '@/types';
 
 const props = defineProps<{
-  activity: RepoEvent;
+  activity: ActivityItem;
 }>();
+
+// 展开状态
+const isExpanded = ref(false);
+
+const toggleExpanded = () => {
+  isExpanded.value = !isExpanded.value;
+};
 
 // 判断事件类型
 const isPushEvent = computed(() => {
@@ -89,9 +137,34 @@ const isDownloadEvent = computed(() => {
   return (
     props.activity.action === 31 &&
     props.activity.target_type === 'Repository' &&
-    props.activity.title === 'zip'
+    props.activity.title === 'zip' &&
+    !props.activity.isDailyDownloadSummary
   );
 });
+
+const isDailyDownloadSummary = computed(() => {
+  return !!props.activity.isDailyDownloadSummary && !!props.activity.dailyDownloadSummary;
+});
+
+const dailySummary = computed(() => {
+  return props.activity.dailyDownloadSummary;
+});
+
+const summaryDateText = computed(() => {
+  if (!dailySummary.value) return '';
+  if (dailySummary.value.isToday) return '今日';
+  // 格式化日期为 MM-DD
+  const date = new Date(dailySummary.value.date);
+  return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+});
+
+const formatRecordTime = (createdAt: string): string => {
+  const date = new Date(createdAt);
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
 const isMergeRequestEvent = computed(() => {
   return props.activity.target_type === 'MergeRequest' && !!props.activity.merge_request_info;
@@ -136,7 +209,7 @@ const displayTitle = computed(() => {
 // 动态卡片类名
 const cardClasses = computed(() => {
   if (isPushEvent.value) return 'push-card';
-  if (isDownloadEvent.value) return 'download-card';
+  if (isDownloadEvent.value || isDailyDownloadSummary.value) return 'download-card';
   if (isMergeRequestEvent.value) return 'merge-request-card';
   return 'default-card';
 });
@@ -240,6 +313,127 @@ const handleCardClick = () => {
 .download-text .author-link:hover {
   color: #4a148c;
   text-decoration: underline;
+}
+
+/* 每日下载汇总样式 */
+.daily-download-summary {
+  width: 100%;
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 4px 0;
+  user-select: none;
+}
+
+.summary-header:hover {
+  opacity: 0.85;
+}
+
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-date {
+  font-weight: 700;
+  font-size: 15px;
+  color: #6a1b9a;
+}
+
+.summary-text {
+  font-size: 14px;
+  color: #7b1fa2;
+}
+
+.summary-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.download-count-tag {
+  background-color: rgba(156, 39, 176, 0.2);
+  color: #6a1b9a;
+  border: none;
+  font-weight: 600;
+}
+
+.expand-icon {
+  color: #9c27b0;
+  transition: transform 0.3s ease;
+  font-size: 14px;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.download-records {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(156, 39, 176, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.download-record {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.record-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.record-avatar-placeholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.record-author {
+  color: #6a1b9a;
+  text-decoration: none;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-author:hover {
+  color: #4a148c;
+  text-decoration: underline;
+}
+
+.record-time {
+  color: #9c27b0;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 
 /* MergeRequest 事件样式 */
