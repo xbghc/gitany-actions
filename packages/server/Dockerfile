@@ -3,11 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Clear proxy and use China npm mirror
-ENV HTTP_PROXY=
-ENV HTTPS_PROXY=
-ENV http_proxy=
-ENV https_proxy=
+# Use China npm mirror
 ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
 ENV COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
 
@@ -35,13 +31,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Clear proxy and use China npm mirror
-ENV HTTP_PROXY=
-ENV HTTPS_PROXY=
-ENV http_proxy=
-ENV https_proxy=
+# Use China npm mirror
 ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
-ENV COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
 
 # Enable pnpm via corepack
 RUN corepack enable
