@@ -1,0 +1,50 @@
+services:
+  server:
+    build:
+      context: ..
+      dockerfile: packages/server/Dockerfile
+    container_name: gitcode-server
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=${PORT:-3000}
+      - DOCKER_NODES=${DOCKER_NODES:-local}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      # Docker-in-Docker: 允许 server 管理宿主机容器执行 workflow
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  dashboard:
+    build:
+      context: ..
+      dockerfile: packages/gitcode-dashboard/Dockerfile
+    container_name: gitcode-dashboard
+    ports:
+      - '8080:80'
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:80']
+      interval: 30s
+      timeout: 10s
+      retries: 3
