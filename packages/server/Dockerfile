@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Use China npm mirror
 ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
+ENV COREPACK_NPM_REGISTRY=https://registry.npmmirror.com
 
 # Enable pnpm via corepack (built into Node.js)
 RUN corepack enable
