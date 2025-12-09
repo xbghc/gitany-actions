@@ -152,10 +152,10 @@ const dailySummary = computed(() => {
 
 const summaryDateText = computed(() => {
   if (!dailySummary.value) return '';
-  if (dailySummary.value.isToday) return '今日';
   // 格式化日期为 MM-DD
   const date = new Date(dailySummary.value.date);
-  return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return dailySummary.value.isToday ? `今日(${dateStr})` : dateStr;
 });
 
 const formatRecordTime = (createdAt: string): string => {
