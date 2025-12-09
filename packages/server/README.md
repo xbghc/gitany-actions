@@ -40,9 +40,6 @@ GITCODE_TOKEN=your_default_token_here
 # 服务器端口（可选，默认 3000）
 PORT=3000
 
-# GitCode API Base URL（可选）
-GITCODE_API_BASE=https://gitcode.com/api/v5
-
 # Docker 节点配置（用于 Workflow 执行）
 # 格式:
 #   - 本机: name (只有名称，使用本机 Docker socket)
