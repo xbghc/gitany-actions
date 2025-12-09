@@ -30,6 +30,8 @@ request.interceptors.request.use(
 
 let isRefreshing = false;
 let requests: Array<(token: string) => void> = [];
+// 使用 WeakSet 记录已重试的请求配置，避免修改原始 config 对象
+const retriedRequests = new WeakSet<AxiosRequestConfig>();
 
 /**
  * 刷新 Token 逻辑
@@ -39,10 +41,10 @@ let requests: Array<(token: string) => void> = [];
 const handleTokenRefresh = async (config: AxiosRequestConfig) => {
   if (!isRefreshing) {
     isRefreshing = true;
-    // 标记为正在重试，防止死循环
+
+    // 标记为正在重试
     if (config) {
-      // @ts-ignore: AxiosRequestConfig custom property
-      config._retry = true;
+      retriedRequests.add(config);
     }
 
     try {
@@ -136,8 +138,8 @@ request.interceptors.response.use(
     if (response) {
       switch (response.status) {
         case 401:
-          // 加上 config._retry 判断，防止死循环
-          if (config && config._retry) {
+          // 使用 WeakSet 检查防止死循环
+          if (config && retriedRequests.has(config)) {
             localStorage.removeItem('gitcode_token');
             localStorage.removeItem('gitcode_refresh_token');
             window.location.href = '/login';
