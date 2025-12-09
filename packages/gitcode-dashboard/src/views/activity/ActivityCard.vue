@@ -43,29 +43,25 @@
             <el-icon class="expand-icon" :class="{ expanded: isExpanded }"><ArrowDown /></el-icon>
           </div>
         </div>
-        <el-collapse-transition>
-          <div v-show="isExpanded" class="download-records">
-            <div
-              v-for="(record, index) in dailySummary?.records"
-              :key="index"
-              class="download-record"
-            >
-              <img
-                v-if="record.author.avatar_url"
-                :src="record.author.avatar_url"
-                :alt="record.author.name"
-                class="record-avatar"
-              />
-              <span v-else class="record-avatar-placeholder">{{
-                record.author.name.charAt(0)
-              }}</span>
-              <a :href="record.author.web_url" target="_blank" class="record-author" @click.stop>
-                {{ record.author.name }}
-              </a>
-              <span class="record-time">{{ formatRecordTime(record.created_at) }}</span>
-            </div>
+        <div v-if="isExpanded" class="download-records">
+          <div
+            v-for="(record, index) in dailySummary?.records"
+            :key="index"
+            class="download-record"
+          >
+            <img
+              v-if="record.author.avatar_url"
+              :src="record.author.avatar_url"
+              :alt="record.author.name"
+              class="record-avatar"
+            />
+            <span v-else class="record-avatar-placeholder">{{ record.author.name.charAt(0) }}</span>
+            <a :href="record.author.web_url" target="_blank" class="record-author" @click.stop>
+              {{ record.author.name }}
+            </a>
+            <span class="record-time">{{ formatRecordTime(record.created_at) }}</span>
           </div>
-        </el-collapse-transition>
+        </div>
       </div>
     </template>
 
