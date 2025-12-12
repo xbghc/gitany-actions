@@ -20,7 +20,6 @@ function getDefaultEditor(): string {
 }
 
 // 在编辑器中打开内容
-// TODO 移除编辑评论内容的功能和调用编辑器的功能
 async function openEditor(content: string): Promise<string> {
   const editor = getDefaultEditor();
   const tempFile = path.join(process.cwd(), '.gitcode-pr-comment-temp.md');
