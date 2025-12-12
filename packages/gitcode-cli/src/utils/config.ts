@@ -126,3 +126,11 @@ export function getAuthType(): 'oauth' | 'token' | 'none' {
 export function getEditorConfig(): string | undefined {
   return config.get('editor');
 }
+
+/**
+ * 设置默认编辑器配置
+ * @param editor 编辑器命令
+ */
+export function setEditorConfig(editor: string): void {
+  config.set('editor', editor);
+}

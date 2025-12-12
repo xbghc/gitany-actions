@@ -3,6 +3,7 @@ import { resolveRepoUrl } from './utils/resolve-repo-url.js';
 import { parseGitUrl } from '@xbghc/gitcode-api';
 import { Command } from 'commander';
 import { authCommand } from './commands/auth.js';
+import { configCommand } from './commands/config/index.js';
 import { issueCommand } from './commands/issue/index.js';
 import { prCommand } from './commands/pr/index.js';
 import { repoCommand } from './commands/repo/index.js';
@@ -12,6 +13,9 @@ import { statusCommand } from './commands/status.js';
 const program = new Command();
 
 program.name('gitcode').description('tools for GitCode').version('0.1.0');
+
+// config command
+program.addCommand(configCommand());
 
 // status command
 program
