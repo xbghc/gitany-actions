@@ -19,6 +19,7 @@ interface GitCodeConfig {
   authStyle?: 'query' | 'bearer' | 'token' | 'header';
   customAuthHeader?: string;
   oauth?: OAuthTokenData; // OAuth token 数据
+  editor?: string; // 默认编辑器
 }
 
 const config = new Conf<GitCodeConfig>({
@@ -116,4 +117,12 @@ export function getAuthType(): 'oauth' | 'token' | 'none' {
   if (config.get('oauth')) return 'oauth';
   if (config.get('token')) return 'token';
   return 'none';
+}
+
+/**
+ * 获取默认编辑器配置
+ * @returns 编辑器命令，如果未配置则返回 undefined
+ */
+export function getEditorConfig(): string | undefined {
+  return config.get('editor');
 }
