@@ -73,15 +73,28 @@ prRouter.get(
 /**
  * 获取 PR 详情
  * GET /api/repo/:owner/:repo/pulls/:number
- * TODO: 待实现 client.pr.get() 方法
  */
-prRouter.get('/repo/:owner/:repo/pulls/:number', async (_req: Request, res: Response) => {
-  res.status(501).json({
-    success: false,
-    error: 'Not implemented',
-    message: 'PR details endpoint is not implemented yet',
-  });
-});
+prRouter.get(
+  '/repo/:owner/:repo/pulls/:number',
+  withAuth(async (req, res, token) => {
+    const { owner, repo, number } = req.params;
+
+    const client = createGitCodeClient(token);
+    const repoUrl = `https://gitcode.com/${owner}/${repo}`;
+
+    try {
+      const pr = await client.pr.get(repoUrl, Number(number));
+
+      res.json({
+        success: true,
+        data: pr,
+      });
+    } catch (error) {
+      logger.error({ owner, repo, prNumber: number, error }, 'Failed to fetch PR details');
+      throw new ExternalServiceError('GitCode', 'Failed to fetch PR details', error as Error);
+    }
+  }),
+);
 
 /**
  * 获取 PR 评论列表
