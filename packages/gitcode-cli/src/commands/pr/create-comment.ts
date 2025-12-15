@@ -16,11 +16,25 @@ interface CreatePrCommentOptions {
 
 // 获取默认编辑器
 function getDefaultEditor(): string {
-  return process.env.EDITOR || process.env.VISUAL || 'nano';
+  if (process.env.EDITOR) {
+    return process.env.EDITOR;
+  }
+
+  try {
+    const gitEditor = execSync('git config core.editor', { stdio: ['pipe', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
+    if (gitEditor) {
+      return gitEditor;
+    }
+  } catch {
+    // ignore
+  }
+
+  return 'nano';
 }
 
 // 在编辑器中打开内容
-// TODO 移除编辑评论内容的功能和调用编辑器的功能
 async function openEditor(content: string): Promise<string> {
   const editor = getDefaultEditor();
   const tempFile = path.join(process.cwd(), '.gitcode-pr-comment-temp.md');
