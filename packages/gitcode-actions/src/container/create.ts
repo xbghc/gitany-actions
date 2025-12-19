@@ -3,37 +3,50 @@ import type Docker from 'dockerode';
 import { executor } from '../executor/container-executor.js';
 import { prepareImage } from './prepare-image.js';
 import { collectForwardEnv, docker } from './shared.js';
+import { GitCommandBuilder } from './git.js';
 
+/**
+ * Configuration for creating a container.
+ */
 export interface CreateContainerConfig {
-  /** Git 仓库 URL */
+  /** Git repository URL */
   repoUrl: string;
 
-  /** 代码版本（三选一） */
+  /** Branch to checkout */
   branch?: string;
+  /** Commit SHA to checkout */
   sha?: string;
+  /** Pull Request number to checkout */
   pr?: number;
 
-  /** 容器配置 */
+  /** Container image (default: node:22-bookworm) */
   image?: string;
+  /** Container labels */
   labels?: Record<string, string>;
+  /** Container environment variables */
   env?: Record<string, string>;
+  /** User to run container as (default: 'node') */
+  user?: string;
 }
 
 export interface CreateContainerResult {
-  /** 容器唯一 ID */
+  /** Unique Container ID */
   id: string;
-  /** Docker 容器实例 */
+  /** Docker Container instance */
   container: Docker.Container;
 }
 
 /**
- * 创建并完全初始化一个可用的容器
+ * Create and fully initialize a usable container.
  *
- * 工作流：
- * 1. 拉取镜像（如未缓存）
- * 2. 创建容器
- * 3. 克隆仓库到 /workspace
- * 4. checkout 到指定版本
+ * Workflow:
+ * 1. Pull image (if not cached)
+ * 2. Create container
+ * 3. Clone repository to /workspace
+ * 4. Checkout specified version
+ *
+ * @param config - The container configuration
+ * @returns The created container result
  *
  * @example
  * ```ts
@@ -41,32 +54,51 @@ export interface CreateContainerResult {
  *   repoUrl: 'https://gitcode.com/owner/repo',
  *   branch: 'main'
  * });
- * // 手动安装依赖
+ * // Manually install dependencies
  * await executor(container).execute('pnpm install');
  * ```
- *
- * @todo 重构
  */
 export async function createContainer(
   config: CreateContainerConfig,
 ): Promise<CreateContainerResult> {
-  const { repoUrl, branch, sha, pr, image = 'node:22-bookworm', labels = {}, env = {} } = config;
+  // Validation
+  if (!config.repoUrl) {
+    throw new Error('repoUrl is required');
+  }
 
-  // 1. 准备镜像
+  const versionCount = [config.branch, config.sha, config.pr].filter(
+    (v) => v !== undefined,
+  ).length;
+  if (versionCount > 1) {
+    throw new Error('Only one of branch, sha, or pr can be specified');
+  }
+
+  const {
+    repoUrl,
+    branch,
+    sha,
+    pr,
+    image = 'node:22-bookworm',
+    labels = {},
+    env = {},
+    user = 'node',
+  } = config;
+
+  // 1. Prepare image
   await prepareImage({ docker, image });
 
-  // 2. 构建环境变量
+  // 2. Build environment variables
   const envVars = [...collectForwardEnv()];
   for (const [key, value] of Object.entries(env)) {
     envVars.push(`${key}=${value}`);
   }
 
-  // 3. 创建容器
+  // 3. Create container
   const container = await docker.createContainer({
     Image: image,
     Cmd: ['sh', '-lc', 'tail -f /dev/null'],
     Env: envVars,
-    User: 'node',
+    User: user,
     WorkingDir: '/workspace',
     HostConfig: { AutoRemove: false },
     Labels: {
@@ -81,45 +113,52 @@ export async function createContainer(
   const containerId = info.Id;
 
   try {
-    // 4. 克隆仓库
-    await executor(container).execute(`git clone ${repoUrl} /workspace`, {
-      name: '克隆仓库',
+    const exec = executor(container);
+
+    // 4. Configure Git credentials
+    await exec.execute(GitCommandBuilder.configureCredentials(), {
+      name: 'Configure Git Credentials',
     });
 
-    // 5. checkout 到指定版本
+    // 5. Clone repository
+    await exec.execute(GitCommandBuilder.clone(repoUrl, '/workspace'), {
+      name: 'Clone Repository',
+    });
+
+    // 6. Checkout version
     if (pr !== undefined) {
-      // PR: fetch 并 checkout
-      await executor(container)
-        .execute(`git fetch origin pull/${pr}/head:pr-${pr}`, {
+      // PR: fetch and checkout
+      await exec
+        .execute(GitCommandBuilder.fetchPr(pr), {
           name: `Fetch PR ${pr}`,
         })
-        .execute(`git checkout pr-${pr}`, {
+        .execute(GitCommandBuilder.checkout(`pr-${pr}`), {
           name: `Checkout PR ${pr}`,
         });
     } else if (sha) {
-      // SHA: 直接 checkout
-      await executor(container).execute(`git checkout ${sha}`, {
+      // SHA: checkout
+      await exec.execute(GitCommandBuilder.checkout(sha), {
         name: `Checkout ${sha}`,
       });
     } else if (branch) {
-      // 分支: checkout
-      await executor(container).execute(`git checkout ${branch}`, {
+      // Branch: checkout
+      await exec.execute(GitCommandBuilder.checkout(branch), {
         name: `Checkout ${branch}`,
       });
     }
-    // 否则使用默认分支（clone 后的默认状态）
+    // Otherwise use default branch (state after clone)
 
     return {
       id: containerId,
       container,
     };
   } catch (error) {
-    // 初始化失败，清理容器
+    // Initialization failed, cleanup container
     try {
       await container.stop({ t: 0 });
       await container.remove({ force: true });
     } catch {
-      // 忽略清理错误
+      // Ignore cleanup error
     }
     throw error;
   }
