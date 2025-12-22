@@ -30,23 +30,3 @@ export interface Branch {
   repo?: Repo | null;
   user?: UserSummary | null;
 }
-
-/** 分支信息类型别名 */
-export type BranchInfo = Branch;
-
-/** 标签类型 */
-export interface Label {
-  id: number;
-  name: string;
-  color: string;
-  description?: string;
-}
-
-/** 统计数据 */
-export interface Statistics {
-  open_prs: number;
-  closed_prs: number;
-  merged_prs: number;
-  open_issues: number;
-  closed_issues: number;
-}

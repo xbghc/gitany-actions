@@ -4,8 +4,8 @@ import type {
   Issue,
   IssueComment,
   IssueFilterParams,
-  CreateIssueParams,
-  UpdateIssueParams,
+  CreateIssueBody,
+  UpdateIssueBody,
   IssueCount,
 } from '@/store/issue';
 
@@ -28,20 +28,15 @@ export const getIssueDetail = (owner: string, repo: string, number: number) => {
 /**
  * 创建 Issue
  */
-export const createIssue = (owner: string, repo: string, params: CreateIssueParams) => {
-  return http.post<ApiResponse<Issue>>(`/api/repo/${owner}/${repo}/issues`, params);
+export const createIssue = (owner: string, repo: string, body: CreateIssueBody) => {
+  return http.post<ApiResponse<Issue>>(`/api/repo/${owner}/${repo}/issues`, body);
 };
 
 /**
  * 更新 Issue
  */
-export const updateIssue = (
-  owner: string,
-  repo: string,
-  number: number,
-  params: UpdateIssueParams,
-) => {
-  return http.patch<ApiResponse<Issue>>(`/api/repo/${owner}/${repo}/issues/${number}`, params);
+export const updateIssue = (owner: string, repo: string, number: number, body: UpdateIssueBody) => {
+  return http.patch<ApiResponse<Issue>>(`/api/repo/${owner}/${repo}/issues/${number}`, body);
 };
 
 /**

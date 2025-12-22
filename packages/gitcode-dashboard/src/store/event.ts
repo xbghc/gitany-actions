@@ -4,14 +4,6 @@ import { getRepoEvents } from '@/api';
 import type { RepoEvent, RepoEventAuthor, EventFilterParams } from '@/api/events';
 import { useRepoStore } from './repo';
 
-// 重新导出 API 类型，方便外部使用
-export type {
-  RepoEvent,
-  RepoEventAuthor,
-  RepoEventsResponse,
-  EventFilterParams,
-} from '@/api/events';
-
 // ============================================
 // Store 层类型定义（用于前端展示）
 // ============================================

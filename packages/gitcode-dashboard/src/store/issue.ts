@@ -74,12 +74,6 @@ export interface UpdateIssueBody {
   state?: 'open' | 'closed';
 }
 
-/** 创建 Issue 参数类型别名 */
-export type CreateIssueParams = CreateIssueBody;
-
-/** 更新 Issue 参数类型别名 */
-export type UpdateIssueParams = UpdateIssueBody;
-
 /** Issue 筛选参数 (扩展自 ListIssuesQuery) */
 export interface IssueFilterParams extends ListIssuesQuery {
   author?: string;
