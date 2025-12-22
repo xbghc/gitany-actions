@@ -1,10 +1,10 @@
 import { http } from './request';
+import type { ApiResponse } from './types';
 import type {
-  ApiResponse,
   WorkflowConfig,
   CreateWorkflowConfigRequest,
   UpdateWorkflowConfigRequest,
-} from '@/types';
+} from '@/store/workflow';
 
 /**
  * 获取仓库的所有 Workflow 配置

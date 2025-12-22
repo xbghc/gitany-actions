@@ -1,8 +1,61 @@
 import { getPRCount, getPRList } from '@/api';
-import type { PRFilterParams, PrCount, PullRequest } from '@/types';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useRepoStore } from './repo';
+import type { Branch, UserSummary } from './shared-types';
+
+// ============================================
+// PR 相关类型定义
+// ============================================
+
+/** Pull Request 查询参数 */
+export interface ListPullsQuery {
+  state?: string;
+  page?: number;
+  per_page?: number;
+  sort?: string;
+  direction?: string;
+  head?: string;
+  base?: string;
+}
+
+/** Pull Request 对象 */
+export interface PullRequest {
+  id: number;
+  number: number;
+  title: string;
+  state: string;
+  head: Branch;
+  base: Branch;
+  user: UserSummary;
+  body?: string;
+  created_at?: string;
+  updated_at?: string;
+  merged_at?: string | null;
+}
+
+/** PR 评论对象 */
+export interface PRComment {
+  id: number;
+  body: string;
+  user: UserSummary;
+  created_at: string;
+  updated_at: string;
+}
+
+/** PR 统计计数 */
+export interface PrCount {
+  all: number;
+  opened: number;
+  closed: number;
+  merged: number;
+  locked: number;
+}
+
+/** PR 筛选参数 (扩展自 ListPullsQuery) */
+export interface PRFilterParams extends ListPullsQuery {
+  author?: string;
+}
 
 interface CacheEntry {
   data: PullRequest[];

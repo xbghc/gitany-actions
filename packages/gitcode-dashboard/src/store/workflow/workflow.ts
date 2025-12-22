@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
-import type { WorkflowResult, WorkflowStatus } from '@/types';
 import { getWorkflowList } from '@/api';
-import { useRepoStore } from './repo';
+import { useRepoStore } from '../repo';
+import type { WorkflowResult, WorkflowStatus } from './types';
 
 export const useWorkflowStore = defineStore('workflow', () => {
   const repoStore = useRepoStore();

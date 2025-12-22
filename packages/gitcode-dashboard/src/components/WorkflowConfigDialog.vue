@@ -122,7 +122,7 @@
 import { ref, watch, reactive } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
-import type { WorkflowConfigStep, WorkflowConfig } from '@/types';
+import type { WorkflowConfigStep, WorkflowConfig } from '@/store/workflow';
 import { useWorkflowConfigStore } from '@/store';
 
 interface Props {

@@ -10,13 +10,13 @@
 
     <!-- Tab 切换 -->
     <el-tabs v-model="activeTab" class="content-tabs">
-      <el-tab-pane name="activity">
+      <el-tab-pane name="event">
         <template #label>
           <span
-            ><el-icon><Bell /></el-icon> {{ t('tabs.activity') }}</span
+            ><el-icon><Bell /></el-icon> {{ t('tabs.event') }}</span
           >
         </template>
-        <ActivityList />
+        <EventList />
       </el-tab-pane>
       <el-tab-pane :label="t('tabs.issue')" name="issue">
         <IssueList />
@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Folder, Bell } from '@element-plus/icons-vue';
-import ActivityList from '@/views/activity/ActivityList.vue';
+import EventList from '@/views/event/EventList.vue';
 import IssueList from '@/views/issue/IssueList.vue';
 import PRList from '@/views/pr/PRList.vue';
 import WorkflowList from '@/views/workflow/WorkflowList.vue';
@@ -43,7 +43,7 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const repoStore = useRepoStore();
-const activeTab = ref<'activity' | 'issue' | 'pr' | 'workflow'>('activity');
+const activeTab = ref<'event' | 'issue' | 'pr' | 'workflow'>('event');
 </script>
 
 <style scoped>

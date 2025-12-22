@@ -1,62 +1,62 @@
 <template>
-  <div class="activity-container">
+  <div class="event-container">
     <!-- 顶部工具栏 -->
     <div class="toolbar">
       <el-select
         v-model="currentFilter"
-        :placeholder="t('activity.type_placeholder')"
+        :placeholder="t('event.type_placeholder')"
         style="width: 150px"
         @change="handleFilterChange"
       >
-        <el-option :label="t('activity.all')" value="all" />
-        <el-option :label="t('activity.push')" value="push" />
-        <el-option :label="t('activity.merged')" value="merged" />
-        <el-option :label="t('activity.issue')" value="issue" />
-        <el-option :label="t('activity.comments')" value="comments" />
-        <el-option :label="t('activity.team')" value="team" />
-        <el-option :label="t('activity.project')" value="project" />
+        <el-option :label="t('event.all')" value="all" />
+        <el-option :label="t('event.push')" value="push" />
+        <el-option :label="t('event.merged')" value="merged" />
+        <el-option :label="t('event.issue')" value="issue" />
+        <el-option :label="t('event.comments')" value="comments" />
+        <el-option :label="t('event.team')" value="team" />
+        <el-option :label="t('event.project')" value="project" />
       </el-select>
 
-      <el-button :loading="activityStore.loading" @click="activityStore.refresh()">
+      <el-button :loading="eventStore.loading" @click="eventStore.refresh()">
         <template #icon>
           <el-icon><Refresh /></el-icon>
         </template>
-        {{ t('activity.refresh') }}
+        {{ t('event.refresh') }}
       </el-button>
 
       <span class="filter-info">
-        {{ t('activity.total_activities', { count: activityStore.activityList.length }) }}
+        {{ t('event.total_events', { count: eventStore.eventList.length }) }}
       </span>
     </div>
 
-    <!-- 活动时间轴 -->
-    <div ref="timelineWrapperRef" v-loading="activityStore.loading" class="timeline-wrapper">
+    <!-- 事件时间轴 -->
+    <div ref="timelineWrapperRef" v-loading="eventStore.loading" class="timeline-wrapper">
       <el-empty
-        v-if="!activityStore.loading && activityStore.activityList.length === 0"
-        :description="t('activity.no_activity')"
+        v-if="!eventStore.loading && eventStore.eventList.length === 0"
+        :description="t('event.no_event')"
       />
 
-      <el-timeline v-else class="activity-timeline">
+      <el-timeline v-else class="event-timeline">
         <el-timeline-item
-          v-for="activity in activityStore.activityList"
-          :key="activity.id"
-          :color="getTimelineColor(activity)"
+          v-for="event in eventStore.eventList"
+          :key="event.id"
+          :color="getTimelineColor(event)"
         >
           <div class="timestamp-toggle" @click="toggleTimeFormat()">
-            {{ formatTimestamp(activity.created_at) }}
+            {{ formatTimestamp(event.created_at) }}
           </div>
-          <ActivityCard :activity="activity" />
+          <EventCard :event="event" />
         </el-timeline-item>
       </el-timeline>
 
       <!-- 加载更多提示 -->
-      <div v-if="activityStore.activityList.length > 0" class="loading-more">
-        <el-text v-if="activityStore.loadingMore" type="info">
+      <div v-if="eventStore.eventList.length > 0" class="loading-more">
+        <el-text v-if="eventStore.loadingMore" type="info">
           <el-icon class="is-loading"><Loading /></el-icon>
-          {{ t('activity.loading') }}
+          {{ t('event.loading') }}
         </el-text>
-        <el-text v-else-if="!activityStore.hasMore" type="info">
-          {{ t('activity.no_more') }}
+        <el-text v-else-if="!eventStore.hasMore" type="info">
+          {{ t('event.no_more') }}
         </el-text>
       </div>
     </div>
@@ -67,14 +67,14 @@
 import { ref, onMounted } from 'vue';
 import { Refresh, Loading } from '@element-plus/icons-vue';
 import { useInfiniteScroll } from '@vueuse/core';
-import { useActivityStore } from '@/store';
-import { useActivityTime } from './useActivityTime';
-import ActivityCard from './ActivityCard.vue';
-import type { ActivityItem } from '@/types';
+import { useEventStore } from '@/store';
+import { useEventTime } from './useEventTime';
+import EventCard from './EventCard.vue';
+import type { EventItem } from '@/store/event';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
-const activityStore = useActivityStore();
+const eventStore = useEventStore();
 
 // timeline-wrapper 容器引用
 const timelineWrapperRef = ref<HTMLElement | null>(null);
@@ -86,21 +86,21 @@ const currentFilter = ref<string>('all');
 const timeDisplayMode = ref<'relative' | 'absolute'>('relative');
 
 // 获取 timeline 节点颜色
-const getTimelineColor = (activity: ActivityItem): string => {
+const getTimelineColor = (event: EventItem): string => {
   // Push 事件
-  if (activity.action_name.toLowerCase().includes('push') && activity.push_data) {
+  if (event.action_name.toLowerCase().includes('push') && event.push_data) {
     return '#2196f3'; // 蓝色
   }
   // 每日下载汇总
-  if (activity.isDailyDownloadSummary) {
+  if (event.isDailyDownloadSummary) {
     return '#9c27b0'; // 紫色
   }
   // Download 事件
-  if (activity.action === 31 && activity.target_type === 'Repository' && activity.title === 'zip') {
+  if (event.action === 31 && event.target_type === 'Repository' && event.title === 'zip') {
     return '#9c27b0'; // 紫色
   }
   // MergeRequest 事件
-  if (activity.target_type === 'MergeRequest' && activity.merge_request_info) {
+  if (event.target_type === 'MergeRequest' && event.merge_request_info) {
     return '#4caf50'; // 绿色
   }
   // 默认
@@ -111,7 +111,7 @@ const getTimelineColor = (activity: ActivityItem): string => {
 const formatTimestamp = (createdAt: string): string => {
   if (timeDisplayMode.value === 'relative') {
     // 相对时间
-    const timeAgo = useActivityTime(() => new Date(createdAt));
+    const timeAgo = useEventTime(() => new Date(createdAt));
     return timeAgo.value;
   } else {
     // 绝对时间
@@ -133,15 +133,15 @@ const toggleTimeFormat = () => {
 
 // 处理筛选变化
 const handleFilterChange = (filter: string) => {
-  activityStore.updateFilters({ filter: filter as any, page: 1 });
+  eventStore.updateFilters({ filter: filter as any, page: 1 });
 };
 
 // 无限滚动
 useInfiniteScroll(
   timelineWrapperRef,
   () => {
-    if (!activityStore.loadingMore && activityStore.hasMore) {
-      activityStore.loadMore();
+    if (!eventStore.loadingMore && eventStore.hasMore) {
+      eventStore.loadMore();
     }
   },
   {
@@ -152,12 +152,12 @@ useInfiniteScroll(
 
 // 初始化
 onMounted(() => {
-  activityStore.fetchActivityList();
+  eventStore.fetchEventList();
 });
 </script>
 
 <style scoped>
-.activity-container {
+.event-container {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -189,15 +189,15 @@ onMounted(() => {
   min-height: 0;
 }
 
-.activity-timeline {
+.event-timeline {
   padding-left: 20px;
 }
 
-.activity-timeline :deep(.el-timeline-item) {
+.event-timeline :deep(.el-timeline-item) {
   padding-bottom: 20px;
 }
 
-.activity-timeline :deep(.el-timeline-item:last-child) {
+.event-timeline :deep(.el-timeline-item:last-child) {
   padding-bottom: 0;
 }
 

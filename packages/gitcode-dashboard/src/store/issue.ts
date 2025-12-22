@@ -1,8 +1,97 @@
 import { getIssueCount, getIssueList } from '@/api';
-import type { Issue, IssueCount, IssueFilterParams } from '@/types';
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useRepoStore } from './repo';
+import type { UserSummary } from './shared-types';
+
+// ============================================
+// Issue 相关类型定义
+// ============================================
+
+/** Issue 查询参数 */
+export interface ListIssuesQuery {
+  state?: 'open' | 'closed' | 'all';
+  labels?: string;
+  page?: number;
+  per_page?: number;
+  sort?: 'created' | 'updated' | 'comments';
+}
+
+/** Issue 标签 */
+export interface IssueLabel {
+  id?: number | string;
+  name?: string;
+  title?: string;
+  color?: string;
+  description?: string;
+}
+
+/** Issue 对象 */
+export interface Issue {
+  id: number;
+  html_url: string;
+  number: string;
+  state: string;
+  title: string;
+  body?: string | null;
+  user?: UserSummary;
+  assignees: UserSummary[];
+  labels: IssueLabel[];
+  created_at: string;
+  updated_at: string;
+  closed_at?: string;
+}
+
+/** Issue 评论对象 */
+export interface IssueComment {
+  id: number;
+  comment_id?: number;
+  body: string;
+  user: UserSummary;
+  created_at: string;
+  updated_at: string;
+}
+
+/** 创建 Issue 请求体 */
+export interface CreateIssueBody {
+  repo?: string;
+  title: string;
+  body: string;
+  assignee?: string;
+  milestone?: number;
+  labels?: string;
+  security_hole?: string;
+  template_path?: string;
+}
+
+/** 更新 Issue 请求体 */
+export interface UpdateIssueBody {
+  title?: string;
+  body?: string;
+  assignee?: string;
+  milestone?: number;
+  labels?: Array<string | number>;
+  state?: 'open' | 'closed';
+}
+
+/** 创建 Issue 参数类型别名 */
+export type CreateIssueParams = CreateIssueBody;
+
+/** 更新 Issue 参数类型别名 */
+export type UpdateIssueParams = UpdateIssueBody;
+
+/** Issue 筛选参数 (扩展自 ListIssuesQuery) */
+export interface IssueFilterParams extends ListIssuesQuery {
+  author?: string;
+  direction?: 'asc' | 'desc';
+}
+
+/** Issue 数量统计 */
+export interface IssueCount {
+  all: number;
+  opened: number;
+  closed: number;
+}
 
 interface CacheEntry {
   data: Issue[];

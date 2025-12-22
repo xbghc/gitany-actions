@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
-import type { WorkflowLogMeta, WorkflowStatus } from '@/types';
 import { getWorkflowLogs, deleteWorkflowLog } from '@/api';
-import { useRepoStore } from './repo';
+import { useRepoStore } from '../repo';
 import { ElMessage } from 'element-plus';
+import type { WorkflowLogMeta, WorkflowStatus } from './types';
 
 export const useWorkflowLogStore = defineStore('workflowLog', () => {
   const repoStore = useRepoStore();

@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { User } from '@/types';
+import type { User } from '@/store/shared-types';
 
 interface Props {
   user?: User;

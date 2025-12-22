@@ -1,13 +1,13 @@
 import { http } from './request';
+import type { ApiResponse } from './types';
 import type {
   Issue,
   IssueComment,
   IssueFilterParams,
   CreateIssueParams,
   UpdateIssueParams,
-  ApiResponse,
   IssueCount,
-} from '@/types';
+} from '@/store/issue';
 
 /**
  * 获取 Issue 列表

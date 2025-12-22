@@ -1,14 +1,56 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 import { getRepoEvents } from '@/api';
-import type {
-  ActivityItem,
-  ActivityFilterParams,
-  RepoEvent,
-  DailyDownloadSummary,
-  DownloadRecord,
-} from '@/types';
+import type { RepoEvent, RepoEventAuthor, EventFilterParams } from '@/api/events';
 import { useRepoStore } from './repo';
+
+// 重新导出 API 类型，方便外部使用
+export type {
+  RepoEvent,
+  RepoEventAuthor,
+  RepoEventsResponse,
+  EventFilterParams,
+} from '@/api/events';
+
+// ============================================
+// Store 层类型定义（用于前端展示）
+// ============================================
+
+/** 单个下载记录（用于汇总展示） */
+export interface DownloadRecord {
+  /** 下载用户 */
+  author: RepoEventAuthor;
+  /** 下载时间 */
+  created_at: string;
+}
+
+/** 每日下载汇总 */
+export interface DailyDownloadSummary {
+  /** 日期（YYYY-MM-DD） */
+  date: string;
+  /** 是否为今天 */
+  isToday: boolean;
+  /** 下载总次数 */
+  totalCount: number;
+  /** 下载用户数（去重） */
+  uniqueUserCount: number;
+  /** 下载记录列表 */
+  records: DownloadRecord[];
+}
+
+/** 统一的事件项类型（用于前端展示） */
+export interface EventItem extends RepoEvent {
+  /** 唯一标识（用于 v-for key） */
+  id: string;
+  /** 事件类型图标 */
+  icon?: string;
+  /** 事件类型颜色 */
+  color?: string;
+  /** 是否为每日下载汇总 */
+  isDailyDownloadSummary?: boolean;
+  /** 每日下载汇总数据 */
+  dailyDownloadSummary?: DailyDownloadSummary;
+}
 
 interface CacheEntry {
   data: RepoEvent[];
@@ -17,15 +59,15 @@ interface CacheEntry {
 
 const TTL = 3 * 60 * 1000; // 3 minutes
 
-export const useActivityStore = defineStore('activity', () => {
+export const useEventStore = defineStore('event', () => {
   const repoStore = useRepoStore();
 
   // 状态
-  const activityList = ref<ActivityItem[]>([]);
+  const eventList = ref<EventItem[]>([]);
   const loading = ref(false);
   const loadingMore = ref(false);
   const hasMore = ref(true);
-  const filters = ref<ActivityFilterParams>({
+  const filters = ref<EventFilterParams>({
     filter: 'all',
     page: 1,
     per_page: 20,
@@ -37,13 +79,13 @@ export const useActivityStore = defineStore('activity', () => {
   /**
    * 生成缓存 Key
    */
-  const getCacheKey = (owner: string, repo: string, params: ActivityFilterParams) => {
+  const getCacheKey = (owner: string, repo: string, params: EventFilterParams) => {
     // 确保参数顺序一致以保证缓存命中
     const sortedParams = Object.keys(params)
       .sort()
       .reduce(
         (obj, key) => {
-          const value = params[key as keyof ActivityFilterParams];
+          const value = params[key as keyof EventFilterParams];
           if (value !== undefined && value !== null) {
             obj[key] = String(value);
           }
@@ -133,12 +175,12 @@ export const useActivityStore = defineStore('activity', () => {
   };
 
   /**
-   * 创建每日下载汇总的 ActivityItem
+   * 创建每日下载汇总的 EventItem
    */
   const createDailySummaryItem = (
     summary: DailyDownloadSummary,
     baseEvent: RepoEvent,
-  ): ActivityItem => {
+  ): EventItem => {
     return {
       ...baseEvent,
       id: `daily-download-${summary.date}`,
@@ -150,9 +192,9 @@ export const useActivityStore = defineStore('activity', () => {
   };
 
   /**
-   * 将 RepoEvent 转换为 ActivityItem
+   * 将 RepoEvent 转换为 EventItem
    */
-  const toActivityItem = (event: RepoEvent): ActivityItem => {
+  const toEventItem = (event: RepoEvent): EventItem => {
     // 根据 action_name 设置图标和颜色
     const iconMap: Record<string, { icon: string; color: string }> = {
       push: { icon: '📤', color: '#409EFF' },
@@ -175,12 +217,12 @@ export const useActivityStore = defineStore('activity', () => {
   };
 
   /**
-   * 查询活动列表（带缓存）
+   * 查询事件列表（带缓存）
    */
-  const queryActivityList = async (
+  const queryEventList = async (
     owner: string,
     repo: string,
-    params: ActivityFilterParams,
+    params: EventFilterParams,
   ): Promise<RepoEvent[]> => {
     const key = getCacheKey(owner, repo, params);
     const cached = cache.get(key);
@@ -202,17 +244,17 @@ export const useActivityStore = defineStore('activity', () => {
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.error('获取活动列表失败:', error);
+        console.error('获取事件列表失败:', error);
       }
     }
     return [];
   };
 
   /**
-   * 获取活动列表
+   * 获取事件列表
    * @param append 是否追加到现有列表（用于无限滚动）
    */
-  const fetchActivityList = async (append = false) => {
+  const fetchEventList = async (append = false) => {
     const selectedRepo = repoStore.selectedRepo;
     if (!selectedRepo) return;
 
@@ -226,16 +268,16 @@ export const useActivityStore = defineStore('activity', () => {
     }
 
     try {
-      const events = await queryActivityList(owner, repo, filters.value);
+      const events = await queryEventList(owner, repo, filters.value);
 
       // 按天分组下载事件
       const { nonDownloadEvents, dailySummaries } = groupDownloadsByDay(events);
 
-      // 转换非下载事件为 ActivityItem
-      const nonDownloadItems = nonDownloadEvents.map(toActivityItem);
+      // 转换非下载事件为 EventItem
+      const nonDownloadItems = nonDownloadEvents.map(toEventItem);
 
       // 创建每日下载汇总项，设置虚拟时间为当天最后时刻（确保排在当天其他事件之后）
-      const summaryItems: ActivityItem[] = [];
+      const summaryItems: EventItem[] = [];
       for (const [date, summary] of dailySummaries) {
         // 使用第一条下载记录作为基础事件
         const firstDownloadEvent = events.find(
@@ -255,18 +297,18 @@ export const useActivityStore = defineStore('activity', () => {
       );
 
       if (append) {
-        activityList.value = [...activityList.value, ...newItems];
+        eventList.value = [...eventList.value, ...newItems];
       } else {
-        activityList.value = newItems;
+        eventList.value = newItems;
       }
 
       // 判断是否还有更多数据
       // 如果返回的数据少于请求的数量，说明没有更多数据了
       hasMore.value = events.length >= (filters.value.per_page || 20);
     } catch (error) {
-      console.error('Failed to fetch activity list:', error);
+      console.error('Failed to fetch event list:', error);
       if (!append) {
-        activityList.value = [];
+        eventList.value = [];
       }
       hasMore.value = false;
     } finally {
@@ -284,16 +326,16 @@ export const useActivityStore = defineStore('activity', () => {
   const refresh = () => {
     filters.value.page = 1;
     hasMore.value = true;
-    fetchActivityList();
+    fetchEventList();
   };
 
   /**
    * 更新筛选条件
    */
-  const updateFilters = (newFilters: Partial<ActivityFilterParams>) => {
+  const updateFilters = (newFilters: Partial<EventFilterParams>) => {
     filters.value = { ...filters.value, ...newFilters };
     hasMore.value = true;
-    fetchActivityList();
+    fetchEventList();
   };
 
   /**
@@ -301,7 +343,7 @@ export const useActivityStore = defineStore('activity', () => {
    */
   const changePage = (page: number) => {
     filters.value.page = page;
-    fetchActivityList();
+    fetchEventList();
   };
 
   /**
@@ -313,7 +355,7 @@ export const useActivityStore = defineStore('activity', () => {
     }
 
     filters.value.page = (filters.value.page || 1) + 1;
-    await fetchActivityList(true);
+    await fetchEventList(true);
   };
 
   // 监听仓库切换
@@ -321,21 +363,21 @@ export const useActivityStore = defineStore('activity', () => {
     () => repoStore.selectedRepo,
     async (newRepo) => {
       if (newRepo) {
-        activityList.value = [];
+        eventList.value = [];
         filters.value.page = 1;
-        await fetchActivityList();
+        await fetchEventList();
       }
     },
   );
 
   return {
-    activityList,
+    eventList,
     loading,
     loadingMore,
     hasMore,
     filters,
-    queryActivityList,
-    fetchActivityList,
+    queryEventList,
+    fetchEventList,
     refresh,
     updateFilters,
     changePage,

@@ -80,7 +80,7 @@ import { ref, watch } from 'vue';
 import { Loading } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
 import { useWorkflowConfigStore } from '@/store';
-import type { WorkflowConfig } from '@/types';
+import type { WorkflowConfig } from '@/store/workflow';
 
 interface Props {
   visible: boolean;

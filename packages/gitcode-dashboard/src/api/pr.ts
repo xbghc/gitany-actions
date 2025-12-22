@@ -1,5 +1,6 @@
 import { http } from './request';
-import type { PullRequest, PRComment, PRFilterParams, ApiResponse, PrCount } from '@/types';
+import type { ApiResponse } from './types';
+import type { PullRequest, PRComment, PRFilterParams, PrCount } from '@/store/pr';
 
 /**
  * 获取 PR 列表

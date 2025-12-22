@@ -1,5 +1,6 @@
 import { http } from './request';
-import type { UserProfile, ApiResponse } from '@/types';
+import type { ApiResponse } from './types';
+import type { UserProfile } from '@/store/user';
 
 /**
  * 获取当前用户信息

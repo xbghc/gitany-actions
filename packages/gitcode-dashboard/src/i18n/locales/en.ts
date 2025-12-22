@@ -31,12 +31,12 @@ export default {
     add_action: 'Add',
   },
   tabs: {
-    activity: 'Activity',
+    event: 'Events',
     issue: 'Issue',
     pr: 'Pull Request',
     workflow: 'Workflow',
   },
-  activity: {
+  event: {
     type_placeholder: 'Event Type',
     all: 'All',
     push: 'Push',
@@ -46,8 +46,8 @@ export default {
     team: 'Team',
     project: 'Project',
     refresh: 'Refresh',
-    total_activities: 'Total {count} activities',
-    no_activity: 'No activities',
+    total_events: 'Total {count} events',
+    no_event: 'No events',
     loading: 'Loading...',
     no_more: 'No more data',
   },

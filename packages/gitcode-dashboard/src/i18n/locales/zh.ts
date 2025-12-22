@@ -31,12 +31,12 @@ export default {
     add_action: '添加',
   },
   tabs: {
-    activity: '动态',
+    event: '动态',
     issue: 'Issue',
     pr: '合并请求',
     workflow: '工作流',
   },
-  activity: {
+  event: {
     type_placeholder: '事件类型',
     all: '全部',
     push: 'Push',
@@ -46,8 +46,8 @@ export default {
     team: '团队',
     project: '项目',
     refresh: '刷新',
-    total_activities: '共 {count} 条活动',
-    no_activity: '暂无活动',
+    total_events: '共 {count} 条事件',
+    no_event: '暂无事件',
     loading: '加载中...',
     no_more: '没有更多数据了',
   },

@@ -1,7 +1,7 @@
 import { useTimeAgo, type UseTimeAgoMessages } from '@vueuse/core';
 import type { MaybeRefOrGetter } from 'vue';
 
-export function useActivityTime(time: MaybeRefOrGetter<string | number | Date>) {
+export function useEventTime(time: MaybeRefOrGetter<string | number | Date>) {
   return useTimeAgo(time, {
     messages: {
       justNow: '刚刚',

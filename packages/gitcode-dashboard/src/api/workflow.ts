@@ -1,11 +1,11 @@
 import { http } from './request';
+import type { ApiResponse } from './types';
 import type {
-  ApiResponse,
   TriggerPRWorkflowRequest,
   WorkflowResult,
   WorkflowLogMeta,
   RegistryMirrorTestResult,
-} from '@/types';
+} from '@/store/workflow';
 
 /**
  * 触发 PR 的 build 和 lint 测试

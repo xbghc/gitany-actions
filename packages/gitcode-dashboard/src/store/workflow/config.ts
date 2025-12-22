@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
-import type {
-  WorkflowConfig,
-  CreateWorkflowConfigRequest,
-  UpdateWorkflowConfigRequest,
-} from '@/types';
 import {
   getWorkflowConfigs,
   createWorkflowConfig as apiCreateWorkflowConfig,
   updateWorkflowConfig as apiUpdateWorkflowConfig,
   deleteWorkflowConfig as apiDeleteWorkflowConfig,
 } from '@/api';
-import { useRepoStore } from './repo';
+import { useRepoStore } from '../repo';
 import { ElMessage } from 'element-plus';
+import type {
+  WorkflowConfig,
+  CreateWorkflowConfigRequest,
+  UpdateWorkflowConfigRequest,
+} from './types';
 
 export const useWorkflowConfigStore = defineStore('workflow-config', () => {
   const repoStore = useRepoStore();

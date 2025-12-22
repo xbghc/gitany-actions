@@ -83,7 +83,7 @@ import type {
   SSEErrorData,
   SSECompleteData,
   WorkflowResult,
-} from '@/types';
+} from '@/store/workflow';
 
 interface Props {
   visible: boolean;

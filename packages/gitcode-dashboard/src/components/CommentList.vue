@@ -14,7 +14,8 @@
 </template>
 
 <script setup lang="ts">
-import type { PRComment, IssueComment } from '@/types';
+import type { PRComment } from '@/store/pr';
+import type { IssueComment } from '@/store/issue';
 import UserAvatar from './UserAvatar.vue';
 import MarkdownViewer from './MarkdownViewer.vue';
 import EmptyState from './EmptyState.vue';

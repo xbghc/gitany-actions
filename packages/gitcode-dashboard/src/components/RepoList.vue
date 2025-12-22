@@ -104,7 +104,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue';
-import { useRepoStore, useActivityStore } from '@/store';
+import { useRepoStore, useEventStore } from '@/store';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Folder, Plus, Close, Expand, Fold } from '@element-plus/icons-vue';
 import { useI18n } from 'vue-i18n';
@@ -119,7 +119,7 @@ defineEmits<{
 
 const { t } = useI18n();
 const repoStore = useRepoStore();
-const activityStore = useActivityStore();
+const eventStore = useEventStore();
 
 const showAddDialog = ref(false);
 const hoveredRepoId = ref<string | null>(null);
@@ -160,10 +160,10 @@ const handleRepoUrlChange = () => {
 
 const handleMouseEnter = (repo: { id: string; owner: string; repo: string }) => {
   hoveredRepoId.value = repo.id;
-  // Prefetch activity list
+  // Prefetch event list
   // 使用当前筛选条件（但重置页码为 1），以匹配切换仓库后的请求行为
-  activityStore.queryActivityList(repo.owner, repo.repo, {
-    ...activityStore.filters,
+  eventStore.queryEventList(repo.owner, repo.repo, {
+    ...eventStore.filters,
     page: 1,
   });
 };

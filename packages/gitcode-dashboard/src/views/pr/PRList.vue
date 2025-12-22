@@ -114,7 +114,8 @@ import EmptyState from '@/components/EmptyState.vue';
 import { formatRelativeTime } from '@/utils/timeFormatter';
 import WorkflowConfigSelector from '@/components/WorkflowConfigSelector.vue';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
-import type { PullRequest, WorkflowConfig } from '@/types';
+import type { PullRequest } from '@/store/pr';
+import type { WorkflowConfig } from '@/store/workflow';
 
 const prStore = usePRStore();
 const repoStore = useRepoStore();
