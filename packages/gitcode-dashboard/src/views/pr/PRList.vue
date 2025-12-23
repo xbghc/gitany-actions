@@ -111,7 +111,7 @@ import { triggerPRWorkflow } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
 import UserAvatar from '@/components/UserAvatar.vue';
 import EmptyState from '@/components/EmptyState.vue';
-import { formatRelativeTime } from '@/utils/timeFormatter';
+import { formatRelativeTime } from '@/utils/time';
 import WorkflowConfigSelector from '@/components/WorkflowConfigSelector.vue';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import type { PullRequest } from '@/store/pr';

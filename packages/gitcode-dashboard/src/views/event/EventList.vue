@@ -68,7 +68,7 @@ import { ref, onMounted } from 'vue';
 import { Refresh, Loading } from '@element-plus/icons-vue';
 import { useInfiniteScroll } from '@vueuse/core';
 import { useEventStore } from '@/store';
-import { useEventTime } from './useEventTime';
+import { useRelativeTime, formatDateTime } from '@/utils/time';
 import EventCard from './EventCard.vue';
 import type { EventItem } from '@/store/event';
 import { useI18n } from 'vue-i18n';
@@ -111,18 +111,11 @@ const getTimelineColor = (event: EventItem): string => {
 const formatTimestamp = (createdAt: string): string => {
   if (timeDisplayMode.value === 'relative') {
     // 相对时间
-    const timeAgo = useEventTime(() => new Date(createdAt));
+    const timeAgo = useRelativeTime(() => new Date(createdAt));
     return timeAgo.value;
   } else {
     // 绝对时间
-    const date = new Date(createdAt);
-    return date.toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDateTime(createdAt);
   }
 };
 

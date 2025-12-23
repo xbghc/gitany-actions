@@ -184,7 +184,7 @@ import { useWorkflowConfigStore } from '@/store';
 import { useWorkflowLogStore, type WorkflowStatus, type WorkflowConfig } from '@/store/workflow';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import WorkflowConfigDialog from '@/components/WorkflowConfigDialog.vue';
-import { formatRelativeTime } from '@/utils/timeFormatter';
+import { formatRelativeTime } from '@/utils/time';
 
 const workflowLogStore = useWorkflowLogStore();
 const configStore = useWorkflowConfigStore();

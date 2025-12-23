@@ -75,6 +75,7 @@ import { ElMessage } from 'element-plus';
 import { CopyDocument } from '@element-plus/icons-vue';
 import { createWorkflowStream, getWorkflowStatus, getWorkflowLogDetail } from '@/api';
 import { useRepoStore } from '@/store';
+import { formatDateTime } from '@/utils/time';
 import type {
   WorkflowStatus,
   WorkflowStep,
@@ -191,7 +192,7 @@ const getStatusText = (status: WorkflowStatus) => {
  * 格式化时间
  */
 const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN');
+  return formatDateTime(time);
 };
 
 /**

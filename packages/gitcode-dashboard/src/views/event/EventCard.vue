@@ -111,6 +111,7 @@
 import { computed, ref } from 'vue';
 import { ChatDotRound, Right, Download, ArrowDown } from '@element-plus/icons-vue';
 import type { EventItem } from '@/store/event';
+import { formatShortDate, formatTime } from '@/utils/time';
 
 const props = defineProps<{
   repoEvent: EventItem;
@@ -148,18 +149,11 @@ const dailySummary = computed(() => {
 
 const summaryDateText = computed(() => {
   if (!dailySummary.value) return '';
-  // 格式化日期为 MM-DD
-  const date = new Date(dailySummary.value.date);
-  const dateStr = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  return dailySummary.value.isToday ? `今日(${dateStr})` : dateStr;
+  return formatShortDate(dailySummary.value.date, { showToday: dailySummary.value.isToday });
 });
 
 const formatRecordTime = (createdAt: string): string => {
-  const date = new Date(createdAt);
-  return date.toLocaleTimeString('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatTime(createdAt);
 };
 
 const isMergeRequestEvent = computed(() => {

@@ -3,7 +3,7 @@
     <div v-for="comment in comments" :key="comment.id" class="comment-item">
       <div class="comment-header">
         <UserAvatar :user="comment.user" :show-name="true" />
-        <span class="comment-time">{{ formatTime(comment.created_at) }}</span>
+        <span class="comment-time">{{ formatDateTime(comment.created_at) }}</span>
       </div>
       <div class="comment-body">
         <MarkdownViewer :content="comment.body" />
@@ -19,16 +19,13 @@ import type { IssueComment } from '@/store/issue';
 import UserAvatar from './UserAvatar.vue';
 import MarkdownViewer from './MarkdownViewer.vue';
 import EmptyState from './EmptyState.vue';
+import { formatDateTime } from '@/utils/time';
 
 interface Props {
   comments: PRComment[] | IssueComment[];
 }
 
 defineProps<Props>();
-
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN');
-};
 </script>
 
 <style scoped>
