@@ -1,19 +1,19 @@
 <template>
   <el-card
-    :class="['event-card', cardClasses, { clickable: !!event._links?.action_type }]"
+    :class="['event-card', cardClasses, { clickable: !!repoEvent._links?.action_type }]"
     shadow="hover"
     @click="handleCardClick"
   >
     <!-- Push 事件内容 -->
     <template v-if="isPushEvent">
       <div class="push-description">
-        <a :href="event.author.web_url" target="_blank" class="author-link" @click.stop>
-          {{ event.author.name }}
+        <a :href="repoEvent.author.web_url" target="_blank" class="author-link" @click.stop>
+          {{ repoEvent.author.name }}
         </a>
         {{ pushDescription }}
       </div>
-      <div v-if="event.push_data?.commit_title" class="commit-title">
-        {{ event.push_data.commit_title }}
+      <div v-if="repoEvent.push_data?.commit_title" class="commit-title">
+        {{ repoEvent.push_data.commit_title }}
       </div>
     </template>
 
@@ -21,8 +21,8 @@
     <template v-else-if="isDownloadEvent">
       <div class="download-text">
         <el-icon class="download-icon" :size="16"><Download /></el-icon>
-        <a :href="event.author.web_url" target="_blank" class="author-link" @click.stop>
-          {{ event.author.name }}
+        <a :href="repoEvent.author.web_url" target="_blank" class="author-link" @click.stop>
+          {{ repoEvent.author.name }}
         </a>
         下载了仓库代码
       </div>
@@ -70,27 +70,27 @@
       <div class="mr-header">
         <div class="mr-left">
           <div class="mr-action">
-            <a :href="event.author.web_url" target="_blank" class="author-link" @click.stop>
-              {{ event.author.name }}
+            <a :href="repoEvent.author.web_url" target="_blank" class="author-link" @click.stop>
+              {{ repoEvent.author.name }}
             </a>
             {{ mergeRequestAction }}
           </div>
-          <div v-if="event.merge_request_info" class="branch-flow">
-            <span class="source-branch">{{ event.merge_request_info.source_branch }}</span>
+          <div v-if="repoEvent.merge_request_info" class="branch-flow">
+            <span class="source-branch">{{ repoEvent.merge_request_info.source_branch }}</span>
             <el-icon class="arrow-icon"><Right /></el-icon>
-            <span class="target-branch">{{ event.merge_request_info.target_branch }}</span>
+            <span class="target-branch">{{ repoEvent.merge_request_info.target_branch }}</span>
           </div>
         </div>
-        <div v-if="event.target_iid" class="mr-number">!{{ event.target_iid }}</div>
+        <div v-if="repoEvent.target_iid" class="mr-number">!{{ repoEvent.target_iid }}</div>
       </div>
 
       <div v-if="displayTitle" class="mr-title">
         {{ displayTitle }}
       </div>
 
-      <div v-if="event.note?.body" class="comment-content">
+      <div v-if="repoEvent.note?.body" class="comment-content">
         <el-icon class="comment-icon"><ChatDotRound /></el-icon>
-        <span class="comment-text">{{ event.note.body }}</span>
+        <span class="comment-text">{{ repoEvent.note.body }}</span>
       </div>
     </template>
 
@@ -99,9 +99,9 @@
       <div v-if="displayTitle" class="event-title">
         {{ displayTitle }}
       </div>
-      <div v-if="event.note?.body" class="comment-content">
+      <div v-if="repoEvent.note?.body" class="comment-content">
         <el-icon class="comment-icon"><ChatDotRound /></el-icon>
-        <span class="comment-text">{{ event.note.body }}</span>
+        <span class="comment-text">{{ repoEvent.note.body }}</span>
       </div>
     </template>
   </el-card>
@@ -113,7 +113,7 @@ import { ChatDotRound, Right, Download, ArrowDown } from '@element-plus/icons-vu
 import type { EventItem } from '@/store/event';
 
 const props = defineProps<{
-  event: EventItem;
+  repoEvent: EventItem;
 }>();
 
 // 展开状态
@@ -125,25 +125,25 @@ const toggleExpanded = () => {
 
 // 判断事件类型
 const isPushEvent = computed(() => {
-  const actionName = props.event.action_name.toLowerCase();
-  return actionName.includes('push') && !!props.event.push_data;
+  const actionName = props.repoEvent.action_name.toLowerCase();
+  return actionName.includes('push') && !!props.repoEvent.push_data;
 });
 
 const isDownloadEvent = computed(() => {
   return (
-    props.event.action === 31 &&
-    props.event.target_type === 'Repository' &&
-    props.event.title === 'zip' &&
-    !props.event.isDailyDownloadSummary
+    props.repoEvent.action === 31 &&
+    props.repoEvent.target_type === 'Repository' &&
+    props.repoEvent.title === 'zip' &&
+    !props.repoEvent.isDailyDownloadSummary
   );
 });
 
 const isDailyDownloadSummary = computed(() => {
-  return !!props.event.isDailyDownloadSummary && !!props.event.dailyDownloadSummary;
+  return !!props.repoEvent.isDailyDownloadSummary && !!props.repoEvent.dailyDownloadSummary;
 });
 
 const dailySummary = computed(() => {
-  return props.event.dailyDownloadSummary;
+  return props.repoEvent.dailyDownloadSummary;
 });
 
 const summaryDateText = computed(() => {
@@ -163,14 +163,14 @@ const formatRecordTime = (createdAt: string): string => {
 };
 
 const isMergeRequestEvent = computed(() => {
-  return props.event.target_type === 'MergeRequest' && !!props.event.merge_request_info;
+  return props.repoEvent.target_type === 'MergeRequest' && !!props.repoEvent.merge_request_info;
 });
 
 // Push 描述
 const pushDescription = computed(() => {
-  if (!props.event.push_data) return '';
-  const actionName = props.event.action_name.toLowerCase();
-  const branch = props.event.push_data.ref;
+  if (!props.repoEvent.push_data) return '';
+  const actionName = props.repoEvent.action_name.toLowerCase();
+  const branch = props.repoEvent.push_data.ref;
   if (actionName.includes('new')) {
     return `推送到 ${branch} 分支（新）`;
   }
@@ -180,18 +180,18 @@ const pushDescription = computed(() => {
 // MergeRequest 动作描述
 const mergeRequestAction = computed(() => {
   if (!isMergeRequestEvent.value) return '';
-  const actionName = props.event.action_name.toLowerCase();
+  const actionName = props.repoEvent.action_name.toLowerCase();
 
-  if (actionName === 'accepted' || props.event.action === 7) {
+  if (actionName === 'accepted' || props.repoEvent.action === 7) {
     return '合并了合并请求';
   }
-  if (actionName === 'opened' || props.event.action === 2) {
+  if (actionName === 'opened' || props.repoEvent.action === 2) {
     return '打开了合并请求';
   }
-  if (actionName === 'created' || props.event.action === 1) {
+  if (actionName === 'created' || props.repoEvent.action === 1) {
     return '创建了合并请求';
   }
-  if (actionName === 'closed' || props.event.action === 3) {
+  if (actionName === 'closed' || props.repoEvent.action === 3) {
     return '关闭了合并请求';
   }
   return '更新了合并请求';
@@ -199,7 +199,7 @@ const mergeRequestAction = computed(() => {
 
 // 显示标题
 const displayTitle = computed(() => {
-  return props.event.target_title || props.event.title || props.event.action_name;
+  return props.repoEvent.target_title || props.repoEvent.title || props.repoEvent.action_name;
 });
 
 // 动态卡片类名
@@ -212,7 +212,7 @@ const cardClasses = computed(() => {
 
 // 处理卡片点击
 const handleCardClick = () => {
-  const url = props.event._links?.action_type;
+  const url = props.repoEvent._links?.action_type;
   if (url) {
     window.open(url, '_blank');
   }

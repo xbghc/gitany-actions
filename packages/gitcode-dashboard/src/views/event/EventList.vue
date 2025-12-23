@@ -45,7 +45,7 @@
           <div class="timestamp-toggle" @click="toggleTimeFormat()">
             {{ formatTimestamp(event.created_at) }}
           </div>
-          <EventCard :event="event" />
+          <EventCard :repo-event="event" />
         </el-timeline-item>
       </el-timeline>
 
