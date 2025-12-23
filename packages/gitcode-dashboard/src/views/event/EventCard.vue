@@ -24,7 +24,7 @@
         <a :href="repoEvent.author.web_url" target="_blank" class="author-link" @click.stop>
           {{ repoEvent.author.name }}
         </a>
-        下载了仓库代码
+        {{ t('event_card.downloaded_repo') }}
       </div>
     </template>
 
@@ -35,9 +35,9 @@
           <div class="summary-left">
             <el-icon class="download-icon" :size="18"><Download /></el-icon>
             <span class="summary-date">{{ summaryDateText }}</span>
-            <span class="summary-text"
-              >下载 <strong> {{ dailySummary?.totalCount }} </strong> 次</span
-            >
+            <span class="summary-text">{{
+              t('event_card.download_count', { count: dailySummary?.totalCount })
+            }}</span>
           </div>
           <div class="summary-right">
             <el-icon class="expand-icon" :class="{ expanded: isExpanded }"><ArrowDown /></el-icon>
@@ -109,9 +109,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { ChatDotRound, Right, Download, ArrowDown } from '@element-plus/icons-vue';
 import type { EventItem } from '@/store/event';
 import { formatShortDate, formatTime } from '@/utils/time';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   repoEvent: EventItem;
@@ -166,9 +169,9 @@ const pushDescription = computed(() => {
   const actionName = props.repoEvent.action_name.toLowerCase();
   const branch = props.repoEvent.push_data.ref;
   if (actionName.includes('new')) {
-    return `推送到 ${branch} 分支（新）`;
+    return t('event_card.pushed_to_branch_new', { branch });
   }
-  return `推送到 ${branch} 分支`;
+  return t('event_card.pushed_to_branch', { branch });
 });
 
 // MergeRequest 动作描述
@@ -177,18 +180,18 @@ const mergeRequestAction = computed(() => {
   const actionName = props.repoEvent.action_name.toLowerCase();
 
   if (actionName === 'accepted' || props.repoEvent.action === 7) {
-    return '合并了合并请求';
+    return t('event_card.mr_merged');
   }
   if (actionName === 'opened' || props.repoEvent.action === 2) {
-    return '打开了合并请求';
+    return t('event_card.mr_opened');
   }
   if (actionName === 'created' || props.repoEvent.action === 1) {
-    return '创建了合并请求';
+    return t('event_card.mr_created');
   }
   if (actionName === 'closed' || props.repoEvent.action === 3) {
-    return '关闭了合并请求';
+    return t('event_card.mr_closed');
   }
-  return '更新了合并请求';
+  return t('event_card.mr_updated');
 });
 
 // 显示标题

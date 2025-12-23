@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     :model-value="visible"
-    title="Workflow 执行日志"
+    :title="t('workflow.log_dialog_title')"
     width="900px"
     :close-on-click-modal="false"
     @update:model-value="handleClose"
@@ -10,19 +10,21 @@
     <!-- 执行信息 -->
     <div v-if="workflowInfo" class="workflow-info">
       <el-descriptions :column="3" border size="small">
-        <el-descriptions-item label="Workflow ID">{{
+        <el-descriptions-item :label="t('workflow.table.workflow_id')">{{
           workflowInfo.workflowId
         }}</el-descriptions-item>
-        <el-descriptions-item label="PR编号"> #{{ workflowInfo.prNumber }} </el-descriptions-item>
-        <el-descriptions-item label="状态">
+        <el-descriptions-item :label="t('workflow.table.pr_number')">
+          #{{ workflowInfo.prNumber }}
+        </el-descriptions-item>
+        <el-descriptions-item :label="t('workflow.table.status')">
           <el-tag :type="getStatusTagType(workflowInfo.status)" size="small">
             {{ getStatusText(workflowInfo.status) }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="创建时间" :span="2">
+        <el-descriptions-item :label="t('workflow.table.created_at')" :span="2">
           {{ formatTime(workflowInfo.createdAt) }}
         </el-descriptions-item>
-        <el-descriptions-item label="完成时间">
+        <el-descriptions-item :label="t('workflow.table.completed_at')">
           {{ workflowInfo.completedAt ? formatTime(workflowInfo.completedAt) : '-' }}
         </el-descriptions-item>
       </el-descriptions>
@@ -47,7 +49,7 @@
       <div class="log-header">
         <div class="log-header-info">
           <span class="step-title">
-            {{ selectedStep || '实时日志' }}
+            {{ selectedStep || t('workflow.realtime_log') }}
           </span>
           <el-tag
             v-if="currentStepStatus"
@@ -58,13 +60,15 @@
             {{ getStatusText(currentStepStatus) }}
           </el-tag>
         </div>
-        <el-button :icon="CopyDocument" size="small" @click="copyLogs"> 复制日志 </el-button>
+        <el-button :icon="CopyDocument" size="small" @click="copyLogs">
+          {{ t('workflow.copy_logs') }}
+        </el-button>
       </div>
       <pre ref="logElement" class="log-output">{{ currentLogs }}</pre>
     </div>
 
     <template #footer>
-      <el-button @click="handleClose">关闭</el-button>
+      <el-button @click="handleClose">{{ t('common.close') }}</el-button>
     </template>
   </el-dialog>
 </template>
@@ -73,9 +77,11 @@
 import { ref, computed, watch, nextTick, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { CopyDocument } from '@element-plus/icons-vue';
+import { useI18n } from 'vue-i18n';
 import { createWorkflowStream, getWorkflowStatus, getWorkflowLogDetail } from '@/api';
 import { useRepoStore } from '@/store';
 import { formatDateTime } from '@/utils/time';
+import { useStatusText, getStatusTagType } from '@/utils/status';
 import type {
   WorkflowStatus,
   WorkflowStep,
@@ -93,6 +99,8 @@ interface Props {
   repo?: string;
 }
 
+const { t } = useI18n();
+const { getStatusText } = useStatusText();
 const repoStore = useRepoStore();
 
 interface Emits {
@@ -128,7 +136,7 @@ const activeStep = computed(() => {
  */
 const currentLogs = computed(() => {
   if (!selectedStep.value) return '';
-  return stepLogs.value.get(selectedStep.value) || '暂无输出';
+  return stepLogs.value.get(selectedStep.value) || t('workflow.no_output');
 });
 
 /**
@@ -153,38 +161,6 @@ const getStepStatus = (status: WorkflowStatus) => {
       return 'process';
     default:
       return 'wait';
-  }
-};
-
-/**
- * 获取状态标签类型
- */
-const getStatusTagType = (status: WorkflowStatus) => {
-  switch (status) {
-    case 'success':
-      return 'success';
-    case 'failed':
-      return 'danger';
-    case 'running':
-      return 'warning';
-    default:
-      return 'info';
-  }
-};
-
-/**
- * 获取状态文本
- */
-const getStatusText = (status: WorkflowStatus) => {
-  switch (status) {
-    case 'pending':
-      return '等待中';
-    case 'running':
-      return '运行中';
-    case 'success':
-      return '成功';
-    case 'failed':
-      return '失败';
   }
 };
 
@@ -263,7 +239,7 @@ const loadWorkflowInfo = async () => {
     if (import.meta.env.DEV) {
       console.error('加载 workflow 信息失败:', error);
     }
-    ElMessage.error('加载 workflow 信息失败');
+    ElMessage.error(t('workflow.load_failed'));
   }
 };
 
@@ -282,7 +258,7 @@ const connectSSE = () => {
     const currentLog = stepLogs.value.get(firstStep) || '';
     stepLogs.value.set(
       firstStep,
-      currentLog + `\n=== 已连接到 Workflow: ${data.workflowId} ===\n\n`,
+      currentLog + `\n=== Connected to Workflow: ${data.workflowId} ===\n\n`,
     );
     scrollToBottom();
   });
@@ -294,7 +270,7 @@ const connectSSE = () => {
     // 将步骤状态变更保存到对应步骤的日志
     const statusText = getStatusText(data.status);
     const currentLog = stepLogs.value.get(data.name) || '';
-    stepLogs.value.set(data.name, currentLog + `\n[步骤] ${data.name}: ${statusText}\n`);
+    stepLogs.value.set(data.name, currentLog + `\n[Step] ${data.name}: ${statusText}\n`);
 
     // 自动选中正在运行或失败的步骤
     if (data.status === 'running' || data.status === 'failed') {
@@ -325,7 +301,7 @@ const connectSSE = () => {
       const data: SSEErrorData = JSON.parse(e.data);
       // 将错误信息保存到对应步骤的日志
       const currentLog = stepLogs.value.get(data.step) || '';
-      stepLogs.value.set(data.step, currentLog + `\n❌ 错误 [${data.step}]: ${data.message}\n`);
+      stepLogs.value.set(data.step, currentLog + `\n❌ Error [${data.step}]: ${data.message}\n`);
 
       // 自动选中出错的步骤
       selectedStep.value = data.step;
@@ -347,7 +323,7 @@ const connectSSE = () => {
     const statusText = getStatusText(data.status);
     const lastStep = steps.value[steps.value.length - 1]?.name || 'step-final';
     const currentLog = stepLogs.value.get(lastStep) || '';
-    stepLogs.value.set(lastStep, currentLog + `\n\n=== 测试完成: ${statusText} ===\n`);
+    stepLogs.value.set(lastStep, currentLog + `\n\n=== Complete: ${statusText} ===\n`);
     scrollToBottom();
 
     // 关闭 SSE 连接
@@ -359,7 +335,7 @@ const connectSSE = () => {
     // 将连接中断信息保存到当前选中的步骤（如果有）
     if (selectedStep.value) {
       const currentLog = stepLogs.value.get(selectedStep.value) || '';
-      stepLogs.value.set(selectedStep.value, currentLog + '\n\n⚠️  SSE 连接中断\n');
+      stepLogs.value.set(selectedStep.value, currentLog + '\n\n⚠️  SSE Disconnected\n');
     }
     closeSSE();
   };
@@ -407,10 +383,10 @@ const copyLogs = async () => {
       });
     }
     await navigator.clipboard.writeText(logText);
-    ElMessage.success('日志已复制到剪贴板');
+    ElMessage.success(t('workflow.log_copied'));
   } catch (error) {
     console.error('复制日志失败:', error);
-    ElMessage.error('复制失败');
+    ElMessage.error(t('workflow.copy_failed'));
   }
 };
 

@@ -3,36 +3,38 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <h3>Pull Request 列表</h3>
+          <h3>{{ t('pr.list_title') }}</h3>
         </div>
       </template>
 
       <!-- 筛选条件 -->
       <div class="filters">
         <el-form :inline="true">
-          <el-form-item label="状态">
+          <el-form-item :label="t('pr.table.status')">
             <el-select
               v-model="filters.state"
-              placeholder="选择状态"
+              :placeholder="t('status.select')"
               style="width: 120px"
               @change="handleFilterChange"
             >
-              <el-option label="全部" value="all" />
-              <el-option label="Open" value="open" />
-              <el-option label="Closed" value="closed" />
-              <el-option label="Merged" value="merged" />
+              <el-option :label="t('status.all')" value="all" />
+              <el-option :label="t('status.open')" value="open" />
+              <el-option :label="t('status.closed')" value="closed" />
+              <el-option :label="t('status.merged')" value="merged" />
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button :icon="RefreshRight" @click="handleRefresh">刷新</el-button>
+            <el-button :icon="RefreshRight" @click="handleRefresh">{{
+              t('common.refresh')
+            }}</el-button>
           </el-form-item>
         </el-form>
       </div>
 
       <!-- PR 列表 -->
       <el-table v-loading="loading" :data="prList" style="width: 100%">
-        <el-table-column prop="number" label="编号" width="80" />
-        <el-table-column label="标题" min-width="300">
+        <el-table-column prop="number" :label="t('pr.table.number')" width="80" />
+        <el-table-column :label="t('pr.table.title')" min-width="300">
           <template #default="{ row }">
             <div class="pr-title">
               <span>{{ row.title }}</span>
@@ -49,31 +51,31 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column :label="t('pr.table.status')" width="100">
           <template #default="{ row }">
             <StatusTag :status="row.state" />
           </template>
         </el-table-column>
-        <el-table-column label="作者" width="150">
+        <el-table-column :label="t('pr.table.author')" width="150">
           <template #default="{ row }">
             <UserAvatar :user="row.user" :show-name="true" />
           </template>
         </el-table-column>
-        <el-table-column label="更新时间" width="180">
+        <el-table-column :label="t('pr.table.updated_at')" width="180">
           <template #default="{ row }">
             {{ formatRelativeTime(row.updated_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column :label="t('pr.table.actions')" width="120" fixed="right">
           <template #default="{ row }">
             <el-button :icon="Promotion" size="small" @click="handleRunTest(row)">
-              运行测试
+              {{ t('pr.run_test') }}
             </el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <EmptyState v-if="!loading && prList.length === 0" description="暂无 PR" />
+      <EmptyState v-if="!loading && prList.length === 0" :description="t('pr.no_pr')" />
 
       <!-- 配置选择对话框 -->
       <WorkflowConfigSelector
@@ -106,6 +108,7 @@ import { computed, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { RefreshRight, Promotion } from '@element-plus/icons-vue';
 import { ElMessage, ElNotification } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 import { usePRStore, useRepoStore } from '@/store';
 import { triggerPRWorkflow } from '@/api';
 import StatusTag from '@/components/StatusTag.vue';
@@ -117,6 +120,7 @@ import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import type { PullRequest } from '@/store/pr';
 import type { WorkflowConfig } from '@/store/workflow';
 
+const { t } = useI18n();
 const prStore = usePRStore();
 const repoStore = useRepoStore();
 
@@ -189,7 +193,7 @@ const handlePaginationMouseOver = (event: MouseEvent) => {
  */
 const handleRunTest = (pr: PullRequest) => {
   if (!selectedRepoId.value) {
-    ElMessage.warning('请先选择仓库');
+    ElMessage.warning(t('pr.select_repo_first'));
     return;
   }
 
@@ -214,7 +218,7 @@ const handleConfigSelected = async (configId: string, config: WorkflowConfig) =>
   const { owner, repo, number } = selectedPR.value;
 
   if (!owner || !repo) {
-    ElMessage.error('无法获取仓库信息');
+    ElMessage.error(t('pr.cannot_get_repo_info'));
     return;
   }
 
@@ -231,8 +235,8 @@ const handleConfigSelected = async (configId: string, config: WorkflowConfig) =>
 
       // 显示通知
       ElNotification.success({
-        title: `PR #${number} 测试已启动`,
-        message: `使用配置: ${config.name}`,
+        title: t('pr.test_started', { number }),
+        message: t('pr.using_config', { name: config.name }),
         duration: 3000,
       });
 
@@ -241,7 +245,7 @@ const handleConfigSelected = async (configId: string, config: WorkflowConfig) =>
     }
   } catch (error) {
     console.error('触发 workflow 失败:', error);
-    ElMessage.error('启动测试失败');
+    ElMessage.error(t('pr.start_test_failed'));
   }
 };
 </script>

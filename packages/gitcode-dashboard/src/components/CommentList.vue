@@ -9,17 +9,20 @@
         <MarkdownViewer :content="comment.body" />
       </div>
     </div>
-    <EmptyState v-if="comments.length === 0" description="暂无评论" />
+    <EmptyState v-if="comments.length === 0" :description="t('comment.no_comment')" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { PRComment } from '@/store/pr';
 import type { IssueComment } from '@/store/issue';
 import UserAvatar from './UserAvatar.vue';
 import MarkdownViewer from './MarkdownViewer.vue';
 import EmptyState from './EmptyState.vue';
 import { formatDateTime } from '@/utils/time';
+
+const { t } = useI18n();
 
 interface Props {
   comments: PRComment[] | IssueComment[];

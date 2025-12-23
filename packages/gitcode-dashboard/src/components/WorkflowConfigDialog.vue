@@ -1,24 +1,32 @@
 <template>
   <el-dialog
     :model-value="visible"
-    :title="isEditMode ? '编辑 Workflow 配置' : '新建 Workflow 配置'"
+    :title="
+      isEditMode ? t('workflow.config_dialog.title_edit') : t('workflow.config_dialog.title_create')
+    "
     width="700px"
     @update:model-value="handleClose"
     @close="handleClose"
   >
     <el-form ref="formRef" :model="formData" :rules="rules" label-width="100px">
       <!-- 配置名称 -->
-      <el-form-item label="配置名称" prop="name">
-        <el-input v-model="formData.name" placeholder="例如：构建和测试" clearable />
+      <el-form-item :label="t('workflow.config_dialog.config_name')" prop="name">
+        <el-input
+          v-model="formData.name"
+          :placeholder="t('workflow.config_dialog.config_name_placeholder')"
+          clearable
+        />
       </el-form-item>
 
       <!-- 步骤列表 -->
-      <el-form-item label="执行步骤" required>
+      <el-form-item :label="t('workflow.config_dialog.execution_steps')" required>
         <div class="steps-container">
           <div v-for="(step, stepIndex) in formData.steps" :key="stepIndex" class="step-item">
             <el-card shadow="hover">
               <div class="step-header">
-                <span class="step-title">步骤 {{ stepIndex + 1 }}</span>
+                <span class="step-title">{{
+                  t('workflow.config_dialog.step_n', { n: stepIndex + 1 })
+                }}</span>
                 <el-button
                   v-if="formData.steps.length > 1"
                   type="danger"
@@ -26,7 +34,7 @@
                   text
                   @click="removeStep(stepIndex)"
                 >
-                  删除步骤
+                  {{ t('workflow.config_dialog.delete_step') }}
                 </el-button>
               </div>
 
@@ -34,17 +42,21 @@
               <el-form-item
                 :prop="`steps.${stepIndex}.name`"
                 :rules="rules.stepName"
-                label="步骤名称"
+                :label="t('workflow.config_dialog.step_name')"
                 label-width="80px"
               >
-                <el-input v-model="step.name" placeholder="例如：安装依赖" clearable />
+                <el-input
+                  v-model="step.name"
+                  :placeholder="t('workflow.config_dialog.step_name_placeholder')"
+                  clearable
+                />
               </el-form-item>
 
               <!-- 命令列表 -->
               <el-form-item
                 :prop="`steps.${stepIndex}.commands`"
                 :rules="rules.commands"
-                label="命令列表"
+                :label="t('workflow.config_dialog.commands_list')"
                 label-width="80px"
               >
                 <div class="commands-container">
@@ -55,7 +67,7 @@
                   >
                     <el-input
                       v-model="step.commands[cmdIndex]"
-                      placeholder="例如：pnpm install"
+                      :placeholder="t('workflow.config_dialog.command_placeholder')"
                       clearable
                     >
                       <template #append>
@@ -65,63 +77,79 @@
                           text
                           @click="removeCommand(stepIndex, cmdIndex)"
                         >
-                          删除
+                          {{ t('common.delete') }}
                         </el-button>
                       </template>
                     </el-input>
                   </div>
-                  <el-button size="small" @click="addCommand(stepIndex)"> 添加命令 </el-button>
+                  <el-button size="small" @click="addCommand(stepIndex)">
+                    {{ t('workflow.config_dialog.add_command') }}
+                  </el-button>
                 </div>
               </el-form-item>
             </el-card>
           </div>
 
-          <el-button type="primary" @click="addStep"> 添加步骤 </el-button>
+          <el-button type="primary" @click="addStep">
+            {{ t('workflow.config_dialog.add_step') }}
+          </el-button>
         </div>
       </el-form-item>
 
       <!-- 环境变量 -->
-      <el-form-item label="环境变量">
+      <el-form-item :label="t('workflow.config_dialog.env_variables')">
         <div class="env-container">
           <div v-for="(_value, key, index) in formData.env" :key="index" class="env-item">
             <el-input
               :model-value="key"
-              placeholder="变量名"
+              :placeholder="t('workflow.config_dialog.var_name')"
               style="width: 200px"
               @input="(val: string) => updateEnvKey(key, val)"
             />
             <span class="env-separator">=</span>
-            <el-input v-model="formData.env[key]" placeholder="变量值" style="flex: 1" clearable />
-            <el-button type="danger" text @click="removeEnv(key)"> 删除 </el-button>
+            <el-input
+              v-model="formData.env[key]"
+              :placeholder="t('workflow.config_dialog.var_value')"
+              style="flex: 1"
+              clearable
+            />
+            <el-button type="danger" text @click="removeEnv(key)">
+              {{ t('common.delete') }}
+            </el-button>
           </div>
-          <el-button size="small" @click="addEnv"> 添加环境变量 </el-button>
+          <el-button size="small" @click="addEnv">
+            {{ t('workflow.config_dialog.add_env') }}
+          </el-button>
         </div>
       </el-form-item>
 
       <!-- 超时时间 -->
-      <el-form-item label="超时时间" prop="timeout">
+      <el-form-item :label="t('workflow.config_dialog.timeout_label')" prop="timeout">
         <el-input-number
           v-model="formData.timeout"
           :min="0"
           :step="60000"
           :precision="0"
-          placeholder="毫秒"
+          placeholder="ms"
         />
-        <span class="timeout-hint">（毫秒，0 表示不限制）</span>
+        <span class="timeout-hint">{{ t('workflow.config_dialog.timeout_unit') }}</span>
       </el-form-item>
     </el-form>
 
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
-      <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+      <el-button @click="handleClose">{{ t('common.cancel') }}</el-button>
+      <el-button type="primary" :loading="saving" @click="handleSave">{{
+        t('common.save')
+      }}</el-button>
     </template>
   </el-dialog>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive } from 'vue';
+import { ref, watch, reactive, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 import type { WorkflowConfigStep, WorkflowConfig } from '@/store/workflow';
 import { useWorkflowConfigStore } from '@/store';
 
@@ -138,6 +166,7 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const { t } = useI18n();
 const configStore = useWorkflowConfigStore();
 const formRef = ref<FormInstance>();
 const saving = ref(false);
@@ -157,14 +186,16 @@ const formData = reactive<{
 });
 
 // 表单验证规则
-const rules: FormRules = {
-  name: [{ required: true, message: '请输入配置名称', trigger: 'blur' }],
-  stepName: [{ required: true, message: '请输入步骤名称', trigger: 'blur' }],
+const rules = computed<FormRules>(() => ({
+  name: [{ required: true, message: t('workflow.config_dialog.name_required'), trigger: 'blur' }],
+  stepName: [
+    { required: true, message: t('workflow.config_dialog.step_name_required'), trigger: 'blur' },
+  ],
   commands: [
     {
       validator: (_rule, value, callback) => {
         if (!value || value.length === 0 || value.every((cmd: string) => !cmd.trim())) {
-          callback(new Error('至少添加一条命令'));
+          callback(new Error(t('workflow.config_dialog.command_required')));
         } else {
           callback();
         }
@@ -172,7 +203,7 @@ const rules: FormRules = {
       trigger: 'blur',
     },
   ],
-};
+}));
 
 /**
  * 添加步骤
@@ -223,7 +254,7 @@ const removeEnv = (key: string) => {
 const updateEnvKey = (oldKey: string, newKey: string) => {
   if (oldKey === newKey) return;
   if (newKey in formData.env) {
-    ElMessage.warning('环境变量名已存在');
+    ElMessage.warning(t('workflow.config_dialog.env_key_exists'));
     return;
   }
   const value = formData.env[oldKey];

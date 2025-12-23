@@ -2,22 +2,24 @@
   <div class="workflow-container">
     <!-- Tab 切换 -->
     <el-tabs v-model="activeTab" class="workflow-tabs">
-      <el-tab-pane label="执行记录" name="executions">
+      <el-tab-pane :label="t('workflow.executions_tab')" name="executions">
         <!-- 工具栏 -->
         <div class="toolbar">
           <div class="toolbar-left">
             <!-- 状态筛选 -->
             <el-radio-group v-model="workflowLogStore.statusFilter" size="small">
-              <el-radio-button value="all">全部</el-radio-button>
-              <el-radio-button value="success">成功</el-radio-button>
-              <el-radio-button value="failed">失败</el-radio-button>
-              <el-radio-button value="running">运行中</el-radio-button>
-              <el-radio-button value="pending">等待中</el-radio-button>
+              <el-radio-button value="all">{{ t('status.all') }}</el-radio-button>
+              <el-radio-button value="success">{{ t('status.success') }}</el-radio-button>
+              <el-radio-button value="failed">{{ t('status.failed') }}</el-radio-button>
+              <el-radio-button value="running">{{ t('status.running') }}</el-radio-button>
+              <el-radio-button value="pending">{{ t('status.pending') }}</el-radio-button>
             </el-radio-group>
           </div>
 
           <div class="toolbar-right">
-            <el-button :icon="Refresh" @click="handleRefreshWorkflows">刷新</el-button>
+            <el-button :icon="Refresh" @click="handleRefreshWorkflows">{{
+              t('common.refresh')
+            }}</el-button>
           </div>
         </div>
 
@@ -28,7 +30,7 @@
           stripe
           style="width: 100%"
         >
-          <el-table-column prop="workflowId" label="Workflow ID" width="180">
+          <el-table-column prop="workflowId" :label="t('workflow.table.workflow_id')" width="180">
             <template #default="{ row }">
               <el-link type="primary" @click="handleViewLogs(row.workflowId)">
                 {{ row.workflowId.substring(0, 12) }}...
@@ -36,19 +38,19 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="prNumber" label="PR编号" width="100">
+          <el-table-column prop="prNumber" :label="t('workflow.table.pr_number')" width="100">
             <template #default="{ row }">
               <el-link type="primary">#{{ row.prNumber }}</el-link>
             </template>
           </el-table-column>
 
-          <el-table-column prop="configName" label="使用配置" width="150">
+          <el-table-column prop="configName" :label="t('workflow.table.config_name')" width="150">
             <template #default="{ row }">
               {{ row.configName || '-' }}
             </template>
           </el-table-column>
 
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="status" :label="t('workflow.table.status')" width="100">
             <template #default="{ row }">
               <el-tag :type="getStatusTagType(row.status)" size="small">
                 {{ getStatusText(row.status) }}
@@ -56,31 +58,33 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="createdAt" label="创建时间" width="180">
+          <el-table-column prop="createdAt" :label="t('workflow.table.created_at')" width="180">
             <template #default="{ row }">
               {{ formatRelativeTime(row.createdAt) }}
             </template>
           </el-table-column>
 
-          <el-table-column prop="completedAt" label="完成时间" width="180">
+          <el-table-column prop="completedAt" :label="t('workflow.table.completed_at')" width="180">
             <template #default="{ row }">
               {{ row.completedAt ? formatRelativeTime(row.completedAt) : '-' }}
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="250" fixed="right">
+          <el-table-column :label="t('workflow.table.actions')" width="250" fixed="right">
             <template #default="{ row }">
               <el-button type="primary" size="small" @click="handleViewLogs(row.workflowId)">
-                查看日志
+                {{ t('workflow.view_logs') }}
               </el-button>
               <el-popconfirm
-                title="确定要删除这条日志吗？"
-                confirm-button-text="确定"
-                cancel-button-text="取消"
+                :title="t('workflow.confirm_delete_log')"
+                :confirm-button-text="t('common.confirm')"
+                :cancel-button-text="t('common.cancel')"
                 @confirm="handleDeleteLog(row.workflowId)"
               >
                 <template #reference>
-                  <el-button type="danger" size="small" :icon="Delete">删除</el-button>
+                  <el-button type="danger" size="small" :icon="Delete">{{
+                    t('common.delete')
+                  }}</el-button>
                 </template>
               </el-popconfirm>
             </template>
@@ -99,18 +103,22 @@
         </div>
       </el-tab-pane>
 
-      <el-tab-pane label="配置管理" name="configs">
+      <el-tab-pane :label="t('workflow.configs_tab')" name="configs">
         <!-- 工具栏 -->
         <div class="toolbar">
           <div class="toolbar-left">
-            <span class="config-count">共 {{ configStore.totalCount }} 个配置</span>
+            <span class="config-count">{{
+              t('workflow.config_count', { count: configStore.totalCount })
+            }}</span>
           </div>
 
           <div class="toolbar-right">
             <el-button type="primary" :icon="Plus" @click="handleCreateConfig">
-              新建配置
+              {{ t('workflow.new_config') }}
             </el-button>
-            <el-button :icon="Refresh" @click="handleRefreshConfigs">刷新</el-button>
+            <el-button :icon="Refresh" @click="handleRefreshConfigs">{{
+              t('common.refresh')
+            }}</el-button>
           </div>
         </div>
 
@@ -121,9 +129,9 @@
           stripe
           style="width: 100%"
         >
-          <el-table-column prop="name" label="配置名称" width="200" />
+          <el-table-column prop="name" :label="t('workflow.table.config_name_col')" width="200" />
 
-          <el-table-column prop="steps" label="步骤概览" width="300">
+          <el-table-column prop="steps" :label="t('workflow.table.steps_overview')" width="300">
             <template #default="{ row }">
               <el-tag
                 v-for="(step, index) in row.steps"
@@ -136,26 +144,33 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="env" label="环境变量" width="120">
+          <el-table-column prop="env" :label="t('workflow.table.env_vars')" width="120">
             <template #default="{ row }">
-              {{ row.env ? Object.keys(row.env).length : 0 }} 个
+              {{
+                t('workflow.table.env_var_count', {
+                  count: row.env ? Object.keys(row.env).length : 0,
+                })
+              }}
             </template>
           </el-table-column>
 
-          <el-table-column prop="timeout" label="超时时间" width="120">
+          <el-table-column prop="timeout" :label="t('workflow.table.timeout')" width="120">
             <template #default="{ row }">
-              {{ row.timeout ? `${row.timeout / 1000}s` : '无限制' }}
+              {{ row.timeout ? `${row.timeout / 1000}s` : t('workflow.table.no_limit') }}
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="200" fixed="right">
+          <el-table-column :label="t('workflow.table.actions')" width="200" fixed="right">
             <template #default="{ row }">
               <el-button type="primary" size="small" @click="handleEditConfig(row.id)">
-                编辑
+                {{ t('common.edit') }}
               </el-button>
-              <el-popconfirm title="确定要删除这个配置吗？" @confirm="handleDeleteConfig(row.id)">
+              <el-popconfirm
+                :title="t('workflow.confirm_delete_config')"
+                @confirm="handleDeleteConfig(row.id)"
+              >
                 <template #reference>
-                  <el-button type="danger" size="small">删除</el-button>
+                  <el-button type="danger" size="small">{{ t('common.delete') }}</el-button>
                 </template>
               </el-popconfirm>
             </template>
@@ -180,11 +195,16 @@
 import { ref } from 'vue';
 import { Refresh, Plus, Delete } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 import { useWorkflowConfigStore } from '@/store';
-import { useWorkflowLogStore, type WorkflowStatus, type WorkflowConfig } from '@/store/workflow';
+import { useWorkflowLogStore, type WorkflowConfig } from '@/store/workflow';
+import { useStatusText, getStatusTagType } from '@/utils/status';
 import WorkflowLogViewer from '@/components/WorkflowLogViewer.vue';
 import WorkflowConfigDialog from '@/components/WorkflowConfigDialog.vue';
 import { formatRelativeTime } from '@/utils/time';
+
+const { t } = useI18n();
+const { getStatusText } = useStatusText();
 
 const workflowLogStore = useWorkflowLogStore();
 const configStore = useWorkflowConfigStore();
@@ -199,38 +219,6 @@ const selectedWorkflowId = ref('');
 // ConfigDialog 对话框
 const configDialogVisible = ref(false);
 const selectedConfig = ref<WorkflowConfig | undefined>(undefined);
-
-/**
- * 获取状态标签类型
- */
-const getStatusTagType = (status: WorkflowStatus) => {
-  switch (status) {
-    case 'success':
-      return 'success';
-    case 'failed':
-      return 'danger';
-    case 'running':
-      return 'warning';
-    default:
-      return 'info';
-  }
-};
-
-/**
- * 获取状态文本
- */
-const getStatusText = (status: WorkflowStatus) => {
-  switch (status) {
-    case 'pending':
-      return '等待中';
-    case 'running':
-      return '运行中';
-    case 'success':
-      return '成功';
-    case 'failed':
-      return '失败';
-  }
-};
 
 /**
  * 刷新 Workflow 列表
@@ -282,7 +270,7 @@ const handleCreateConfig = () => {
 const handleEditConfig = (id: string) => {
   const config = configStore.configList.find((c) => c.id === id);
   if (!config) {
-    ElMessage.error('配置不存在');
+    ElMessage.error(t('workflow.config_not_exists'));
     return;
   }
   selectedConfig.value = config;

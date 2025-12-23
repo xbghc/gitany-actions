@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     :model-value="visible"
-    title="选择测试配置"
+    :title="t('workflow.config_selector.title')"
     width="700px"
     @update:model-value="handleClose"
     @close="handleClose"
@@ -10,12 +10,14 @@
       <el-icon class="is-loading" :size="32">
         <Loading />
       </el-icon>
-      <p>加载配置列表...</p>
+      <p>{{ t('workflow.config_selector.loading') }}</p>
     </div>
 
     <div v-else-if="configList.length === 0" class="empty-container">
-      <el-empty description="暂无可用配置">
-        <el-button type="primary" @click="handleGoToConfigManagement">前往创建配置</el-button>
+      <el-empty :description="t('workflow.config_selector.no_config')">
+        <el-button type="primary" @click="handleGoToConfigManagement">{{
+          t('workflow.config_selector.go_create')
+        }}</el-button>
       </el-empty>
     </div>
 
@@ -32,7 +34,7 @@
             <div class="config-header">
               <span class="config-name">{{ config.name }}</span>
               <el-tag v-if="config.timeout" size="small" type="info">
-                超时: {{ config.timeout / 1000 }}s
+                {{ t('workflow.config_selector.timeout_label') }}: {{ config.timeout / 1000 }}s
               </el-tag>
             </div>
 
@@ -49,7 +51,7 @@
             </div>
 
             <div v-if="config.env && Object.keys(config.env).length > 0" class="config-env">
-              <span class="env-label">环境变量:</span>
+              <span class="env-label">{{ t('workflow.config_selector.env_vars_label') }}</span>
               <el-tag
                 v-for="key in Object.keys(config.env)"
                 :key="key"
@@ -67,9 +69,9 @@
     </div>
 
     <template #footer>
-      <el-button @click="handleClose">取消</el-button>
+      <el-button @click="handleClose">{{ t('common.cancel') }}</el-button>
       <el-button type="primary" :disabled="!selectedConfigId" @click="handleConfirm">
-        开始测试
+        {{ t('workflow.config_selector.start_test') }}
       </el-button>
     </template>
   </el-dialog>
@@ -79,6 +81,7 @@
 import { ref, watch } from 'vue';
 import { Loading } from '@element-plus/icons-vue';
 import { ElMessage } from 'element-plus';
+import { useI18n } from 'vue-i18n';
 import { useWorkflowConfigStore } from '@/store';
 import type { WorkflowConfig } from '@/store/workflow';
 
@@ -96,6 +99,7 @@ interface Emits {
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
+const { t } = useI18n();
 const configStore = useWorkflowConfigStore();
 const selectedConfigId = ref<string>('');
 const loading = ref(false);
@@ -122,7 +126,7 @@ const loadConfigs = async () => {
     if (import.meta.env.DEV) {
       console.error('加载配置列表失败:', error);
     }
-    ElMessage.error('加载配置列表失败');
+    ElMessage.error(t('workflow.config_selector.load_failed'));
   } finally {
     loading.value = false;
   }
@@ -133,14 +137,14 @@ const loadConfigs = async () => {
  */
 const handleConfirm = () => {
   if (!selectedConfigId.value) {
-    ElMessage.warning('请选择一个配置');
+    ElMessage.warning(t('workflow.config_selector.select_warning'));
     return;
   }
 
   const selectedConfig = configList.value.find((config) => config.id === selectedConfigId.value);
 
   if (!selectedConfig) {
-    ElMessage.error('配置不存在');
+    ElMessage.error(t('workflow.config_selector.config_not_found'));
     return;
   }
 
@@ -160,7 +164,7 @@ const handleClose = () => {
  * 前往配置管理
  */
 const handleGoToConfigManagement = () => {
-  ElMessage.info('请先在"Workflow 管理"页面创建配置');
+  ElMessage.info(t('workflow.config_selector.go_create_hint'));
   handleClose();
 };
 
