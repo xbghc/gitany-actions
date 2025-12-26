@@ -6,6 +6,7 @@ import * as path from 'path';
 import { execSync } from 'child_process';
 import { withClient } from '../../utils/with-client.js';
 import { resolveGitCodeRepoUrl } from '../../utils/resolve-repo-url.js';
+import { getEditorConfig } from '../../utils/config.js';
 import { formatAssignees } from './helpers.js';
 
 export interface CreateOptions {
@@ -37,7 +38,7 @@ async function promptForInput(message: string, defaultValue?: string): Promise<s
 
 // 获取默认编辑器
 function getDefaultEditor(): string {
-  return process.env.EDITOR || process.env.VISUAL || 'nano';
+  return getEditorConfig() || 'nano';
 }
 
 // 在编辑器中打开内容
